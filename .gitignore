@@ -1,0 +1,33 @@
+# ==========================================
+# EdTech Portfolio - Git Ignore Specification
+# ==========================================
+
+# 1. 敏感憑證與私鑰 (嚴禁上傳)
+.env
+.env.local
+*.pem
+*.cert
+secret.json
+
+# 2. 相依套件目錄
+node_modules/
+.pnp
+.pnp.js
+
+# 3. 系統與編輯器暫存檔
+.DS_Store
+.DS_Store?
+ehthumbs.db
+Icon?
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 4. 建置與編譯輸出 (未來擴充用)
+dist/
+build/
+.next/
+out/

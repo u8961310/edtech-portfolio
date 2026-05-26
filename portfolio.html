@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>陳冠廷 · 國小資訊教師作品集</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #78350f;
+            --accent: #f59e0b;
+            --accent-dark: #b45309;
+            --bg: #fffbeb;
+            --bg-soft: #fef3c7;
+            --text-dark: #1f2937;
+            --text-muted: #6b7280;
+            --border: #fde68a;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: var(--bg);
+            color: var(--text-dark);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ===== Top Nav ===== */
+        .topnav {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 251, 235, 0.92);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            padding: 12px 0;
+        }
+        .topnav .nav-inner {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+        .topnav .brand {
+            font-weight: 900;
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 15px;
+        }
+        .topnav .back-link {
+            background: var(--accent);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 13px;
+            box-shadow: 0 2px 0 var(--accent-dark);
+        }
+        .topnav .back-link:hover { transform: translateY(-1px); }
+
+        /* ===== Hero ===== */
+        .hero {
+            padding: 64px 0 48px;
+            text-align: center;
+            border-bottom: 2px dashed var(--border);
+        }
+        .hero .avatar {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin: 0 auto 16px;
+            box-shadow: 0 6px 16px rgba(180, 83, 9, 0.25);
+        }
+        .hero h1 {
+            font-size: clamp(28px, 4vw, 40px);
+            margin: 0 0 4px 0;
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+        .hero .role {
+            font-size: clamp(15px, 1.8vw, 17px);
+            color: var(--accent-dark);
+            font-weight: 700;
+            margin: 0 0 16px 0;
+        }
+        .hero .tagline {
+            font-size: clamp(15px, 1.8vw, 18px);
+            color: var(--text-muted);
+            max-width: 560px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+        .hero .tagline strong { color: var(--primary); }
+
+        /* ===== Section ===== */
+        section.block {
+            padding: 48px 0 32px;
+            border-bottom: 1px dashed var(--border);
+        }
+        section.block:last-of-type { border-bottom: none; }
+        h2.section-title {
+            font-size: clamp(22px, 2.8vw, 28px);
+            color: var(--primary);
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        h2.section-title::before {
+            content: '';
+            width: 8px;
+            height: 28px;
+            background: var(--accent);
+            border-radius: 4px;
+        }
+        .section-sub {
+            color: var(--text-muted);
+            margin: 0 0 20px 0;
+            font-size: 15px;
+        }
+        section.block p {
+            color: var(--text-dark);
+            font-size: 15px;
+            margin: 0 0 12px 0;
+        }
+
+        /* ===== Philosophy list ===== */
+        .philosophy {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+            margin-top: 16px;
+        }
+        @media (min-width: 640px) {
+            .philosophy { grid-template-columns: repeat(2, 1fr); }
+        }
+        .phi-item {
+            background: white;
+            border: 2px solid var(--border);
+            border-left: 5px solid var(--accent);
+            border-radius: 12px;
+            padding: 14px 18px;
+        }
+        .phi-item h3 {
+            margin: 0 0 4px 0;
+            color: var(--primary);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .phi-item p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* ===== Projects ===== */
+        .projects {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+        @media (min-width: 720px) {
+            .projects { grid-template-columns: repeat(2, 1fr); }
+        }
+        .project {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.15s, box-shadow 0.15s;
+            text-decoration: none;
+            color: inherit;
+        }
+        .project:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(180,83,9,0.12);
+            border-color: var(--accent);
+        }
+        .project .proj-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .project .proj-cover {
+            font-size: 36px;
+            line-height: 1;
+        }
+        .project .proj-title {
+            flex: 1;
+            font-size: 17px;
+            font-weight: 900;
+            color: var(--text-dark);
+            margin: 0;
+        }
+        .project .proj-grade {
+            background: var(--bg-soft);
+            color: var(--accent-dark);
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+        .project .proj-goal {
+            color: var(--text-muted);
+            font-size: 13.5px;
+            margin: 0 0 10px 0;
+            line-height: 1.55;
+            flex-grow: 1;
+        }
+        .project .proj-tech {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--border);
+        }
+        .project .tech-chip {
+            background: #f3f4f6;
+            color: #4b5563;
+            padding: 2px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'Noto Sans TC', monospace;
+        }
+        .project .tech-chip.ai { background: #fef3c7; color: #92400e; }
+        .project .tech-chip.skill { background: #dbeafe; color: #1e3a8a; }
+
+        /* ===== Workflow ===== */
+        .workflow {
+            counter-reset: step;
+            list-style: none;
+            padding: 0;
+            margin: 16px 0 0 0;
+        }
+        .workflow li {
+            counter-increment: step;
+            position: relative;
+            padding: 12px 16px 12px 56px;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .workflow li::before {
+            content: counter(step);
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 16px;
+        }
+        .workflow strong { color: var(--primary); display: block; margin-bottom: 2px; }
+        .workflow span { color: var(--text-muted); font-size: 13px; }
+
+        /* ===== Stack ===== */
+        .stack-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 14px;
+        }
+        @media (min-width: 640px) {
+            .stack-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        .stack-item {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+        }
+        .stack-item .stack-label {
+            color: var(--accent-dark);
+            font-weight: 900;
+            font-size: 13px;
+            margin: 0 0 4px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stack-item .stack-detail {
+            color: var(--text-dark);
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* ===== Contact ===== */
+        .contact {
+            text-align: center;
+            padding: 32px 24px;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            margin-top: 16px;
+        }
+        .contact p { color: var(--text-muted); margin: 0 0 12px 0; font-size: 14px; }
+        .contact .links {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .contact .link {
+            background: white;
+            border: 2px solid var(--accent);
+            color: var(--accent-dark);
+            padding: 8px 18px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .contact .link:hover { background: var(--accent); color: white; }
+
+        footer.copyright {
+            padding: 32px 24px 48px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <div class="nav-inner">
+        <a href="./portfolio.html" class="brand">陳冠廷 · 教師作品集</a>
+        <a href="./index.html" class="back-link">🎮 學生樂園</a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- ===== Hero ===== -->
+    <section class="hero">
+        <div class="avatar">🍰</div>
+        <h1>陳冠廷 Cake Chen</h1>
+        <p class="role">國小資訊教師 × 軟體工程師</p>
+        <p class="tagline">
+            <strong>「教材即遊戲，AI 是放大器」</strong><br>
+            把十年工程能力帶進教學現場，自己動手做出符合學生需求的互動教材，而不是受限於現成軟體。
+        </p>
+    </section>
+
+    <!-- ===== About ===== -->
+    <section class="block">
+        <h2 class="section-title">關於我</h2>
+        <p>
+            我是陳冠廷，目前擔任國小資訊教育教師。在踏入教學現場之前，是十年以上經驗的軟體工程師。這個雙背景讓我在課堂上比起一般教師多了一個維度
+            —— 能直接動手做出符合教學情境的教材，不必受限於現成軟體的功能與授權。
+        </p>
+        <p>
+            工作之餘，我持續學習 AI 應用，並把 LLM 與 code agent 帶進教材設計流程。本作品集中的每個遊戲，
+            都是這套「教師 + AI 協作」工作流的實際產出，從零到部署平均只需要 1–2 個工作天。
+        </p>
+    </section>
+
+    <!-- ===== Philosophy ===== -->
+    <section class="block">
+        <h2 class="section-title">教學理念</h2>
+        <p class="section-sub">五個帶我做出這份作品集的核心信念。</p>
+        <div class="philosophy">
+            <div class="phi-item">
+                <h3>🎮 教材即遊戲</h3>
+                <p>用遊戲化降低學習挫折感，讓孩子主動想學。每個遊戲都有過關、有證書、有成就稱號。</p>
+            </div>
+            <div class="phi-item">
+                <h3>🚀 AI 是放大器</h3>
+                <p>善用 AI 工具讓單人教師也能產出高品質教材。從發想、設計、開發到部署都能加速。</p>
+            </div>
+            <div class="phi-item">
+                <h3>🧠 資訊素養 ≠ 學程式</h3>
+                <p>重點在運算思維、邏輯推理、媒體識讀。一年級就能學運算思維，不必等到中高年級才寫程式。</p>
+            </div>
+            <div class="phi-item">
+                <h3>🎯 一個遊戲練一件事</h3>
+                <p>每個單元目標清楚、不貪心。學生負荷不會過大，能在 10–15 分鐘內完成完整闖關體驗。</p>
+            </div>
+            <div class="phi-item">
+                <h3>📂 作品集即履歷</h3>
+                <p>教學成果用可互動網站呈現，比 PPT 更有說服力，家長與學生隨時點開都能體驗。</p>
+            </div>
+            <div class="phi-item">
+                <h3>🌱 容錯設計優先</h3>
+                <p>按錯不扣分、目標不會太小、節奏可調整。讓挫折感降到最低，每個孩子都能完成。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== Projects ===== -->
+    <section class="block">
+        <h2 class="section-title">作品集</h2>
+        <p class="section-sub">6 款互動教材，涵蓋一年級到中年級資訊教育核心能力。點擊任一張可直接體驗。</p>
+        <div class="projects">
+
+            <a href="./units/unit2-mouse-adventure/index.html" class="project">
+                <div class="proj-head">
+                    <div class="proj-cover">🐰⚔️</div>
+                    <h3 class="proj-title">小兔勇者大冒險</h3>
+                    <span class="proj-grade">🎒 一年級</span>
+                </div>
+                <p class="proj-goal">滑鼠控制訓練：點擊 / 移動 / 拖曳 / 雙擊四技能。三階段闖關（森林 / 山洞 / 魔王城），魔王戰整合所有操作。</p>
+                <div class="proj-tech">
+                    <span class="tech-chip skill">滑鼠操作</span>
+                    <span class="tech-chip ai">Claude Code</span>
+                    <span class="tech-chip">Vanilla JS</span>
+                </div>
+            </a>
+
+            <a href="./units/unit4-whack-keyboard/index.html" class="project">
+                <div class="proj-head">
+                    <div class="proj-cover">🐹⌨️</div>
+                    <h3 class="proj-title">鍵盤打地鼠</h3>
+                    <span class="proj-grade">🎒 一年級</span>
+                </div>
+                <p class="proj-goal">鍵盤位置認識：3 種模式自選（數字 / 方向鍵 / 英文字母 A-Z）。60 秒挑戰，最後計算準確率。</p>
+                <div class="proj-tech">
+                    <span class="tech-chip skill">鍵盤入門</span>
+                    <span class="tech-chip ai">Claude Code</span>
+                    <span class="tech-chip">Web Audio</span>
+                </div>
+            </a>
+
+            <a href="./units/unit3-space-typing/index.html" class="project">
+                <div class="proj-head">
+                    <div class="proj-cover">🛸🌍</div>
+                    <h3 class="proj-title">太空打字防衛戰</h3>
+                    <span class="proj-grade">🎒 一年級</span>
+                </div>
+                <p class="proj-goal">英文打字入門：3 關漸進（單字母 → 2 字母 → 3 字母單字）。自動鎖定最低外星人，字母輸入即時視覺回饋。</p>
+                <div class="proj-tech">
+                    <span class="tech-chip skill">英文打字</span>
+                    <span class="tech-chip ai">Claude Code</span>
+                    <span class="tech-chip">RAF 動畫</span>
+                </div>
+            </a>
+
+            <a href="./units/unit5-pixel-art/index.html" class="project">
+                <div class="proj-head">
+                    <div class="proj-cover">🎨🖼️</div>
+                    <h3 class="proj-title">像素藝術小畫家</h3>
+                    <span class="proj-grade">🎒 一年級</span>
+                </div>
+                <p class="proj-goal">數位創作：12×12 像素網格 + 9 色調色盤。可照範本（6 種）依相似度給星，或自由創作。Pointer Events 支援滑鼠 + 觸控。</p>
+                <div class="proj-tech">
+                    <span class="tech-chip skill">數位創作</span>
+                    <span class="tech-chip ai">Claude Code</span>
+                    <span class="tech-chip">Pointer API</span>
+                </div>
+            </a>
+
+            <a href="./units/unit6-turtle-commander/index.html" class="project">
+                <div class="proj-head">
+                    <div class="proj-cover">🐢🥕</div>
+                    <h3 class="proj-title">烏龜小指揮官</h3>
+                    <span class="proj-grade">🎒 一年級</span>
+                </div>
+                <p class="proj-goal">運算思維入門：點箭頭組成指令序列，按 ▶ 執行讓烏龜吃到所有胡蘿蔔。5 關漸進含繞牆與多目標，最少步數可拿 3 星。</p>
+                <div class="proj-tech">
+                    <span class="tech-chip skill">運算思維</span>
+                    <span class="tech-chip ai">Claude Code</span>
+                    <span class="tech-chip">async/await</span>
+                </div>
+            </a>
+
+            <a href="./units/unit1-typing-adventure/index.html" class="project">
+                <div class="proj-head">
+                    <div class="proj-cover">⚔️🐲</div>
+                    <h3 class="proj-title">中文打字冒險王</h3>
+                    <span class="proj-grade">📘 中年級</span>
+                </div>
+                <p class="proj-goal">注音打字練習：RPG 戰鬥與連擊機制讓打字變成闖關冒險。完成後頒發可列印的勇者證書。</p>
+                <div class="proj-tech">
+                    <span class="tech-chip skill">注音打字</span>
+                    <span class="tech-chip ai">Gemini Canvas</span>
+                    <span class="tech-chip ai">Claude Code</span>
+                </div>
+            </a>
+
+        </div>
+    </section>
+
+    <!-- ===== Workflow ===== -->
+    <section class="block">
+        <h2 class="section-title">開發工作流</h2>
+        <p class="section-sub">教師 + AI 協作開發流程，每個遊戲平均 1–2 個工作天從零到上線。</p>
+        <ol class="workflow">
+            <li>
+                <strong>教學需求釐清</strong>
+                <span>要練什麼能力 / 哪個年級 / 課堂時間多久 / 班級設備（桌機 / iPad / Chromebook）</span>
+            </li>
+            <li>
+                <strong>AI 共同設計</strong>
+                <span>用對話發想遊戲玩法、關卡節奏、視覺風格，AI 提供多個選項讓老師取捨</span>
+            </li>
+            <li>
+                <strong>AI 產出原型</strong>
+                <span>Gemini Canvas 出視覺與動畫、Claude Code 寫邏輯與資料層</span>
+            </li>
+            <li>
+                <strong>教師整合迭代</strong>
+                <span>依實際教學經驗微調節奏、容錯、文案、進度條設計，反覆測試</span>
+            </li>
+            <li>
+                <strong>一鍵部署上線</strong>
+                <span>GitHub Pages 自動發布，學生任何裝置開瀏覽器就能玩</span>
+            </li>
+        </ol>
+    </section>
+
+    <!-- ===== Tech Stack ===== -->
+    <section class="block">
+        <h2 class="section-title">技術棧</h2>
+        <p class="section-sub">純前端、純靜態，無後端、無資料庫，符合學校資安與部署簡便性需求。</p>
+        <div class="stack-grid">
+            <div class="stack-item">
+                <p class="stack-label">前端</p>
+                <p class="stack-detail">HTML5 + CSS3 + Vanilla JavaScript（不依賴 React / Vue 等框架，降低部署複雜度）</p>
+            </div>
+            <div class="stack-item">
+                <p class="stack-label">AI 工具</p>
+                <p class="stack-detail">Claude Code（Anthropic）邏輯與整合、Gemini Canvas（Google）視覺原型</p>
+            </div>
+            <div class="stack-item">
+                <p class="stack-label">資料儲存</p>
+                <p class="stack-detail">瀏覽器 LocalStorage（學生本機紀錄，無後端、無個資外洩風險）</p>
+            </div>
+            <div class="stack-item">
+                <p class="stack-label">音效引擎</p>
+                <p class="stack-detail">Web Audio API 純合成（不依賴外部音檔，跨平台一致）</p>
+            </div>
+            <div class="stack-item">
+                <p class="stack-label">響應式設計</p>
+                <p class="stack-detail">CSS Grid + Flexbox + Pointer Events，桌機 / iPad / Chromebook 通用</p>
+            </div>
+            <div class="stack-item">
+                <p class="stack-label">部署</p>
+                <p class="stack-detail">GitHub Pages 一鍵自動部署，免費、HTTPS、CDN 加速</p>
+            </div>
+            <div class="stack-item">
+                <p class="stack-label">設計規範</p>
+                <p class="stack-detail">SDD 軟體設計說明書嚴格管理（命名、目錄結構、資料儲存規約）</p>
+            </div>
+            <div class="stack-item">
+                <p class="stack-label">列印支援</p>
+                <p class="stack-detail">所有過關證書支援列印（@media print 樣式），可直接給家長簽名</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== Contact ===== -->
+    <section class="block">
+        <h2 class="section-title">聯絡 / 合作</h2>
+        <p class="section-sub">如果你也對 EdTech、AI 協作開發、教師作品集有興趣，歡迎交流。</p>
+        <div class="contact">
+            <p>對遊戲開發、AI 教材設計、運算思維教學有任何想法或合作機會，歡迎聯絡。</p>
+            <div class="links">
+                <a href="mailto:your-email@example.com" class="link">📧 Email</a>
+                <a href="https://github.com/" target="_blank" rel="noopener" class="link">🐙 GitHub</a>
+                <a href="./SDD.md" class="link">📄 技術文件 (SDD)</a>
+                <a href="./README.md" class="link">📘 專案 README</a>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<footer class="copyright">
+    © 陳冠廷 Cake Chen · 國小資訊教師作品集 ·
+    用 <span style="color:#dc2626;">♥</span> 與 Claude / Gemini 共同打造
+</footer>
+
+</body>
+</html>

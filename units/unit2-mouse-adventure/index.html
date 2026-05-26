@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小兔勇者大冒險 - 滑鼠特訓</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; }
+    body {
+        font-family: 'Noto Sans TC', sans-serif;
+        user-select: none;
+        -webkit-user-select: none;
+        background: linear-gradient(180deg, #bbf7d0 0%, #86efac 100%);
+        color: #064e3b;
+    }
+
+    #app {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* ===== Screen Layout ===== */
+    .screen {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+    }
+    .hidden { display: none !important; }
+
+    /* ===== Title ===== */
+    .title-emoji {
+        font-size: clamp(80px, 18vw, 180px);
+        animation: bounce 1.5s ease-in-out infinite;
+    }
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0) rotate(-3deg); }
+        50% { transform: translateY(-20px) rotate(3deg); }
+    }
+    .title-text {
+        font-size: clamp(36px, 6vw, 64px);
+        font-weight: 900;
+        color: #064e3b;
+        text-shadow: 4px 4px 0 #fff, 6px 6px 0 #14532d33;
+        margin: 16px 0 8px;
+        text-align: center;
+    }
+    .subtitle {
+        font-size: clamp(18px, 2.5vw, 24px);
+        color: #166534;
+        font-weight: 700;
+        margin-bottom: 32px;
+        text-align: center;
+    }
+
+    /* ===== Big Button ===== */
+    .big-btn {
+        font-family: 'Noto Sans TC', sans-serif;
+        font-size: clamp(24px, 3.5vw, 36px);
+        font-weight: 900;
+        padding: 20px 56px;
+        background: linear-gradient(180deg, #fbbf24, #f59e0b);
+        color: white;
+        border: none;
+        border-radius: 999px;
+        box-shadow: 0 8px 0 #b45309, 0 12px 24px rgba(0,0,0,0.2);
+        cursor: pointer;
+        transition: transform 0.1s, box-shadow 0.1s;
+        text-shadow: 2px 2px 0 #92400e;
+    }
+    .big-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 0 #b45309, 0 14px 28px rgba(0,0,0,0.25); }
+    .big-btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #b45309, 0 6px 12px rgba(0,0,0,0.15); }
+    .big-btn.secondary {
+        background: linear-gradient(180deg, #60a5fa, #3b82f6);
+        box-shadow: 0 8px 0 #1d4ed8, 0 12px 24px rgba(0,0,0,0.2);
+        text-shadow: 2px 2px 0 #1e40af;
+    }
+    .big-btn.secondary:active { box-shadow: 0 4px 0 #1d4ed8, 0 6px 12px rgba(0,0,0,0.15); }
+
+    /* ===== HUD ===== */
+    #hud {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: clamp(20px, 2.5vw, 28px);
+        font-weight: 900;
+        pointer-events: none;
+        z-index: 50;
+    }
+    .hud-box {
+        background: rgba(255,255,255,0.85);
+        padding: 8px 20px;
+        border-radius: 999px;
+        box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+        backdrop-filter: blur(4px);
+    }
+
+    /* ===== Game Area ===== */
+    #game-area {
+        position: absolute;
+        inset: 0;
+        cursor: none;
+        overflow: hidden;
+    }
+
+    /* Stage backgrounds */
+    .stage-1 { background: linear-gradient(180deg, #bbf7d0 0%, #4ade80 100%); }
+    .stage-2 { background: linear-gradient(180deg, #6b7280 0%, #1f2937 100%); }
+    .stage-3 { background: linear-gradient(180deg, #581c87 0%, #1e1b4b 100%); }
+
+    /* ===== Player Rabbit ===== */
+    .player {
+        position: absolute;
+        font-size: clamp(48px, 7vw, 80px);
+        pointer-events: none;
+        z-index: 30;
+        transform: translate(-50%, -50%);
+        transition: transform 0.05s linear;
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    }
+    .player.attacking {
+        animation: attack-pulse 0.25s ease-out;
+    }
+    @keyframes attack-pulse {
+        0% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+        50% { transform: translate(-50%, -50%) scale(1.3) rotate(-12deg); }
+        100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+    }
+
+    /* ===== Enemies ===== */
+    .enemy {
+        position: absolute;
+        font-size: clamp(60px, 9vw, 96px);
+        cursor: pointer;
+        transform: translate(-50%, -50%);
+        animation: enemy-appear 0.3s ease-out, enemy-wiggle 1.2s ease-in-out infinite 0.3s;
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+        z-index: 20;
+    }
+    .enemy:hover { transform: translate(-50%, -50%) scale(1.1); }
+    @keyframes enemy-appear {
+        from { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+        to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+    @keyframes enemy-wiggle {
+        0%, 100% { transform: translate(-50%, -50%) rotate(-5deg); }
+        50% { transform: translate(-50%, -50%) rotate(5deg); }
+    }
+    .enemy.dying {
+        animation: die 0.4s ease-out forwards;
+        pointer-events: none;
+    }
+    @keyframes die {
+        0% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+        100% { transform: translate(-50%, -150%) scale(0.3) rotate(720deg); opacity: 0; }
+    }
+
+    /* Hitbox padding to make Grade-1 clicks easier */
+    .enemy::before {
+        content: '';
+        position: absolute;
+        inset: -20px;
+    }
+
+    /* ===== Carrot Pickup (Stage 2) ===== */
+    .carrot {
+        position: absolute;
+        font-size: clamp(40px, 6vw, 56px);
+        pointer-events: none;
+        transform: translate(-50%, -50%);
+        animation: carrot-glow 1s ease-in-out infinite;
+        z-index: 15;
+        filter: drop-shadow(0 0 8px #fde047);
+    }
+    @keyframes carrot-glow {
+        0%, 100% { transform: translate(-50%, -50%) scale(1); }
+        50% { transform: translate(-50%, -50%) scale(1.15); }
+    }
+    .carrot.collected {
+        animation: carrot-collect 0.4s ease-out forwards;
+    }
+    @keyframes carrot-collect {
+        to { transform: translate(-50%, -200%) scale(0.3); opacity: 0; }
+    }
+
+    /* ===== Magic Carrot (Drag item, Stage 3) ===== */
+    .magic-carrot {
+        position: absolute;
+        font-size: clamp(48px, 6vw, 64px);
+        cursor: grab;
+        transform: translate(-50%, -50%);
+        z-index: 25;
+        filter: drop-shadow(0 0 12px #f472b6);
+        animation: magic-float 1.5s ease-in-out infinite;
+    }
+    .magic-carrot:active { cursor: grabbing; }
+    .magic-carrot.dragging {
+        animation: none;
+        pointer-events: none;
+        transition: none;
+    }
+    @keyframes magic-float {
+        0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+        50% { transform: translate(-50%, -50%) translateY(-10px); }
+    }
+
+    /* ===== Boss (Stage 3) ===== */
+    .boss {
+        position: absolute;
+        font-size: clamp(120px, 18vw, 200px);
+        cursor: pointer;
+        transform: translate(-50%, -50%);
+        z-index: 20;
+        filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5));
+        animation: boss-idle 2s ease-in-out infinite;
+    }
+    @keyframes boss-idle {
+        0%, 100% { transform: translate(-50%, -50%) scale(1); }
+        50% { transform: translate(-50%, -50%) scale(1.05); }
+    }
+    .boss.shielded {
+        filter: drop-shadow(0 0 24px #38bdf8) drop-shadow(0 8px 16px rgba(0,0,0,0.5));
+    }
+    .boss.hit {
+        animation: boss-hit 0.3s ease-out;
+    }
+    @keyframes boss-hit {
+        0% { transform: translate(-50%, -50%) scale(1) translateX(0); }
+        25% { transform: translate(-50%, -50%) scale(1) translateX(-20px); }
+        75% { transform: translate(-50%, -50%) scale(1) translateX(20px); }
+        100% { transform: translate(-50%, -50%) scale(1) translateX(0); }
+    }
+    .boss-shield {
+        position: absolute;
+        font-size: clamp(140px, 20vw, 240px);
+        transform: translate(-50%, -50%);
+        z-index: 21;
+        pointer-events: none;
+        opacity: 0.85;
+        animation: shield-spin 4s linear infinite;
+    }
+    @keyframes shield-spin {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    .boss-hp-bar {
+        position: absolute;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(80%, 600px);
+        height: 32px;
+        background: rgba(0,0,0,0.5);
+        border-radius: 999px;
+        overflow: hidden;
+        border: 4px solid #f59e0b;
+        z-index: 40;
+    }
+    .boss-hp-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #ef4444, #f97316);
+        transition: width 0.3s ease-out;
+    }
+
+    /* ===== Particle Effects ===== */
+    .particle {
+        position: absolute;
+        font-size: 24px;
+        pointer-events: none;
+        animation: particle-pop 0.6s ease-out forwards;
+        z-index: 35;
+    }
+    @keyframes particle-pop {
+        0% { transform: translate(-50%, -50%) scale(1) translate(0, 0); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(0.3) translate(var(--dx), var(--dy)); opacity: 0; }
+    }
+
+    .damage-text {
+        position: absolute;
+        font-size: clamp(32px, 4vw, 48px);
+        font-weight: 900;
+        color: #fbbf24;
+        text-shadow: 3px 3px 0 #b45309, 5px 5px 0 rgba(0,0,0,0.3);
+        pointer-events: none;
+        animation: damage-rise 0.8s ease-out forwards;
+        z-index: 36;
+        transform: translate(-50%, -50%);
+    }
+    @keyframes damage-rise {
+        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+        20% { transform: translate(-50%, -80%) scale(1.3); opacity: 1; }
+        100% { transform: translate(-50%, -200%) scale(1); opacity: 0; }
+    }
+
+    /* ===== Tutorial Hint Overlay ===== */
+    .hint-banner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(255,255,255,0.95);
+        padding: 40px 60px;
+        border-radius: 32px;
+        box-shadow: 0 12px 0 rgba(0,0,0,0.2);
+        text-align: center;
+        z-index: 60;
+        animation: hint-pop 0.4s ease-out;
+    }
+    @keyframes hint-pop {
+        from { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
+        to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+    .hint-emoji {
+        font-size: clamp(60px, 10vw, 100px);
+        margin-bottom: 12px;
+    }
+    .hint-text {
+        font-size: clamp(28px, 4vw, 40px);
+        font-weight: 900;
+        color: #064e3b;
+    }
+    .hint-sub {
+        font-size: clamp(16px, 2vw, 22px);
+        color: #166534;
+        margin-top: 8px;
+    }
+
+    /* ===== Screen Shake ===== */
+    .screen-shake {
+        animation: screen-shake 0.3s ease-out;
+    }
+    @keyframes screen-shake {
+        0%, 100% { transform: translate(0, 0); }
+        20% { transform: translate(-8px, 4px); }
+        40% { transform: translate(8px, -4px); }
+        60% { transform: translate(-6px, -4px); }
+        80% { transform: translate(6px, 4px); }
+    }
+
+    /* ===== Stage Title ===== */
+    .stage-title {
+        position: absolute;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: clamp(48px, 8vw, 96px);
+        font-weight: 900;
+        color: #fff;
+        text-shadow: 6px 6px 0 rgba(0,0,0,0.4);
+        z-index: 70;
+        pointer-events: none;
+        animation: stage-title-anim 2.5s ease-out forwards;
+    }
+    @keyframes stage-title-anim {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+        20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(1.2); }
+    }
+
+    /* ===== Certificate ===== */
+    .certificate {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 8px solid #f59e0b;
+        border-radius: 24px;
+        padding: 32px 48px;
+        max-width: 600px;
+        text-align: center;
+        box-shadow: 0 16px 32px rgba(0,0,0,0.2);
+        position: relative;
+    }
+    .cert-corner {
+        position: absolute;
+        font-size: 48px;
+    }
+    .cert-corner.tl { top: 8px; left: 12px; }
+    .cert-corner.tr { top: 8px; right: 12px; }
+    .cert-corner.bl { bottom: 8px; left: 12px; }
+    .cert-corner.br { bottom: 8px; right: 12px; }
+    .cert-title { font-size: clamp(28px, 4vw, 40px); font-weight: 900; color: #92400e; margin-bottom: 8px; }
+    .cert-body { font-size: clamp(18px, 2vw, 22px); color: #78350f; line-height: 1.8; margin: 16px 0; }
+    .cert-stat { font-size: clamp(24px, 3vw, 32px); font-weight: 900; color: #b91c1c; margin: 8px 0; }
+    .cert-rank { font-size: clamp(20px, 2.5vw, 28px); font-weight: 900; color: #7c2d12; margin-top: 16px; }
+
+    /* Print: hide non-cert elements */
+    @media print {
+        body * { visibility: hidden; }
+        #end-screen .certificate, #end-screen .certificate * { visibility: visible; }
+        #end-screen .certificate { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+    }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+    <!-- ===== Start Screen ===== -->
+    <div id="start-screen" class="screen">
+        <div class="title-emoji">🐰⚔️</div>
+        <h1 class="title-text">小兔勇者大冒險</h1>
+        <p class="subtitle">用滑鼠陪小兔勇者打敗森林壞蛋！</p>
+        <button class="big-btn" onclick="startGame()">▶ 開始冒險</button>
+        <div style="margin-top: 32px; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+            <div style="background: rgba(255,255,255,0.7); padding: 12px 20px; border-radius: 999px; font-weight: 700; font-size: 18px;">🖱️ 點擊</div>
+            <div style="background: rgba(255,255,255,0.7); padding: 12px 20px; border-radius: 999px; font-weight: 700; font-size: 18px;">↔️ 移動</div>
+            <div style="background: rgba(255,255,255,0.7); padding: 12px 20px; border-radius: 999px; font-weight: 700; font-size: 18px;">🤏 拖曳</div>
+            <div style="background: rgba(255,255,255,0.7); padding: 12px 20px; border-radius: 999px; font-weight: 700; font-size: 18px;">⚡ 雙擊</div>
+        </div>
+    </div>
+
+    <!-- ===== Game Screen ===== -->
+    <div id="game-screen" class="hidden">
+        <div id="hud">
+            <div class="hud-box" id="hud-hearts">❤️❤️❤️</div>
+            <div class="hud-box" id="hud-progress">第 1 關</div>
+            <div class="hud-box" id="hud-score">⭐ 0</div>
+        </div>
+        <div id="game-area"></div>
+    </div>
+
+    <!-- ===== Stage Clear Screen ===== -->
+    <div id="stage-clear-screen" class="screen hidden">
+        <div style="font-size: clamp(80px, 14vw, 160px); animation: bounce 1s ease-in-out infinite;">🎉</div>
+        <h2 class="title-text" id="clear-title">過關！</h2>
+        <p class="subtitle" id="clear-subtitle">前進下一關！</p>
+        <button class="big-btn" onclick="nextStage()">▶ 繼續冒險</button>
+    </div>
+
+    <!-- ===== End Screen ===== -->
+    <div id="end-screen" class="screen hidden" style="background: linear-gradient(180deg, #fef3c7, #fbbf24); overflow-y: auto;">
+        <div class="certificate">
+            <span class="cert-corner tl">⭐</span>
+            <span class="cert-corner tr">⭐</span>
+            <span class="cert-corner bl">⭐</span>
+            <span class="cert-corner br">⭐</span>
+            <div style="font-size: 64px;" id="cert-trophy">🏆</div>
+            <div class="cert-title" id="cert-title">滑鼠勇士證書</div>
+            <div class="cert-body">
+                恭喜小勇者完成<br>
+                <strong>小兔勇者大冒險</strong>
+            </div>
+            <div class="cert-stat">⭐ <span id="cert-score">0</span> 分</div>
+            <div class="cert-rank" id="cert-rank">🥈 稱號：滑鼠小騎士</div>
+            <div style="margin-top: 16px; font-size: 14px; color: #78350f;" id="cert-date"></div>
+        </div>
+        <div style="margin-top: 24px; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
+            <button class="big-btn" onclick="location.reload()">🔄 再玩一次</button>
+            <button class="big-btn secondary" onclick="window.print()">🖨️ 列印證書</button>
+        </div>
+    </div>
+</div>
+
+<script>
+'use strict';
+
+// ============================================================
+// Audio Engine (Web Audio API, no external assets)
+// ============================================================
+let audioCtx = null;
+function getAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+}
+function beep(freq, duration, type = 'square', volume = 0.15) {
+    try {
+        const ctx = getAudio();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(volume, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+    } catch (e) { /* audio context not available */ }
+}
+const SFX = {
+    click: () => beep(800, 0.08, 'square'),
+    hit: () => { beep(500, 0.06); setTimeout(() => beep(750, 0.08), 60); },
+    pickup: () => { beep(900, 0.08, 'sine'); setTimeout(() => beep(1200, 0.1, 'sine'), 80); },
+    damage: () => beep(200, 0.3, 'sawtooth', 0.2),
+    win: () => { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, 0.15, 'sine'), i * 100)); },
+    lose: () => { [400, 300, 200].forEach((f, i) => setTimeout(() => beep(f, 0.2, 'sawtooth'), i * 150)); },
+    boss: () => beep(80, 0.4, 'sawtooth', 0.3),
+};
+
+// ============================================================
+// Game State
+// ============================================================
+const state = {
+    stage: 1,
+    hp: 3,
+    score: 0,
+    killsThisStage: 0,
+    carrotsThisStage: 0,
+    bossHp: 100,
+    bossShielded: false,
+    playing: false,
+    mouseX: window.innerWidth / 2,
+    mouseY: window.innerHeight / 2,
+    playerX: window.innerWidth / 2,
+    playerY: window.innerHeight / 2,
+    enemies: [],
+    carrots: [],
+    spawnTimer: null,
+    carrotSpawnTimer: null,
+};
+
+const STAGE_GOALS = {
+    1: { kills: 8, label: '第 1 關 · 森林' },
+    2: { kills: 6, carrots: 3, label: '第 2 關 · 山洞' },
+    3: { label: '第 3 關 · 魔王城' },
+};
+
+const ENEMIES_BY_STAGE = {
+    1: ['🍄', '🍄', '🦔'],
+    2: ['🐝', '🐝', '🦇'],
+    3: ['👹', '🧌', '🦂'],
+};
+
+// ============================================================
+// Element Helpers
+// ============================================================
+const gameArea = () => document.getElementById('game-area');
+const $ = (id) => document.getElementById(id);
+
+function spawn(emoji, className, x, y) {
+    const el = document.createElement('div');
+    el.className = className;
+    el.textContent = emoji;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    gameArea().appendChild(el);
+    return el;
+}
+
+function particles(x, y, emoji, count = 6) {
+    for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.textContent = emoji;
+        p.style.left = x + 'px';
+        p.style.top = y + 'px';
+        const angle = (Math.PI * 2 * i) / count;
+        const dist = 60 + Math.random() * 40;
+        p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+        p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+        gameArea().appendChild(p);
+        setTimeout(() => p.remove(), 600);
+    }
+}
+
+function damageText(x, y, text) {
+    const d = document.createElement('div');
+    d.className = 'damage-text';
+    d.textContent = text;
+    d.style.left = x + 'px';
+    d.style.top = y + 'px';
+    gameArea().appendChild(d);
+    setTimeout(() => d.remove(), 800);
+}
+
+function showHint(emoji, text, sub, duration = 2200) {
+    const banner = document.createElement('div');
+    banner.className = 'hint-banner';
+    banner.innerHTML = `<div class="hint-emoji">${emoji}</div><div class="hint-text">${text}</div><div class="hint-sub">${sub}</div>`;
+    gameArea().appendChild(banner);
+    setTimeout(() => {
+        banner.style.transition = 'opacity 0.3s';
+        banner.style.opacity = '0';
+        setTimeout(() => banner.remove(), 300);
+    }, duration);
+}
+
+function showStageTitle(text) {
+    const title = document.createElement('div');
+    title.className = 'stage-title';
+    title.textContent = text;
+    gameArea().appendChild(title);
+    setTimeout(() => title.remove(), 2500);
+}
+
+function updateHud() {
+    $('hud-hearts').textContent = '❤️'.repeat(state.hp) + '🖤'.repeat(3 - state.hp);
+    $('hud-score').textContent = '⭐ ' + state.score;
+    if (state.stage === 1) {
+        $('hud-progress').textContent = `第 1 關 (${state.killsThisStage}/${STAGE_GOALS[1].kills})`;
+    } else if (state.stage === 2) {
+        $('hud-progress').textContent = `第 2 關 怪:${state.killsThisStage}/${STAGE_GOALS[2].kills} 🥕:${state.carrotsThisStage}/${STAGE_GOALS[2].carrots}`;
+    } else {
+        $('hud-progress').textContent = '第 3 關 · 魔王城';
+    }
+}
+
+// ============================================================
+// Player (rabbit) follow mouse
+// ============================================================
+function initPlayer() {
+    const p = document.createElement('div');
+    p.className = 'player';
+    p.textContent = '🐰';
+    p.id = 'player';
+    gameArea().appendChild(p);
+}
+
+function updatePlayer() {
+    state.playerX += (state.mouseX - state.playerX) * 0.25;
+    state.playerY += (state.mouseY - state.playerY) * 0.25;
+    const p = $('player');
+    if (p) {
+        p.style.left = state.playerX + 'px';
+        p.style.top = state.playerY + 'px';
+    }
+    if (state.playing) requestAnimationFrame(updatePlayer);
+}
+
+function flashPlayerAttack() {
+    const p = $('player');
+    if (!p) return;
+    p.classList.remove('attacking');
+    void p.offsetWidth;
+    p.classList.add('attacking');
+}
+
+// ============================================================
+// Click Handler (global, for enemies)
+// ============================================================
+function onGameClick(e) {
+    if (!state.playing) return;
+    flashPlayerAttack();
+    SFX.click();
+    const target = e.target;
+    if (target.classList.contains('enemy')) {
+        defeatEnemy(target);
+    } else if (target.classList.contains('boss')) {
+        hitBoss(target, e.clientX, e.clientY);
+    }
+}
+
+function onGameDblClick(e) {
+    if (!state.playing) return;
+    const target = e.target;
+    if (target.classList.contains('boss')) {
+        if (state.bossShielded) breakShield(target, e.clientX, e.clientY);
+    }
+}
+
+// ============================================================
+// Stage 1 & 2: Enemy Spawning
+// ============================================================
+function spawnEnemy() {
+    if (!state.playing) return;
+    const pool = ENEMIES_BY_STAGE[state.stage];
+    const emoji = pool[Math.floor(Math.random() * pool.length)];
+    const margin = 100;
+    const x = margin + Math.random() * (window.innerWidth - margin * 2);
+    const y = 120 + Math.random() * (window.innerHeight - 240);
+    const enemy = spawn(emoji, 'enemy', x, y);
+    enemy.dataset.x = x;
+    enemy.dataset.y = y;
+    state.enemies.push(enemy);
+
+    const lifetime = state.stage === 1 ? 3500 : 4000;
+    setTimeout(() => {
+        if (enemy.parentNode && !enemy.classList.contains('dying')) {
+            enemy.style.transition = 'opacity 0.3s';
+            enemy.style.opacity = '0';
+            setTimeout(() => enemy.remove(), 300);
+            state.enemies = state.enemies.filter(en => en !== enemy);
+            // 一年級友善：第 2 關漏打不扣血，只是不得分
+        }
+    }, lifetime);
+}
+
+function defeatEnemy(enemy) {
+    if (enemy.classList.contains('dying')) return;
+    const x = parseFloat(enemy.dataset.x);
+    const y = parseFloat(enemy.dataset.y);
+    enemy.classList.add('dying');
+    state.enemies = state.enemies.filter(en => en !== enemy);
+    SFX.hit();
+    particles(x, y, '✨', 8);
+    damageText(x, y, '+10');
+    state.score += 10;
+    state.killsThisStage++;
+    updateHud();
+    setTimeout(() => enemy.remove(), 400);
+    checkStageClear();
+}
+
+// ============================================================
+// Stage 2: Carrot collection (mouse-move tracking)
+// ============================================================
+function spawnCarrot() {
+    if (!state.playing || state.stage !== 2) return;
+    const margin = 100;
+    const x = margin + Math.random() * (window.innerWidth - margin * 2);
+    const y = 150 + Math.random() * (window.innerHeight - 280);
+    const c = spawn('🥕', 'carrot', x, y);
+    c.dataset.x = x;
+    c.dataset.y = y;
+    state.carrots.push(c);
+    setTimeout(() => {
+        if (c.parentNode && !c.classList.contains('collected')) {
+            c.style.transition = 'opacity 0.3s';
+            c.style.opacity = '0';
+            setTimeout(() => c.remove(), 300);
+            state.carrots = state.carrots.filter(cc => cc !== c);
+        }
+    }, 8000);
+}
+
+function checkCarrotPickup() {
+    if (state.stage !== 2 || !state.playing) return;
+    state.carrots.forEach(c => {
+        if (c.classList.contains('collected')) return;
+        const cx = parseFloat(c.dataset.x);
+        const cy = parseFloat(c.dataset.y);
+        const dist = Math.hypot(state.playerX - cx, state.playerY - cy);
+        if (dist < 100) {
+            c.classList.add('collected');
+            state.carrots = state.carrots.filter(cc => cc !== c);
+            SFX.pickup();
+            particles(cx, cy, '🥕', 5);
+            damageText(cx, cy, '+5');
+            state.score += 5;
+            state.carrotsThisStage++;
+            updateHud();
+            setTimeout(() => c.remove(), 400);
+            checkStageClear();
+        }
+    });
+}
+
+// ============================================================
+// Stage 3: Boss Fight
+// ============================================================
+function startBossFight() {
+    gameArea().innerHTML = '';
+    initPlayer();
+    state.bossHp = 100;
+    state.bossShielded = false;
+
+    const bossX = window.innerWidth / 2;
+    const bossY = window.innerHeight / 2 - 40;
+    const boss = spawn('👺', 'boss', bossX, bossY);
+    boss.id = 'boss';
+    boss.dataset.x = bossX;
+    boss.dataset.y = bossY;
+
+    const hpBar = document.createElement('div');
+    hpBar.className = 'boss-hp-bar';
+    hpBar.innerHTML = '<div class="boss-hp-fill" id="boss-hp-fill" style="width:100%"></div>';
+    gameArea().appendChild(hpBar);
+
+    SFX.boss();
+    showHint('👺', '魔王出現了！', '點擊魔王來攻擊', 2500);
+    spawnMagicCarrots();
+}
+
+function hitBoss(boss, x, y) {
+    if (state.bossShielded) {
+        damageText(x, y, '🛡️ 雙擊！');
+        SFX.click();
+        return;
+    }
+    if (state.bossHp <= 0) return;
+    boss.classList.remove('hit');
+    void boss.offsetWidth;
+    boss.classList.add('hit');
+    SFX.hit();
+    state.bossHp = Math.max(0, state.bossHp - 3);
+    state.score += 5;
+    damageText(x, y, '-3');
+    particles(x, y, '💥', 4);
+    updateBossHp();
+    updateHud();
+
+    // Trigger shield at 60%
+    if (state.bossHp <= 60 && !state.bossShielded && !boss.dataset.shieldUsed) {
+        activateShield(boss);
+    }
+    if (state.bossHp <= 0) victoryBoss();
+}
+
+function activateShield(boss) {
+    state.bossShielded = true;
+    boss.dataset.shieldUsed = '1';
+    boss.classList.add('shielded');
+    const shield = document.createElement('div');
+    shield.className = 'boss-shield';
+    shield.id = 'boss-shield';
+    shield.textContent = '🛡️';
+    shield.style.left = boss.dataset.x + 'px';
+    shield.style.top = boss.dataset.y + 'px';
+    gameArea().appendChild(shield);
+    showHint('🛡️⚡', '魔王開盾了！', '快速點兩下破盾', 2200);
+    SFX.boss();
+}
+
+function breakShield(boss, x, y) {
+    state.bossShielded = false;
+    boss.classList.remove('shielded');
+    const s = $('boss-shield');
+    if (s) {
+        particles(parseFloat(boss.dataset.x), parseFloat(boss.dataset.y), '💥', 12);
+        s.remove();
+    }
+    SFX.hit();
+    SFX.hit();
+    damageText(x, y, '破盾！');
+    state.score += 20;
+    updateHud();
+    setTimeout(() => {
+        if (state.bossHp > 0) showHint('🥕✨', '拖魔法蘿蔔砸魔王！', '按住蘿蔔拖到魔王身上', 2500);
+    }, 600);
+}
+
+function updateBossHp() {
+    const fill = $('boss-hp-fill');
+    if (fill) fill.style.width = state.bossHp + '%';
+}
+
+function spawnMagicCarrots() {
+    const interval = setInterval(() => {
+        if (!state.playing || state.bossHp <= 0) {
+            clearInterval(interval);
+            return;
+        }
+        if (document.querySelectorAll('.magic-carrot').length >= 2) return;
+        const x = 60 + Math.random() * 80;
+        const y = 150 + Math.random() * (window.innerHeight - 300);
+        const c = spawn('🥕', 'magic-carrot', x, y);
+        c.dataset.x = x;
+        c.dataset.y = y;
+        attachDrag(c);
+    }, 3000);
+    // Spawn initial pair
+    setTimeout(() => {
+        for (let i = 0; i < 2; i++) {
+            const x = 60 + i * 80;
+            const y = 200 + i * 120;
+            const c = spawn('🥕', 'magic-carrot', x, y);
+            c.dataset.x = x;
+            c.dataset.y = y;
+            attachDrag(c);
+        }
+    }, 100);
+}
+
+function attachDrag(carrot) {
+    let dragging = false;
+    let startX, startY;
+    carrot.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        dragging = true;
+        carrot.classList.add('dragging');
+        startX = e.clientX;
+        startY = e.clientY;
+    });
+    carrot.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        dragging = true;
+        carrot.classList.add('dragging');
+        const t = e.touches[0];
+        startX = t.clientX;
+        startY = t.clientY;
+    }, { passive: false });
+
+    function move(clientX, clientY) {
+        if (!dragging) return;
+        carrot.style.left = clientX + 'px';
+        carrot.style.top = clientY + 'px';
+        carrot.dataset.x = clientX;
+        carrot.dataset.y = clientY;
+    }
+    function drop(clientX, clientY) {
+        if (!dragging) return;
+        dragging = false;
+        carrot.classList.remove('dragging');
+        const boss = $('boss');
+        if (boss && !state.bossShielded && state.bossHp > 0) {
+            const bx = parseFloat(boss.dataset.x);
+            const by = parseFloat(boss.dataset.y);
+            const dist = Math.hypot(clientX - bx, clientY - by);
+            if (dist < 140) {
+                carrot.remove();
+                SFX.hit();
+                SFX.pickup();
+                state.bossHp = Math.max(0, state.bossHp - 15);
+                state.score += 25;
+                damageText(bx, by - 40, '-15 魔法！');
+                particles(bx, by, '✨', 10);
+                particles(bx, by, '🌟', 6);
+                boss.classList.remove('hit');
+                void boss.offsetWidth;
+                boss.classList.add('hit');
+                updateBossHp();
+                updateHud();
+                if (state.bossHp <= 0) victoryBoss();
+                return;
+            }
+        }
+        // snap back
+        setTimeout(() => {
+            if (carrot.parentNode) {
+                carrot.style.transition = 'left 0.2s, top 0.2s';
+                carrot.style.left = '80px';
+                carrot.style.top = (150 + Math.random() * 300) + 'px';
+                carrot.dataset.x = 80;
+                carrot.dataset.y = parseFloat(carrot.style.top);
+                setTimeout(() => carrot.style.transition = '', 250);
+            }
+        }, 50);
+    }
+
+    document.addEventListener('mousemove', (e) => move(e.clientX, e.clientY));
+    document.addEventListener('mouseup', (e) => drop(e.clientX, e.clientY));
+    document.addEventListener('touchmove', (e) => { if (dragging) { e.preventDefault(); const t = e.touches[0]; move(t.clientX, t.clientY); }}, { passive: false });
+    document.addEventListener('touchend', (e) => { if (dragging) { const t = e.changedTouches[0]; drop(t.clientX, t.clientY); }});
+}
+
+function victoryBoss() {
+    state.playing = false;
+    SFX.win();
+    setTimeout(() => endGame(true), 1200);
+    for (let i = 0; i < 20; i++) {
+        setTimeout(() => particles(window.innerWidth / 2, window.innerHeight / 2, ['🎉','✨','🌟','⭐'][i%4], 8), i * 80);
+    }
+}
+
+// ============================================================
+// HP / Damage
+// ============================================================
+function takeDamage() {
+    state.hp--;
+    SFX.damage();
+    $('app').classList.remove('screen-shake');
+    void $('app').offsetWidth;
+    $('app').classList.add('screen-shake');
+    updateHud();
+    if (state.hp <= 0) {
+        state.playing = false;
+        SFX.lose();
+        setTimeout(() => endGame(false), 800);
+    }
+}
+
+// ============================================================
+// Stage Flow
+// ============================================================
+function checkStageClear() {
+    if (state.stage === 1 && state.killsThisStage >= STAGE_GOALS[1].kills) {
+        clearStage();
+    } else if (state.stage === 2 && state.killsThisStage >= STAGE_GOALS[2].kills && state.carrotsThisStage >= STAGE_GOALS[2].carrots) {
+        clearStage();
+    }
+}
+
+function clearStage() {
+    state.playing = false;
+    clearInterval(state.spawnTimer);
+    clearInterval(state.carrotSpawnTimer);
+    SFX.win();
+    setTimeout(() => {
+        $('game-screen').classList.add('hidden');
+        $('stage-clear-screen').classList.remove('hidden');
+        const next = state.stage + 1;
+        if (next <= 3) {
+            $('clear-title').textContent = `第 ${state.stage} 關 過關！`;
+            $('clear-subtitle').textContent = next === 3 ? '魔王城在等你！' : '前進下一關！';
+        }
+    }, 600);
+}
+
+function nextStage() {
+    state.stage++;
+    state.killsThisStage = 0;
+    state.carrotsThisStage = 0;
+    $('stage-clear-screen').classList.add('hidden');
+    $('game-screen').classList.remove('hidden');
+    enterStage();
+}
+
+function enterStage() {
+    gameArea().className = `stage-${state.stage}`;
+    gameArea().innerHTML = '';
+    initPlayer();
+    updateHud();
+    showStageTitle(STAGE_GOALS[state.stage].label);
+
+    setTimeout(() => {
+        state.playing = true;
+        if (state.stage === 1) {
+            showHint('🖱️', '點一下打怪！', '怪物出現點下去就贏', 2200);
+            state.spawnTimer = setInterval(spawnEnemy, 1600);
+        } else if (state.stage === 2) {
+            showHint('🐰↔️🥕', '移動滑鼠吃蘿蔔！', '小兔會跟著滑鼠走過去拿蘿蔔', 3500);
+            state.spawnTimer = setInterval(spawnEnemy, 1900);
+            state.carrotSpawnTimer = setInterval(spawnCarrot, 2400);
+        } else if (state.stage === 3) {
+            startBossFight();
+        }
+        requestAnimationFrame(updatePlayer);
+    }, 2500);
+}
+
+// ============================================================
+// Start / End
+// ============================================================
+function startGame() {
+    state.stage = 1;
+    state.hp = 3;
+    state.score = 0;
+    state.killsThisStage = 0;
+    state.carrotsThisStage = 0;
+    $('start-screen').classList.add('hidden');
+    $('game-screen').classList.remove('hidden');
+    enterStage();
+}
+
+function endGame(isVictory) {
+    state.playing = false;
+    clearInterval(state.spawnTimer);
+    clearInterval(state.carrotSpawnTimer);
+    $('game-screen').classList.add('hidden');
+    $('stage-clear-screen').classList.add('hidden');
+    $('end-screen').classList.remove('hidden');
+
+    // SDD §5: persist best score per unit
+    try {
+        const prev = parseInt(localStorage.getItem('edtech-unit2-score') || '0', 10);
+        if (state.score > prev) localStorage.setItem('edtech-unit2-score', state.score);
+    } catch (e) { /* localStorage unavailable */ }
+
+    $('cert-score').textContent = state.score;
+    const today = new Date();
+    $('cert-date').textContent = `${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日 頒發`;
+
+    if (isVictory) {
+        $('cert-trophy').textContent = '👑';
+        $('cert-title').textContent = '滑鼠勇士證書';
+        if (state.score >= 250) $('cert-rank').textContent = '🏆 稱號：黃金滑鼠大師';
+        else if (state.score >= 150) $('cert-rank').textContent = '🥇 稱號：神速滑鼠勇者';
+        else $('cert-rank').textContent = '🥈 稱號：滑鼠小騎士';
+    } else {
+        $('cert-trophy').textContent = '💪';
+        $('cert-title').textContent = '勇敢挑戰證明';
+        $('cert-rank').textContent = '🥉 稱號：永不放棄小勇者';
+    }
+}
+
+// ============================================================
+// Global Event Listeners
+// ============================================================
+document.addEventListener('mousemove', (e) => {
+    state.mouseX = e.clientX;
+    state.mouseY = e.clientY;
+    checkCarrotPickup();
+});
+document.addEventListener('touchmove', (e) => {
+    if (e.touches[0]) {
+        state.mouseX = e.touches[0].clientX;
+        state.mouseY = e.touches[0].clientY;
+        checkCarrotPickup();
+    }
+}, { passive: true });
+
+document.addEventListener('click', onGameClick);
+document.addEventListener('dblclick', onGameDblClick);
+
+// Unlock audio on first interaction (mobile)
+document.addEventListener('click', () => getAudio(), { once: true });
+</script>
+</body>
+</html>

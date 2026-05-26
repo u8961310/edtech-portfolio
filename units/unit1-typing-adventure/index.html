@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中文打字冒險王 - 勇者傳奇</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Bpmf (注音) support -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0fdf4;
+            transition: background-color 0.5s;
+        }
+        /* 注音字體與排版 */
+        .char-container {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            margin: 0 10px;
+            position: relative;
+            min-width: 90px;
+        }
+        .zhuyin {
+            font-size: 2rem;
+            color: #f97316; /* 亮橘色 */
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 4px;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 0px #fff, -2px -2px 0px #fff;
+        }
+        .character {
+            font-size: 5rem; /* 超大字體 */
+            font-weight: 900;
+            color: #1e3a8a; /* 深藍色 */
+            line-height: 1;
+            text-shadow: 3px 3px 0px #dbeafe;
+            transition: all 0.2s;
+        }
+        /* 拼音輸入中狀態 */
+        .char-container.active .character {
+            color: #3b82f6;
+            transform: scale(1.15);
+            text-shadow: 3px 3px 0px #bfdbfe, 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        .char-container.completed .character {
+            color: #10b981; /* 綠色代表完成 */
+            text-shadow: 3px 3px 0px #d1fae5;
+            transform: scale(1) translateY(-5px);
+        }
+        .char-container.completed .zhuyin {
+            color: #10b981;
+        }
+        /* 搖晃與受擊動畫 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+            20%, 40%, 60%, 80% { transform: translateX(6px); }
+        }
+        .shake-effect {
+            animation: shake 0.4s ease-in-out;
+        }
+        @keyframes attackLeft {
+            0% { transform: translateX(0) scale(1); }
+            50% { transform: translateX(40px) scale(1.1); }
+            100% { transform: translateX(0) scale(1); }
+        }
+        .attack-left {
+            animation: attackLeft 0.3s ease-out;
+        }
+        @keyframes attackRight {
+            0% { transform: translateX(0) scale(1); }
+            50% { transform: translateX(-40px) scale(1.1); }
+            100% { transform: translateX(0) scale(1); }
+        }
+        .attack-right {
+            animation: attackRight 0.3s ease-out;
+        }
+        /* 飄浮與旋轉 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(3deg); }
+        }
+        .hero-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes enemyFloat {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(8px) scale(0.95); }
+        }
+        .enemy-float {
+            animation: enemyFloat 2.5s ease-in-out infinite;
+        }
+        /* 魔法飛彈動畫 */
+        @keyframes shoot {
+            0% { transform: translate(0, 0) scale(0.5); opacity: 1; }
+            100% { transform: translate(250px, -20px) scale(1.5); opacity: 0; }
+        }
+        .projectile {
+            position: absolute;
+            font-size: 2.5rem;
+            pointer-events: none;
+            z-index: 50;
+            animation: shoot 0.4s ease-out forwards;
+        }
+
+        /* 證書列印專用樣式 */
+        @media print {
+            body {
+                background-color: white !important;
+            }
+            header, footer, #game-screen, #start-screen, .no-print {
+                display: none !important;
+            }
+            #end-screen {
+                display: block !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+            .certificate-card {
+                border: 15px double #b45309 !important;
+                box-shadow: none !important;
+                background-color: white !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden select-none">
+
+    <!-- 遊戲頂部資訊欄 -->
+    <header class="bg-gradient-to-r from-teal-500 via-emerald-500 to-green-500 text-white p-4 shadow-lg rounded-b-3xl no-print">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+            <!-- 標題與勇士狀態 -->
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl" id="nav-hero-emoji">🦁</span>
+                <div>
+                    <h1 class="text-xl font-black tracking-wider">中文打字冒險王</h1>
+                    <!-- 玩家 HP 生命心形 -->
+                    <div class="flex space-x-1 mt-0.5" id="hp-container">
+                        <span class="text-red-500 text-lg">❤️</span>
+                        <span class="text-red-500 text-lg">❤️</span>
+                        <span class="text-red-500 text-lg">❤️</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 連擊與狀態提示 -->
+            <div class="flex items-center space-x-3">
+                <div id="combo-badge" class="hidden bg-red-500 text-white px-3 py-1 rounded-full text-sm font-black animate-bounce shadow">
+                    🔥 COMBO <span id="combo-count">0</span>
+                </div>
+                <!-- 道具狀態列 -->
+                <div id="active-item-shield" class="hidden bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow">
+                    🛡️ 護盾中
+                </div>
+            </div>
+
+            <!-- 得分與剩餘時間 -->
+            <div class="flex items-center space-x-4 text-base font-bold">
+                <div class="bg-emerald-700 px-4 py-1.5 rounded-full shadow-inner text-white">
+                    ⭐ 分數：<span id="score-display">0</span>
+                </div>
+                <div class="bg-emerald-700 px-4 py-1.5 rounded-full shadow-inner text-white text-yellow-300">
+                    ⏱️ 剩餘時間：<span id="session-timer-display">10:00</span>
+                </div>
+                <div class="bg-emerald-700 px-4 py-1.5 rounded-full shadow-inner text-white">
+                    👾 擊敗數：<span id="defeat-display">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 魔法飛彈動畫容器 -->
+    <div id="fx-container" class="absolute inset-0 pointer-events-none z-40 overflow-hidden no-print"></div>
+
+    <!-- 主遊戲區域 -->
+    <main class="flex-grow flex flex-col items-center justify-center p-4 max-w-5xl mx-auto w-full">
+        
+        <!-- ================= 開始畫面 ================= -->
+        <div id="start-screen" class="bg-white p-6 sm:p-8 rounded-3xl shadow-2xl border-4 border-emerald-400 max-w-lg w-full my-6 text-center no-print">
+            <h2 class="text-4xl font-black text-emerald-800 mb-2 tracking-wider">🗡️ 冒險王傳奇 🛡️</h2>
+            <p class="text-emerald-600 font-extrabold text-sm mb-4">台北市私立立人國際中小學 推薦練習</p>
+            <p class="text-gray-600 mb-6 font-bold text-xs sm:text-sm">這是一場神秘的注音魔法冒險！<br>輸入名字、選擇你的勇士與地圖，出發打倒拼音怪獸吧！</p>
+            
+            <!-- 0. 玩家名字輸入 -->
+            <div class="mb-4">
+                <label class="block font-black text-gray-700 mb-2 text-left text-lg">📝 勇士名字：</label>
+                <input type="text" id="player-name-input" placeholder="請輸入你的名字 (例: 王小明)" class="w-full px-4 py-3 rounded-2xl border-2 border-emerald-300 text-center font-bold text-lg text-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-200 focus:border-emerald-500">
+            </div>
+
+            <!-- 1. 選擇遊戲時間 (下拉式選單) -->
+            <div class="mb-4">
+                <label class="block font-black text-gray-700 mb-2 text-left text-lg">⏱️ 選擇冒險時間：</label>
+                <select id="game-duration-select" class="w-full px-4 py-3 rounded-2xl border-2 border-emerald-300 font-bold text-lg text-emerald-800 bg-white focus:outline-none focus:ring-4 focus:ring-emerald-200">
+                    <option value="600">⏰ 10 分鐘 (標準挑戰)</option>
+                    <option value="900">⏰ 15 分鐘 (深度修練)</option>
+                    <option value="1200">⏰ 20 分鐘 (極限探險)</option>
+                    <option value="180">⚡ 3 分鐘 (快速體驗)</option>
+                </select>
+            </div>
+
+            <!-- 2. 選擇勇士角色 -->
+            <div class="mb-4">
+                <label class="block font-black text-gray-700 mb-2 text-left text-lg">✨ 選擇你的勇士：</label>
+                <div class="grid grid-cols-4 gap-3">
+                    <button onclick="selectHero('lion', '🦁')" id="hero-lion" class="hero-select-btn p-3 rounded-2xl border-2 border-slate-200 hover:border-emerald-500 bg-slate-50 flex flex-col items-center transition-all">
+                        <span class="text-4xl mb-1">🦁</span>
+                        <span class="text-xs font-black text-slate-700">小獅王</span>
+                    </button>
+                    <button onclick="selectHero('panda', '🐼')" id="hero-panda" class="hero-select-btn p-3 rounded-2xl border-2 border-slate-200 hover:border-emerald-500 bg-slate-50 flex flex-col items-center transition-all">
+                        <span class="text-4xl mb-1">🐼</span>
+                        <span class="text-xs font-black text-slate-700">熊貓大俠</span>
+                    </button>
+                    <button onclick="selectHero('unicorn', '🦄')" id="hero-unicorn" class="hero-select-btn p-3 rounded-2xl border-2 border-slate-200 hover:border-emerald-500 bg-slate-50 flex flex-col items-center transition-all">
+                        <span class="text-4xl mb-1">🦄</span>
+                        <span class="text-xs font-black text-slate-700">獨角獸</span>
+                    </button>
+                    <button onclick="selectHero('rocket', '🚀')" id="hero-rocket" class="hero-select-btn p-3 rounded-2xl border-2 border-slate-200 hover:border-emerald-500 bg-slate-50 flex flex-col items-center transition-all">
+                        <span class="text-4xl mb-1">🚀</span>
+                        <span class="text-xs font-black text-slate-700">星際號</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. 選擇冒險地圖 -->
+            <div class="mb-6">
+                <label class="block font-black text-gray-700 mb-2 text-left text-lg">🗺️ 選擇冒險地圖：</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="selectLevel('easy')" id="btn-easy" class="level-btn py-3 px-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl border-b-4 border-emerald-700 transition text-sm">
+                        🌱 綠野森林<br><span class="text-xs font-normal">基礎單字</span>
+                    </button>
+                    <button onclick="selectLevel('medium')" id="btn-medium" class="level-btn py-3 px-1 bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-black rounded-2xl border-b-4 border-yellow-600 transition text-sm">
+                        🌋 熔岩巨集<br><span class="text-xs font-normal">常用詞彙</span>
+                    </button>
+                    <button onclick="selectLevel('hard')" id="btn-hard" class="level-btn py-3 px-1 bg-violet-500 hover:bg-violet-600 text-white font-black rounded-2xl border-b-4 border-violet-700 transition text-sm">
+                        🌌 幻境星空<br><span class="text-xs font-normal">歡樂短句</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 開始按鈕 -->
+            <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-white font-black text-2xl rounded-2xl shadow-xl hover:brightness-110 btn-bounce border-b-4 border-red-700">
+                ⚔️ 進入傳送門！
+            </button>
+        </div>
+
+        <!-- ================= 遊戲主戰場 ================= -->
+        <div id="game-screen" class="hidden w-full flex flex-col items-center no-print">
+            
+            <!-- 回饋提示泡泡 -->
+            <div id="feedback-bubble" class="h-10 text-2xl font-black text-pink-500 mb-2 transition-all duration-300 opacity-0 transform translate-y-2">
+                完美打擊！ 💥
+            </div>
+
+            <!-- RPG 戰鬥舞台 -->
+            <div id="battle-stage" class="w-full bg-cover bg-center rounded-3xl shadow-2xl border-4 border-white overflow-hidden mb-6 relative min-h-[340px] flex flex-col justify-between p-6">
+                
+                <!-- 遮罩以提升文字易讀性 -->
+                <div class="absolute inset-0 bg-slate-900/40 pointer-events-none"></div>
+
+                <!-- 戰鬥上半部：勇士與怪物的血條與狀態 -->
+                <div class="relative z-10 flex justify-between items-center w-full">
+                    <!-- 勇士狀態 -->
+                    <div class="bg-black/50 text-white px-3 py-1.5 rounded-2xl flex items-center space-x-2 text-xs sm:text-sm font-bold">
+                        <span id="stage-hero-avatar" class="text-2xl">🦁</span>
+                        <div>
+                            <div class="text-yellow-300" id="stage-player-name">勇士</div>
+                            <div class="text-emerald-400" id="hero-buff-text">狀態：正常</div>
+                        </div>
+                    </div>
+
+                    <!-- 怪物計時條：時間走完怪物會攻擊，並自動換字！ -->
+                    <div class="bg-black/50 p-2 rounded-2xl w-48 sm:w-60">
+                        <div class="flex justify-between text-[10px] text-red-300 font-bold mb-1">
+                            <span>👾 怪獸準備攻擊！</span>
+                            <span id="word-timer-sec">30s</span>
+                        </div>
+                        <div class="w-full bg-gray-700 h-3 rounded-full overflow-hidden">
+                            <div id="word-timer-bar" class="bg-gradient-to-r from-red-500 to-yellow-500 h-full w-full transition-all duration-100"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 戰鬥中部：角色對決動畫區 -->
+                <div class="relative z-10 flex justify-between items-center w-full px-4 my-4">
+                    <!-- 左：我方勇士 -->
+                    <div id="hero-character-box" class="hero-float flex flex-col items-center relative">
+                        <!-- 施法光環 -->
+                        <div id="cast-glow" class="absolute -inset-4 bg-cyan-400/30 rounded-full blur-xl scale-0 transition-transform duration-200"></div>
+                        <span id="active-hero-emoji" class="text-7xl sm:text-8xl filter drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">🦁</span>
+                        <div class="mt-2 bg-emerald-500/90 text-white px-3 py-0.5 rounded-full text-xs font-black shadow">我方勇者</div>
+                    </div>
+
+                    <!-- 中間攻擊彈道虛擬區 -->
+                    <div class="flex-grow h-2"></div>
+
+                    <!-- 右：拼音怪獸與題目卡牌 -->
+                    <div id="enemy-character-box" class="enemy-float flex flex-col items-center relative">
+                        <!-- 怪獸圖示與血量 -->
+                        <div class="relative mb-2 flex flex-col items-center">
+                            <span id="monster-emoji" class="text-7xl sm:text-8xl filter drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">👾</span>
+                            <!-- 怪物血條 -->
+                            <div class="w-24 bg-gray-800 h-2.5 rounded-full border border-gray-600 overflow-hidden mt-1 shadow-inner">
+                                <div id="monster-hp-bar" class="bg-red-500 h-full w-full transition-all duration-300"></div>
+                            </div>
+                        </div>
+                        <div class="bg-red-600/90 text-white px-3 py-0.5 rounded-full text-xs font-black shadow" id="monster-name">拼音怪</div>
+                    </div>
+                </div>
+
+                <!-- 戰鬥下半部：超大字體卡牌 -->
+                <div class="relative z-10 bg-white/95 backdrop-blur py-5 px-6 rounded-3xl shadow-xl border-4 border-yellow-300 w-full flex justify-center items-center min-h-[140px]">
+                    <div id="word-container" class="flex flex-wrap justify-center items-center">
+                        <!-- JS 插入超大中文字與注音 -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 當前輸入提示欄 -->
+            <div class="bg-sky-50 px-6 py-3 rounded-full border-2 border-sky-200 text-sky-800 font-bold mb-4 text-lg flex items-center space-x-2 shadow-sm">
+                <span>🪄 魔法聚能：</span>
+                <span id="current-input-display" class="bg-white px-4 py-1 rounded-md border-2 border-sky-300 text-2xl text-orange-600 min-w-[120px] h-10 inline-flex items-center justify-center font-mono shadow-inner"></span>
+                <span class="text-xs text-sky-600">(按「空白鍵」施放魔法攻擊！)</span>
+            </div>
+
+            <!-- 輔助虛擬鍵盤 (大千式注音鍵盤) -->
+            <div class="w-full max-w-2xl bg-slate-100 p-3 sm:p-4 rounded-3xl border border-slate-200 shadow-inner">
+                <div class="text-center text-xs text-slate-500 mb-2 font-bold flex justify-center items-center gap-1">
+                    <span>💡 鍵盤對照表：看著注音字母敲擊，按空白鍵送出攻擊！</span>
+                </div>
+                <!-- 鍵盤主體 -->
+                <div id="keyboard" class="grid gap-1 scale-90 sm:scale-100 origin-center">
+                    <!-- 第一排 -->
+                    <div class="flex justify-center gap-1">
+                        <kbd class="key-cap" data-key="1">ㄅ<span class="key-eng">1</span></kbd>
+                        <kbd class="key-cap" data-key="2">ㄉ<span class="key-eng">2</span></kbd>
+                        <kbd class="key-cap" data-key="3">ˇ<span class="key-eng">3</span></kbd>
+                        <kbd class="key-cap" data-key="4">ˋ<span class="key-eng">4</span></kbd>
+                        <kbd class="key-cap" data-key="5">ㄓ<span class="key-eng">5</span></kbd>
+                        <kbd class="key-cap" data-key="6">ˊ<span class="key-eng">6</span></kbd>
+                        <kbd class="key-cap" data-key="7">˙<span class="key-eng">7</span></kbd>
+                        <kbd class="key-cap" data-key="8">ㄚ<span class="key-eng">8</span></kbd>
+                        <kbd class="key-cap" data-key="9">ㄞ<span class="key-eng">9</span></kbd>
+                        <kbd class="key-cap" data-key="0">ㄢ<span class="key-eng">0</span></kbd>
+                        <kbd class="key-cap" data-key="-">ㄦ<span class="key-eng">-</span></kbd>
+                    </div>
+                    <!-- 第二排 -->
+                    <div class="flex justify-center gap-1 pl-4">
+                        <kbd class="key-cap" data-key="q">ㄆ<span class="key-eng">Q</span></kbd>
+                        <kbd class="key-cap" data-key="w">ㄊ<span class="key-eng">W</span></kbd>
+                        <kbd class="key-cap" data-key="e">ㄍ<span class="key-eng">E</span></kbd>
+                        <kbd class="key-cap" data-key="r">ㄐ<span class="key-eng">R</span></kbd>
+                        <kbd class="key-cap" data-key="t">ㄔ<span class="key-eng">T</span></kbd>
+                        <kbd class="key-cap" data-key="y">ㄗ<span class="key-eng">Y</span></kbd>
+                        <kbd class="key-cap" data-key="u">ㄧ<span class="key-eng">U</span></kbd>
+                        <kbd class="key-cap" data-key="i">ㄛ<span class="key-eng">I</span></kbd>
+                        <kbd class="key-cap" data-key="o">ㄟ<span class="key-eng">O</span></kbd>
+                        <kbd class="key-cap" data-key="p">ㄣ<span class="key-eng">P</span></kbd>
+                    </div>
+                    <!-- 第三排 -->
+                    <div class="flex justify-center gap-1 pl-8">
+                        <kbd class="key-cap" data-key="a">ㄇ<span class="key-eng">A</span></kbd>
+                        <kbd class="key-cap" data-key="s">ㄋ<span class="key-eng">S</span></kbd>
+                        <kbd class="key-cap" data-key="d">ㄎ<span class="key-eng">D</span></kbd>
+                        <kbd class="key-cap" data-key="f">ㄑ<span class="key-eng">F</span></kbd>
+                        <kbd class="key-cap" data-key="g">ㄕ<span class="key-eng">G</span></kbd>
+                        <kbd class="key-cap" data-key="h">ㄘ<span class="key-eng">H</span></kbd>
+                        <kbd class="key-cap" data-key="j">ㄨ<span class="key-eng">J</span></kbd>
+                        <kbd class="key-cap" data-key="k">ㄜ<span class="key-eng">K</span></kbd>
+                        <kbd class="key-cap" data-key="l">ㄠ<span class="key-eng">L</span></kbd>
+                        <kbd class="key-cap" data-key=";">ㄤ<span class="key-eng">;</span></kbd>
+                    </div>
+                    <!-- 第四排 -->
+                    <div class="flex justify-center gap-1 pl-12">
+                        <kbd class="key-cap" data-key="z">ㄈ<span class="key-eng">Z</span></kbd>
+                        <kbd class="key-cap" data-key="x">ㄌ<span class="key-eng">X</span></kbd>
+                        <kbd class="key-cap" data-key="c">ㄏ<span class="key-eng">C</span></kbd>
+                        <kbd class="key-cap" data-key="v">ㄒ<span class="key-eng">V</span></kbd>
+                        <kbd class="key-cap" data-key="b">ㄖ<span class="key-eng">B</span></kbd>
+                        <kbd class="key-cap" data-key="n">ㄙ<span class="key-eng">N</span></kbd>
+                        <kbd class="key-cap" data-key="m">ㄩ<span class="key-eng">M</span></kbd>
+                        <kbd class="key-cap" data-key=",">ㄝ<span class="key-eng">,</span></kbd>
+                        <kbd class="key-cap" data-key=".">ㄡ<span class="key-eng">.</span></kbd>
+                        <kbd class="key-cap" data-key="/">ㄥ<span class="key-eng">/</span></kbd>
+                    </div>
+                    <!-- 空白鍵 -->
+                    <div class="flex justify-center gap-1 mt-1">
+                        <kbd class="key-cap-wide flex-grow max-w-[320px]" data-key=" ">空白鍵 (第一聲 ˉ / 確定攻擊)</kbd>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= 遊戲結束與榮譽闖關證明畫面 ================= -->
+        <div id="end-screen" class="hidden w-full max-w-2xl my-8">
+            
+            <!-- 實體闖關證明設計 -->
+            <div class="bg-amber-50 p-6 sm:p-10 rounded-3xl shadow-2xl border-[12px] border-amber-700 relative overflow-hidden certificate-card">
+                <!-- 精美背景裝飾 -->
+                <div class="absolute -top-16 -left-16 w-32 h-32 bg-amber-200/40 rounded-full blur-xl pointer-events-none"></div>
+                <div class="absolute -bottom-16 -right-16 w-40 h-40 bg-amber-300/30 rounded-full blur-xl pointer-events-none"></div>
+                
+                <!-- 學校抬頭 -->
+                <div class="text-center mb-4">
+                    <h3 class="text-lg sm:text-xl font-bold text-amber-900 tracking-widest">台北市私立立人國際中小學</h3>
+                    <p class="text-[10px] uppercase tracking-widest text-amber-800">Liren International Primary & Middle School</p>
+                    <div class="w-full flex justify-center my-2">
+                        <div class="h-[2px] w-2/3 bg-gradient-to-r from-transparent via-amber-700 to-transparent"></div>
+                    </div>
+                </div>
+
+                <!-- 證書主標題 -->
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-amber-800 tracking-wider text-center my-4 font-serif">🏆 闖關合格證明書 🏆</h2>
+                
+                <!-- 證書文字 -->
+                <div class="text-slate-800 text-sm sm:text-base leading-relaxed space-y-4 my-6 sm:my-8 px-4 font-medium">
+                    <p class="text-lg">
+                        恭喜立人小勇士： <span id="cert-player-name" class="font-black text-2xl text-blue-900 border-b-2 border-blue-900 px-4 py-1">王小明</span> 同學，
+                    </p>
+                    <p class="indent-6 sm:indent-8">
+                        於本校中文注音打字魔法挑戰中表現極為優異！在 <span id="cert-level" class="font-black text-amber-800">綠野森林</span> 戰場中成功打敗拼音巨獸，順利通過「中文盲打魔法試煉」。
+                    </p>
+                    <p class="indent-6 sm:indent-8">
+                        特以此證，表揚其在中文輸入與注音符號對照上展現出的敏捷度與學習熱忱。希望你在未來的學習旅程中，繼續保持敏捷與專注，成為最棒的中文數位小達人！
+                    </p>
+                </div>
+
+                <!-- 榮譽稱號展示元件 -->
+                <div class="text-center text-lg sm:text-xl font-black text-emerald-600 mb-6" id="final-achievement">
+                    🏅 榮獲稱號：【注音小勇士】
+                </div>
+
+                <!-- 戰績展示區 -->
+                <div class="grid grid-cols-2 gap-4 bg-white/70 backdrop-blur border border-amber-300/60 p-4 rounded-2xl mb-8 shadow-sm">
+                    <div class="text-center border-r border-amber-200">
+                        <div class="text-xs text-amber-800 font-bold mb-1">🏅 最終冒險得分</div>
+                        <div class="text-2xl sm:text-3xl font-black text-amber-600 animate-pulse" id="final-score">0 分</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs text-amber-800 font-bold mb-1">🎯 注音準確率</div>
+                        <div class="text-2xl sm:text-3xl font-black text-emerald-600" id="accuracy-rate">100%</div>
+                    </div>
+                </div>
+
+                <!-- 證書底部蓋章與日期 -->
+                <div class="flex justify-between items-end mt-6 sm:mt-10 px-4">
+                    <div class="text-xs sm:text-sm text-slate-600 font-bold space-y-1">
+                        <div>頒發機構：教務處資訊組</div>
+                        <div>發行日期：中華民國 <span id="cert-date">115</span> 年 <span id="cert-month">5</span> 月 <span id="cert-day">26</span> 日</div>
+                    </div>
+                    <!-- 虛擬紅章 -->
+                    <div class="relative flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 border-4 border-red-600 rounded-2xl text-red-600 font-black text-center text-xs sm:text-sm rotate-12 bg-white/40 drop-shadow select-none">
+                        <div class="leading-tight p-1">
+                            立人中小學<br>教務處<br>認證合格章
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 操作按鈕列 (列印時隱藏) -->
+            <div class="flex flex-col sm:flex-row gap-4 mt-6 no-print">
+                <button onclick="window.print()" class="flex-1 py-4 bg-gradient-to-r from-amber-600 to-amber-700 text-white font-black text-xl rounded-2xl shadow-lg hover:brightness-110 btn-bounce border-b-4 border-amber-800 flex justify-center items-center gap-2">
+                    🖨️ 列印闖關證明
+                </button>
+                <button onclick="showStartScreen()" class="flex-1 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-xl rounded-2xl shadow-lg hover:brightness-110 btn-bounce border-b-4 border-emerald-700 flex justify-center items-center gap-2">
+                    🔄 再冒險一次！
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 頁尾說明 -->
+    <footer class="bg-emerald-100 text-emerald-800 py-3 text-center text-xs sm:text-sm font-bold border-t border-emerald-200 no-print">
+        <div>💡 貼心提醒：請切換為「注音輸入法」，看著大螢幕對應鍵盤敲擊哦！</div>
+    </footer>
+
+    <!-- CSS 輔助樣式定義 -->
+    <style>
+        .key-cap {
+            background-color: white;
+            border: 2px solid #cbd5e1;
+            border-bottom-width: 4px;
+            border-radius: 8px;
+            padding: 2px 0;
+            width: 38px;
+            text-align: center;
+            font-size: 0.95rem;
+            font-weight: 900;
+            color: #334155;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            user-select: none;
+            transition: all 0.05s;
+        }
+        .key-cap-wide {
+            background-color: white;
+            border: 2px solid #cbd5e1;
+            border-bottom-width: 4px;
+            border-radius: 8px;
+            padding: 6px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #475569;
+            user-select: none;
+            transition: all 0.05s;
+        }
+        .key-eng {
+            font-size: 0.55rem;
+            color: #94a3b8;
+        }
+        .key-active {
+            background-color: #3b82f6 !important;
+            color: white !important;
+            border-color: #1d4ed8 !important;
+            border-bottom-width: 2px !important;
+            transform: translateY(2px);
+        }
+        .key-active .key-eng {
+            color: #93c5fd !important;
+        }
+    </style>
+
+    <script>
+        // --- 鍵盤與地圖/角色數據庫 ---
+        const bpmfMap = {
+            '1': 'ㄅ', 'q': 'ㄆ', 'a': 'ㄇ', 'z': 'ㄈ',
+            '2': 'ㄉ', 'w': 'ㄊ', 's': 'ㄋ', 'x': 'ㄌ',
+            'e': 'ㄍ', 'd': 'ㄎ', 'c': 'ㄏ',
+            'r': 'ㄐ', 'f': 'ㄑ', 'v': 'ㄒ',
+            '5': 'ㄓ', 't': 'ㄔ', 'g': 'ㄕ', 'b': 'ㄖ',
+            'y': 'ㄗ', 'h': 'ㄘ', 'n': 'ㄙ',
+            'u': 'ㄧ', 'j': 'ㄨ', 'm': 'ㄩ',
+            'i': 'ㄛ', 'k': 'ㄜ', 'l': 'ㄠ', 'o': 'ㄟ',
+            'p': 'ㄣ', ';': 'ㄤ', ',': 'ㄝ', '.': 'ㄡ',
+            '/': 'ㄥ', '8': 'ㄚ', '9': 'ㄞ', '0': 'ㄢ',
+            '-': 'ㄦ',
+            '3': 'ˇ', '4': 'ˋ', '6': 'ˊ', '7': '˙', ' ': ' '
+        };
+
+        // 🌟 擴充與修正後的豐富單字量（100% 穩定，修正了 "跑步" 拼音錯誤）
+        const wordDatabase = {
+            easy: [
+                { word: '貓', bpmf: 'ㄇㄠ' },
+                { word: '狗', bpmf: 'ㄍㄡˇ' },
+                { word: '魚', bpmf: 'ㄩˊ' },
+                { word: '鳥', bpmf: 'ㄋㄧㄠˇ' },
+                { word: '樹', bpmf: 'ㄕㄨˋ' },
+                { word: '花', bpmf: 'ㄏㄨㄚ' },
+                { word: '草', bpmf: 'ㄘㄠˇ' },
+                { word: '山', bpmf: 'ㄕㄢ' },
+                { word: '水', bpmf: 'ㄕㄨㄟˇ' },
+                { word: '風', bpmf: 'ㄈㄥ' },
+                { word: '雨', bpmf: 'ㄩˇ' },
+                { word: '雲', bpmf: 'ㄩㄣˊ' },
+                { word: '牛', bpmf: 'ㄋㄧㄡˊ' },
+                { word: '羊', bpmf: 'ㄧㄤˊ' },
+                { word: '馬', bpmf: 'ㄇㄚˇ' },
+                { word: '兔', bpmf: 'ㄊㄨˋ' },
+                { word: '月', bpmf: 'ㄩㄝˋ' },
+                { word: '星', bpmf: 'ㄒㄧㄥ' },
+                { word: '石', bpmf: 'ㄕˊ' },
+                { word: '田', bpmf: 'ㄊㄧㄢˊ' },
+                { word: '天', bpmf: 'ㄊㄧㄢ' },
+                { word: '地', bpmf: 'ㄉㄧˋ' },
+                { word: '人', bpmf: 'ㄖㄣˊ' },
+                { word: '書', bpmf: 'ㄕㄨ' },
+                { word: '筆', bpmf: 'ㄅㄧˇ' },
+                { word: '紙', bpmf: 'ㄓˇ' },
+                { word: '車', bpmf: 'ㄔㄜ' },
+                { word: '船', bpmf: 'ㄔㄨㄢˊ' }
+            ],
+            medium: [
+                { word: '學校', bpmf: 'ㄒㄩㄝˊ ㄒㄧㄠˋ' },
+                { word: '老師', bpmf: 'ㄌㄠˇ ㄕ' },
+                { word: '朋友', bpmf: 'ㄆㄥˊ ㄧㄡˇ' },
+                { word: '看書', bpmf: 'ㄎㄢˋ ㄕㄨ' },
+                { word: '畫畫', bpmf: 'ㄏㄨㄚˋ ㄏㄨㄚˋ' },
+                { word: '唱歌', bpmf: 'ㄔㄤˋ ㄍㄜ' },
+                { word: '跑步', bpmf: 'ㄆㄠˇ ㄅㄨˋ' }, // 🌟 修正注音錯誤，由原先的 'ㄆ跑 ㄅㄨˋ' 修正為標準 'ㄆㄠˇ ㄅㄨˋ'
+                { word: '遊戲', bpmf: 'ㄧㄡˊ ㄒㄧˋ' },
+                { word: '大象', bpmf: 'ㄉㄚˋ ㄒㄧㄤˋ' },
+                { word: '氣球', bpmf: 'ㄑㄧˋ ㄑㄧㄡˊ' },
+                { word: '香蕉', bpmf: 'ㄒㄧㄤ ㄐㄧㄠ' }, // 🌟 修正注音錯誤
+                { word: '蘋果', bpmf: 'ㄆㄧㄥˊ ㄍㄨㄛˇ' },
+                { word: '立人', bpmf: 'ㄌㄧˋ ㄖㄣˊ' },
+                { word: '功課', bpmf: 'ㄍㄨㄥ ㄎㄜˋ' },
+                { word: '鉛筆', bpmf: 'ㄑㄧㄢ ㄅㄧˇ' },
+                { word: '橡皮', bpmf: 'ㄒㄧㄤˋ ㄆㄧˊ' },
+                { word: '飛機', bpmf: 'ㄈㄟ ㄐㄧ' },
+                { word: '西瓜', bpmf: 'ㄒㄧ ㄍㄨㄚ' },
+                { word: '蜜蜂', bpmf: 'ㄇㄧˋ ㄈㄥ' },
+                { word: '蝴蝶', bpmf: 'ㄏㄨˊ ㄉㄧㄝˊ' },
+                { word: '操場', bpmf: 'ㄘㄠ ㄔㄤˇ' },
+                { word: '教室', bpmf: 'ㄐㄧㄠˋ ㄕˋ' },
+                { word: '午餐', bpmf: 'ㄨˇ ㄘㄢ' },
+                { word: '故事', bpmf: 'ㄍㄨˋ ㄕˋ' }
+            ],
+            hard: [
+                { word: '小狗在跑步', bpmf: 'ㄒㄧㄠˇ ㄍㄡˇ ㄗㄞˋ ㄆㄠˇ ㄅㄨˋ' },
+                { word: '我去上學校', bpmf: 'ㄨㄛˇ ㄑㄩˋ ㄕㄤˋ ㄒㄩㄝˊ ㄒㄧㄠˋ' },
+                { word: '老師您好嗎', bpmf: 'ㄌㄠˇ ㄕ ㄋㄧㄣˊ ㄏㄠˇ ㄇㄚ' },
+                { word: '大象鼻子長', bpmf: 'ㄉㄚˋ ㄒㄧㄤˋ ㄅㄧˊ ㄗ˙ ㄔㄤˊ' },
+                { word: '今天天氣好', bpmf: 'ㄐㄧㄣ ㄊㄧㄢ ㄊㄧㄢ ㄑㄧˋ ㄏㄠˇ' },
+                { word: '我們愛看書', bpmf: 'ㄨㄛˇ ㄇㄣˊ ㄞˋ ㄎㄢˋ ㄕㄨ' },
+                { word: '小魚水中游', bpmf: 'ㄒㄧㄠˇ ㄩˊ ㄕㄨㄟˇ ㄓㄨㄥ ㄧㄡˊ' },
+                { word: '立人好兒童', bpmf: 'ㄌㄧˋ ㄖㄣˊ ㄏㄠˇ ㄦˊ ㄊㄨㄥˊ' },
+                { word: '爸爸開新車', bpmf: 'ㄅㄚˋ ㄅㄚ˙ ㄎㄞ ㄒㄧㄣ ㄔㄜ' },
+                { word: '媽媽愛花朵', bpmf: 'ㄇㄚ ㄇㄚ˙ ㄞˋ ㄏㄨㄚ ㄉㄨㄛˇ' },
+                { word: '小鳥樹上叫', bpmf: 'ㄒㄧㄠˇ ㄋㄧㄠˇ ㄕㄨˋ ㄕㄤˋ ㄐㄧㄠˋ' },
+                { word: '天上有星星', bpmf: 'ㄊㄧㄢ ㄕㄤˋ ㄧㄡˇ ㄒㄧㄥ ㄒㄧㄥ' },
+                { word: '我們愛立人', bpmf: 'ㄨㄛˇ ㄇㄣˊ ㄞˋ ㄌㄧˋ ㄖㄣˊ' },
+                { word: '大家做運動', bpmf: 'ㄉㄚˋ ㄐㄧㄚ ㄗㄨㄛˋ ㄩㄣˋ ㄉㄨㄥˋ' }
+            ]
+        };
+
+        const monsters = {
+            easy: [
+                { emoji: '🐛', name: '毛毛蟲怪' },
+                { emoji: '🍄', name: '毒蘑菇精' },
+                { emoji: '🐝', name: '毒刺黃蜂' },
+                { emoji: '🐸', name: '泥沼青蛙' },
+                { emoji: '🐵', name: '頑皮怪猴' }
+            ],
+            medium: [
+                { emoji: '🦁', name: '烈焰魔獅' },
+                { emoji: '🐊', name: '鋼甲巨鱷' },
+                { emoji: '🐍', name: '劇毒響尾蛇' },
+                { emoji: '🦖', name: '暴龍大魔王' },
+                { emoji: '🦇', name: '暗夜吸血蝙蝠' }
+            ],
+            hard: [
+                { emoji: '👽', name: '星際異形' },
+                { emoji: '🛸', name: '巨型飛碟' },
+                { emoji: '👾', name: '像素電玩怪' },
+                { emoji: '🤖', name: '失控戰鬥機甲' },
+                { emoji: '🐉', name: '終焉星空巨龍' }
+            ]
+        };
+
+        // 地圖背景樣式
+        const mapBackgrounds = {
+            easy: 'url("https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&q=80&w=1000")', // 翠綠森林
+            medium: 'url("https://images.unsplash.com/photo-1541844053589-3462536b74e1?auto=format&fit=crop&q=80&w=1000")', // 火山/荒原
+            hard: 'url("https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&q=80&w=1000")' // 星空宇宙
+        };
+
+        // --- 遊戲變數 ---
+        let playerName = "立人小勇士";
+        let currentLevel = 'easy';
+        let currentHero = 'lion';
+        let currentHeroEmoji = '🦁';
+        
+        let score = 0;
+        let lives = 3;
+        let combo = 0;
+        let maxCombo = 0;
+        let monstersDefeated = 0;
+
+        let isPlaying = false;
+        let currentWordIndex = 0;
+        let currentTargetWord = {};
+        let currentTargetCharIndex = 0;
+        let currentInputBpmf = "";
+
+        // 🌟 總體冒險計時器變數
+        let totalGameDuration = 600; // 預設 10 分鐘 (600秒)
+        let totalGameTimeLeft = 600;
+        let sessionTimerInterval = null;
+
+        // 怪獸單字計時器 (單一字卡倒數)
+        let wordTimerMax = 30; // 統一設為固定的 30 秒，防止孩子卡字
+        let wordTimer = 30;
+        let wordTimerInterval = null;
+
+        // 道具狀態
+        let hasShield = false;
+        let isTimeFrozen = false;
+        let freezeTimer = 0;
+
+        // 準確率統計
+        let totalKeysPressed = 0;
+        let correctKeysPressed = 0;
+
+        // 聲音生成
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'hit') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.15);
+            } else if (type === 'hit_heavy') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.25);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.25);
+            } else if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.08); // E5
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.25);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'monster_hit') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'hurt') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(60, audioCtx.currentTime + 0.4);
+                gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.4);
+            } else if (type === 'loot') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(392, audioCtx.currentTime); // G4
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime + 0.1); // C5
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.2); // E5
+                osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.3); // G5
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            }
+        }
+
+        // --- 初始化與選擇機制 ---
+
+        function selectHero(heroName, emoji) {
+            currentHero = heroName;
+            currentHeroEmoji = emoji;
+            document.querySelectorAll('.hero-select-btn').forEach(btn => {
+                btn.classList.remove('border-emerald-500', 'bg-emerald-50', 'ring-2', 'ring-emerald-300');
+                btn.classList.add('border-slate-200', 'bg-slate-50');
+            });
+            const selectedBtn = document.getElementById(`hero-${heroName}`);
+            selectedBtn.classList.remove('border-slate-200', 'bg-slate-50');
+            selectedBtn.classList.add('border-emerald-500', 'bg-emerald-50', 'ring-2', 'ring-emerald-300');
+            document.getElementById('nav-hero-emoji').textContent = emoji;
+        }
+
+        function selectLevel(level) {
+            currentLevel = level;
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.classList.add('opacity-50');
+                btn.classList.remove('ring-4', 'ring-white', 'scale-105');
+            });
+            const selectedBtn = document.getElementById(`btn-${level}`);
+            selectedBtn.classList.remove('opacity-50');
+            selectedBtn.classList.add('ring-4', 'ring-white', 'scale-105');
+        }
+
+        // 啟動遊戲
+        function startGame() {
+            const nameInput = document.getElementById('player-name-input').value.trim();
+            playerName = nameInput !== "" ? nameInput : "立人小勇士";
+            document.getElementById('stage-player-name').textContent = playerName;
+
+            // 🌟 讀取自訂冒險時間 (從下拉選單讀取秒數)
+            totalGameDuration = parseInt(document.getElementById('game-duration-select').value);
+            totalGameTimeLeft = totalGameDuration;
+
+            isPlaying = true;
+            score = 0;
+            lives = 3;
+            combo = 0;
+            maxCombo = 0;
+            monstersDefeated = 0;
+            hasShield = false;
+            isTimeFrozen = false;
+            
+            totalKeysPressed = 0;
+            correctKeysPressed = 0;
+
+            // 更新 UI
+            updateHpDisplay();
+            updateComboUI();
+            document.getElementById('score-display').textContent = score;
+            document.getElementById('defeat-display').textContent = monstersDefeated;
+            document.getElementById('active-item-shield').classList.add('hidden');
+            document.getElementById('hero-buff-text').textContent = "狀態：正常";
+            document.getElementById('hero-buff-text').className = "text-emerald-400";
+
+            // 設定戰場背景
+            const stage = document.getElementById('battle-stage');
+            stage.style.backgroundImage = mapBackgrounds[currentLevel];
+
+            // 設定我方英雄與地圖相對的怪獸
+            document.getElementById('stage-hero-avatar').textContent = currentHeroEmoji;
+            document.getElementById('active-hero-emoji').textContent = currentHeroEmoji;
+
+            // 切換畫面
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            // 準備詞彙庫與怪物
+            shuffleArray(wordDatabase[currentLevel]);
+            shuffleArray(monsters[currentLevel]);
+            currentWordIndex = 0;
+
+            loadNextMonster();
+            
+            // 啟動兩個獨立的計時器
+            startSessionTimer(); // 總冒險時間
+            startWordTimer();    // 單字準備攻擊時間 (30秒)
+        }
+
+        // 🌟 總冒險時間計時器 (倒數完畢即勝利)
+        function startSessionTimer() {
+            if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+            updateSessionTimerUI();
+
+            sessionTimerInterval = setInterval(() => {
+                if (!isPlaying) return;
+                totalGameTimeLeft--;
+                updateSessionTimerUI();
+
+                if (totalGameTimeLeft <= 0) {
+                    // 時間截止，順利過關！
+                    endGame(true);
+                }
+            }, 1000);
+        }
+
+        function updateSessionTimerUI() {
+            const minutes = Math.floor(totalGameTimeLeft / 60);
+            const seconds = totalGameTimeLeft % 60;
+            const displayStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('session-timer-display').textContent = displayStr;
+        }
+
+        // 單字準備攻擊時間 (30秒)
+        function startWordTimer() {
+            if (wordTimerInterval) clearInterval(wordTimerInterval);
+            
+            wordTimerMax = 30; // 固定為極具張力的 30 秒
+            wordTimer = wordTimerMax;
+            
+            const timerBar = document.getElementById('word-timer-bar');
+            const timerSec = document.getElementById('word-timer-sec');
+            
+            timerBar.style.width = '100%';
+            timerSec.textContent = `${wordTimer}s`;
+
+            wordTimerInterval = setInterval(() => {
+                if (!isPlaying) return;
+
+                if (isTimeFrozen) {
+                    freezeTimer--;
+                    document.getElementById('hero-buff-text').textContent = `❄️ 凍結怪獸 (${freezeTimer}s)`;
+                    if (freezeTimer <= 0) {
+                        isTimeFrozen = false;
+                        document.getElementById('hero-buff-text').textContent = "狀態：正常";
+                        document.getElementById('hero-buff-text').className = "text-emerald-400";
+                    }
+                    return;
+                }
+
+                wordTimer--;
+                timerSec.textContent = `${wordTimer}s`;
+                
+                const pct = (wordTimer / wordTimerMax) * 100;
+                timerBar.style.width = `${pct}%`;
+
+                if (pct > 50) {
+                    timerBar.className = "bg-gradient-to-r from-emerald-400 to-yellow-400 h-full transition-all duration-100";
+                } else if (pct > 25) {
+                    timerBar.className = "bg-gradient-to-r from-yellow-400 to-orange-500 h-full transition-all duration-100";
+                } else {
+                    timerBar.className = "bg-gradient-to-r from-orange-500 to-red-600 h-full transition-all duration-100 animate-pulse";
+                }
+
+                if (wordTimer <= 0) {
+                    monsterAttack();
+                }
+            }, 1000);
+        }
+
+        // 怪物發動攻擊 (時間到沒拼完直接攻擊並換下一題，防卡死)
+        function monsterAttack() {
+            const enemyBox = document.getElementById('enemy-character-box');
+            enemyBox.classList.add('attack-right');
+            
+            const stage = document.getElementById('battle-stage');
+            stage.classList.add('shake-effect');
+
+            setTimeout(() => {
+                enemyBox.classList.remove('attack-right');
+                stage.classList.remove('shake-effect');
+            }, 400);
+
+            if (hasShield) {
+                hasShield = false;
+                document.getElementById('active-item-shield').classList.add('hidden');
+                showFeedback("🛡️ 護盾抵擋了攻擊！", true);
+                playSound('correct');
+            } else {
+                lives--;
+                updateHpDisplay();
+                playSound('hurt');
+                showFeedback("💥 被怪獸咬了一口！", false);
+                resetCombo();
+            }
+
+            if (lives <= 0) {
+                endGame(false); // 失敗結算
+            } else {
+                // 🌟 防卡死核心：時間到了沒打完，怪物咬一口後「自動更換下一個字」！
+                currentInputBpmf = "";
+                updateInputDisplay();
+                currentWordIndex++;
+                loadNextMonster();
+            }
+        }
+
+        // 載入下一個拼音怪獸
+        function loadNextMonster() {
+            const monsterList = monsters[currentLevel];
+            const currentMonster = monsterList[monstersDefeated % monsterList.length];
+
+            document.getElementById('monster-emoji').textContent = currentMonster.emoji;
+            document.getElementById('monster-name').textContent = currentMonster.name;
+            
+            // 🌟 修正點：加上防禦性判斷，防止該元件因改版移除而拋出 TypeError 中斷執行
+            const monsterNumEl = document.getElementById('current-monster-num');
+            if (monsterNumEl) {
+                monsterNumEl.textContent = (monstersDefeated + 1);
+            }
+
+            document.getElementById('monster-hp-bar').style.width = '100%';
+
+            loadNextWord();
+        }
+
+        // 載入中文字詞題目
+        function loadNextWord() {
+            if (currentWordIndex >= wordDatabase[currentLevel].length) {
+                shuffleArray(wordDatabase[currentLevel]);
+                currentWordIndex = 0;
+            }
+
+            currentTargetWord = wordDatabase[currentLevel][currentWordIndex];
+            currentTargetCharIndex = 0;
+            currentInputBpmf = "";
+            updateInputDisplay();
+
+            const wordContainer = document.getElementById('word-container');
+            wordContainer.innerHTML = '';
+
+            const chars = currentTargetWord.word.split('');
+            const wordBpmfList = splitBpmf(currentTargetWord.bpmf);
+
+            for (let i = 0; i < chars.length; i++) {
+                const charContainer = document.createElement('div');
+                charContainer.className = `char-container ${i === 0 ? 'active' : ''}`;
+                charContainer.id = `char-box-${i}`;
+
+                const zhuyinDiv = document.createElement('div');
+                zhuyinDiv.className = 'zhuyin';
+                zhuyinDiv.textContent = wordBpmfList[i] || '';
+
+                const charDiv = document.createElement('div');
+                charDiv.className = 'character';
+                charDiv.textContent = chars[i];
+
+                charContainer.appendChild(zhuyinDiv);
+                charContainer.appendChild(charDiv);
+                wordContainer.appendChild(charContainer);
+            }
+
+            startWordTimer();
+        }
+
+        // 攻擊魔法特效產生器
+        function spawnProjectile() {
+            const fxContainer = document.getElementById('fx-container');
+            const p = document.createElement('div');
+            p.className = 'projectile';
+            
+            let magic = '⚡';
+            if (currentHero === 'lion') magic = '🔥';
+            if (currentHero === 'panda') magic = '🎋';
+            if (currentHero === 'unicorn') magic = '🌈';
+            if (currentHero === 'rocket') magic = '🚀';
+
+            p.textContent = magic;
+
+            const heroBox = document.getElementById('hero-character-box');
+            const rect = heroBox.getBoundingClientRect();
+            
+            p.style.left = `${rect.left + rect.width / 2}px`;
+            p.style.top = `${rect.top}px`;
+
+            fxContainer.appendChild(p);
+            playSound('hit');
+
+            setTimeout(() => {
+                p.remove();
+                
+                const enemyBox = document.getElementById('enemy-character-box');
+                enemyBox.classList.add('shake-effect');
+                setTimeout(() => { enemyBox.classList.remove('shake-effect'); }, 300);
+            }, 400);
+        }
+
+        // 當一個中字打對時，增加分數！
+        function damageMonster() {
+            spawnProjectile();
+            
+            const totalChars = currentTargetWord.word.length;
+            const currentHpPct = 100 - ((currentTargetCharIndex + 1) / totalChars) * 100;
+            document.getElementById('monster-hp-bar').style.width = `${currentHpPct}%`;
+
+            playSound('monster_hit');
+
+            // 每個字打對都加 5 分，確保打越多、累積得分越高！
+            score += 5;
+            document.getElementById('score-display').textContent = score;
+        }
+
+        // 擊敗怪獸，給予分數加成
+        function onMonsterDefeated() {
+            playSound('correct');
+            monstersDefeated++;
+            document.getElementById('defeat-display').textContent = monstersDefeated;
+
+            // 擊倒怪物大加分
+            const baseBonus = currentTargetWord.word.length * 10;
+            const comboBonus = Math.floor(combo / 5) * 5; 
+            score += (baseBonus + comboBonus);
+            document.getElementById('score-display').textContent = score;
+
+            if (Math.random() < 0.4) {
+                triggerLootDrop();
+            } else {
+                showFeedback("🎉 成功打倒怪物！分數大提升！", true);
+            }
+
+            // 無限冒險模式：打倒一隻就立刻補下一隻，直到時間歸零！
+            setTimeout(() => {
+                currentWordIndex++;
+                loadNextMonster();
+            }, 800);
+        }
+
+        // 道具隨機掉落
+        function triggerLootDrop() {
+            const items = [
+                { emoji: '🛡️', name: '神奇防護罩', desc: '幫你擋下怪物一次攻擊！', action: () => {
+                    hasShield = true;
+                    document.getElementById('active-item-shield').classList.remove('hidden');
+                }},
+                { emoji: '🧪', name: '神奇生命藥水', desc: '幫你回復 1 顆愛心！', action: () => {
+                    if (lives < 3) {
+                        lives++;
+                        updateHpDisplay();
+                    }
+                }},
+                { emoji: '❄️', name: '時光凍結冰沙', desc: '凍結怪物攻擊計時 7 秒！', action: () => {
+                    isTimeFrozen = true;
+                    freezeTimer = 7;
+                    document.getElementById('hero-buff-text').textContent = "❄️ 凍結怪獸 (7s)";
+                    document.getElementById('hero-buff-text').className = "text-sky-300 font-black";
+                }}
+            ];
+
+            const loot = items[Math.floor(Math.random() * items.length)];
+            loot.action();
+            playSound('loot');
+            showFeedback(`🎁 獲得 [${loot.emoji} ${loot.name}]！`, true);
+        }
+
+        // 更新愛心 UI
+        function updateHpDisplay() {
+            const container = document.getElementById('hp-container');
+            container.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const heart = document.createElement('span');
+                heart.textContent = i < lives ? '❤️' : '🖤';
+                heart.className = i < lives ? 'text-red-500 text-lg animate-pulse' : 'text-gray-400 text-lg';
+                container.appendChild(heart);
+            }
+        }
+
+        // Combo 更新
+        function increaseCombo() {
+            combo++;
+            if (combo > maxCombo) maxCombo = combo;
+            updateComboUI();
+        }
+
+        function resetCombo() {
+            combo = 0;
+            updateComboUI();
+        }
+
+        // 鍵盤視覺高亮與主動回報
+        function updateComboUI() {
+            const badge = document.getElementById('combo-badge');
+            const count = document.getElementById('combo-count');
+            
+            if (combo >= 3) {
+                badge.classList.remove('hidden');
+                count.textContent = combo;
+                
+                if (combo >= 7) {
+                    badge.className = "bg-gradient-to-r from-red-500 via-yellow-500 to-pink-500 text-white px-4 py-1.5 rounded-full text-base font-black animate-bounce shadow-lg ring-4 ring-yellow-300";
+                    showFeedback(`🔥 FEVER ${combo}連擊！`, true);
+                } else {
+                    badge.className = "bg-red-500 text-white px-3 py-1 rounded-full text-sm font-black animate-bounce shadow";
+                }
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // 結束遊戲與動態生成證書
+        function endGame(isVictory) {
+            isPlaying = false;
+            clearInterval(sessionTimerInterval);
+            clearInterval(wordTimerInterval);
+
+            // 依 SDD §5 規範：分數高於本機紀錄時更新最佳成績
+            try {
+                const prev = parseInt(localStorage.getItem('edtech-unit1-score') || '0', 10);
+                if (score > prev) {
+                    localStorage.setItem('edtech-unit1-score', score);
+                }
+            } catch (e) { /* localStorage 不可用時靜默略過 */ }
+
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+
+            const trophy = document.getElementById('end-trophy');
+            const title = document.getElementById('end-title');
+            const subtitle = document.getElementById('end-subtitle');
+            
+            const achieve = document.getElementById('final-achievement');
+
+            const accuracy = totalKeysPressed > 0 ? Math.round((correctKeysPressed / totalKeysPressed) * 100) : 100;
+
+            // 填充證書動態資訊
+            document.getElementById('cert-player-name').textContent = playerName;
+            
+            // 地圖名稱中文化
+            let mapName = "綠野森林";
+            if (currentLevel === 'medium') mapName = "熔岩巨集";
+            if (currentLevel === 'hard') mapName = "幻境星空";
+            document.getElementById('cert-level').textContent = mapName;
+
+            // 更新頒發日期
+            const today = new Date();
+            document.getElementById('cert-date').textContent = today.getFullYear() - 1911; // 民國年
+            document.getElementById('cert-month').textContent = today.getMonth() + 1;
+            document.getElementById('cert-day').textContent = today.getDate();
+
+            // 將即時分數與正確率填入證書
+            document.getElementById('final-score').textContent = score + " 分";
+            document.getElementById('accuracy-rate').textContent = `${accuracy}% (最大連擊數：${maxCombo}次)`;
+
+            if (isVictory) {
+                trophy.textContent = '👑';
+                title.textContent = '冒險成功！';
+                title.className = "text-3xl font-black text-emerald-600 mb-2 text-center";
+                subtitle.textContent = `太強了！你成功守護了「${mapName}」！`;
+                
+                if (accuracy >= 90) {
+                    achieve.textContent = '🏅 榮獲稱號：【黃金神速鍵盤手】';
+                } else {
+                    achieve.textContent = '🥈 榮獲稱號：【終極注音勇士】';
+                }
+            } else {
+                trophy.textContent = '💀';
+                title.textContent = '戰死沙場...';
+                title.className = "text-3xl font-black text-red-600 mb-2 text-center";
+                subtitle.textContent = '沒關係，怪獸很強大！多多練習，再次挑戰證書！';
+                achieve.textContent = '💪 榮獲稱號：【努力的小騎士】';
+            }
+        }
+
+        function showStartScreen() {
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+
+        // 注音切分
+        function splitBpmf(bpmfStr) {
+            return bpmfStr.split(' ');
+        }
+
+        function getTargetCharBpmf() {
+            const wordBpmfList = splitBpmf(currentTargetWord.bpmf);
+            return wordBpmfList[currentTargetCharIndex] || "";
+        }
+
+        function updateInputDisplay() {
+            document.getElementById('current-input-display').textContent = currentInputBpmf;
+        }
+
+        function showFeedback(text, isGood = true) {
+            const bubble = document.getElementById('feedback-bubble');
+            bubble.textContent = text;
+            if (isGood) {
+                bubble.className = "h-10 text-2xl font-black text-emerald-500 mb-2 transition-all duration-300 opacity-100 transform translate-y-0";
+            } else {
+                bubble.className = "h-10 text-2xl font-black text-red-500 mb-2 transition-all duration-300 opacity-100 transform translate-y-0";
+            }
+            setTimeout(() => {
+                bubble.className = "h-10 text-2xl font-black text-emerald-500 mb-2 transition-all duration-300 opacity-0 transform translate-y-2";
+            }, 800);
+        }
+
+        // --- 鍵盤監聽 ---
+        window.addEventListener('keydown', (e) => {
+            if (!isPlaying) return;
+
+            if (e.key.length > 1 && e.key !== 'Enter' && e.key !== 'Backspace' && e.key !== ' ') {
+                return;
+            }
+
+            totalKeysPressed++;
+            const pressedKey = e.key.toLowerCase();
+            highlightKey(pressedKey);
+
+            // 1. Backspace 退格
+            if (e.key === 'Backspace') {
+                e.preventDefault();
+                if (currentInputBpmf.length > 0) {
+                    currentInputBpmf = currentInputBpmf.slice(0, -1);
+                    updateInputDisplay();
+                    correctKeysPressed++;
+                }
+                return;
+            }
+
+            // 2. 空白鍵 -> 第一聲與魔法確認
+            if (e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                checkBpmfMatch(true);
+                return;
+            }
+
+            // 3. 注音按鍵輸入
+            const mappedBpmf = bpmfMap[pressedKey];
+            if (mappedBpmf) {
+                e.preventDefault();
+                const isTone = ['ˊ', 'ˇ', 'ˋ', '˙'].includes(mappedBpmf);
+                currentInputBpmf += mappedBpmf;
+                updateInputDisplay();
+
+                checkBpmfMatch(isTone);
+            }
+        });
+
+        // 檢查輸入
+        function checkBpmfMatch(isToneOrSpace) {
+            const targetBpmfFull = getTargetCharBpmf(); 
+            const targetBpmfNoTone = targetBpmfFull.replace(/[ˊˇˋ˙]/g, "");
+            const inputNoTone = currentInputBpmf.replace(/[ˊˇˋ˙]/g, "");
+
+            if (isToneOrSpace) {
+                let isMatch = false;
+                const targetHasNoTone = !/[ˊˇˋ˙]/.test(targetBpmfFull);
+
+                if (targetHasNoTone) {
+                    if (inputNoTone === targetBpmfNoTone) {
+                        isMatch = true;
+                    }
+                } else {
+                    if (currentInputBpmf === targetBpmfFull) {
+                        isMatch = true;
+                    }
+                }
+
+                if (isMatch) {
+                    correctKeysPressed += currentInputBpmf.length;
+                    
+                    damageMonster();
+                    increaseCombo();
+
+                    const activeBox = document.getElementById(`char-box-${currentTargetCharIndex}`);
+                    if (activeBox) {
+                        activeBox.classList.remove('active');
+                        activeBox.classList.add('completed');
+                    }
+
+                    currentTargetCharIndex++;
+                    currentInputBpmf = "";
+                    updateInputDisplay();
+
+                    if (currentTargetCharIndex >= currentTargetWord.word.length) {
+                        onMonsterDefeated();
+                    } else {
+                        const nextBox = document.getElementById(`char-box-${currentTargetCharIndex}`);
+                        if (nextBox) {
+                            nextBox.classList.add('active');
+                        }
+                    }
+
+                } else {
+                    playSound('wrong');
+                    showFeedback("施法失敗！注意注音符號", false);
+                    resetCombo();
+                    currentInputBpmf = "";
+                    updateInputDisplay();
+                    
+                    const stage = document.getElementById('battle-stage');
+                    stage.classList.add('shake-effect');
+                    setTimeout(() => stage.classList.remove('shake-effect'), 400);
+                }
+            } else {
+                if (targetBpmfNoTone.startsWith(inputNoTone)) {
+                    correctKeysPressed++;
+                } else {
+                    playSound('wrong');
+                    currentInputBpmf = currentInputBpmf.slice(0, -1);
+                    updateInputDisplay();
+                }
+            }
+        }
+
+        function highlightKey(key) {
+            let keyEl = document.querySelector(`.key-cap[data-key="${key}"]`);
+            if (!keyEl && key === ' ') {
+                keyEl = document.querySelector(`.key-cap-wide[data-key=" "]`);
+            }
+            if (keyEl) {
+                keyEl.classList.add('key-active');
+                setTimeout(() => { keyEl.classList.remove('key-active'); }, 150);
+            }
+        }
+
+        // 隨機排序輔助
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // 初始化選擇
+        selectHero('lion', '🦁');
+        selectLevel('easy');
+    </script>
+</body>
+</html>

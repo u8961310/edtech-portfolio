@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 我的學習遊戲樂園</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background:
+                radial-gradient(circle at 20% 10%, #fef3c7 0%, transparent 40%),
+                radial-gradient(circle at 80% 20%, #dbeafe 0%, transparent 40%),
+                radial-gradient(circle at 70% 80%, #fce7f3 0%, transparent 40%),
+                linear-gradient(180deg, #fffbeb 0%, #fef9c3 50%, #fde68a 100%);
+            min-height: 100vh;
+            color: #78350f;
+            padding: 20px 14px 48px;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        /* ===== Header ===== */
+        header {
+            text-align: center;
+            padding: 12px 16px 24px;
+        }
+        header h1 {
+            font-size: clamp(26px, 4vw, 40px);
+            font-weight: 900;
+            color: #78350f;
+            margin: 0;
+            text-shadow: 3px 3px 0 #fff, 5px 5px 0 #f59e0b33;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+        }
+        header p {
+            font-size: clamp(13px, 1.7vw, 17px);
+            color: #92400e;
+            font-weight: 700;
+            margin: 10px 0 0;
+        }
+        .nav-top {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: white;
+            border: 2px solid #78350f;
+            color: #78350f;
+            padding: 6px 14px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 900;
+            font-size: 13px;
+            box-shadow: 0 3px 0 #92400e;
+        }
+        .nav-top:hover { transform: translateY(-1px); }
+
+        /* ===== Grade Section ===== */
+        .grade-section {
+            margin: 20px 0;
+            padding: 18px 16px;
+            border-radius: 20px;
+            position: relative;
+        }
+        .grade-section.g1 {
+            background: rgba(96, 165, 250, 0.15);
+            border: 3px dashed #3b82f6;
+        }
+        .grade-section.gmid {
+            background: rgba(34, 197, 94, 0.15);
+            border: 3px dashed #16a34a;
+        }
+        .grade-section h2 {
+            font-size: clamp(20px, 2.6vw, 28px);
+            font-weight: 900;
+            margin: 0 0 4px 0;
+            text-shadow: 2px 2px 0 #fff;
+        }
+        .grade-section.g1 h2 { color: #1e3a8a; }
+        .grade-section.gmid h2 { color: #14532d; }
+        .grade-section .grade-hint {
+            font-size: clamp(12px, 1.4vw, 14px);
+            font-weight: 700;
+            margin: 0 0 14px 0;
+            opacity: 0.85;
+        }
+        .grade-section.g1 .grade-hint { color: #1e3a8a; }
+        .grade-section.gmid .grade-hint { color: #14532d; }
+
+        /* ===== Card Grid ===== */
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        @media (min-width: 640px) {
+            .card-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (min-width: 980px) {
+            .card-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        /* ===== Card ===== */
+        .card {
+            background: white;
+            border: 3px solid var(--c, #fbbf24);
+            border-radius: 18px;
+            padding: 18px 16px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.18s, box-shadow 0.18s;
+            box-shadow: 0 5px 0 var(--c, #f59e0b);
+            cursor: pointer;
+            position: relative;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 9px 0 var(--c, #f59e0b), 0 12px 20px rgba(0,0,0,0.08);
+        }
+        .card:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 0 var(--c, #f59e0b);
+        }
+        .card-cover {
+            font-size: clamp(42px, 6vw, 60px);
+            line-height: 1;
+            margin: 2px 0 8px;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.12));
+            transition: transform 0.3s;
+        }
+        .card:hover .card-cover {
+            transform: scale(1.08) rotate(-4deg);
+        }
+        .card-title {
+            font-size: clamp(17px, 2.1vw, 21px);
+            font-weight: 900;
+            color: #1f2937;
+            margin: 0 0 6px 0;
+        }
+        .card-desc {
+            color: #475569;
+            font-size: clamp(12px, 1.4vw, 14px);
+            font-weight: 700;
+            line-height: 1.55;
+            flex-grow: 1;
+            margin: 0 0 12px 0;
+        }
+        .card-score {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-weight: 900;
+            font-size: 12px;
+            margin: 0 0 10px 0;
+            border: 2px solid #fbbf24;
+            box-shadow: 0 2px 0 #f59e0b;
+        }
+        .play-btn {
+            background: var(--c, #fbbf24);
+            color: white;
+            font-size: clamp(14px, 1.7vw, 17px);
+            font-weight: 900;
+            padding: 9px 24px;
+            border-radius: 999px;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.25);
+            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2);
+            white-space: nowrap;
+        }
+        .skill-tag {
+            position: absolute;
+            top: -10px;
+            right: 14px;
+            background: white;
+            border: 2px solid var(--c, #fbbf24);
+            color: var(--c, #92400e);
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 900;
+            box-shadow: 0 2px 0 rgba(0,0,0,0.08);
+        }
+
+        /* ===== Footer (teacher info) ===== */
+        footer {
+            margin: 48px auto 0;
+            padding: 24px;
+            text-align: center;
+            max-width: 800px;
+        }
+        details.teacher-info {
+            background: white;
+            border: 2px solid #d4d4d8;
+            border-radius: 16px;
+            padding: 14px 20px;
+            text-align: left;
+            color: #475569;
+            font-size: 14px;
+        }
+        details.teacher-info summary {
+            cursor: pointer;
+            font-weight: 900;
+            color: #1f2937;
+            font-size: 15px;
+        }
+        details.teacher-info[open] summary { margin-bottom: 12px; }
+        details.teacher-info ul { margin: 8px 0; padding-left: 20px; line-height: 1.8; }
+        details.teacher-info code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        details.teacher-info a { color: #2563eb; text-decoration: none; }
+        details.teacher-info a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="./portfolio.html" class="nav-top">👨‍🏫 給老師看</a>
+
+    <header>
+        <h1>🎮 我的學習遊戲樂園</h1>
+        <p>選你的年級，開始好玩的挑戰吧！</p>
+    </header>
+
+    <!-- ===== 一年級 ===== -->
+    <section class="grade-section g1">
+        <h2>🎒 一年級的遊戲</h2>
+        <p class="grade-hint">一起學會用滑鼠、鍵盤，還可以畫畫和指揮小烏龜！</p>
+
+        <div class="card-grid">
+            <a href="./units/unit2-mouse-adventure/index.html" class="card" style="--c: #16a34a;">
+                <span class="skill-tag">滑鼠特訓</span>
+                <div class="card-cover">🐰⚔️</div>
+                <h3 class="card-title">小兔勇者大冒險</h3>
+                <p class="card-desc">陪小兔勇者用滑鼠打敗森林壞蛋！學會點點、移動、拖拉、雙擊四種魔法。</p>
+                <p class="card-score" id="unit2-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+
+            <a href="./units/unit4-whack-keyboard/index.html" class="card" style="--c: #f59e0b;">
+                <span class="skill-tag">鍵盤入門</span>
+                <div class="card-cover">🐹⌨️</div>
+                <h3 class="card-title">鍵盤打地鼠</h3>
+                <p class="card-desc">地鼠舉著字牌跑出來啦！在鍵盤上找到那個鍵按下去，把地鼠打回洞裡。</p>
+                <p class="card-score" id="unit4-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+
+            <a href="./units/unit3-space-typing/index.html" class="card" style="--c: #9333ea;">
+                <span class="skill-tag">英文打字</span>
+                <div class="card-cover">🛸🌍</div>
+                <h3 class="card-title">太空打字防衛戰</h3>
+                <p class="card-desc">外星人從天上飛下來啦！按出英文字母擊落他們，保衛我們的地球！</p>
+                <p class="card-score" id="unit3-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+
+            <a href="./units/unit5-pixel-art/index.html" class="card" style="--c: #ec4899;">
+                <span class="skill-tag">數位創作</span>
+                <div class="card-cover">🎨🖼️</div>
+                <h3 class="card-title">像素藝術小畫家</h3>
+                <p class="card-desc">一格一格塗顏色，畫出愛心、星星、小屋！或自由發揮，創作你的小作品。</p>
+                <p class="card-score" id="unit5-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+
+            <a href="./units/unit6-turtle-commander/index.html" class="card" style="--c: #14b8a6;">
+                <span class="skill-tag">動腦想想</span>
+                <div class="card-cover">🐢🥕</div>
+                <h3 class="card-title">烏龜小指揮官</h3>
+                <p class="card-desc">先想好要走哪邊，再按箭頭給烏龜指令。讓烏龜吃到所有胡蘿蔔！</p>
+                <p class="card-score" id="unit6-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- ===== 中年級 ===== -->
+    <section class="grade-section gmid">
+        <h2>📘 中年級的遊戲</h2>
+        <p class="grade-hint">挑戰更進階的遊戲，把學會的本領都用出來！</p>
+
+        <div class="card-grid">
+            <a href="./units/unit1-typing-adventure/index.html" class="card" style="--c: #ef4444;">
+                <span class="skill-tag">注音打字</span>
+                <div class="card-cover">⚔️🐲</div>
+                <h3 class="card-title">中文打字冒險王</h3>
+                <p class="card-desc">邊打注音邊打怪！連擊越多分數越高，闖關完成可以拿到勇者證書。</p>
+                <p class="card-score" id="unit1-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+        </div>
+    </section>
+
+    <footer style="margin-top: 32px; text-align: center; padding: 16px; color: #92400e; font-size: 13px; font-weight: 700;">
+        想了解這些遊戲怎麼來的？ <a href="./portfolio.html" style="color: #b45309; text-decoration: underline;">看老師的作品集說明 →</a>
+    </footer>
+</div>
+
+<script>
+    // 讀取各單元 LocalStorage 最佳分數（SDD §5 規範 key 為 edtech-unit{N}-score）
+    function loadLocalScore(unitId) {
+        return localStorage.getItem(`edtech-unit${unitId}-score`) || null;
+    }
+    [1, 2, 3, 4, 5, 6].forEach((id) => {
+        const score = loadLocalScore(id);
+        const badge = document.getElementById(`unit${id}-score-badge`);
+        if (score && badge) {
+            badge.textContent = `🏆 最佳成績：${score} 分`;
+            badge.style.display = 'inline-block';
+        }
+    });
+</script>
+
+</body>
+</html>
