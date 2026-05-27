@@ -30,6 +30,9 @@
 | 🎒 一年級 | `unit5-pixel-art` | 像素藝術小畫家 | 數位創作、像素概念、滑鼠精準 |
 | 🎒 一年級 | `unit6-turtle-commander` | 烏龜小指揮官 | 運算思維入門：序列、除錯、最少步數 |
 | 🎒 一年級 | `unit7-spell-commander` | 指令小法師 | 滑鼠+鍵盤整合、運算思維：順序、重複、條件 |
+| 🎒 一年級 | `unit8-desktop-organizer` | 桌面整理大師 | 檔案管理、拖曳整理、檔案類型辨識 |
+| 🎒 一年級 | `unit9-net-detective` | 網路小警察 | 資訊倫理、詐騙辨識、個資保護 |
+| 🎒 一年級 | `unit10-classifier-captain` | 分類大隊長 | 觀察分類、依特徵歸組（資料概念入門） |
 | 📘 中年級 | `unit1-typing-adventure` | 中文打字冒險王 | 注音輸入、中文識讀、闖關成就感 |
 
 ## 🚀 快速開始
@@ -64,7 +67,13 @@ edtech-portfolio/
     │   └── index.html
     ├── unit6-turtle-commander/
     │   └── index.html
-    └── unit7-spell-commander/
+    ├── unit7-spell-commander/
+    │   └── index.html
+    ├── unit8-desktop-organizer/
+    │   └── index.html
+    ├── unit9-net-detective/
+    │   └── index.html
+    └── unit10-classifier-captain/
         └── index.html
 ```
 

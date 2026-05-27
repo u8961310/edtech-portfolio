@@ -292,6 +292,33 @@
                 <p class="card-score" id="unit7-score-badge" style="display:none;"></p>
                 <span class="play-btn">▶ 開始玩</span>
             </a>
+
+            <a href="./units/unit8-desktop-organizer/index.html" class="card" style="--c: #eab308;">
+                <span class="skill-tag">檔案整理</span>
+                <div class="card-cover">📁🖥️</div>
+                <h3 class="card-title">桌面整理大師</h3>
+                <p class="card-desc">把作業、音樂、圖片拖到對的資料夾！學會分類整理，桌面再也不亂啦。</p>
+                <p class="card-score" id="unit8-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+
+            <a href="./units/unit9-net-detective/index.html" class="card" style="--c: #3b82f6;">
+                <span class="skill-tag">網路安全</span>
+                <div class="card-cover">🕵️🛡️</div>
+                <h3 class="card-title">網路小警察</h3>
+                <p class="card-desc">收到奇怪訊息怎麼辦？學會分辨詐騙、保護自己，成為網路偵探！</p>
+                <p class="card-score" id="unit9-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+
+            <a href="./units/unit10-classifier-captain/index.html" class="card" style="--c: #92400e;">
+                <span class="skill-tag">觀察分類</span>
+                <div class="card-cover">🍎🧺</div>
+                <h3 class="card-title">分類大隊長</h3>
+                <p class="card-desc">物品從天上掉下來啦！觀察特徵，拖到對的籃子。練習資料分類的小高手。</p>
+                <p class="card-score" id="unit10-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
         </div>
     </section>
 
@@ -322,7 +349,7 @@
     function loadLocalScore(unitId) {
         return localStorage.getItem(`edtech-unit${unitId}-score`) || null;
     }
-    [1, 2, 3, 4, 5, 6, 7].forEach((id) => {
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach((id) => {
         const score = loadLocalScore(id);
         const badge = document.getElementById(`unit${id}-score-badge`);
         if (score && badge) {
