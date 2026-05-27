@@ -283,6 +283,15 @@
                 <p class="card-score" id="unit6-score-badge" style="display:none;"></p>
                 <span class="play-btn">▶ 開始玩</span>
             </a>
+
+            <a href="./units/unit7-spell-commander/index.html" class="card" style="--c: #6366f1;">
+                <span class="skill-tag">咒語對戰</span>
+                <div class="card-cover">🧙‍♂️🐉</div>
+                <h3 class="card-title">指令小法師</h3>
+                <p class="card-desc">照怪獸頭上的順序排咒語，用滑鼠或鍵盤施法！學會「順序」和「重複」的魔法。</p>
+                <p class="card-score" id="unit7-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
         </div>
     </section>
 
@@ -313,7 +322,7 @@
     function loadLocalScore(unitId) {
         return localStorage.getItem(`edtech-unit${unitId}-score`) || null;
     }
-    [1, 2, 3, 4, 5, 6].forEach((id) => {
+    [1, 2, 3, 4, 5, 6, 7].forEach((id) => {
         const score = loadLocalScore(id);
         const badge = document.getElementById(`unit${id}-score-badge`);
         if (score && badge) {

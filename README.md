@@ -29,6 +29,7 @@
 | 🎒 一年級 | `unit3-space-typing` | 太空打字防衛戰 | 英文打字入門：字母 → 短詞 → 3 字母單字 |
 | 🎒 一年級 | `unit5-pixel-art` | 像素藝術小畫家 | 數位創作、像素概念、滑鼠精準 |
 | 🎒 一年級 | `unit6-turtle-commander` | 烏龜小指揮官 | 運算思維入門：序列、除錯、最少步數 |
+| 🎒 一年級 | `unit7-spell-commander` | 指令小法師 | 滑鼠+鍵盤整合、運算思維：順序、重複、條件 |
 | 📘 中年級 | `unit1-typing-adventure` | 中文打字冒險王 | 注音輸入、中文識讀、闖關成就感 |
 
 ## 🚀 快速開始
@@ -61,7 +62,9 @@ edtech-portfolio/
     │   └── index.html
     ├── unit5-pixel-art/
     │   └── index.html
-    └── unit6-turtle-commander/
+    ├── unit6-turtle-commander/
+    │   └── index.html
+    └── unit7-spell-commander/
         └── index.html
 ```
 
