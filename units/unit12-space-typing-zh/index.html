@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中打太空特攻 - 選時間，打中文打外星人</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --c: #ec4899;
+        --c-dark: #be185d;
+        --c-light: #f9a8d4;
+        --bg-1: #0a0014;
+        --bg-2: #1a0828;
+        --bg-3: #2d0a3e;
+        --star: #fef9c3;
+        --good: #4ade80;
+        --bad: #ef4444;
+        --warn: #fbbf24;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; min-height: 100%; overflow-x: hidden; }
+    body {
+        font-family: 'Noto Sans TC', sans-serif;
+        user-select: none;
+        -webkit-user-select: none;
+        color: #f8fafc;
+        min-height: 100vh;
+        background:
+            radial-gradient(ellipse at 20% 30%, #ec489922 0%, transparent 60%),
+            radial-gradient(ellipse at 80% 70%, #9333ea33 0%, transparent 55%),
+            linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 60%, var(--bg-3) 100%);
+    }
+
+    .screen {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        position: relative;
+        z-index: 2;
+    }
+    .hidden { display: none !important; }
+
+    /* ===== Stars background ===== */
+    #stars-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+    .star {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        background: var(--star);
+        border-radius: 50%;
+        opacity: 0.7;
+        animation: twinkle 3s ease-in-out infinite;
+    }
+    .star.big { width: 3px; height: 3px; box-shadow: 0 0 4px var(--star); }
+    @keyframes twinkle {
+        0%, 100% { opacity: 0.2; }
+        50% { opacity: 1; }
+    }
+
+    /* ===== Start screen ===== */
+    .title-emoji {
+        font-size: clamp(80px, 14vw, 140px);
+        animation: float 2.4s ease-in-out infinite;
+        filter: drop-shadow(0 4px 20px var(--c));
+        line-height: 1;
+    }
+    @keyframes float {
+        0%, 100% { transform: translateY(0) rotate(-3deg); }
+        50% { transform: translateY(-14px) rotate(3deg); }
+    }
+    .title-text {
+        font-size: clamp(34px, 5.5vw, 56px);
+        font-weight: 900;
+        color: var(--star);
+        text-shadow: 4px 4px 0 var(--c-dark), 6px 6px 0 #00000055;
+        margin: 8px 0 4px;
+        text-align: center;
+        letter-spacing: 2px;
+    }
+    .subtitle {
+        font-size: clamp(15px, 2vw, 20px);
+        color: var(--c-light);
+        font-weight: 700;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    /* IME tip card — icon-heavy, minimal text */
+    .ime-tip {
+        background: rgba(236, 72, 153, 0.12);
+        border: 2px solid var(--c);
+        border-radius: 20px;
+        padding: 18px 24px;
+        max-width: 420px;
+        margin: 0 auto 22px;
+        text-align: center;
+        box-shadow: 0 8px 24px rgba(236, 72, 153, 0.25);
+    }
+    .ime-tip .row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        font-size: clamp(32px, 5vw, 44px);
+        margin-bottom: 6px;
+    }
+    .ime-tip .row .arrow {
+        font-size: clamp(24px, 4vw, 32px);
+        color: var(--c-light);
+        animation: arrow-pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes arrow-pulse {
+        0%, 100% { transform: translateX(0); opacity: 0.7; }
+        50% { transform: translateX(6px); opacity: 1; }
+    }
+    .ime-tip .hint {
+        font-size: 13px;
+        color: var(--c-light);
+        font-weight: 700;
+        margin-top: 4px;
+    }
+
+    /* Time choice — 5 big buttons */
+    .time-choices {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 14px;
+        max-width: 720px;
+        width: 100%;
+        margin: 8px 0 20px;
+    }
+    .time-btn {
+        font-family: 'Noto Sans TC', sans-serif;
+        font-weight: 900;
+        font-size: clamp(18px, 2.4vw, 22px);
+        padding: 18px 12px;
+        background: linear-gradient(180deg, var(--c-light), var(--c));
+        color: white;
+        border: none;
+        border-radius: 18px;
+        box-shadow: 0 6px 0 var(--c-dark), 0 10px 24px rgba(236, 72, 153, 0.4);
+        cursor: pointer;
+        transition: transform 0.12s, box-shadow 0.12s;
+        text-shadow: 2px 2px 0 var(--c-dark);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        min-height: 92px;
+        justify-content: center;
+    }
+    .time-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 0 var(--c-dark), 0 12px 28px rgba(236, 72, 153, 0.5); }
+    .time-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--c-dark); }
+    .time-btn .icon { font-size: 28px; line-height: 1; }
+    .time-btn .label { font-size: clamp(16px, 2vw, 20px); }
+    .time-btn .best {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--star);
+        background: rgba(0,0,0,0.3);
+        padding: 1px 8px;
+        border-radius: 999px;
+        margin-top: 2px;
+        opacity: 0.9;
+    }
+
+    .home-btn {
+        background: transparent;
+        border: 2px solid var(--c-light);
+        color: var(--c-light);
+        font-family: 'Noto Sans TC', sans-serif;
+        font-weight: 700;
+        font-size: 16px;
+        padding: 8px 20px;
+        border-radius: 999px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: background 0.15s;
+    }
+    .home-btn:hover { background: rgba(236, 72, 153, 0.18); }
+
+    /* ===== Game screen ===== */
+    #game-screen {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 8px 12px 12px;
+        gap: 8px;
+        overflow: hidden;
+    }
+    .hud {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        max-width: 920px;
+        margin: 0 auto;
+    }
+    .hud-box {
+        background: rgba(236, 72, 153, 0.18);
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-weight: 900;
+        font-size: clamp(13px, 1.6vw, 16px);
+        color: var(--star);
+        border: 2px solid var(--c);
+        white-space: nowrap;
+    }
+    .hud-box.timer { background: rgba(251, 191, 36, 0.18); border-color: var(--warn); color: var(--warn); }
+    .hud-box.combo { background: rgba(74, 222, 128, 0.18); border-color: var(--good); color: var(--good); }
+    .hud-box.combo.cold { opacity: 0.4; }
+    .hud-hp {
+        font-size: clamp(18px, 2.2vw, 22px);
+        letter-spacing: 2px;
+        background: rgba(0,0,0,0.3);
+        padding: 4px 12px;
+        border-radius: 999px;
+        border: 2px solid var(--bad);
+    }
+    .hud-hp .gone { opacity: 0.18; filter: grayscale(1); }
+    .top-back {
+        background: transparent;
+        border: 2px solid #c7d2fe;
+        color: #c7d2fe;
+        font-family: 'Noto Sans TC', sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    /* Arena */
+    .arena {
+        position: relative;
+        flex: 1;
+        width: 100%;
+        max-width: 920px;
+        margin: 0 auto;
+        background:
+            radial-gradient(ellipse at 50% 100%, #ec489944, transparent 70%),
+            radial-gradient(ellipse at 30% 20%, #9333ea33, transparent 60%),
+            linear-gradient(180deg, #0a0014cc 0%, #1a0828aa 100%);
+        border: 3px solid var(--c);
+        border-radius: 22px;
+        overflow: hidden;
+        min-height: 380px;
+    }
+
+    /* Alien */
+    .alien {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        transition: filter 0.18s;
+        z-index: 3;
+    }
+    .alien .word-card {
+        background: rgba(0, 0, 0, 0.72);
+        border: 2px solid var(--c-light);
+        border-radius: 12px;
+        padding: 4px 12px;
+        font-weight: 900;
+        color: var(--star);
+        font-size: clamp(20px, 2.6vw, 28px);
+        letter-spacing: 2px;
+        white-space: nowrap;
+        text-shadow: 1px 1px 0 #000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .alien .word-card .matched {
+        color: var(--good);
+        text-shadow: 0 0 6px var(--good);
+    }
+    .alien.partial .word-card {
+        border-color: var(--good);
+        background: rgba(74, 222, 128, 0.18);
+        animation: alien-glow 0.4s ease-in-out infinite alternate;
+    }
+    @keyframes alien-glow {
+        from { box-shadow: 0 0 6px var(--good); }
+        to { box-shadow: 0 0 18px var(--good); }
+    }
+    .alien .body {
+        font-size: clamp(46px, 7vw, 64px);
+        line-height: 1;
+        filter: drop-shadow(0 4px 8px rgba(236, 72, 153, 0.5));
+        animation: alien-bob 2.2s ease-in-out infinite;
+    }
+    @keyframes alien-bob {
+        0%, 100% { transform: translateY(0) rotate(-4deg); }
+        50% { transform: translateY(-6px) rotate(4deg); }
+    }
+    .alien.dying .body { animation: alien-die 0.4s ease-out forwards; }
+    @keyframes alien-die {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.6) rotate(20deg); filter: brightness(2.5) drop-shadow(0 0 16px var(--good)); }
+        100% { transform: scale(0) rotate(180deg); opacity: 0; }
+    }
+
+    /* Laser */
+    .laser {
+        position: absolute;
+        height: 4px;
+        background: linear-gradient(90deg, transparent, var(--c-light), white, var(--c-light), transparent);
+        border-radius: 999px;
+        transform-origin: left center;
+        box-shadow: 0 0 12px var(--c-light), 0 0 24px var(--c);
+        z-index: 5;
+        animation: laser-flash 0.32s ease-out forwards;
+    }
+    @keyframes laser-flash {
+        0% { opacity: 0; transform: scaleY(0.2); }
+        20% { opacity: 1; transform: scaleY(1); }
+        100% { opacity: 0; transform: scaleY(1); }
+    }
+
+    /* Explosion */
+    .boom {
+        position: absolute;
+        font-size: 60px;
+        line-height: 1;
+        z-index: 4;
+        pointer-events: none;
+        animation: boom 0.55s ease-out forwards;
+    }
+    @keyframes boom {
+        0% { transform: scale(0.4) rotate(0); opacity: 1; }
+        50% { transform: scale(1.6) rotate(20deg); opacity: 1; }
+        100% { transform: scale(2.4) rotate(40deg); opacity: 0; }
+    }
+
+    /* Ship at bottom (shooter) */
+    .ship {
+        position: absolute;
+        left: 50%;
+        bottom: 70px;
+        transform: translateX(-50%);
+        font-size: clamp(48px, 6vw, 64px);
+        line-height: 1;
+        z-index: 6;
+        filter: drop-shadow(0 0 8px var(--c));
+        pointer-events: none;
+    }
+    .ship.shoot { animation: ship-shoot 0.2s ease-out; }
+    @keyframes ship-shoot {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50% { transform: translateX(-50%) translateY(4px); }
+    }
+
+    /* Input bar at bottom */
+    .input-bar-wrap {
+        position: absolute;
+        left: 0; right: 0;
+        bottom: 10px;
+        padding: 0 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 7;
+        pointer-events: none;
+    }
+    .input-bar {
+        max-width: 540px;
+        width: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1.5px solid var(--c-light);
+        border-radius: 999px;
+        padding: 6px 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        pointer-events: auto;
+        backdrop-filter: blur(4px);
+    }
+    .input-bar .icon { font-size: 18px; opacity: 0.7; }
+    .input-bar input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: rgba(255,255,255,0.55);
+        font-family: 'Noto Sans TC', sans-serif;
+        font-weight: 700;
+        font-size: 16px;
+        letter-spacing: 2px;
+        caret-color: var(--c-light);
+        min-width: 50px;
+    }
+    .input-bar input::placeholder { color: rgba(255,255,255,0.25); font-size: 13px; letter-spacing: 0; }
+    .input-bar .composing-tag {
+        font-size: 11px;
+        color: var(--warn);
+        background: rgba(251, 191, 36, 0.18);
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-weight: 700;
+        opacity: 0;
+        transition: opacity 0.15s;
+    }
+    .input-bar .composing-tag.on { opacity: 1; }
+
+    /* Screen flash on wrong */
+    .arena.flash-red {
+        animation: flash-red 0.32s ease-out;
+    }
+    @keyframes flash-red {
+        0% { box-shadow: inset 0 0 0 0 var(--bad); }
+        30% { box-shadow: inset 0 0 100px 8px var(--bad); border-color: var(--bad); }
+        100% { box-shadow: inset 0 0 0 0 var(--bad); }
+    }
+
+    /* Pause overlay */
+    .pause-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        z-index: 20;
+        backdrop-filter: blur(4px);
+    }
+    .pause-overlay .pause-icon { font-size: 64px; }
+    .pause-overlay .pause-text { font-size: 26px; font-weight: 900; color: var(--c-light); }
+    .pause-overlay .pause-hint { font-size: 14px; color: #cbd5e1; }
+
+    /* Floating score popup */
+    .float-score {
+        position: absolute;
+        font-size: clamp(20px, 2.6vw, 28px);
+        font-weight: 900;
+        color: var(--good);
+        text-shadow: 0 0 8px var(--good), 2px 2px 0 #000;
+        z-index: 6;
+        pointer-events: none;
+        animation: float-up 0.9s ease-out forwards;
+    }
+    @keyframes float-up {
+        0% { transform: translate(-50%, 0); opacity: 1; }
+        100% { transform: translate(-50%, -60px); opacity: 0; }
+    }
+
+    /* ===== End screen / Certificate ===== */
+    .certificate {
+        background: linear-gradient(180deg, #fefce8, #fef3c7);
+        border: 6px double #b45309;
+        border-radius: 24px;
+        padding: 36px 32px;
+        text-align: center;
+        max-width: 560px;
+        width: 100%;
+        position: relative;
+        color: #4338ca;
+        box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+    }
+    .cert-corner { position: absolute; font-size: 32px; }
+    .cert-corner.tl { top: 8px; left: 12px; }
+    .cert-corner.tr { top: 8px; right: 12px; }
+    .cert-corner.bl { bottom: 8px; left: 12px; }
+    .cert-corner.br { bottom: 8px; right: 12px; }
+    .cert-trophy { font-size: 64px; line-height: 1; margin-bottom: 4px; }
+    .cert-title { font-size: clamp(26px, 4vw, 38px); font-weight: 900; color: var(--c-dark); margin-bottom: 8px; letter-spacing: 2px; }
+    .cert-body { font-size: clamp(16px, 2vw, 20px); color: #312e81; line-height: 1.8; margin: 12px 0; }
+    .cert-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px 18px;
+        margin: 14px auto;
+        max-width: 420px;
+    }
+    .cert-stats .stat {
+        background: rgba(236, 72, 153, 0.1);
+        border: 1.5px solid #ec489966;
+        border-radius: 12px;
+        padding: 10px 14px;
+    }
+    .cert-stats .stat .label { font-size: 12px; color: #6b21a8; font-weight: 700; margin-bottom: 2px; }
+    .cert-stats .stat .value { font-size: clamp(20px, 2.6vw, 26px); font-weight: 900; color: var(--c-dark); }
+    .cert-rank {
+        font-size: clamp(20px, 2.6vw, 28px);
+        font-weight: 900;
+        color: var(--c-dark);
+        margin-top: 14px;
+        background: rgba(236, 72, 153, 0.12);
+        padding: 8px 18px;
+        border-radius: 999px;
+        display: inline-block;
+    }
+    .cert-date { margin-top: 12px; font-size: 13px; color: #6366f1; }
+
+    @media print {
+        body { background: white !important; color: black !important; }
+        #stars-bg, #start-screen, #game-screen { display: none !important; }
+        #end-screen { min-height: auto; padding: 0; background: white; }
+        #end-screen > .end-actions { display: none !important; }
+        .certificate { box-shadow: none; border-color: #b45309; }
+    }
+
+    .end-actions {
+        margin-top: 18px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .big-btn {
+        font-family: 'Noto Sans TC', sans-serif;
+        font-size: clamp(16px, 2vw, 20px);
+        font-weight: 900;
+        padding: 12px 24px;
+        background: linear-gradient(180deg, var(--c-light), var(--c));
+        color: white;
+        border: none;
+        border-radius: 999px;
+        box-shadow: 0 5px 0 var(--c-dark);
+        cursor: pointer;
+        text-shadow: 2px 2px 0 var(--c-dark);
+        text-decoration: none;
+        display: inline-block;
+    }
+    .big-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--c-dark); }
+    .big-btn.gold { background: linear-gradient(180deg, #fbbf24, #f59e0b); box-shadow: 0 5px 0 #b45309; text-shadow: 2px 2px 0 #92400e; }
+    .big-btn.gray { background: linear-gradient(180deg, #64748b, #475569); box-shadow: 0 5px 0 #1e293b; text-shadow: 2px 2px 0 #1e293b; }
+
+    /* Difficulty banner (mid-game phase hint) */
+    .phase-banner {
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.55);
+        border: 1.5px solid var(--c);
+        color: var(--star);
+        font-weight: 700;
+        font-size: 13px;
+        padding: 4px 14px;
+        border-radius: 999px;
+        z-index: 8;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .phase-banner.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="stars-bg"></div>
+
+<!-- ============================================================
+     Start screen
+     ============================================================ -->
+<div id="start-screen" class="screen">
+    <div class="title-emoji">🚀</div>
+    <h1 class="title-text">中打太空特攻</h1>
+    <p class="subtitle">選時間，打中文打外星人</p>
+
+    <div class="ime-tip">
+        <div class="row">
+            <span>⌨️</span>
+            <span class="arrow">➡️</span>
+            <span>ㄅㄆㄇ</span>
+        </div>
+        <div class="hint">請先切注音輸入法</div>
+    </div>
+
+    <div class="time-choices" id="time-choices">
+        <!-- buttons injected by JS -->
+    </div>
+
+    <a href="../../index.html" class="home-btn">🏠 回首頁</a>
+</div>
+
+<!-- ============================================================
+     Game screen
+     ============================================================ -->
+<div id="game-screen" class="hidden">
+    <div class="hud">
+        <a href="../../index.html" class="top-back">🏠 首頁</a>
+        <div class="hud-box timer" id="hud-timer">⏱ 00:00</div>
+        <div class="hud-box" id="hud-score">🎯 0</div>
+        <div class="hud-box combo cold" id="hud-combo">⚡ ×1.0</div>
+        <div class="hud-box" id="hud-acc">💯 100%</div>
+        <div class="hud-hp" id="hud-hp">❤️❤️❤️</div>
+    </div>
+
+    <div class="arena" id="arena">
+        <div class="phase-banner" id="phase-banner"></div>
+        <div class="ship" id="ship">🚀</div>
+
+        <div class="input-bar-wrap">
+            <div class="input-bar">
+                <span class="icon">⌨️</span>
+                <input type="text" id="word-input" autocomplete="off" autocapitalize="off"
+                       spellcheck="false" placeholder="切注音輸入法後在這裡打字"
+                       aria-label="輸入中文">
+                <span class="composing-tag" id="composing-tag">組字中</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     End screen
+     ============================================================ -->
+<div id="end-screen" class="screen hidden">
+    <div class="certificate">
+        <span class="cert-corner tl">🚀</span>
+        <span class="cert-corner tr">⭐</span>
+        <span class="cert-corner bl">👾</span>
+        <span class="cert-corner br">🛸</span>
+        <div class="cert-trophy" id="cert-trophy">🏆</div>
+        <div class="cert-title">中打太空證書</div>
+        <div class="cert-body">
+            勇敢的太空指揮官完成了<br>
+            <strong id="cert-duration">10 分鐘</strong> 的中打任務！
+        </div>
+        <div class="cert-stats">
+            <div class="stat"><div class="label">🎯 總分</div><div class="value" id="cert-score">0</div></div>
+            <div class="stat"><div class="label">📝 字/分</div><div class="value" id="cert-wpm">0</div></div>
+            <div class="stat"><div class="label">⚡ 最高連擊</div><div class="value" id="cert-combo">0</div></div>
+            <div class="stat"><div class="label">💯 命中率</div><div class="value" id="cert-acc">100%</div></div>
+        </div>
+        <div class="cert-rank" id="cert-rank">🥈 新手</div>
+        <div class="cert-date" id="cert-date"></div>
+    </div>
+    <div class="end-actions">
+        <button class="big-btn" onclick="location.reload()">🔄 再玩一次</button>
+        <button class="big-btn gold" onclick="window.print()">🖨️ 列印證書</button>
+        <a href="../../index.html" class="big-btn gray">🏠 回首頁</a>
+    </div>
+</div>
+
+<script>
+'use strict';
+
+// ============================================================
+// Constants
+// ============================================================
+const STORAGE_KEY_SCORE = 'edtech-unit12-best-score';
+const STORAGE_KEY_WPM = 'edtech-unit12-best-wpm';
+
+const TIME_OPTIONS = [
+    { sec: 30,   label: '30 秒', icon: '⏱', short: '30s' },
+    { sec: 300,  label: '5 分',  icon: '⏰', short: '5m'  },
+    { sec: 600,  label: '10 分', icon: '🕙', short: '10m' },
+    { sec: 900,  label: '15 分', icon: '🕘', short: '15m' },
+    { sec: 1200, label: '20 分', icon: '🕛', short: '20m' }
+];
+
+// Word pools by difficulty tier
+const POOL_1CHAR = [
+    '一','二','三','四','五','六','七','八','九','十',
+    '人','口','手','足','上','下','大','小','多','少',
+    '好','白','黑','紅','青','山','水','日','月','火',
+    '土','心','目','耳','車','馬','牛','羊','貓','狗',
+    '鳥','魚','花','草','樹','木','米','雲','雨','風',
+    '來','去','走','跑'
+];
+const POOL_2CHAR = [
+    '爸爸','媽媽','哥哥','姊姊','弟弟','妹妹',
+    '老師','學生','學校','回家','上學','放學',
+    '吃飯','玩具','好玩','好吃','好看','生日',
+    '快樂','太陽','月亮','星星','白雲','下雨',
+    '刮風','走路','跑步','運動','寫字','看書',
+    '畫畫','唱歌','朋友','同學','早上','晚上',
+    '今天','明天','蘋果','西瓜','香蕉','蜜蜂',
+    '小貓','小狗','大象','長頸鹿'
+];
+const POOL_3CHAR = [
+    '去學校','回家了','吃午餐','寫作業','玩遊戲',
+    '看電視','打怪獸','好朋友','新衣服','紅蘋果',
+    '小白兔','綠色草','藍天空','大太陽','下大雨',
+    '愛媽媽','喜歡你','坐火車','搭飛機','上樓梯',
+    '小書包','黃色花','大蘋果','小老鼠','飛上天'
+];
+const POOL_SHORT = [
+    '今天天氣好','我喜歡你','太空船飛行','媽媽愛我',
+    '我會打字','太陽很大','月亮亮亮的','星星眨眼睛',
+    '小狗在跑步','我去上學校','大家一起玩','花朵真漂亮',
+    '小鳥樹上叫','天上有星星','我們愛立人','藍天白雲飛',
+    '小魚水中游','彩虹真好看','蘋果紅紅的'
+];
+
+// Score per word by length
+function scoreForLen(len) {
+    if (len === 1) return 2;
+    if (len === 2) return 5;
+    if (len === 3) return 10;
+    return 20;
+}
+
+// ============================================================
+// Audio
+// ============================================================
+let audioCtx = null;
+function getAudio() {
+    if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    }
+    return audioCtx;
+}
+function beep(freq, dur, type = 'square', vol = 0.1) {
+    try {
+        const ctx = getAudio(); if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(vol, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        osc.connect(g).connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + dur);
+    } catch(e) {}
+}
+const SFX = {
+    laser() {
+        beep(880, 0.05, 'square', 0.08);
+        setTimeout(() => beep(660, 0.06, 'square', 0.08), 30);
+    },
+    hit() {
+        beep(180, 0.12, 'sawtooth', 0.14);
+        setTimeout(() => beep(110, 0.18, 'sawtooth', 0.12), 60);
+    },
+    wrong() {
+        beep(160, 0.18, 'square', 0.12);
+        setTimeout(() => beep(110, 0.22, 'square', 0.10), 140);
+    },
+    spawn() { beep(420, 0.06, 'triangle', 0.06); },
+    lifeLost() {
+        beep(220, 0.2, 'sawtooth', 0.18);
+        setTimeout(() => beep(140, 0.3, 'sawtooth', 0.18), 180);
+    },
+    gameover() {
+        beep(330, 0.18, 'sine', 0.12);
+        setTimeout(() => beep(247, 0.18, 'sine', 0.12), 180);
+        setTimeout(() => beep(196, 0.32, 'sine', 0.12), 360);
+    },
+    win() {
+        beep(523, 0.12, 'sine', 0.12);
+        setTimeout(() => beep(659, 0.12, 'sine', 0.12), 110);
+        setTimeout(() => beep(784, 0.12, 'sine', 0.12), 220);
+        setTimeout(() => beep(1047, 0.28, 'sine', 0.14), 330);
+    },
+    click() { beep(540, 0.05, 'square', 0.07); }
+};
+
+// ============================================================
+// State
+// ============================================================
+const state = {
+    durationSec: 600,
+    timeLeftMs: 0,
+    startMs: 0,
+    elapsedMs: 0,
+    paused: false,
+    pauseStartMs: 0,
+
+    score: 0,
+    combo: 0,
+    maxCombo: 0,
+    hits: 0,             // successful word kills
+    charsTyped: 0,       // chars in killed words (for WPM)
+    keystrokes: 0,       // total commits (correct + wrong)
+    correctKeystrokes: 0,
+
+    hp: 3,
+
+    aliens: [],          // { id, el, x, y, vy, text, matched, w, h }
+    nextAlienId: 1,
+    lastSpawnMs: 0,
+    spawnIntervalMs: 1800,
+
+    running: false,
+    phaseLabel: ''
+};
+
+let mainLoopHandle = null;
+let timerHandle = null;
+let arenaEl, inputEl, shipEl, hudTimer, hudScore, hudCombo, hudAcc, hudHp, composingTag;
+let isComposing = false;
+let arenaRect = { w: 0, h: 0 };
+
+// ============================================================
+// Helpers
+// ============================================================
+function $(id) { return document.getElementById(id); }
+function rand(a, b) { return a + Math.random() * (b - a); }
+function randInt(a, b) { return Math.floor(rand(a, b + 1)); }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function fmtTime(ms) {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    const m = Math.floor(s / 60);
+    const ss = s % 60;
+    return `${m.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+}
+
+// ============================================================
+// Stars background
+// ============================================================
+function buildStars() {
+    const bg = $('stars-bg');
+    bg.innerHTML = '';
+    const count = 90;
+    for (let i = 0; i < count; i++) {
+        const s = document.createElement('div');
+        s.className = 'star' + (Math.random() < 0.25 ? ' big' : '');
+        s.style.left = (Math.random() * 100) + '%';
+        s.style.top = (Math.random() * 100) + '%';
+        s.style.animationDelay = (Math.random() * 3) + 's';
+        s.style.animationDuration = (2 + Math.random() * 2.5) + 's';
+        bg.appendChild(s);
+    }
+}
+
+// ============================================================
+// Start screen build
+// ============================================================
+function buildTimeButtons() {
+    const wrap = $('time-choices');
+    wrap.innerHTML = '';
+    const bestScore = parseInt(localStorage.getItem(STORAGE_KEY_SCORE) || '0', 10);
+    const bestWpm = parseInt(localStorage.getItem(STORAGE_KEY_WPM) || '0', 10);
+    TIME_OPTIONS.forEach(opt => {
+        const b = document.createElement('button');
+        b.className = 'time-btn';
+        const bestTag = (bestScore > 0 || bestWpm > 0) ? '' : '';
+        b.innerHTML = `<span class="icon">${opt.icon}</span>
+                       <span class="label">${opt.label}</span>`;
+        b.onclick = () => { SFX.click(); startGame(opt.sec); };
+        wrap.appendChild(b);
+    });
+    if (bestScore > 0 || bestWpm > 0) {
+        const tip = document.createElement('div');
+        tip.style.cssText = 'grid-column: 1 / -1; text-align: center; font-size: 13px; color: #c7d2fe; margin-top: 6px;';
+        tip.innerHTML = `🏆 最佳：${bestScore} 分　📝 最佳字/分：${bestWpm}`;
+        wrap.appendChild(tip);
+    }
+}
+
+// ============================================================
+// Game start
+// ============================================================
+function startGame(durationSec) {
+    // ensure audio context unlocked by user gesture
+    try { const a = getAudio(); if (a && a.state === 'suspended') a.resume(); } catch(e) {}
+
+    state.durationSec = durationSec;
+    state.timeLeftMs = durationSec * 1000;
+    state.startMs = performance.now();
+    state.elapsedMs = 0;
+    state.paused = false;
+
+    state.score = 0;
+    state.combo = 0;
+    state.maxCombo = 0;
+    state.hits = 0;
+    state.charsTyped = 0;
+    state.keystrokes = 0;
+    state.correctKeystrokes = 0;
+    state.hp = 3;
+
+    state.aliens = [];
+    state.nextAlienId = 1;
+    state.lastSpawnMs = 0;
+    state.spawnIntervalMs = 2000;
+    state.running = true;
+
+    $('start-screen').classList.add('hidden');
+    $('end-screen').classList.add('hidden');
+    $('game-screen').classList.remove('hidden');
+
+    arenaEl = $('arena');
+    inputEl = $('word-input');
+    shipEl = $('ship');
+    hudTimer = $('hud-timer');
+    hudScore = $('hud-score');
+    hudCombo = $('hud-combo');
+    hudAcc = $('hud-acc');
+    hudHp = $('hud-hp');
+    composingTag = $('composing-tag');
+
+    // Clear existing aliens DOM
+    document.querySelectorAll('.alien, .boom, .laser, .float-score').forEach(n => n.remove());
+
+    inputEl.value = '';
+    inputEl.focus();
+
+    measureArena();
+    updateHud();
+    showPhaseBanner('🟢 簡單字');
+
+    if (mainLoopHandle) cancelAnimationFrame(mainLoopHandle);
+    if (timerHandle) clearInterval(timerHandle);
+    let lastFrame = performance.now();
+    function loop(ts) {
+        if (!state.running) return;
+        const dt = ts - lastFrame;
+        lastFrame = ts;
+        if (!state.paused) {
+            update(dt);
+        }
+        mainLoopHandle = requestAnimationFrame(loop);
+    }
+    mainLoopHandle = requestAnimationFrame(loop);
+
+    timerHandle = setInterval(tickClock, 200);
+}
+
+function measureArena() {
+    const r = arenaEl.getBoundingClientRect();
+    arenaRect.w = r.width;
+    arenaRect.h = r.height;
+}
+
+window.addEventListener('resize', () => {
+    if (arenaEl) measureArena();
+});
+
+// ============================================================
+// Phase / difficulty progression
+// ============================================================
+function currentPhase() {
+    const ratio = 1 - (state.timeLeftMs / (state.durationSec * 1000));
+    if (ratio < 0.2) return { tier: 1, label: '🟢 簡單字',     pool: POOL_1CHAR, fall: 0.020, spawn: 1900 };
+    if (ratio < 0.5) return { tier: 2, label: '🟡 兩字詞',     pool: POOL_2CHAR, fall: 0.025, spawn: 1900 };
+    if (ratio < 0.8) return { tier: 3, label: '🟠 三字短句',   pool: POOL_3CHAR, fall: 0.030, spawn: 2100 };
+    return                     { tier: 4, label: '🔴 短句挑戰', pool: POOL_SHORT, fall: 0.034, spawn: 2400 };
+}
+
+function showPhaseBanner(text) {
+    const el = $('phase-banner');
+    if (!el) return;
+    el.textContent = text;
+    el.classList.add('show');
+    clearTimeout(showPhaseBanner._t);
+    showPhaseBanner._t = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+// ============================================================
+// Spawn alien
+// ============================================================
+function spawnAlien() {
+    const phase = currentPhase();
+    if (phase.label !== state.phaseLabel) {
+        state.phaseLabel = phase.label;
+        showPhaseBanner(phase.label);
+    }
+    state.spawnIntervalMs = phase.spawn;
+
+    const text = pick(phase.pool);
+    // estimate width based on chars (each ~26px, padding ~32px)
+    const estW = text.length * 28 + 36;
+    const minX = 8;
+    const maxX = Math.max(8, arenaRect.w - estW - 8);
+    const x = randInt(minX, maxX);
+    const y = -60; // start above arena
+
+    const el = document.createElement('div');
+    el.className = 'alien';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+
+    const alienEmojis = ['👾','🛸','👽','🤖','🦠','🐙'];
+    const body = pick(alienEmojis);
+    el.innerHTML = `<div class="word-card" data-text="${text}"><span class="full">${text}</span></div>
+                    <div class="body">${body}</div>`;
+
+    arenaEl.appendChild(el);
+
+    const alien = {
+        id: state.nextAlienId++,
+        el,
+        text,
+        x,
+        y,
+        w: estW,
+        h: 100,
+        vy: phase.fall * (0.85 + Math.random() * 0.35),
+        matched: 0
+    };
+    state.aliens.push(alien);
+    SFX.spawn();
+}
+
+// ============================================================
+// Update loop
+// ============================================================
+function update(dt) {
+    state.timeLeftMs -= dt;
+    if (state.timeLeftMs <= 0) {
+        state.timeLeftMs = 0;
+        endGame(true);
+        return;
+    }
+
+    // spawn check
+    state.lastSpawnMs += dt;
+    if (state.lastSpawnMs >= state.spawnIntervalMs) {
+        state.lastSpawnMs = 0;
+        spawnAlien();
+    }
+
+    // move aliens
+    const floorY = arenaRect.h - 80; // input bar zone
+    for (let i = state.aliens.length - 1; i >= 0; i--) {
+        const a = state.aliens[i];
+        a.y += a.vy * dt;
+        a.el.style.top = a.y + 'px';
+        if (a.y >= floorY) {
+            // reached floor — lose life
+            removeAlien(i);
+            loseLife();
+        }
+    }
+
+    // update HUD timer text occasionally — handled by tickClock too
+    updateTimerHud();
+}
+
+function tickClock() {
+    if (!state.running) return;
+    updateTimerHud();
+}
+
+function updateTimerHud() {
+    hudTimer.textContent = '⏱ ' + fmtTime(state.timeLeftMs);
+}
+
+function updateHud() {
+    hudScore.textContent = '🎯 ' + state.score;
+    const mult = (1 + Math.min(10, Math.floor(state.combo / 5)) * 0.1).toFixed(1);
+    hudCombo.textContent = `⚡ ×${mult}`;
+    if (state.combo >= 5) hudCombo.classList.remove('cold');
+    else hudCombo.classList.add('cold');
+    const acc = state.keystrokes === 0 ? 100 :
+                Math.max(0, Math.round((state.correctKeystrokes / state.keystrokes) * 100));
+    hudAcc.textContent = '💯 ' + acc + '%';
+
+    let hpHtml = '';
+    for (let i = 0; i < 3; i++) {
+        hpHtml += i < state.hp ? '❤️' : '<span class="gone">❤️</span>';
+    }
+    hudHp.innerHTML = hpHtml;
+}
+
+// ============================================================
+// Input handling — IME aware
+// ============================================================
+function setupInput() {
+    inputEl = $('word-input');
+    composingTag = $('composing-tag');
+
+    inputEl.addEventListener('compositionstart', () => {
+        isComposing = true;
+        composingTag.classList.add('on');
+    });
+    inputEl.addEventListener('compositionend', (e) => {
+        isComposing = false;
+        composingTag.classList.remove('on');
+        // After composition end, the value already includes the committed text
+        // Let it propagate via 'input' which fires after
+        // some browsers — but we'll force a check now
+        setTimeout(() => checkMatches(), 0);
+    });
+    inputEl.addEventListener('input', () => {
+        // Only act when not actively composing (IME mid-string)
+        if (isComposing) return;
+        checkMatches();
+    });
+
+    // refocus loop — keep input always focused
+    inputEl.addEventListener('blur', () => {
+        setTimeout(() => {
+            if (state.running && !state.paused) inputEl.focus();
+        }, 200);
+    });
+
+    // Esc = pause
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (state.running) {
+                e.preventDefault();
+                togglePause();
+            }
+        }
+        if (e.key === 'F8') {
+            if (state.running) {
+                e.preventDefault();
+                endGame(true);
+            }
+        }
+        // Prevent some keys from stealing focus
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            inputEl.focus();
+        }
+    });
+}
+
+function checkMatches() {
+    const raw = inputEl.value;
+    if (!raw) {
+        // clear any partial highlighting
+        state.aliens.forEach(a => {
+            a.matched = 0;
+            a.el.classList.remove('partial');
+            const card = a.el.querySelector('.word-card');
+            card.innerHTML = `<span class="full">${a.text}</span>`;
+        });
+        return;
+    }
+
+    // Find best match: try to match each alien's text against END of input
+    // Strategy: for each alien, find the longest suffix of input that is a prefix of alien.text
+    let killedAny = false;
+
+    // Pass 1 — exact full match (suffix == alien.text fully)
+    for (let i = state.aliens.length - 1; i >= 0; i--) {
+        const a = state.aliens[i];
+        if (raw.endsWith(a.text)) {
+            // Kill!
+            killAlien(i);
+            // remove that consumed substring from input
+            inputEl.value = raw.slice(0, raw.length - a.text.length);
+            killedAny = true;
+            break; // re-evaluate next input change
+        }
+    }
+    if (killedAny) {
+        // After kill, re-check (player may have queued multiple)
+        checkMatches();
+        return;
+    }
+
+    // Pass 2 — partial highlight (input suffix is a prefix of alien text but not whole)
+    let bestPartial = null;
+    let bestLen = 0;
+    state.aliens.forEach(a => {
+        // try to find longest k such that raw endsWith a.text.slice(0, k)
+        const maxK = Math.min(raw.length, a.text.length - 1);
+        for (let k = maxK; k >= 1; k--) {
+            const prefix = a.text.slice(0, k);
+            if (raw.endsWith(prefix)) {
+                if (k > bestLen) {
+                    bestLen = k;
+                    bestPartial = { alien: a, k };
+                }
+                break;
+            }
+        }
+    });
+
+    // Reset all visual states first
+    state.aliens.forEach(a => {
+        a.matched = 0;
+        a.el.classList.remove('partial');
+        const card = a.el.querySelector('.word-card');
+        card.innerHTML = `<span class="full">${a.text}</span>`;
+    });
+
+    if (bestPartial) {
+        const { alien, k } = bestPartial;
+        alien.matched = k;
+        alien.el.classList.add('partial');
+        const card = alien.el.querySelector('.word-card');
+        card.innerHTML =
+            `<span class="matched">${alien.text.slice(0, k)}</span>` +
+            `<span class="full">${alien.text.slice(k)}</span>`;
+    }
+
+    // wrong-typed detection — if input has non-empty text that doesn't match any prefix
+    // and the latest character was just committed (we detect by simply checking
+    // that no partial nor full match exists)
+    if (!bestPartial && raw.length > 0) {
+        // last char is wrong → flash + reset combo (but only count once per change)
+        // We will charge keystroke here (count = 1) and mark as wrong.
+        // To avoid penalizing every keystroke as IME builds words, we measure
+        // input-length delta — but simpler: when raw has content and no alien
+        // partial, flash and clear.
+        registerWrong();
+        inputEl.value = '';
+    }
+}
+
+function killAlien(index) {
+    const a = state.aliens[index];
+    if (!a) return;
+
+    // visuals: laser from ship to alien, explosion at alien
+    fireLaser(a);
+    spawnExplosion(a.x + a.w / 2, a.y + 30);
+
+    // scoring
+    const base = scoreForLen(a.text.length);
+    state.combo++;
+    if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+    const mult = 1 + Math.min(10, Math.floor(state.combo / 5)) * 0.1;
+    const gained = Math.round(base * mult);
+    state.score += gained;
+    state.hits++;
+    state.charsTyped += a.text.length;
+    state.keystrokes++;
+    state.correctKeystrokes++;
+
+    showFloatScore(a.x + a.w / 2, a.y, '+' + gained);
+
+    // remove alien (delay slightly so explosion shows)
+    a.el.classList.add('dying');
+    setTimeout(() => {
+        if (a.el.parentNode) a.el.parentNode.removeChild(a.el);
+    }, 420);
+    state.aliens.splice(index, 1);
+
+    SFX.hit();
+    SFX.laser();
+    updateHud();
+}
+
+function registerWrong() {
+    state.combo = 0;
+    state.keystrokes++;
+    // do NOT increment correctKeystrokes
+    SFX.wrong();
+    arenaEl.classList.remove('flash-red');
+    void arenaEl.offsetWidth; // restart animation
+    arenaEl.classList.add('flash-red');
+    setTimeout(() => arenaEl.classList.remove('flash-red'), 320);
+    updateHud();
+}
+
+function loseLife() {
+    state.hp--;
+    state.combo = 0;
+    SFX.lifeLost();
+    arenaEl.classList.remove('flash-red');
+    void arenaEl.offsetWidth;
+    arenaEl.classList.add('flash-red');
+    setTimeout(() => arenaEl.classList.remove('flash-red'), 320);
+    updateHud();
+    if (state.hp <= 0) {
+        endGame(false);
+    }
+}
+
+function removeAlien(index) {
+    const a = state.aliens[index];
+    if (!a) return;
+    if (a.el.parentNode) a.el.parentNode.removeChild(a.el);
+    state.aliens.splice(index, 1);
+}
+
+// ============================================================
+// FX
+// ============================================================
+function fireLaser(alien) {
+    if (!shipEl) return;
+    const shipRect = shipEl.getBoundingClientRect();
+    const arenaR = arenaEl.getBoundingClientRect();
+    const sx = (shipRect.left - arenaR.left) + shipRect.width / 2;
+    const sy = (shipRect.top  - arenaR.top)  + 10;
+    const tx = alien.x + alien.w / 2;
+    const ty = alien.y + 40;
+    const dx = tx - sx;
+    const dy = ty - sy;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+    const laser = document.createElement('div');
+    laser.className = 'laser';
+    laser.style.left = sx + 'px';
+    laser.style.top = sy + 'px';
+    laser.style.width = len + 'px';
+    laser.style.transform = `rotate(${angle}deg)`;
+    arenaEl.appendChild(laser);
+
+    shipEl.classList.remove('shoot');
+    void shipEl.offsetWidth;
+    shipEl.classList.add('shoot');
+
+    setTimeout(() => { if (laser.parentNode) laser.parentNode.removeChild(laser); }, 350);
+}
+
+function spawnExplosion(cx, cy) {
+    const b = document.createElement('div');
+    b.className = 'boom';
+    b.textContent = '💥';
+    b.style.left = (cx - 30) + 'px';
+    b.style.top = (cy - 30) + 'px';
+    arenaEl.appendChild(b);
+    setTimeout(() => { if (b.parentNode) b.parentNode.removeChild(b); }, 600);
+}
+
+function showFloatScore(cx, cy, text) {
+    const s = document.createElement('div');
+    s.className = 'float-score';
+    s.textContent = text;
+    s.style.left = cx + 'px';
+    s.style.top = cy + 'px';
+    arenaEl.appendChild(s);
+    setTimeout(() => { if (s.parentNode) s.parentNode.removeChild(s); }, 950);
+}
+
+// ============================================================
+// Pause
+// ============================================================
+function togglePause() {
+    state.paused = !state.paused;
+    if (state.paused) {
+        showPauseOverlay();
+    } else {
+        hidePauseOverlay();
+        inputEl.focus();
+    }
+}
+function showPauseOverlay() {
+    if ($('pause-overlay')) return;
+    const o = document.createElement('div');
+    o.className = 'pause-overlay';
+    o.id = 'pause-overlay';
+    o.innerHTML = `<div class="pause-icon">⏸️</div>
+                   <div class="pause-text">已暫停</div>
+                   <div class="pause-hint">按 Esc 繼續</div>`;
+    arenaEl.appendChild(o);
+}
+function hidePauseOverlay() {
+    const o = $('pause-overlay');
+    if (o && o.parentNode) o.parentNode.removeChild(o);
+}
+
+// ============================================================
+// End game
+// ============================================================
+function endGame(naturalWin) {
+    state.running = false;
+    if (mainLoopHandle) cancelAnimationFrame(mainLoopHandle);
+    if (timerHandle) clearInterval(timerHandle);
+    // Clear all aliens
+    state.aliens.forEach(a => { if (a.el.parentNode) a.el.parentNode.removeChild(a.el); });
+    state.aliens = [];
+
+    if (naturalWin) SFX.win(); else SFX.gameover();
+
+    // compute stats
+    const elapsedSec = state.durationSec - Math.ceil(state.timeLeftMs / 1000);
+    const elapsedMin = Math.max(0.01, elapsedSec / 60);
+    const wpm = Math.round(state.charsTyped / elapsedMin);
+    const acc = state.keystrokes === 0 ? 100 :
+                Math.max(0, Math.round((state.correctKeystrokes / state.keystrokes) * 100));
+
+    // localStorage best
+    try {
+        const prevScore = parseInt(localStorage.getItem(STORAGE_KEY_SCORE) || '0', 10);
+        if (state.score > prevScore) localStorage.setItem(STORAGE_KEY_SCORE, String(state.score));
+        const prevWpm = parseInt(localStorage.getItem(STORAGE_KEY_WPM) || '0', 10);
+        if (wpm > prevWpm) localStorage.setItem(STORAGE_KEY_WPM, String(wpm));
+    } catch(e) {}
+
+    // rank
+    let rank;
+    if (wpm >= 30)      rank = '👑 中文打字王';
+    else if (wpm >= 20) rank = '🥇 高手';
+    else if (wpm >= 10) rank = '🥈 新手';
+    else                rank = '💪 加油';
+
+    let trophy = '🏆';
+    if (wpm >= 30) trophy = '👑';
+    else if (wpm >= 20) trophy = '🥇';
+    else if (wpm >= 10) trophy = '🥈';
+    else trophy = '🎯';
+
+    // duration label
+    const dur = TIME_OPTIONS.find(o => o.sec === state.durationSec);
+    const durLabel = dur ? dur.label : (state.durationSec + ' 秒');
+
+    $('cert-duration').textContent = durLabel;
+    $('cert-score').textContent = state.score;
+    $('cert-wpm').textContent = wpm;
+    $('cert-combo').textContent = state.maxCombo;
+    $('cert-acc').textContent = acc + '%';
+    $('cert-rank').textContent = rank;
+    $('cert-trophy').textContent = trophy;
+
+    const now = new Date();
+    const rocYear = now.getFullYear() - 1911;
+    $('cert-date').textContent = `中華民國 ${rocYear} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日`;
+
+    $('game-screen').classList.add('hidden');
+    $('end-screen').classList.remove('hidden');
+}
+
+// ============================================================
+// Init
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    buildStars();
+    buildTimeButtons();
+    setupInput();
+});
+</script>
+</body>
+</html>

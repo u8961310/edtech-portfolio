@@ -31,9 +31,11 @@
 | 🎒 一年級 | `unit6-turtle-commander` | 烏龜小指揮官 | 運算思維入門：序列、除錯、最少步數 |
 | 🎒 一年級 | `unit7-spell-commander` | 指令小法師 | 滑鼠+鍵盤整合、運算思維：順序、重複、條件 |
 | 🎒 一年級 | `unit8-desktop-organizer` | 桌面整理大師 | 檔案管理、拖曳整理、檔案類型辨識 |
-| 🎒 一年級 | `unit9-net-detective` | 網路小警察 | 資訊倫理、詐騙辨識、個資保護 |
+| 🎒 一年級 | `unit9-net-detective` | 網路小警察（圖示判斷版）| 資訊倫理、看圖辨識壞訊號（零文字依賴） |
 | 🎒 一年級 | `unit10-classifier-captain` | 分類大隊長 | 觀察分類、依特徵歸組（資料概念入門） |
 | 📘 中年級 | `unit1-typing-adventure` | 中文打字冒險王 | 注音輸入、中文識讀、闖關成就感 |
+| 📘 中年級 | `unit11-space-typing-pro` | 英打太空特攻 | 計時英打練習、漸進難度、WPM 計分 |
+| 📘 中年級 | `unit12-space-typing-zh` | 中打太空特攻 | 計時注音輸入練習、IME 比對、漸進難度 |
 
 ## 🚀 快速開始
 
@@ -73,7 +75,11 @@ edtech-portfolio/
     │   └── index.html
     ├── unit9-net-detective/
     │   └── index.html
-    └── unit10-classifier-captain/
+    ├── unit10-classifier-captain/
+    │   └── index.html
+    ├── unit11-space-typing-pro/
+    │   └── index.html
+    └── unit12-space-typing-zh/
         └── index.html
 ```
 
