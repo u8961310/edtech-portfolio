@@ -319,6 +319,15 @@
                 <p class="card-score" id="unit10-score-badge" style="display:none;"></p>
                 <span class="play-btn">▶ 開始玩</span>
             </a>
+
+            <a href="./units/unit15-computational-thinking/index.html" class="card" style="--c: #06b6d4;">
+                <span class="skill-tag">運算思維</span>
+                <div class="card-cover">🧠✨</div>
+                <h3 class="card-title">運算思維挑戰營</h3>
+                <p class="card-desc">小一運算思維四階段：拆解、找規則、抽象化、演算法，趣味闖關慢慢練！</p>
+                <p class="card-score" id="unit15-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
         </div>
     </section>
 
@@ -385,7 +394,7 @@
     function loadLocalScore(unitId) {
         return localStorage.getItem(`edtech-unit${unitId}-score`) || null;
     }
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].forEach((id) => {
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].forEach((id) => {
         const score = loadLocalScore(id);
         const badge = document.getElementById(`unit${id}-score-badge`);
         if (score && badge) {

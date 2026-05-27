@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小一運算思維挑戰營！</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Animate.css for awesome animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for Cute Bubble/Kids Style -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka One', 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #FFDEE9 0%, #B5FFFC 100%);
+            user-select: none;
+            overflow-x: hidden;
+        }
+        .bouncy-btn {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .bouncy-btn:hover {
+            transform: scale(1.05) rotate(1deg);
+        }
+        .bouncy-btn:active {
+            transform: scale(0.95);
+        }
+        /* Grid background for algorithm map */
+        .grid-bg {
+            background-size: 50px 50px;
+            background-image: linear-gradient(to right, rgba(99, 102, 241, 0.1) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(99, 102, 241, 0.1) 1px, transparent 1px);
+        }
+        .draggable-item {
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .draggable-item:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+        .silhouette {
+            fill: #e2e8f0;
+            stroke: #cbd5e1;
+            stroke-width: 2;
+            stroke-dasharray: 4 4;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-4 relative">
+
+    <!-- Canvas overlay for full screen custom particle animations -->
+    <canvas id="particleCanvas" class="absolute inset-0 pointer-events-none z-50"></canvas>
+
+    <!-- Header Section -->
+    <header class="w-full max-w-4xl text-center my-4 z-10 animate__animated animate__fadeInDown">
+        <h1 class="text-3xl md:text-5xl font-extrabold text-indigo-700 drop-shadow-md flex items-center justify-center gap-2">
+            <span>🚀</span> 運算思維腦力大激盪 <span>🧠</span>
+        </h1>
+        <div class="mt-3 flex items-center justify-center gap-2">
+            <p class="text-gray-700 font-bold text-sm md:text-base bg-white/80 backdrop-blur-sm py-1.5 px-6 rounded-full inline-block border border-indigo-100 shadow-sm">
+                動動腦，和小機器人一起破關吧！ ✨
+            </p>
+            <button onclick="speakText('歡迎來到運算思維腦力大激盪！點選底下的彩色按鈕，和機器人一起動腦破關吧！')" class="bg-indigo-600 hover:bg-indigo-700 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-md bouncy-btn">
+                <i class="fa-solid fa-volume-high text-xs"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="w-full max-w-4xl flex-grow bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-indigo-200 p-6 relative overflow-hidden flex flex-col justify-between min-h-[580px] z-10">
+        
+        <!-- =================== 1. 首頁/選單 =================== -->
+        <div id="homePage" class="w-full h-full flex flex-col justify-center items-center gap-6 py-4">
+            <h2 class="text-xl md:text-2xl font-black text-purple-600 mb-2 text-center">請選擇一個任務開始挑戰：</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl px-4">
+                
+                <!-- 關卡1: 拆解 -->
+                <button onclick="switchGame('decomposition')" class="bouncy-btn bg-gradient-to-br from-pink-400 to-rose-500 hover:from-pink-500 hover:to-rose-600 text-white p-5 rounded-2xl shadow-lg flex flex-col items-center gap-3 border-b-8 border-rose-700">
+                    <div class="bg-white/30 p-4 rounded-full text-3xl"><i class="fa-solid fa-puzzle-piece animate-bounce"></i></div>
+                    <span class="text-2xl font-bold">1. 火箭拆拼圖</span>
+                    <span class="text-xs bg-white/20 px-3 py-1 rounded-full font-bold">拆解：把大物體分開看</span>
+                </button>
+
+                <!-- 關卡2: 模式識別 -->
+                <button onclick="switchGame('pattern')" class="bouncy-btn bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white p-5 rounded-2xl shadow-lg flex flex-col items-center gap-3 border-b-8 border-orange-700">
+                    <div class="bg-white/30 p-4 rounded-full text-3xl"><i class="fa-solid fa-shapes animate-pulse"></i></div>
+                    <span class="text-2xl font-bold">2. 找規律偵探</span>
+                    <span class="text-xs bg-white/20 px-3 py-1 rounded-full font-bold">規律：找出排隊順序</span>
+                </button>
+
+                <!-- 關卡3: 抽象化 -->
+                <button onclick="switchGame('abstraction')" class="bouncy-btn bg-gradient-to-br from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white p-5 rounded-2xl shadow-lg flex flex-col items-center gap-3 border-b-8 border-teal-700">
+                    <div class="bg-white/30 p-4 rounded-full text-3xl"><i class="fa-solid fa-filter animate-spin" style="animation-duration: 4s;"></i></div>
+                    <span class="text-2xl font-bold">3. 形色過濾器</span>
+                    <span class="text-xs bg-white/20 px-3 py-1 rounded-full font-bold">抽象：只留下特徵</span>
+                </button>
+
+                <!-- 關卡4: 演算法 -->
+                <button onclick="switchGame('algorithm')" class="bouncy-btn bg-gradient-to-br from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-white p-5 rounded-2xl shadow-lg flex flex-col items-center gap-3 border-b-8 border-blue-700">
+                    <div class="bg-white/30 p-4 rounded-full text-3xl"><i class="fa-solid fa-code-fork"></i></div>
+                    <span class="text-2xl font-bold">4. 走路尋寶記</span>
+                    <span class="text-xs bg-white/20 px-3 py-1 rounded-full font-bold">演算：照步驟解決</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- =================== 2. 遊戲：拆解 (Decomposition) =================== -->
+        <div id="decompositionGame" class="hidden w-full flex-col items-center gap-4">
+            <div class="text-center">
+                <span class="bg-pink-100 text-pink-700 font-extrabold text-[10px] md:text-xs px-4 py-1 rounded-full">拆解：把大東西，分成小圖形</span>
+                <div class="flex items-center justify-center gap-2 mt-2">
+                    <h3 class="text-2xl font-black text-pink-600">1. 火箭幾何拆拼圖</h3>
+                    <button onclick="speakText('請把右邊的幾何零件，放進左邊火箭對應的地方，拼出完整火箭吧！')" class="bg-pink-500 hover:bg-pink-600 text-white w-7 h-7 rounded-full flex items-center justify-center shadow">
+                        <i class="fa-solid fa-volume-high text-xs"></i>
+                    </button>
+                </div>
+                <p class="text-gray-600 mt-1 text-sm">請把右邊零件，放到左邊一樣形狀的位置！</p>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-8 items-center justify-center w-full mt-4">
+                <!-- 火箭目標放置區 (SVG 互動) -->
+                <div class="relative w-[280px] h-[280px] border-4 border-dashed border-pink-300 rounded-2xl bg-pink-50/30 flex items-center justify-center">
+                    <svg width="240" height="240" viewBox="0 0 100 100" class="absolute">
+                        <polygon id="target-nose" data-part="nose" points="50,10 35,40 65,40" class="silhouette hover:fill-pink-100 transition-colors cursor-pointer"/>
+                        <rect id="target-body" data-part="body" x="35" y="40" width="30" height="40" class="silhouette hover:fill-pink-100 transition-colors cursor-pointer"/>
+                        <polygon id="target-lwing" data-part="lwing" points="35,60 20,80 35,80" class="silhouette hover:fill-pink-100 transition-colors cursor-pointer"/>
+                        <polygon id="target-rwing" data-part="rwing" points="65,60 80,80 65,80" class="silhouette hover:fill-pink-100 transition-colors cursor-pointer"/>
+                        <circle id="target-fire" data-part="fire" cx="50" cy="88" r="8" class="silhouette hover:fill-pink-100 transition-colors cursor-pointer"/>
+                    </svg>
+                    <!-- 提示文字覆蓋 -->
+                    <div class="absolute inset-0 flex items-center justify-between p-2 pointer-events-none text-[11px] text-pink-400 font-bold">
+                        <span class="absolute top-4 left-1/2 -translate-x-1/2">三角形</span>
+                        <span class="absolute top-[120px] left-1/2 -translate-x-1/2">長方形</span>
+                        <span class="absolute bottom-12 left-2">左翼</span>
+                        <span class="absolute bottom-12 right-2">右翼</span>
+                        <span class="absolute bottom-1 left-1/2 -translate-x-1/2">圓形</span>
+                    </div>
+                </div>
+
+                <!-- 零件來源箱 -->
+                <div class="grid grid-cols-5 md:grid-cols-1 gap-4 p-4 bg-pink-50 rounded-2xl border-2 border-pink-200 min-w-[200px] justify-items-center">
+                    <span class="text-pink-700 font-black text-sm col-span-5 md:col-span-1">零件箱：</span>
+                    
+                    <div id="part-nose" draggable="true" ondragstart="drag(event)" data-part="nose" class="draggable-item w-16 h-12 bg-rose-500 flex items-center justify-center shadow-md rounded border border-rose-600" style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%);">
+                    </div>
+                    <div id="part-body" draggable="true" ondragstart="drag(event)" data-part="body" class="draggable-item w-12 h-16 bg-blue-500 shadow-md rounded border border-blue-600">
+                    </div>
+                    <div id="part-lwing" draggable="true" ondragstart="drag(event)" data-part="lwing" class="draggable-item w-10 h-12 bg-amber-500 shadow-md border border-amber-600" style="clip-path: polygon(100% 0%, 0% 100%, 100% 100%);">
+                    </div>
+                    <div id="part-rwing" draggable="true" ondragstart="drag(event)" data-part="rwing" class="draggable-item w-10 h-12 bg-amber-500 shadow-md border border-amber-600" style="clip-path: polygon(0% 0%, 0% 100%, 100% 100%);">
+                    </div>
+                    <div id="part-fire" draggable="true" ondragstart="drag(event)" data-part="fire" class="draggable-item w-10 h-10 bg-orange-500 rounded-full shadow-md border border-orange-600">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部回饋 -->
+            <div id="decomp-feedback" class="h-8 text-center text-rose-600 font-extrabold text-xl animate__animated"></div>
+        </div>
+
+        <!-- =================== 3. 遊戲：模式識別 (Pattern) =================== -->
+        <div id="patternGame" class="hidden w-full flex-col items-center gap-4">
+            <div class="text-center">
+                <span class="bg-amber-100 text-amber-700 font-extrabold text-xs px-4 py-1 rounded-full">規律：找出排隊順序</span>
+                <div class="flex items-center justify-center gap-2 mt-2">
+                    <h3 class="text-2xl font-black text-amber-600">2. 規律推理神偵探</h3>
+                    <button id="pattern-speak-btn" class="bg-amber-500 hover:bg-amber-600 text-white w-7 h-7 rounded-full flex items-center justify-center shadow">
+                        <i class="fa-solid fa-volume-high text-xs"></i>
+                    </button>
+                </div>
+                <p class="text-gray-600 mt-1 text-sm">請看排隊的規律，點選最配的圖案！ <span class="text-indigo-600 font-extrabold">(第 <span id="pattern-round-title">1 / 3</span> 關)</span></p>
+            </div>
+
+            <div class="w-full bg-amber-50/50 border-4 border-amber-200 rounded-2xl p-6 flex flex-col items-center gap-6 mt-4">
+                <!-- 規律展示鏈 -->
+                <div id="pattern-container" class="flex items-center gap-2 md:gap-4 flex-wrap justify-center py-4 bg-white/90 rounded-xl px-6 shadow-inner w-full min-h-[100px]">
+                </div>
+
+                <!-- 選擇作答區 -->
+                <div class="flex flex-col items-center gap-2">
+                    <span class="text-amber-800 font-bold text-sm">💡 點選正確的答案補上空缺：</span>
+                    <div id="pattern-options" class="flex gap-6 justify-center mt-2">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部回饋 -->
+            <div id="pattern-feedback" class="h-8 text-center text-amber-600 font-extrabold text-xl animate__animated"></div>
+        </div>
+
+        <!-- =================== 4. 遊戲：抽象化 (Abstraction) =================== -->
+        <div id="abstractionGame" class="hidden w-full flex-col items-center gap-4">
+            <div class="text-center">
+                <span class="bg-emerald-100 text-emerald-700 font-extrabold text-xs px-4 py-1 rounded-full">抽象：只看特徵，不看別的</span>
+                <div class="flex items-center justify-center gap-2 mt-2">
+                    <h3 class="text-2xl font-black text-emerald-600">3. 多屬性特徵過濾器</h3>
+                    <button onclick="speakText('我們今天只要找黃色而且是圓形的物品喔！把對的卡片拖進去收集箱吧！')" class="bg-emerald-500 hover:bg-emerald-600 text-white w-7 h-7 rounded-full flex items-center justify-center shadow">
+                        <i class="fa-solid fa-volume-high text-xs"></i>
+                    </button>
+                </div>
+                <p class="text-gray-600 mt-1 text-sm">我們要找符合 <span class="text-indigo-600 font-black underline">「黃色 且 圓形 🟡」</span> 的東西！</p>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-6 w-full justify-center items-stretch mt-4">
+                <!-- 待分類卡片 (左側) -->
+                <div class="flex-1 bg-emerald-50 rounded-2xl p-4 border-2 border-emerald-200 flex flex-col items-center">
+                    <span class="text-emerald-800 font-black mb-3 text-sm">🔮 點選或拖曳卡片：</span>
+                    <div class="grid grid-cols-4 gap-3 justify-items-center w-full" id="abstraction-source">
+                    </div>
+                </div>
+
+                <!-- 收集過濾器 (右側) -->
+                <div id="abstraction-target" class="flex-1 bg-sky-50 rounded-2xl p-4 border-4 border-dashed border-sky-400 flex flex-col items-center justify-start min-h-[220px] transition-all relative">
+                    <div class="absolute -top-3 left-4 bg-sky-500 text-white font-black px-3 py-0.5 rounded-full text-xs">黃色圓形箱 🟡</div>
+                    <span class="text-sky-700 font-bold mb-3 text-center mt-2 text-xs">黃色 ＋ 圓形 才能進來：</span>
+                    <div class="grid grid-cols-4 gap-3 justify-items-center w-full min-h-[120px]" id="abstract-collected">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部回饋 -->
+            <div id="abstract-feedback" class="h-8 text-center text-emerald-600 font-extrabold text-xl animate__animated"></div>
+        </div>
+
+        <!-- =================== 5. 遊戲：演算法 (Algorithm) =================== -->
+        <div id="algorithmGame" class="hidden w-full flex-col items-center gap-4">
+            <div class="text-center">
+                <span class="bg-blue-100 text-blue-700 font-extrabold text-xs px-4 py-1 rounded-full">步驟：一步一步，拿鑰匙開門</span>
+                <div class="flex items-center justify-center gap-2 mt-2">
+                    <h3 class="text-2xl font-black text-blue-600">4. 邏輯尋寶大作戰</h3>
+                    <button onclick="speakText('機器人想要尋寶。請寫指令，帶他避開火堆，先拿到鑰匙，再走到鎖住的門打開它，最後拿到禮物喔！')" class="bg-blue-500 hover:bg-blue-600 text-white w-7 h-7 rounded-full flex items-center justify-center shadow">
+                        <i class="fa-solid fa-volume-high text-xs"></i>
+                    </button>
+                </div>
+                <p class="text-gray-600 mt-1 text-xs">小機器人 🤖 必須先拿鑰匙 🔑，才能開啟門 🔒 拿寶藏 🎁！</p>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-6 w-full items-center justify-center mt-2">
+                
+                <!-- 網格地圖 (4x4) -->
+                <div class="grid grid-cols-4 gap-1 bg-slate-100 p-2 rounded-2xl border-4 border-blue-200 relative grid-bg shadow-inner" style="width: 260px; height: 260px;">
+                    <div id="cell-0-0" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold"></div>
+                    <div id="cell-1-0" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold text-2xl">🔒</div>
+                    <div id="cell-2-0" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold text-2xl">🎁</div>
+                    <div id="cell-3-0" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold text-2xl">🔥</div>
+
+                    <div id="cell-0-1" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold text-2xl">🔥</div>
+                    <div id="cell-1-1" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold text-2xl">🔥</div>
+                    <div id="cell-2-1" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold"></div>
+                    <div id="cell-3-1" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold"></div>
+
+                    <div id="cell-0-2" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold text-2xl">🔑</div>
+                    <div id="cell-1-2" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold"></div>
+                    <div id="cell-2-2" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold"></div>
+                    <div id="cell-3-2" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold text-2xl">🔥</div>
+
+                    <div id="cell-0-3" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold text-2xl">
+                        <span id="algo-robot" class="text-3xl animate-bounce" style="animation-duration: 2s;">🤖</span>
+                    </div>
+                    <div id="cell-1-3" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold"></div>
+                    <div id="cell-2-3" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold"></div>
+                    <div id="cell-3-3" class="border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold"></div>
+                </div>
+
+                <!-- 程式控制板 -->
+                <div class="flex flex-col gap-3 bg-blue-50/70 p-4 rounded-2xl border border-blue-100 w-full max-w-[340px]">
+                    <div class="text-blue-900 font-extrabold text-center text-sm flex items-center justify-center gap-1">
+                        <span>排定指令（最多 6 步）：</span>
+                        <span id="key-state" class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full text-[10px]">無鑰匙 ❌</span>
+                    </div>
+                    
+                    <!-- 目前指令顯示框 -->
+                    <div class="flex gap-1 justify-center bg-white border border-blue-200 h-14 rounded-xl items-center px-2 shadow-inner overflow-x-auto" id="algo-sequence">
+                        <span class="text-gray-400 text-xs">點按下方按鈕安排路徑...</span>
+                    </div>
+
+                    <!-- 操作方向按鈕 -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="addAlgoCommand('UP')" class="bouncy-btn bg-blue-400 hover:bg-blue-500 text-white font-bold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 text-sm">
+                            <i class="fa-solid fa-arrow-up"></i> 往上走
+                        </button>
+                        <button onclick="addAlgoCommand('RIGHT')" class="bouncy-btn bg-blue-400 hover:bg-blue-500 text-white font-bold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 text-sm">
+                            往右走 <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex gap-2 mt-1">
+                        <button onclick="clearAlgoCommands()" class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 rounded-lg text-xs">
+                            <i class="fa-solid fa-trash-can mr-1"></i> 清除
+                        </button>
+                        <button id="algo-run-btn" onclick="runAlgoCommands()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold py-2 rounded-lg text-xs animate-pulse">
+                            <i class="fa-solid fa-play mr-1"></i> 執行程式
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部回饋 -->
+            <div id="algo-feedback" class="h-8 text-center text-blue-600 font-extrabold text-xl animate__animated"></div>
+        </div>
+
+        <!-- =================== 共用底部控制項 =================== -->
+        <footer class="w-full flex justify-between items-center mt-6 pt-4 border-t border-gray-200/50">
+            <button id="backHomeBtn" onclick="backToHome()" class="bouncy-btn hidden bg-slate-500 hover:bg-slate-600 text-white font-extrabold py-2 px-6 rounded-full shadow border-b-4 border-slate-700 text-sm">
+                <i class="fa-solid fa-home mr-1"></i> 回主選單
+            </button>
+            <div id="scoreDisplay" class="text-indigo-800 font-black text-lg ml-auto bg-indigo-50 px-4 py-2 rounded-full border border-indigo-100 shadow-sm flex items-center gap-2">
+                🌟 得分：<span id="currentScore" class="text-2xl text-amber-500">0</span> 分
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- 成功彈窗Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-3xl p-8 border-8 border-amber-300 shadow-2xl max-w-sm w-full mx-4 text-center animate__animated animate__zoomIn relative">
+            <div class="w-24 h-24 mx-auto mb-4 text-yellow-400">
+                <svg viewBox="0 0 100 100" class="w-full h-full animate__animated animate__pulse animate__infinite">
+                    <polygon points="50,5 64,36 98,36 70,57 81,91 50,70 19,91 30,57 2,36 36,36" fill="#fbbf24" stroke="#f59e0b" stroke-width="4"/>
+                </svg>
+            </div>
+            <h3 class="text-3xl font-extrabold text-indigo-700 mb-2">哇！太厲害了！</h3>
+            <p class="text-gray-700 font-bold mb-6">你成功破關囉！真是個思維達人！🎉</p>
+            <button onclick="closeModalAndGoHome()" class="bouncy-btn bg-gradient-to-r from-emerald-400 to-green-500 text-white text-lg font-black py-3 px-8 rounded-full shadow-lg border-b-4 border-green-700 w-full">
+                挑戰下一關 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer Credit -->
+    <footer class="text-center text-indigo-600/80 font-bold text-xs py-3 mt-4">
+        © 2026 小學一年級運算思維趣味遊戲 🧸 全心為小一新生精心打造
+    </footer>
+
+    <!-- JavaScript 邏輯 -->
+    <script>
+        // --- 狀態變數 ---
+        let score = 0;
+        let currentScreen = 'home';
+        let dragSourceId = '';
+        let dragSourceData = '';
+
+        // --- 語音朗讀系統 (Text-to-Speech) ---
+        function speakText(text) {
+            try {
+                // 先取消之前的語音以免疊加
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 0.85; // 放慢語速，適合小一學生聽
+                utterance.pitch = 1.2; // 提高音調，讓語音顯得比較可愛、童稚
+                
+                window.speechSynthesis.speak(utterance);
+            } catch (e) {
+                console.log("Speech synthesis not fully supported or restricted.");
+            }
+        }
+
+        // --- 粒子特效背景設定 (全螢幕 Canvas) ---
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor(x, y, color, speedX, speedY, size, gravity = 0.05) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.speedX = speedX;
+                this.speedY = speedY;
+                this.size = size;
+                this.gravity = gravity;
+                this.alpha = 1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.speedY += this.gravity;
+                this.alpha -= 0.015;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function createConfetti(x, y) {
+            const colors = ['#FF5733', '#FFC300', '#DAF7A6', '#FF33FF', '#33FFF6', '#FF9933'];
+            for (let i = 0; i < 40; i++) {
+                const speedX = (Math.random() - 0.5) * 12;
+                const speedY = (Math.random() - 0.7) * 15;
+                const size = Math.random() * 6 + 4;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                particles.push(new Particle(x, y, color, speedX, speedY, size, 0.15));
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles = particles.filter(p => p.alpha > 0);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // 點擊網頁小粒子
+        window.addEventListener('click', (e) => {
+            if (Math.random() > 0.6) {
+                const colors = ['#FFC0CB', '#87CEFA', '#FFFFE0', '#98FB98', '#E6E6FA'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                for (let i = 0; i < 6; i++) {
+                    const speedX = (Math.random() - 0.5) * 4;
+                    const speedY = (Math.random() - 0.5) * 4;
+                    particles.push(new Particle(e.clientX, e.clientY, color, speedX, speedY, Math.random() * 4 + 2, 0.02));
+                }
+            }
+        });
+
+        // --- 音效替代方案 (Web Audio API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playTone(freq, type, duration) {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                // Ignore audio restriction errors
+            }
+        }
+
+        function playSuccessSound() {
+            playTone(523.25, 'sine', 0.1); // C5
+            setTimeout(() => playTone(659.25, 'sine', 0.1), 100); // E5
+            setTimeout(() => playTone(783.99, 'sine', 0.2), 200); // G5
+        }
+
+        function playErrorSound() {
+            playTone(150, 'sawtooth', 0.3);
+        }
+
+        function playPopSound() {
+            playTone(850, 'sine', 0.05);
+        }
+
+        // --- 得分管理 ---
+        function addScore(points) {
+            score += points;
+            const scoreEl = document.getElementById('currentScore');
+            scoreEl.textContent = score;
+            scoreEl.classList.add('animate__animated', 'animate__bounceIn');
+            setTimeout(() => {
+                scoreEl.classList.remove('animate__animated', 'animate__bounceIn');
+            }, 1000);
+        }
+
+        // --- 導航機制 ---
+        function switchGame(gameType) {
+            playPopSound();
+            document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('decompositionGame').classList.add('hidden');
+            document.getElementById('patternGame').classList.add('hidden');
+            document.getElementById('abstractionGame').classList.add('hidden');
+            document.getElementById('algorithmGame').classList.add('hidden');
+            document.getElementById('backHomeBtn').classList.remove('hidden');
+
+            currentScreen = gameType;
+
+            if (gameType === 'decomposition') {
+                document.getElementById('decompositionGame').classList.remove('hidden');
+                setupDecompositionGame();
+                speakText("火箭幾何拆拼圖！請把右邊的圖形零件，放到左邊火箭一樣的位置喔！");
+            } else if (gameType === 'pattern') {
+                document.getElementById('patternGame').classList.remove('hidden');
+                setupPatternGame();
+                speakText("規律推理神偵探！請仔細觀察一整排圖案的規律，猜猜問號裡面應該放什麼呢？");
+            } else if (gameType === 'abstraction') {
+                document.getElementById('abstractionGame').classList.remove('hidden');
+                setupAbstractionGame();
+                speakText("多屬性特徵過濾器！我們只要收集黃色、而且是圓形的物品喔！其他的不要拿！");
+            } else if (gameType === 'algorithm') {
+                document.getElementById('algorithmGame').classList.remove('hidden');
+                setupAlgorithmGame();
+                speakText("邏輯尋寶大作戰！機器人想去拿寶箱。但路途上你必須先讓他往左走拿到鑰匙，再去開上鎖的門，還要避開火堆喔！快排好他的腳步程式吧！");
+            }
+        }
+
+        function backToHome() {
+            playPopSound();
+            window.speechSynthesis.cancel(); // 停止唸讀
+            document.getElementById('homePage').classList.remove('hidden');
+            document.getElementById('decompositionGame').classList.add('hidden');
+            document.getElementById('patternGame').classList.add('hidden');
+            document.getElementById('abstractionGame').classList.add('hidden');
+            document.getElementById('algorithmGame').classList.add('hidden');
+            document.getElementById('backHomeBtn').classList.add('hidden');
+            currentScreen = 'home';
+        }
+
+        // --- 拖曳事件 ---
+        function drag(ev) {
+            dragSourceId = ev.target.id;
+            dragSourceData = ev.target.dataset;
+            ev.dataTransfer.setData("text", ev.target.id);
+            playPopSound();
+        }
+
+        function enableDragAndDrop(targetId, onDropSuccess) {
+            const target = document.getElementById(targetId);
+            target.addEventListener('dragover', (ev) => {
+                ev.preventDefault();
+            });
+            target.addEventListener('drop', (ev) => {
+                ev.preventDefault();
+                onDropSuccess(ev);
+            });
+        }
+
+        function showSuccessModal() {
+            playSuccessSound();
+            speakText("哇！你太厲害了！你成功的用你的超級大腦破解了這一關！點選綠色按鈕挑戰下一關吧！");
+            const rect = document.body.getBoundingClientRect();
+            createConfetti(rect.width / 2, rect.height / 3);
+            setTimeout(() => {
+                const modal = document.getElementById('successModal');
+                modal.classList.remove('hidden');
+            }, 500);
+        }
+
+        function closeModalAndGoHome() {
+            document.getElementById('successModal').classList.add('hidden');
+            backToHome();
+        }
+
+
+        // ==========================================
+        // 🧩 遊戲 1: 幾何火箭拆解 (Decomposition)
+        // ==========================================
+        let decompState = { nose: false, body: false, lwing: false, rwing: false, fire: false };
+
+        function setupDecompositionGame() {
+            decompState = { nose: false, body: false, lwing: false, rwing: false, fire: false };
+            document.getElementById('decomp-feedback').textContent = '';
+            
+            const sourceContainer = document.querySelector('#decompositionGame .min-w-\\[200px\\]');
+            const ids = ['part-nose', 'part-body', 'part-lwing', 'part-rwing', 'part-fire'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                sourceContainer.appendChild(el);
+                el.classList.remove('opacity-50', 'pointer-events-none');
+            });
+
+            const targets = ['target-nose', 'target-body', 'target-lwing', 'target-rwing', 'target-fire'];
+            targets.forEach(tid => {
+                const tel = document.getElementById(tid);
+                tel.style.fill = "#e2e8f0";
+                tel.style.stroke = "#cbd5e1";
+            });
+
+            let activePart = null;
+
+            document.querySelectorAll('#decompositionGame .draggable-item').forEach(item => {
+                item.onclick = function() {
+                    playPopSound();
+                    document.querySelectorAll('#decompositionGame .draggable-item').forEach(el => el.classList.remove('ring-4', 'ring-pink-400'));
+                    activePart = this;
+                    this.classList.add('ring-4', 'ring-pink-400');
+                };
+            });
+
+            targets.forEach(tid => {
+                const targetEl = document.getElementById(tid);
+                
+                targetEl.ondragover = (ev) => ev.preventDefault();
+                targetEl.ondrop = (ev) => {
+                    ev.preventDefault();
+                    const droppedId = ev.dataTransfer.getData("text");
+                    const droppedEl = document.getElementById(droppedId);
+                    handleDecompositionPlacement(droppedEl, tid);
+                };
+
+                targetEl.onclick = function() {
+                    if (activePart) {
+                        handleDecompositionPlacement(activePart, tid);
+                        activePart.classList.remove('ring-4', 'ring-pink-400');
+                        activePart = null;
+                    }
+                };
+            });
+        }
+
+        function handleDecompositionPlacement(droppedEl, targetId) {
+            const expectedPart = document.getElementById(targetId).dataset.part;
+            const actualPart = droppedEl.dataset.part;
+
+            if (expectedPart === actualPart) {
+                const targetEl = document.getElementById(targetId);
+                let color = '#f43f5e';
+                if (actualPart === 'body') color = '#3b82f6';
+                if (actualPart === 'lwing' || actualPart === 'rwing') color = '#f59e0b';
+                if (actualPart === 'fire') color = '#f97316';
+
+                targetEl.style.fill = color;
+                targetEl.style.stroke = color;
+
+                droppedEl.classList.add('opacity-50', 'pointer-events-none');
+                
+                decompState[actualPart] = true;
+                playPopSound();
+                
+                document.getElementById('decomp-feedback').textContent = '✨ 完美拼接！分解步驟正確！';
+                document.getElementById('decomp-feedback').className = "h-8 text-center text-rose-500 font-extrabold text-lg animate__animated animate__pulse";
+                speakText("放對囉！");
+
+                if (Object.values(decompState).every(v => v === true)) {
+                    addScore(25);
+                    setTimeout(showSuccessModal, 800);
+                }
+            } else {
+                playErrorSound();
+                document.getElementById('decomp-feedback').textContent = '❌ 這不是這個幾何槽的正確零件喔！再觀察形狀與位置！';
+                document.getElementById('decomp-feedback').className = "h-8 text-center text-red-500 font-extrabold text-base animate__animated animate__shakeX";
+                speakText("不對喔，再看一次形狀！");
+            }
+        }
+
+
+        // ==========================================
+        // 🍎 遊戲 2: 規律推理神偵探 (Pattern Recognition)
+        // ==========================================
+        let patternRound = 1;
+        const totalPatternRounds = 3;
+
+        function setupPatternGame() {
+            patternRound = 1;
+            document.getElementById('pattern-feedback').textContent = '';
+            loadPatternRound();
+        }
+
+        function loadPatternRound() {
+            document.getElementById('pattern-feedback').textContent = '';
+            document.getElementById('pattern-round-title').textContent = `${patternRound} / ${totalPatternRounds}`;
+            const container = document.getElementById('pattern-container');
+            const optionsBox = document.getElementById('pattern-options');
+            container.innerHTML = '';
+            optionsBox.innerHTML = '';
+
+            const speakBtn = document.getElementById('pattern-speak-btn');
+
+            if (patternRound === 1) {
+                // Round 1 (ABB 規律): 🍎 🍌 🍌 | 🍎 🍌 🍌 | 🍎 ❓ 🍌
+                const sequence = ['🍎', '🍌', '🍌', '🍎', '🍌', '🍌', '🍎', '❓', '🍌'];
+                renderPatternSequence(sequence);
+                renderPatternOptions(['🍎', '🍌', '🍇'], '🍌');
+                speakBtn.onclick = () => speakText("第一題，蘋果、香蕉、香蕉，蘋果、香蕉、香蕉，蘋果、問號、香蕉。問號裡面應該放什麼呢？");
+            } else if (patternRound === 2) {
+                // Round 2 (雙特徵交叉規律): 紅心 藍方 紅心 藍方 ❓ 藍方
+                const sequenceHTML = [
+                    '<span class="text-red-500 text-4xl">❤️</span>', 
+                    '<span class="text-blue-500 text-4xl">🔷</span>', 
+                    '<span class="text-red-500 text-4xl">❤️</span>', 
+                    '<span class="text-blue-500 text-4xl">🔷</span>', 
+                    '❓', 
+                    '<span class="text-blue-500 text-4xl">🔷</span>'
+                ];
+                renderPatternSequenceHTML(sequenceHTML);
+                renderPatternOptionsHTML([
+                    { html: '<span class="text-red-500 text-4xl">❤️</span>', val: 'heart' },
+                    { html: '<span class="text-blue-500 text-4xl">🔷</span>', val: 'diamond' },
+                    { html: '<span class="text-green-500 text-4xl">💚</span>', val: 'green' }
+                ], 'heart');
+                speakBtn.onclick = () => speakText("第二題，紅色愛心、藍色正方形，紅色愛心、藍色正方形，問號、藍色正方形。問號裡面應該放什麼呢？");
+            } else if (patternRound === 3) {
+                // Round 3 (漸進數量增長規律): 🌟🌙 | 🌟🌟🌙 | 🌟🌟🌟❓
+                const sequence = ['🌟', '🌙', '🌟', '🌟', '🌙', '🌟', '🌟', '🌟', '❓'];
+                renderPatternSequence(sequence);
+                renderPatternOptions(['🌟', '🌙', '☀️'], '🌙');
+                speakBtn.onclick = () => speakText("第三題難度很高喔！一顆星星、一個月亮。兩顆星星、一個月亮。三顆星星、一個問號。問號裡面應該放什麼呢？");
+            }
+        }
+
+        function renderPatternSequence(arr) {
+            const container = document.getElementById('pattern-container');
+            arr.forEach((item, idx) => {
+                const el = document.createElement('div');
+                if (item === '❓') {
+                    el.id = 'pattern-answer-slot';
+                    el.className = 'w-14 h-14 border-4 border-dashed border-amber-500 rounded-2xl flex items-center justify-center text-2xl font-black bg-amber-50 animate-pulse';
+                    el.textContent = '❓';
+                } else {
+                    el.className = 'w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center text-3xl shadow-sm animate__animated animate__fadeIn';
+                    el.textContent = item;
+                }
+                container.appendChild(el);
+                
+                if (idx < arr.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'text-amber-400 font-bold';
+                    arrow.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+                    container.appendChild(arrow);
+                }
+            });
+        }
+
+        function renderPatternSequenceHTML(arr) {
+            const container = document.getElementById('pattern-container');
+            arr.forEach((item, idx) => {
+                const el = document.createElement('div');
+                if (item === '❓') {
+                    el.id = 'pattern-answer-slot';
+                    el.className = 'w-14 h-14 border-4 border-dashed border-amber-500 rounded-2xl flex items-center justify-center text-2xl font-black bg-amber-50 animate-pulse';
+                    el.textContent = '❓';
+                } else {
+                    el.className = 'w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center shadow-sm animate__animated animate__fadeIn';
+                    el.innerHTML = item;
+                }
+                container.appendChild(el);
+                
+                if (idx < arr.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'text-amber-400 font-bold';
+                    arrow.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+                    container.appendChild(arrow);
+                }
+            });
+        }
+
+        function renderPatternOptions(opts, correctVal) {
+            const optionsBox = document.getElementById('pattern-options');
+            opts.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'bouncy-btn w-16 h-16 bg-white hover:bg-amber-100 border-2 border-amber-400 rounded-2xl flex items-center justify-center text-4xl shadow-md';
+                btn.textContent = opt;
+                btn.onclick = () => submitPatternAnswer(opt, correctVal, opt);
+                optionsBox.appendChild(btn);
+            });
+        }
+
+        function renderPatternOptionsHTML(opts, correctVal) {
+            const optionsBox = document.getElementById('pattern-options');
+            opts.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'bouncy-btn w-16 h-16 bg-white hover:bg-amber-100 border-2 border-amber-400 rounded-2xl flex items-center justify-center shadow-md';
+                btn.innerHTML = opt.html;
+                btn.onclick = () => submitPatternAnswer(opt.val, correctVal, opt.html);
+                optionsBox.appendChild(btn);
+            });
+        }
+
+        function submitPatternAnswer(ans, correct, displayContent) {
+            if (ans === correct) {
+                playPopSound();
+                const slot = document.getElementById('pattern-answer-slot');
+                slot.innerHTML = displayContent;
+                slot.classList.remove('animate-pulse', 'border-dashed');
+                slot.classList.add('bg-green-100', 'border-green-500');
+
+                document.getElementById('pattern-feedback').textContent = '🎉 規律解碼成功！你太厲害了！';
+                document.getElementById('pattern-feedback').className = "h-8 text-center text-emerald-600 font-extrabold text-lg animate__animated animate__pulse";
+                speakText("答對了！");
+
+                if (patternRound < totalPatternRounds) {
+                    patternRound++;
+                    setTimeout(loadPatternRound, 1200);
+                } else {
+                    addScore(25);
+                    setTimeout(showSuccessModal, 1200);
+                }
+            } else {
+                playErrorSound();
+                document.getElementById('pattern-feedback').textContent = '❌ 唔... 這個不符合前面的規律喔！再仔細數數或觀察顏色！';
+                document.getElementById('pattern-feedback').className = "h-8 text-center text-red-500 font-extrabold text-base animate__animated animate__shakeX";
+                speakText("不太對喔，再觀察排隊規律！");
+            }
+        }
+
+
+        // ==========================================
+        // 🟡 遊戲 3: 多屬性過濾 (Abstraction)
+        // ==========================================
+        let abstractScore = 0;
+        const totalAbstractAnswers = 3;
+
+        function setupAbstractionGame() {
+            abstractScore = 0;
+            document.getElementById('abstract-feedback').textContent = '';
+            document.getElementById('abstract-collected').innerHTML = '';
+            
+            const cardsData = [
+                { id: 'abs-lemon', emoji: '🍋', shape: 'round', color: 'yellow', name: '酸檸檬' },
+                { id: 'abs-coin', emoji: '🪙', shape: 'round', color: 'yellow', name: '黃金幣' },
+                { id: 'abs-sun', emoji: '☀️', shape: 'round', color: 'yellow', name: '大太陽' },
+                
+                { id: 'abs-cheese', emoji: '🧀', shape: 'square', color: 'yellow', name: '方起司' },
+                { id: 'abs-apple', emoji: '🍎', shape: 'round', color: 'red', name: '紅蘋果' },
+                { id: 'abs-clock', emoji: '⏰', shape: 'round', color: 'red', name: '紅鬧鐘' },
+                { id: 'abs-bus', emoji: '🚌', shape: 'square', color: 'yellow', name: '黃巴士' },
+                { id: 'abs-ballon', emoji: '🎈', shape: 'round', color: 'red', name: '紅氣球' }
+            ];
+
+            cardsData.sort(() => Math.random() - 0.5);
+
+            const sourceGrid = document.getElementById('abstraction-source');
+            sourceGrid.innerHTML = '';
+
+            cardsData.forEach(card => {
+                const el = document.createElement('div');
+                el.id = card.id;
+                el.draggable = true;
+                el.dataset.shape = card.shape;
+                el.dataset.color = card.color;
+                el.className = "draggable-item w-14 h-16 bg-white rounded-xl shadow border border-slate-200 flex flex-col items-center justify-center cursor-pointer transition-all hover:shadow-md";
+                el.innerHTML = `
+                    <span class="text-3xl">${card.emoji}</span>
+                    <span class="text-[9px] text-gray-400 font-bold">${card.name}</span>
+                `;
+                
+                el.addEventListener('dragstart', drag);
+                el.onclick = () => handleAbstractionFiltering(el);
+                
+                sourceGrid.appendChild(el);
+            });
+
+            enableDragAndDrop('abstraction-target', (ev) => {
+                const droppedId = ev.dataTransfer.getData("text");
+                const droppedEl = document.getElementById(droppedId);
+                handleAbstractionFiltering(droppedEl);
+            });
+        }
+
+        function handleAbstractionFiltering(el) {
+            if (!el) return;
+            const isRound = el.dataset.shape === 'round';
+            const isYellow = el.dataset.color === 'yellow';
+
+            if (isRound && isYellow) {
+                const targetBox = document.getElementById('abstract-collected');
+                targetBox.appendChild(el);
+                el.setAttribute('draggable', 'false');
+                el.onclick = null;
+                el.className = "w-12 h-14 bg-emerald-100 rounded-xl shadow border border-emerald-400 flex flex-col items-center justify-center animate__animated animate__bounceIn";
+                
+                abstractScore++;
+                playPopSound();
+
+                document.getElementById('abstract-feedback').textContent = `✨ 成功提取黃色圓形特徵！ (${abstractScore}/${totalAbstractAnswers})`;
+                document.getElementById('abstract-feedback').className = "h-8 text-center text-emerald-600 font-extrabold text-lg animate__animated animate__pulse";
+                speakText("太棒了，它是黃色也是圓形！");
+
+                if (abstractScore === totalAbstractAnswers) {
+                    addScore(25);
+                    setTimeout(showSuccessModal, 800);
+                }
+            } else {
+                playErrorSound();
+                el.classList.add('animate__animated', 'animate__shakeX');
+                setTimeout(() => el.classList.remove('animate__animated', 'animate__shakeX'), 500);
+
+                let reason = '';
+                let voiceReason = '';
+                if (!isRound && isYellow) {
+                    reason = '它是黃色的，但它是方形的喔！';
+                    voiceReason = "它是黃色的，但是它的形狀是方形，不對喔！";
+                }
+                if (isRound && !isYellow) {
+                    reason = '它是圓形的，但顏色不是黃色喔！';
+                    voiceReason = "它是圓形的，但是它的顏色是紅色，不對喔！";
+                }
+                if (!isRound && !isYellow) {
+                    reason = '它的形狀 and 顏色都不對喔！';
+                    voiceReason = "它的顏色和形狀都不對喔！";
+                }
+
+                document.getElementById('abstract-feedback').textContent = `❌ ${reason}`;
+                document.getElementById('abstract-feedback').className = "h-8 text-center text-red-500 font-extrabold text-base animate__animated animate__shakeX";
+                speakText(voiceReason);
+            }
+        }
+
+
+        // ==========================================
+        // 🤖 遊戲 4: 演算法路徑規劃 (Algorithm)
+        // ==========================================
+        let commands = [];
+        let robotX = 0;
+        let robotY = 3;
+        let hasKey = false;
+        let isRunning = false;
+
+        const gridSetup = {
+            '0-0': 'empty', '1-0': 'lock', '2-0': 'chest', '3-0': 'fire',
+            '0-1': 'fire',  '1-1': 'fire', '2-1': 'empty', '3-1': 'empty',
+            '0-2': 'key',   '1-2': 'empty', '2-2': 'empty', '3-2': 'fire',
+            '0-3': 'robot', '1-3': 'empty', '2-3': 'empty', '3-3': 'empty'
+        };
+
+        function setupAlgorithmGame() {
+            commands = [];
+            robotX = 0;
+            robotY = 3;
+            hasKey = false;
+            isRunning = false;
+
+            document.getElementById('algo-feedback').textContent = '';
+            document.getElementById('algo-run-btn').disabled = false;
+            document.getElementById('key-state').className = "bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full text-[10px]";
+            document.getElementById('key-state').textContent = "無鑰匙 ❌";
+            
+            updateAlgoSequenceDisplay();
+            drawGridEntities();
+        }
+
+        function drawGridEntities() {
+            for (let y = 0; y < 4; y++) {
+                for (let x = 0; x < 4; x++) {
+                    const cell = document.getElementById(`cell-${x}-${y}`);
+                    cell.innerHTML = '';
+                    
+                    const type = gridSetup[`${x}-${y}`];
+                    if (type === 'fire') {
+                        cell.innerHTML = '<span class="text-2xl animate__animated animate__pulse animate__infinite">🔥</span>';
+                        cell.className = "border border-indigo-50 rounded-lg bg-red-50 flex items-center justify-center relative font-bold";
+                    } else if (type === 'key') {
+                        cell.innerHTML = '<span class="text-2xl animate__animated animate__pulse animate__infinite">🔑</span>';
+                        cell.className = "border border-indigo-50 rounded-lg bg-amber-50 flex items-center justify-center relative font-bold";
+                    } else if (type === 'lock') {
+                        cell.innerHTML = '<span id="grid-lock" class="text-2xl">🔒</span>';
+                        cell.className = "border border-indigo-50 rounded-lg bg-purple-50 flex items-center justify-center relative font-bold";
+                    } else if (type === 'chest') {
+                        cell.innerHTML = '<span class="text-2xl">🎁</span>';
+                        cell.className = "border border-indigo-50 rounded-lg bg-emerald-50 flex items-center justify-center relative font-bold";
+                    } else {
+                        cell.className = "border border-indigo-50 rounded-lg bg-white/80 flex items-center justify-center relative font-bold";
+                    }
+                }
+            }
+            const robotCell = document.getElementById(`cell-${robotX}-${robotY}`);
+            robotCell.innerHTML = '<span id="algo-robot" class="text-3xl animate-bounce" style="animation-duration: 2s;">🤖</span>';
+        }
+
+        function addAlgoCommand(direction) {
+            if (isRunning) return;
+            if (commands.length >= 6) {
+                document.getElementById('algo-feedback').textContent = '⚠️ 一次最多只能規劃 6 個指令喔！';
+                document.getElementById('algo-feedback').className = "h-8 text-center text-amber-600 font-extrabold text-base animate__animated animate__bounce";
+                speakText("最多走六步喔！");
+                return;
+            }
+            commands.push(direction);
+            playPopSound();
+            updateAlgoSequenceDisplay();
+            speakText(direction === 'UP' ? "向上" : "向右");
+        }
+
+        function clearAlgoCommands() {
+            if (isRunning) return;
+            commands = [];
+            playPopSound();
+            updateAlgoSequenceDisplay();
+            document.getElementById('algo-feedback').textContent = '';
+            speakText("清除路徑！");
+        }
+
+        function updateAlgoSequenceDisplay() {
+            const container = document.getElementById('algo-sequence');
+            if (commands.length === 0) {
+                container.innerHTML = '<span class="text-gray-400 text-xs">點按下方按鈕安排路徑...</span>';
+                return;
+            }
+
+            container.innerHTML = commands.map((cmd, idx) => {
+                const arrow = cmd === 'UP' ? '⬆️ 向上' : '➡️ 向右';
+                return `<span class="bg-blue-100 text-blue-700 font-extrabold px-2.5 py-1 rounded-lg border border-blue-200 animate__animated animate__scaleIn text-xs shrink-0">${idx+1}. ${arrow}</span>`;
+            }).join('');
+        }
+
+        async function runAlgoCommands() {
+            if (isRunning || commands.length === 0) return;
+            isRunning = true;
+            document.getElementById('algo-run-btn').disabled = true;
+            speakText("執行程式！機器人出發！");
+
+            for (let i = 0; i < commands.length; i++) {
+                const cmd = commands[i];
+                await new Promise(resolve => setTimeout(resolve, 750));
+
+                if (cmd === 'UP') robotY -= 1;
+                else if (cmd === 'RIGHT') robotX += 1;
+
+                if (robotX < 0) robotX = 0;
+                if (robotX > 3) robotX = 3;
+                if (robotY < 0) robotY = 0;
+                if (robotY > 3) robotY = 3;
+
+                drawRobotStep();
+                playPopSound();
+
+                const currentTile = gridSetup[`${robotX}-${robotY}`];
+
+                if (currentTile === 'fire') {
+                    playErrorSound();
+                    document.getElementById('algo-feedback').textContent = '💥 哎呀！機器人撞到火堆燒掉了！演算法錯誤！';
+                    document.getElementById('algo-feedback').className = "h-8 text-center text-red-500 font-extrabold text-lg animate__animated animate__flash";
+                    speakText("糟糕！燒掉了！演算法錯誤！");
+                    setTimeout(setupAlgorithmGame, 1600);
+                    return;
+                }
+
+                if (currentTile === 'key' && !hasKey) {
+                    hasKey = true;
+                    playSuccessSound();
+                    document.getElementById('key-state').className = "bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-[10px] animate__animated animate__bounce";
+                    document.getElementById('key-state').textContent = "持有鑰匙 🔑";
+                    document.getElementById('algo-feedback').textContent = '🔑 取得鑰匙！鑰匙狀態變更為 TRUE！';
+                    speakText("耶！拿到鑰匙了！");
+                    
+                    const cell = document.getElementById(`cell-${robotX}-${robotY}`);
+                    cell.innerHTML = '<span id="algo-robot" class="text-3xl animate-bounce">🤖</span>';
+                }
+
+                if (currentTile === 'lock') {
+                    if (hasKey) {
+                        playSuccessSound();
+                        document.getElementById('algo-feedback').textContent = '🔓 鎖門打開！順利通行！';
+                        speakText("門開了！繼續前進！");
+                        const lockEl = document.getElementById('grid-lock');
+                        if (lockEl) lockEl.remove();
+                    } else {
+                        playErrorSound();
+                        document.getElementById('algo-feedback').textContent = '🔒 門鎖住了！你沒有鑰匙無法通過！程式卡死！';
+                        document.getElementById('algo-feedback').className = "h-8 text-center text-red-500 font-extrabold text-lg animate__animated animate__shakeX";
+                        speakText("門鎖住了，沒有鑰匙過不去！程式失敗！");
+                        setTimeout(setupAlgorithmGame, 1600);
+                        return;
+                    }
+                }
+
+                if (currentTile === 'chest') {
+                    playSuccessSound();
+                    document.getElementById('algo-feedback').textContent = '🎉 成功執行演算法路徑！順利解鎖寶藏！';
+                    document.getElementById('algo-feedback').className = "h-8 text-center text-emerald-500 font-extrabold text-xl animate__animated animate__pulse";
+                    
+                    addScore(25);
+                    setTimeout(showSuccessModal, 1000);
+                    return;
+                }
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 600));
+            playErrorSound();
+            document.getElementById('algo-feedback').textContent = '⚠️ 指令序列執行完畢，但沒能拿到寶箱喔！再調整演算法！';
+            document.getElementById('algo-feedback').className = "h-8 text-center text-amber-500 font-extrabold text-base animate__animated animate__shakeX";
+            speakText("指令走完了，但是沒有拿到寶箱。再排一次程式吧！");
+            setTimeout(setupAlgorithmGame, 1800);
+        }
+
+        function drawRobotStep() {
+            const oldRobot = document.getElementById('algo-robot');
+            if (oldRobot) oldRobot.remove();
+
+            const cell = document.getElementById(`cell-${robotX}-${robotY}`);
+            if (cell) {
+                const rb = document.createElement('span');
+                rb.id = 'algo-robot';
+                rb.className = 'text-3xl animate-bounce z-10';
+                rb.textContent = '🤖';
+                cell.appendChild(rb);
+            }
+        }
+    </script>
+</body>
+</html>
