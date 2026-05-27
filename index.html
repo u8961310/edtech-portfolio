@@ -363,6 +363,15 @@
                 <p class="card-score" id="unit13-score-badge" style="display:none;"></p>
                 <span class="play-btn">▶ 開始玩</span>
             </a>
+
+            <a href="./units/unit14-magic-word-bullet/index.html" class="card" style="--c: #a855f7;">
+                <span class="skill-tag">魔法英打</span>
+                <div class="card-cover">🔮⚔️</div>
+                <h3 class="card-title">魔法字彈極速覺醒</h3>
+                <p class="card-desc">魔法城堡守護戰！打英文擊落怪獸，10/2 分鐘時間模式選擇，三年級 RPG 修練。</p>
+                <p class="card-score" id="unit14-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
         </div>
     </section>
 
@@ -376,7 +385,7 @@
     function loadLocalScore(unitId) {
         return localStorage.getItem(`edtech-unit${unitId}-score`) || null;
     }
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].forEach((id) => {
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].forEach((id) => {
         const score = loadLocalScore(id);
         const badge = document.getElementById(`unit${id}-score-badge`);
         if (score && badge) {

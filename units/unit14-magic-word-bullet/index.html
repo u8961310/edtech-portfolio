@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魔法字彈：極速覺醒！</title>
+    <!-- 引入 Tailwind CSS 與 Google Playful 字体 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', 'Fredoka One', sans-serif;
+            background: radial-gradient(circle, #1e1b4b 0%, #0f172a 100%);
+            overflow: hidden;
+            user-select: none;
+        }
+        /* 魔法發光特效 */
+        .glow-text {
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.8), 0 0 20px rgba(168, 85, 247, 0.4);
+        }
+        .glow-border {
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+        }
+        /* 獎狀列印專用樣式 */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #certificate-print-area, #certificate-print-area * {
+                visibility: visible;
+            }
+            #certificate-print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background: #fef3c7 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex items-center justify-center text-white select-none">
+
+<script>
+    // 遊戲狀態與設定
+    const state = {
+        gameState: 'welcome', // welcome, playing, gameover, victory
+        playerName: '',
+        score: 0,
+        passingScore: 1000,
+        gameDuration: 600, // 預設 10 分鐘 (600秒)
+        timeLeft: 600,
+        combo: 0,
+        maxCombo: 0,
+        hp: 100,
+        activeWords: [],
+        currentInput: '',
+        activeTargetId: null, // 當前正在鎖定打字的單字 ID
+        lastSpawnTime: 0,
+        spawnInterval: 2500, // 生成怪獸間隔 (ms)
+        difficultyMultiplier: 1.0,
+        muted: false
+    };
+
+    // 音效合成器 (Web Audio API)
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function playSound(type) {
+        if (state.muted) return;
+        initAudio();
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'shoot') {
+            // 魔法射擊聲 (快速向上頻率掃描)
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+            gainNode.gain.setValueAtTime(0.15, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else if (type === 'hit') {
+            // 打倒怪獸爆炸聲
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.exponentialRampToValueAtTime(40, now + 0.3);
+            gainNode.gain.setValueAtTime(0.2, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        } else if (type === 'combo') {
+            // Combo 連擊音效 (清脆的雙音階)
+            osc.type = 'sine';
+            const freq = 523.25 + (state.combo * 20); // 隨 combo 提高音高
+            osc.frequency.setValueAtTime(freq, now);
+            osc.frequency.setValueAtTime(freq * 1.5, now + 0.08);
+            gainNode.gain.setValueAtTime(0.1, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        } else if (type === 'hurt') {
+            // 城堡受傷
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(180, now);
+            osc.frequency.linearRampToValueAtTime(60, now + 0.4);
+            gainNode.gain.setValueAtTime(0.3, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc.start(now);
+            osc.stop(now + 0.4);
+        } else if (type === 'victory') {
+            // 勝利凱旋號角
+            const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+            notes.forEach((freq, idx) => {
+                const noteOsc = audioCtx.createOscillator();
+                const noteGain = audioCtx.createGain();
+                noteOsc.connect(noteGain);
+                noteGain.connect(audioCtx.destination);
+                noteOsc.type = 'sine';
+                noteOsc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                noteGain.gain.setValueAtTime(0.15, now + idx * 0.12);
+                noteGain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.3);
+                noteOsc.start(now + idx * 0.12);
+                noteOsc.stop(now + idx * 0.12 + 0.4);
+            });
+        } else if (type === 'defeat') {
+            // 失敗哀傷旋律
+            const notes = [293.66, 277.18, 261.63, 220.00];
+            notes.forEach((freq, idx) => {
+                const noteOsc = audioCtx.createOscillator();
+                const noteGain = audioCtx.createGain();
+                noteOsc.connect(noteGain);
+                noteGain.connect(audioCtx.destination);
+                noteOsc.type = 'triangle';
+                noteOsc.frequency.setValueAtTime(freq, now + idx * 0.18);
+                noteGain.gain.setValueAtTime(0.15, now + idx * 0.18);
+                noteGain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.18 + 0.4);
+                noteOsc.start(now + idx * 0.18);
+                noteOsc.stop(now + idx * 0.18 + 0.5);
+            });
+        }
+    }
+</script>
+
+<script>
+    // 適合三年級國小學生的打字字庫區
+    const WORD_POOLS = {
+        // 階段一：單一基礎英文字母鍵 (鍵盤基本功)
+        stage1: ['A', 'S', 'D', 'F', 'J', 'K', 'L', 'G', 'H', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'C', 'V', 'B', 'N', 'M'],
+        // 階段二：簡單的 3 到 4 字母生活英文單字
+        stage2: ['CAT', 'DOG', 'SUN', 'BOY', 'GIRL', 'BOOK', 'PLAY', 'RUN', 'JUMP', 'CUP', 'RED', 'BLUE', 'GOOD', 'LOVE', 'STAR', 'FISH', 'TREE', 'BIRD', 'MILK', 'CAKE'],
+        // 階段三：酷炫魔法咒語與鼓勵句子
+        stage3: ['MAGIC', 'WAND', 'FIRE', 'WATER', 'POWER', 'SPELL', 'HAPPY', 'HELLO', 'SMILE', 'FRIEND', 'DREAM', 'CHAMP', 'GREAT', 'AWESOME', 'SUPER', 'WINNER', 'SWEET']
+    };
+
+    // 怪獸外觀資料庫 (Emoji 與色彩主題)
+    const MONSTER_TEMPLATES = [
+        { emoji: '👾', bg: 'bg-purple-600', border: 'border-purple-400', name: '果凍小惡魔' },
+        { emoji: 'slime', bg: 'bg-emerald-600', border: 'border-emerald-400', name: 'Ｑ彈綠史萊姆' },
+        { emoji: '👻', bg: 'bg-cyan-600', border: 'border-cyan-400', name: '搗蛋幽靈' },
+        { emoji: '🐉', bg: 'bg-rose-600', border: 'border-rose-400', name: '迷你熔岩龍' },
+        { emoji: '🦉', bg: 'bg-amber-600', border: 'border-amber-400', name: '智慧魔法鴞' }
+    ];
+
+    function getRandomWord() {
+        // 根據剩餘時間百分比來分配掉落難度
+        const elapsedPercent = (state.gameDuration - state.timeLeft) / state.gameDuration;
+        let pool = [];
+        
+        if (elapsedPercent < 0.3) {
+            // 前 30% 時間：主要練習單字母
+            pool = WORD_POOLS.stage1;
+        } else if (elapsedPercent < 0.7) {
+            // 中間 40% 時間：單字與字母混合
+            pool = Math.random() < 0.4 ? WORD_POOLS.stage1 : WORD_POOLS.stage2;
+        } else {
+            // 最後 30% 時間：中階單字與魔法詞彙混合
+            pool = Math.random() < 0.3 ? WORD_POOLS.stage2 : WORD_POOLS.stage3;
+        }
+
+        const randomIndex = Math.floor(Math.random() * pool.length);
+        return pool[randomIndex];
+    }
+</script>
+
+<!-- 遊戲主容器 -->
+<div class="w-full max-w-4xl h-[95vh] flex flex-col justify-between p-4 relative z-10 bg-slate-900/80 backdrop-blur-md rounded-3xl border-2 border-indigo-500/30 shadow-2xl shadow-indigo-500/10">
+
+    <!-- 1. 頂部狀態列 -->
+    <header class="flex justify-between items-center bg-slate-800/80 p-4 rounded-2xl border border-slate-700/50">
+        <!-- 魔法師資訊 -->
+        <div class="flex items-center space-x-3">
+            <div class="relative">
+                <span class="text-4xl">🧙‍♂️</span>
+                <span id="player-badge" class="absolute -bottom-1 -right-1 text-xs bg-purple-600 px-1.5 py-0.5 rounded-full font-bold">學徒</span>
+            </div>
+            <div>
+                <h2 id="hud-name" class="font-bold text-lg text-indigo-300">新手魔法師</h2>
+                <!-- HP 條 -->
+                <div class="flex items-center space-x-2 w-48 mt-1">
+                    <span class="text-xs font-semibold text-rose-400">城堡HP</span>
+                    <div class="w-full bg-slate-700 h-3 rounded-full overflow-hidden">
+                        <div id="hp-bar" class="bg-gradient-to-r from-rose-500 to-red-600 h-full transition-all duration-300" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 計時器與關卡資訊 -->
+        <div class="text-center">
+            <div id="stage-badge" class="text-xs uppercase tracking-wider text-amber-400 font-extrabold bg-amber-950/40 px-3 py-1 rounded-full border border-amber-500/30">
+                微光森林 (階段 1)
+            </div>
+            <div id="timer-display" class="text-4xl font-extrabold text-white font-mono mt-1 tracking-wider">
+                10:00
+            </div>
+        </div>
+
+        <!-- 分數與連擊數 -->
+        <div class="text-right">
+            <div class="text-xs text-slate-400 font-semibold">神聖積分 / 及格門檻</div>
+            <div class="text-3xl font-extrabold text-emerald-400 font-mono">
+                <span id="score-display">0</span><span class="text-slate-500 text-lg"> / 1000</span>
+            </div>
+            <!-- Combo 浮動框 -->
+            <div id="combo-container" class="opacity-0 transition-all duration-200 mt-1 flex items-center justify-end space-x-1">
+                <span class="text-xs text-amber-400 font-bold uppercase animate-pulse">Combo!</span>
+                <span id="combo-display" class="text-2xl font-black text-amber-500 italic">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 2. 核心遊戲戰鬥視窗 (Canvas / DOM 物件掉落區) -->
+    <main id="game-arena" class="relative flex-1 bg-slate-950/80 rounded-2xl my-4 border border-indigo-950 overflow-hidden shadow-inner flex flex-col justify-between">
+        
+        <!-- 背景星空與防護罩魔法裝飾 -->
+        <div class="absolute inset-0 pointer-events-none opacity-25">
+            <div class="absolute top-10 left-1/4 w-2 h-2 bg-blue-400 rounded-full animate-ping"></div>
+            <div class="absolute top-1/2 left-2/3 w-3 h-3 bg-purple-400 rounded-full animate-ping"></div>
+            <div class="absolute bottom-20 left-10 w-2.5 h-2.5 bg-yellow-400 rounded-full animate-ping"></div>
+            <!-- 防線特效 -->
+            <div class="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-rose-500/40 to-transparent border-t border-rose-500/50"></div>
+        </div>
+
+        <!-- 魔法守護塔 (下方防禦點) -->
+        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center z-10 pointer-events-none">
+            <div class="text-5xl animate-bounce">🏰</div>
+            <div class="text-xs bg-indigo-950/90 text-indigo-300 px-2.5 py-0.5 rounded-full border border-indigo-500/40 mt-1 shadow-md">
+                學術魔法防護罩
+            </div>
+        </div>
+
+        <!-- 動態漂浮怪獸渲染區域 -->
+        <div id="monsters-layer" class="absolute inset-0"></div>
+
+        <!-- 即時輸入提示特效與反饋 -->
+        <div class="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center">
+            <!-- 擊鍵波紋與輸入顯示 -->
+            <div id="typing-echo" class="text-3xl font-extrabold text-purple-400 tracking-wider h-10 glow-text scale-100 transition-all"></div>
+        </div>
+    </main>
+
+    <!-- 3. 底部操作面板 -->
+    <footer class="flex justify-between items-center bg-slate-800/50 px-5 py-3 rounded-2xl border border-slate-700/30 text-sm">
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-1 text-slate-400">
+                <span class="text-lg">⌨️</span>
+                <span>打字即可發射魔法！無需手動點選滑鼠。</span>
+            </div>
+        </div>
+        
+        <!-- 功能按鈕組 -->
+        <div class="flex items-center space-x-3">
+            <button onclick="toggleMute()" id="mute-btn" class="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-slate-300 transition-all">
+                🔊 音效開
+            </button>
+            <button onclick="pauseGame()" id="pause-btn" class="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-slate-300 transition-all font-semibold">
+                ⏸ 暫停
+            </button>
+            <button onclick="showInstructions()" class="px-4 py-2 bg-indigo-600/50 hover:bg-indigo-600 rounded-lg text-indigo-100 transition-all font-semibold">
+                ❓ 玩法說明
+            </button>
+        </div>
+    </footer>
+</div>
+
+<!-- ================= 浮層面板組 ================= -->
+
+<!-- 1. 歡迎與姓名設定面板 -->
+<div id="panel-welcome" class="fixed inset-0 z-50 bg-slate-950/95 flex items-center justify-center p-4">
+    <div class="bg-gradient-to-b from-indigo-900 to-slate-900 p-8 rounded-3xl border-2 border-indigo-500 glow-border max-w-md w-full text-center space-y-6 relative overflow-hidden">
+        <!-- 背景流星裝飾 -->
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-purple-600/20 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl"></div>
+
+        <div class="space-y-2">
+            <div class="text-6xl animate-bounce">⚡🧙‍♂️🔮</div>
+            <h1 class="text-3xl font-black tracking-wider bg-gradient-to-r from-amber-400 via-pink-400 to-indigo-400 bg-clip-text text-transparent">
+                魔法字彈：極速覺醒
+            </h1>
+            <p class="text-sm text-indigo-200">國小三年級專屬 RPG 趣味打字修練</p>
+        </div>
+
+        <!-- 姓名輸入 -->
+        <div class="space-y-2 text-left">
+            <label class="block text-sm font-bold text-indigo-300">輸入魔法師的名字 (印在獎狀上喔！)：</label>
+            <input type="text" id="input-player-name" placeholder="小布丁 / 魔法小王子" maxlength="10" 
+                   class="w-full px-4 py-3 rounded-xl bg-slate-800 border-2 border-indigo-500/50 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 font-bold text-center text-lg transition-all">
+        </div>
+
+        <!-- 時間試煉選擇 -->
+        <div class="space-y-2 text-left">
+            <label class="block text-sm font-bold text-indigo-300">選擇魔法修練模式：</label>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="selectTimeMode(600)" id="mode-600" class="py-3 px-4 rounded-xl border-2 border-indigo-500 bg-indigo-950/80 font-bold text-indigo-200 hover:bg-indigo-900/60 transition-all text-center">
+                    🏰 10分鐘標準試煉<br><span class="text-xs font-normal text-slate-400">(學校練習首選)</span>
+                </button>
+                <button onclick="selectTimeMode(120)" id="mode-120" class="py-3 px-4 rounded-xl border-2 border-slate-700 bg-slate-800 font-bold text-slate-300 hover:bg-slate-700/60 transition-all text-center">
+                    🚀 2分鐘快速體驗<br><span class="text-xs font-normal text-slate-400">(快速展示模式)</span>
+                </button>
+            </div>
+        </div>
+
+        <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xl rounded-xl shadow-lg shadow-emerald-900/40 transform active:scale-95 transition-all">
+            ✨ 開啟傳送門，出發！
+        </button>
+
+        <p class="text-xs text-slate-400">貼心提醒：及格門檻為 <span class="text-emerald-400 font-bold">1000 分</span>，達標就能獲得皇家認證獎狀！</p>
+    </div>
+</div>
+
+<!-- 2. 暫停面板 -->
+<div id="panel-pause" class="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center">
+    <div class="bg-slate-900 border-2 border-slate-700 p-8 rounded-3xl max-w-sm w-full text-center space-y-6">
+        <h2 class="text-3xl font-bold text-indigo-400">魔法凍結中 ❄️</h2>
+        <p class="text-slate-300">戰場上的魔獸已暫時被冰凍，準備好了隨時可以重新施展魔法！</p>
+        <div class="space-y-3">
+            <button onclick="resumeGame()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold transition-all">
+                ▶ 繼續修練
+            </button>
+            <button onclick="quitToWelcome()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold transition-all">
+                🚪 放棄本次挑戰 (返回首頁)
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 3. 玩法說明面板 -->
+<div id="panel-instructions" class="fixed inset-0 z-40 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border-2 border-indigo-500/50 p-6 rounded-3xl max-w-lg w-full space-y-4">
+        <h2 class="text-2xl font-black text-amber-400 text-center">🔮 魔法修練指南 (適合三年級)</h2>
+        <div class="space-y-3 text-sm text-slate-300 leading-relaxed overflow-y-auto max-h-[60vh] pr-2">
+            <div class="bg-indigo-950/50 p-3 rounded-xl border border-indigo-500/20">
+                <span class="font-bold text-indigo-300 text-base">🛡️ 城堡保衛戰</span><br>
+                畫面上會掉落許多可愛的怪獸，每隻怪獸腳下都有一個<b>神秘魔咒 (英文字母或單字)</b>。按鍵盤打出對應字，城堡就會自動射出火球擊碎牠！
+            </div>
+            <div class="bg-indigo-950/50 p-3 rounded-xl border border-indigo-500/20">
+                <span class="font-bold text-amber-400 text-base">🔥 Combo 連擊大絕招</span><br>
+                連續不間斷打對字母，會累積「Combo 連擊數」，分數獲得加倍！如果打錯字，Combo 會重置，但別擔心不扣分！
+            </div>
+            <div class="bg-indigo-950/50 p-3 rounded-xl border border-indigo-500/20">
+                <span class="font-bold text-emerald-400 text-base">🏆 皇家獎狀系統</span><br>
+                當計時器歸零且分數<b>超過 1000 分</b>，就能取得「皇家魔法師證書」，證書上會展示你的最高 Combo、最終分數和自訂大名！
+            </div>
+        </div>
+        <button onclick="closeInstructions()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold transition-all">
+            我知道了，回去玩！
+        </button>
+    </div>
+</div>
+
+<!-- 4. 遊戲結束/結算面板 (未達標) -->
+<div id="panel-gameover" class="fixed inset-0 z-40 bg-slate-950/95 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border-2 border-rose-500 p-8 rounded-3xl max-w-md w-full text-center space-y-6">
+        <div class="text-6xl">🤕💤</div>
+        <h2 class="text-3xl font-black text-rose-500">魔力耗盡了！</h2>
+        <p class="text-slate-300">
+            親愛的 <span id="gameover-player-name" class="text-indigo-300 font-bold"></span>，
+            魔力防護罩在猛烈的攻擊下暫時關閉了。<br>別氣餒，差一點點就能及格拿到獎狀囉！
+        </p>
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+            <div class="flex justify-between">
+                <span class="text-slate-400">最終獲得積分</span>
+                <span id="gameover-score" class="text-emerald-400 font-bold text-lg">0 分</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-400">及格標準分數</span>
+                <span class="text-slate-300 font-bold">1000 分</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-400">最高連擊 (Combo)</span>
+                <span id="gameover-combo" class="text-amber-400 font-bold">0</span>
+            </div>
+        </div>
+        <div class="flex space-x-3">
+            <button onclick="restartGame()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold transition-all">
+                🔄 再次挑戰
+            </button>
+            <button onclick="quitToWelcome()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold transition-all">
+                🏡 返回首頁
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 5. 勝利/結算面板與皇家獎狀 (已達標) -->
+<div id="panel-victory" class="fixed inset-0 z-40 bg-slate-950/95 overflow-y-auto hidden flex flex-col items-center justify-start p-4 md:p-8">
+    <div class="max-w-3xl w-full text-center space-y-6 mt-4">
+        <!-- 頂部歡慶特效 -->
+        <div class="space-y-2">
+            <div class="text-6xl animate-bounce">🏆🎉✨</div>
+            <h2 class="text-3xl md:text-4xl font-black text-amber-400">恭喜通過魔法考核！</h2>
+            <p class="text-slate-300 text-sm md:text-base">你展現了令人驚嘆的打字速度與精準度，特此授予皇家皇家魔法學院最高榮譽獎狀！</p>
+        </div>
+
+        <!-- 皇家古典羊皮紙獎狀 -->
+        <div id="certificate-print-area" class="bg-amber-50 text-slate-900 border-[12px] border-amber-800/80 rounded-2xl p-6 md:p-12 shadow-2xl relative overflow-hidden mx-auto max-w-2xl select-text">
+            
+            <!-- 羊皮紙精緻邊框與花紋 -->
+            <div class="absolute inset-2 border border-amber-800/20 pointer-events-none rounded-sm"></div>
+            
+            <!-- 裝飾花紋背景 (SVG) -->
+            <div class="absolute top-4 left-4 text-amber-800/15 text-5xl pointer-events-none">⚜️</div>
+            <div class="absolute top-4 right-4 text-amber-800/15 text-5xl pointer-events-none">⚜️</div>
+            <div class="absolute bottom-4 left-4 text-amber-800/15 text-5xl pointer-events-none">⚜️</div>
+            <div class="absolute bottom-4 right-4 text-amber-800/15 text-5xl pointer-events-none">⚜️</div>
+
+            <!-- 獎狀主體內容 -->
+            <div class="space-y-6 relative z-10 text-center">
+                
+                <h3 class="text-xl md:text-2xl font-black tracking-widest text-amber-900 uppercase">
+                    🏰 皇家魔法學院 📜
+                </h3>
+                <div class="w-24 h-0.5 bg-amber-800/50 mx-auto"></div>
+                
+                <h1 class="text-3xl md:text-4xl font-extrabold text-amber-950 tracking-wider">
+                    皇家特許榮譽證書
+                </h1>
+
+                <p class="text-md md:text-lg text-slate-800 leading-relaxed font-semibold">
+                    茲證明勇敢的魔法學徒
+                </p>
+
+                <p class="text-3xl font-black text-indigo-900 underline decoration-amber-600 decoration-wavy underline-offset-8">
+                    <span id="cert-player-name">打字魔法勇士</span>
+                </p>
+
+                <div class="max-w-md mx-auto space-y-3 py-4 text-left bg-amber-100/50 p-4 rounded-xl border border-amber-800/20 text-slate-800">
+                    <p class="text-sm md:text-base leading-loose font-medium indent-8">
+                        於 <span id="cert-time-mode" class="font-bold text-amber-900"></span> 內，順利通過【極速覺醒打字試煉】。勇闖幽暗森林，以精確神速的指法化解魔力字彈，捍衛魔法城堡！
+                    </p>
+                    <div class="grid grid-cols-2 gap-4 pt-3 border-t border-amber-800/10 text-center">
+                        <div>
+                            <span class="text-xs text-slate-500 font-bold block">試煉最終得分</span>
+                            <span id="cert-score" class="text-xl font-bold text-emerald-700">1,250 分</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-500 font-bold block">最高連擊 (Max Combo)</span>
+                            <span id="cert-combo" class="text-xl font-bold text-amber-700">24 次</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-sm md:text-base font-bold text-slate-700">
+                    榮譽稱號：<span id="cert-title" class="text-lg text-amber-900 bg-amber-200/50 px-3 py-1 rounded-full">🎓 皇家首席大魔導士</span>
+                </p>
+
+                <!-- 印章與簽名區 -->
+                <div class="flex justify-between items-center pt-6 px-4">
+                    <div class="text-left">
+                        <div class="text-xs text-slate-500">魔法評議會大長老</div>
+                        <div class="text-lg font-bold font-mono text-slate-700 italic">Gandalf the Wise</div>
+                    </div>
+                    <!-- 精緻紅蠟封印 -->
+                    <div class="relative w-20 h-20 flex items-center justify-center">
+                        <svg class="absolute inset-0 w-full h-full text-red-600/90 drop-shadow-md transform hover:rotate-12 transition-transform" viewBox="0 0 100 100" fill="currentColor">
+                            <path d="M50 5 C25 5, 5 25, 5 50 C5 75, 25 95, 50 95 C75 95, 95 75, 95 50 C95 25, 75 5, 50 5 Z" />
+                            <path d="M50 12 C29 12, 12 29, 12 50 C12 71, 29 88, 50 88 C71 88, 88 71, 88 50 C88 29, 71 12, 50 12 Z" fill="#880000" />
+                        </svg>
+                        <span class="relative z-10 text-2xl font-extrabold text-amber-300">合格</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 獎狀下方控制列 -->
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-4 py-4">
+            <button onclick="printCertificate()" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-extrabold text-lg rounded-xl shadow-lg shadow-amber-900/40 transition-all flex items-center justify-center space-x-2">
+                <span>🖨️ 列印 / 儲存獎狀檔案</span>
+            </button>
+            <button onclick="restartGame()" class="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-lg rounded-xl shadow-lg shadow-indigo-900/40 transition-all flex items-center justify-center space-x-2">
+                <span>🔄 重新自我修練</span>
+            </button>
+            <button onclick="quitToWelcome()" class="w-full sm:w-auto px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-lg rounded-xl transition-all">
+                🚪 返回首頁
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 監聽鍵盤全域輸入 (除輸入框外，玩家只要直接按下對應字母鍵即反應)
+    window.addEventListener('keydown', (e) => {
+        if (state.gameState !== 'playing') return;
+
+        // 避免捕捉系統控制鍵與空白鍵滾動
+        if (e.key === ' ' || e.key === 'Spacebar') {
+            e.preventDefault();
+        }
+
+        const char = e.key.toUpperCase();
+        
+        // 只接受標準字母與空白(有些長句含有空白)
+        if (char.length !== 1) return;
+
+        playSound('shoot');
+
+        // 展示魔法彈回饋
+        const typingEchoEl = document.getElementById('typing-echo');
+        typingEchoEl.innerText = char;
+        typingEchoEl.classList.add('scale-150');
+        setTimeout(() => typingEchoEl.classList.remove('scale-150'), 100);
+
+        // 打字匹配邏輯
+        let matchFound = false;
+
+        if (state.activeTargetId !== null) {
+            // 已有鎖定目標，必須繼續打該目標
+            const target = state.activeWords.find(w => w.id === state.activeTargetId);
+            if (target) {
+                const nextCharNeeded = target.text[target.typedText.length].toUpperCase();
+                if (char === nextCharNeeded) {
+                    target.typedText += e.key; // 紀錄實際輸入的大小寫
+                    matchFound = true;
+                    // 若完成打字
+                    if (target.typedText.length === target.text.length) {
+                        eliminateMonster(target.id);
+                    }
+                }
+            } else {
+                state.activeTargetId = null; // 防呆：鎖定對象若消失，解除鎖定
+            }
+        }
+
+        // 若無鎖定目標，或剛剛沒匹配成功，尋找首字母匹配的怪物
+        if (!matchFound) {
+            // 優先尋找高度最低、最逼近防線的怪獸
+            const potentialTargets = state.activeWords
+                .filter(w => w.text[0].toUpperCase() === char)
+                .sort((a, b) => b.y - a.y); // 按 Y 軸高度降序排列 (底部者優先)
+
+            if (potentialTargets.length > 0) {
+                const bestTarget = potentialTargets[0];
+                state.activeTargetId = bestTarget.id;
+                bestTarget.typedText = e.key;
+                matchFound = true;
+
+                // 若單字長度只有 1 (例如 Stage 1)
+                if (bestTarget.typedText.length === bestTarget.text.length) {
+                    eliminateMonster(bestTarget.id);
+                }
+            }
+        }
+
+        if (matchFound) {
+            updateMonstersUI();
+        } else {
+            // 打錯字：中斷 Combo
+            state.combo = 0;
+            document.getElementById('combo-container').style.opacity = '0';
+            state.activeTargetId = null; // 解除鎖定
+            updateMonstersUI(); // 重置顏色提示
+        }
+    });
+
+    // 成功擊潰怪獸
+    function eliminateMonster(id) {
+        const index = state.activeWords.findIndex(w => w.id === id);
+        if (index === -1) return;
+
+        playSound('hit');
+        state.activeWords.splice(index, 1);
+
+        // 獲得積分與 Combo
+        state.score += 50;
+        state.combo += 1;
+        if (state.combo > state.maxCombo) {
+            state.maxCombo = state.combo;
+        }
+
+        // Combo 介面更新
+        if (state.combo >= 2) {
+            playSound('combo');
+            const comboContainer = document.getElementById('combo-container');
+            comboContainer.style.opacity = '1';
+            document.getElementById('combo-display').innerText = state.combo;
+            
+            // 分數因連擊加乘
+            const bonus = Math.min(state.combo * 5, 50); // 最高每個怪額外 +50 分
+            state.score += bonus;
+        }
+
+        // 解除鎖定
+        state.activeTargetId = null;
+
+        // 更新 HUD
+        document.getElementById('score-display').innerText = state.score;
+
+        updateMonstersUI();
+    }
+</script>
+
+<script>
+    // 選擇時間模式
+    function selectTimeMode(seconds) {
+        state.gameDuration = seconds;
+        state.timeLeft = seconds;
+        
+        // 切換按鈕樣式
+        const btn600 = document.getElementById('mode-600');
+        const btn120 = document.getElementById('mode-120');
+
+        if (seconds === 600) {
+            btn600.className = "py-3 px-4 rounded-xl border-2 border-indigo-500 bg-indigo-950/80 font-bold text-indigo-200 hover:bg-indigo-900/60 transition-all text-center";
+            btn120.className = "py-3 px-4 rounded-xl border-2 border-slate-700 bg-slate-800 font-bold text-slate-300 hover:bg-slate-700/60 transition-all text-center";
+        } else {
+            btn600.className = "py-3 px-4 rounded-xl border-2 border-slate-700 bg-slate-800 font-bold text-slate-300 hover:bg-slate-700/60 transition-all text-center";
+            btn120.className = "py-3 px-4 rounded-xl border-2 border-indigo-500 bg-indigo-950/80 font-bold text-indigo-200 hover:bg-indigo-900/60 transition-all text-center";
+        }
+    }
+
+    // 啟動遊戲
+    function startGame() {
+        const nameInput = document.getElementById('input-player-name').value.trim();
+        state.playerName = nameInput || '匿名魔法師';
+        
+        // 初始化狀態
+        state.score = 0;
+        state.timeLeft = state.gameDuration;
+        state.combo = 0;
+        state.maxCombo = 0;
+        state.hp = 100;
+        state.activeWords = [];
+        state.activeTargetId = null;
+        state.gameState = 'playing';
+
+        // 初始化 Web Audio API (在使用者點擊後激活)
+        initAudio();
+
+        // 介面數據重設
+        document.getElementById('hud-name').innerText = state.playerName;
+        document.getElementById('score-display').innerText = '0';
+        document.getElementById('hp-bar').style.width = '100%';
+        document.getElementById('panel-welcome').classList.add('hidden');
+        document.getElementById('panel-gameover').classList.add('hidden');
+        document.getElementById('panel-victory').classList.add('hidden');
+
+        // 更改魔法學徒徽章
+        updateHUD();
+
+        // 開始計時與遊戲主循環
+        if (window.gameInterval) clearInterval(window.gameInterval);
+        window.gameInterval = setInterval(gameTick, 1000);
+
+        if (window.animationFrameId) cancelAnimationFrame(window.animationFrameId);
+        state.lastSpawnTime = Date.now();
+        gameLoop();
+    }
+
+    // 遊戲時間滴答器 (每秒執行一次)
+    function gameTick() {
+        if (state.gameState !== 'playing') return;
+
+        state.timeLeft--;
+        
+        // 格式化時間 (分:秒)
+        const mins = Math.floor(state.timeLeft / 60);
+        const secs = state.timeLeft % 60;
+        document.getElementById('timer-display').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+        // 動態難度增加
+        const elapsed = state.gameDuration - state.timeLeft;
+        state.difficultyMultiplier = 1.0 + (elapsed / state.gameDuration) * 0.8; // 最多增快 1.8 倍
+
+        // 更改關卡徽章名稱
+        updateHUD();
+
+        // 時間終了結算
+        if (state.timeLeft <= 0) {
+            endGame();
+        }
+    }
+
+    // 更新 HUD 等級稱號
+    function updateHUD() {
+        const elapsedPercent = (state.gameDuration - state.timeLeft) / state.gameDuration;
+        const stageBadge = document.getElementById('stage-badge');
+        const playerBadge = document.getElementById('player-badge');
+
+        if (elapsedPercent < 0.3) {
+            stageBadge.innerText = '微光森林 (階段 1)';
+            stageBadge.className = 'text-xs uppercase tracking-wider text-emerald-400 font-extrabold bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-500/30';
+            playerBadge.innerText = '初階學徒';
+        } else if (elapsedPercent < 0.7) {
+            stageBadge.innerText = '熔岩地窟 (階段 2)';
+            stageBadge.className = 'text-xs uppercase tracking-wider text-orange-400 font-extrabold bg-orange-950/40 px-3 py-1 rounded-full border border-orange-500/30';
+            playerBadge.innerText = '中級法師';
+        } else {
+            stageBadge.innerText = '終界魔王城 (階段 3)';
+            stageBadge.className = 'text-xs uppercase tracking-wider text-rose-400 font-extrabold bg-rose-950/40 px-3 py-1 rounded-full border border-rose-500/30';
+            playerBadge.innerText = '大法師';
+        }
+    }
+
+    // 遊戲繪圖與更新主循環 (FPS級)
+    function gameLoop() {
+        if (state.gameState !== 'playing') return;
+
+        const now = Date.now();
+        const arena = document.getElementById('game-arena');
+        const arenaHeight = arena.clientHeight;
+
+        // 1. 自動生成怪獸
+        const adjustedInterval = state.spawnInterval / state.difficultyMultiplier;
+        if (now - state.lastSpawnTime > adjustedInterval) {
+            spawnMonster();
+            state.lastSpawnTime = now;
+        }
+
+        // 2. 移動怪獸
+        for (let i = state.activeWords.length - 1; i >= 0; i--) {
+            const word = state.activeWords[i];
+            
+            // 隨時間與難度，速度逐步提高
+            const speed = word.speed * state.difficultyMultiplier;
+            word.y += speed;
+
+            // 3. 碰撞城堡防線
+            if (word.y >= arenaHeight - 110) { // 預留防禦塔與底部的高度
+                playSound('hurt');
+                
+                // 受傷扣城堡血量
+                state.hp -= 15;
+                if (state.hp < 0) state.hp = 0;
+                document.getElementById('hp-bar').style.width = `${state.hp}%`;
+
+                // 重置 Combo 與鎖定
+                state.combo = 0;
+                document.getElementById('combo-container').style.opacity = '0';
+                if (state.activeTargetId === word.id) {
+                    state.activeTargetId = null;
+                }
+
+                // 移除該怪獸
+                state.activeWords.splice(i, 1);
+
+                // 血量歸零：死亡結算
+                if (state.hp <= 0) {
+                    endGame();
+                    return;
+                }
+            }
+        }
+
+        // 渲染更新 DOM
+        updateMonstersUI();
+
+        window.animationFrameId = requestAnimationFrame(gameLoop);
+    }
+
+    // 生成一隻怪獸
+    function spawnMonster() {
+        const text = getRandomWord();
+        const template = MONSTER_TEMPLATES[Math.floor(Math.random() * MONSTER_TEMPLATES.length)];
+        const arenaWidth = document.getElementById('game-arena').clientWidth;
+        
+        // 確保怪獸不會超出視窗邊緣 (邊距 50px)
+        const minX = 40;
+        const maxX = arenaWidth - 140;
+        const x = minX + Math.random() * (maxX - minX);
+
+        const newMonster = {
+            id: Date.now() + Math.random().toString(36).substr(2, 5),
+            text: text,
+            typedText: '',
+            x: x,
+            y: -40, // 從上方隱藏處滑落
+            speed: 0.5 + Math.random() * 0.4, // 基本速度
+            emoji: template.emoji,
+            bg: template.bg,
+            border: template.border,
+            name: template.name
+        };
+
+        state.activeWords.push(newMonster);
+    }
+
+    // 渲染或更新怪獸 DOM 物件
+    function updateMonstersUI() {
+        const container = document.getElementById('monsters-layer');
+        container.innerHTML = ''; // 清空重新渲染
+
+        state.activeWords.forEach(word => {
+            const isLocked = state.activeTargetId === word.id;
+            
+            // 建立怪獸卡片
+            const monsterDiv = document.createElement('div');
+            monsterDiv.className = `absolute flex flex-col items-center justify-center transition-all pointer-events-none`;
+            monsterDiv.style.left = `${word.x}px`;
+            monsterDiv.style.top = `${word.y}px`;
+            monsterDiv.style.width = '100px';
+
+            // 根據是否鎖定，套用外邊框發光
+            const lockedClass = isLocked ? 'ring-4 ring-pink-500 scale-110 glow-border' : 'border border-slate-700';
+
+            // 怪獸角色與文字背景渲染
+            const emojiRender = word.emoji === 'slime' ? '🟢' : word.emoji;
+
+            // 切分單字：已打、未打
+            let textHtml = '';
+            for (let i = 0; i < word.text.length; i++) {
+                const char = word.text[i];
+                if (i < word.typedText.length) {
+                    // 已打對：綠色
+                    textHtml += `<span class="text-emerald-400 font-extrabold text-lg drop-shadow-md">${char}</span>`;
+                } else {
+                    // 未打：白色
+                    textHtml += `<span class="text-white font-semibold text-lg">${char}</span>`;
+                }
+            }
+
+            monsterDiv.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <!-- 怪獸表情符號與身體 -->
+                    <div class="w-12 h-12 flex items-center justify-center text-3xl rounded-full ${word.bg} ${lockedClass} relative">
+                        <span class="animate-bounce" style="animation-duration: ${1.5 + Math.random()}s">${emojiRender}</span>
+                    </div>
+                    <!-- 打字英文字詞牌 -->
+                    <div class="mt-1.5 px-2 py-0.5 bg-slate-900/90 rounded-md border border-slate-700/80 shadow-md text-center flex justify-center items-center min-w-[50px]">
+                        ${textHtml}
+                    </div>
+                </div>
+            `;
+            container.appendChild(monsterDiv);
+        });
+    }
+</script>
+
+<script>
+    // 暫停與恢復
+    function pauseGame() {
+        if (state.gameState !== 'playing') return;
+        state.gameState = 'paused';
+        document.getElementById('panel-pause').classList.remove('hidden');
+    }
+
+    function resumeGame() {
+        state.gameState = 'playing';
+        document.getElementById('panel-pause').classList.add('hidden');
+        gameLoop();
+    }
+
+    function toggleMute() {
+        state.muted = !state.muted;
+        document.getElementById('mute-btn').innerText = state.muted ? '🔇 靜音中' : '🔊 音效開';
+        document.getElementById('mute-btn').className = state.muted 
+            ? "p-2 bg-rose-950/80 hover:bg-rose-900 rounded-lg text-rose-300 border border-rose-500/20 transition-all"
+            : "p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-slate-300 transition-all";
+    }
+
+    // 玩法說明
+    function showInstructions() {
+        pauseGame();
+        document.getElementById('panel-instructions').classList.remove('hidden');
+    }
+
+    function closeInstructions() {
+        document.getElementById('panel-instructions').classList.add('hidden');
+        resumeGame();
+    }
+
+    // 返回首頁
+    function quitToWelcome() {
+        if (window.gameInterval) clearInterval(window.gameInterval);
+        if (window.animationFrameId) cancelAnimationFrame(window.animationFrameId);
+        
+        state.gameState = 'welcome';
+        document.getElementById('panel-welcome').classList.remove('hidden');
+        document.getElementById('panel-pause').classList.add('hidden');
+        document.getElementById('panel-gameover').classList.add('hidden');
+        document.getElementById('panel-victory').classList.add('hidden');
+    }
+
+    // 結束/結算
+    function endGame() {
+        if (window.gameInterval) clearInterval(window.gameInterval);
+        if (window.animationFrameId) cancelAnimationFrame(window.animationFrameId);
+
+        // 及格判定 (滿 1000 分為及格門檻)
+        if (state.score >= state.passingScore) {
+            state.gameState = 'victory';
+            playSound('victory');
+            showVictoryCertificate();
+        } else {
+            state.gameState = 'gameover';
+            playSound('defeat');
+            showGameOver();
+        }
+    }
+
+    // 未及格畫面
+    function showGameOver() {
+        document.getElementById('gameover-player-name').innerText = state.playerName;
+        document.getElementById('gameover-score').innerText = `${state.score} 分`;
+        document.getElementById('gameover-combo').innerText = `${state.maxCombo} 次`;
+        document.getElementById('panel-gameover').classList.remove('hidden');
+    }
+
+    // 重新開始
+    function restartGame() {
+        startGame();
+    }
+
+    // 及格！展示精美皇家證書
+    function showVictoryCertificate() {
+        const victoryPanel = document.getElementById('panel-victory');
+        victoryPanel.classList.remove('hidden');
+
+        // 填入證書資訊
+        document.getElementById('cert-player-name').innerText = state.playerName;
+        
+        const modeText = state.gameDuration === 600 ? '「十分鐘皇家正式試煉」' : '「兩分鐘極速修練」';
+        document.getElementById('cert-time-mode').innerText = modeText;
+        document.getElementById('cert-score').innerText = `${state.score.toLocaleString()} 分`;
+        document.getElementById('cert-combo').innerText = `${state.maxCombo} 次`;
+
+        // 根據分數判定稱號
+        let title = '🎓 皇家精英打字學徒';
+        if (state.score >= 2500) {
+            title = '👑 皇家終極大魔導大師 (神速級)';
+        } else if (state.score >= 1800) {
+            title = '🪄 皇家首席大魔導士 (高階級)';
+        } else if (state.score >= 1200) {
+            title = '📜 皇家大魔法使 (進階級)';
+        }
+        document.getElementById('cert-title').innerText = title;
+    }
+
+    // 列印/儲存獎狀PDF或圖片
+    function printCertificate() {
+        // 直接調用系統列印，結合 CSS 媒體查詢達成極佳的排版
+        window.print();
+    }
+</script>
+
+</body>
+</html>

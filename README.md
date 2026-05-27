@@ -37,6 +37,7 @@
 | 📘 中年級 | `unit11-space-typing-pro` | 英打太空特攻 | 計時英打練習、漸進難度、WPM 計分 |
 | 📘 中年級 | `unit12-space-typing-zh` | 中打太空特攻 | 計時注音輸入練習、IME 比對、漸進難度 |
 | 🎒 一年級 | `unit13-forest-typing-defense` | 極速雷射森林戰 | 注音／英打雙模式切換、霓虹雷射射擊、小一友善慢速版 |
+| 🎓 三年級 | `unit14-magic-word-bullet` | 魔法字彈極速覺醒 | 英文打字、時間模式（2/10 分）、RPG 魔法主題 |
 
 ## 🚀 快速開始
 
@@ -82,7 +83,9 @@ edtech-portfolio/
     │   └── index.html
     ├── unit12-space-typing-zh/
     │   └── index.html
-    └── unit13-forest-typing-defense/
+    ├── unit13-forest-typing-defense/
+    │   └── index.html
+    └── unit14-magic-word-bullet/
         └── index.html
 ```
 
