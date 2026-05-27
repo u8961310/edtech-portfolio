@@ -36,6 +36,7 @@
 | 📘 中年級 | `unit1-typing-adventure` | 中文打字冒險王 | 注音輸入、中文識讀、闖關成就感 |
 | 📘 中年級 | `unit11-space-typing-pro` | 英打太空特攻 | 計時英打練習、漸進難度、WPM 計分 |
 | 📘 中年級 | `unit12-space-typing-zh` | 中打太空特攻 | 計時注音輸入練習、IME 比對、漸進難度 |
+| 🎒 一年級 | `unit13-forest-typing-defense` | 極速雷射森林戰 | 注音／英打雙模式切換、霓虹雷射射擊、小一友善慢速版 |
 
 ## 🚀 快速開始
 
@@ -79,7 +80,9 @@ edtech-portfolio/
     │   └── index.html
     ├── unit11-space-typing-pro/
     │   └── index.html
-    └── unit12-space-typing-zh/
+    ├── unit12-space-typing-zh/
+    │   └── index.html
+    └── unit13-forest-typing-defense/
         └── index.html
 ```
 

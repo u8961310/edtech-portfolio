@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
+  <title>極速雷射：森林打字守護戰</title>
+  <!-- 載入 Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 載入 Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      background: radial-gradient(circle, #091e15 0%, #020805 100%);
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+    
+    /* 霓虹字體效果 */
+    .neon-text-green {
+      text-shadow: 0 0 5px #10b981, 0 0 10px #10b981, 0 0 20px #047857;
+    }
+    .neon-text-pink {
+      text-shadow: 0 0 5px #f43f5e, 0 0 10px #f43f5e, 0 0 20px #be185d;
+    }
+    .neon-text-amber {
+      text-shadow: 0 0 5px #f59e0b, 0 0 10px #f59e0b, 0 0 20px #b45309;
+    }
+    
+    /* 邊框霓虹光暈 */
+    .neon-border-green {
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), inset 0 0 15px rgba(16, 185, 129, 0.2);
+    }
+    .neon-border-pink {
+      box-shadow: 0 0 15px rgba(244, 63, 94, 0.4), inset 0 0 15px rgba(244, 63, 94, 0.2);
+    }
+
+    /* 螢幕震動 */
+    .shake-screen {
+      animation: shake 0.15s ease-in-out infinite;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      20% { transform: translate(-4px, 5px) rotate(-0.5deg); }
+      40% { transform: translate(5px, -3px) rotate(0.5deg); }
+      60% { transform: translate(-3px, -2px) rotate(-0.2deg); }
+      80% { transform: translate(4px, 3px) rotate(0.3deg); }
+    }
+
+    /* 虛擬鍵盤按壓動效 */
+    .key-cap {
+      transition: all 0.05s ease;
+      transform: translateY(0);
+      box-shadow: 0 4px 0 #111827, 0 8px 10px rgba(0,0,0,0.5);
+    }
+    .key-cap:active, .key-cap.pressed {
+      transform: translateY(4px);
+      box-shadow: 0 0px 0 #111827, 0 2px 5px rgba(0,0,0,0.5);
+    }
+
+    /* 閃光彈 */
+    .flash-white {
+      animation: flashAnimation 0.3s ease-out;
+    }
+    @keyframes flashAnimation {
+      0% { background-color: rgba(255, 255, 255, 0.6); }
+      100% { background-color: rgba(255, 255, 255, 0); }
+    }
+    
+    /* Fever 模式閃爍背景 */
+    .fever-bg {
+      animation: feverPulse 1s linear infinite;
+    }
+    @keyframes feverPulse {
+      0%, 100% { background: radial-gradient(circle, #2a081c 0%, #020805 100%); }
+      50% { background: radial-gradient(circle, #0a1f2e 0%, #020805 100%); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-2 md:p-4 select-none overflow-hidden relative">
+
+  <!-- 閃光、背景防護罩遮罩層 -->
+  <div id="screen-flash" class="absolute inset-0 pointer-events-none z-40 bg-transparent"></div>
+
+  <!-- 頂部高科技霓虹狀態列 -->
+  <header class="w-full max-w-2xl flex justify-between items-center bg-black/60 backdrop-blur-md rounded-2xl p-3 border border-emerald-900/50 z-30 shadow-2xl">
+    <div class="flex items-center space-x-3">
+      <div id="player-avatar" class="w-12 h-12 bg-emerald-950/80 rounded-xl flex items-center justify-center border border-emerald-500/30">
+        <!-- 角色 SVG -->
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <span class="text-[10px] uppercase font-bold text-emerald-500 tracking-widest">GUARD HERO</span>
+          <span id="fever-badge" class="hidden bg-pink-500 text-white text-[9px] px-1.5 py-0.5 rounded font-black animate-pulse">FEVER ACTIVE</span>
+        </div>
+        <div id="player-name" class="text-white text-sm font-bold tracking-wide">胖胖熊</div>
+      </div>
+    </div>
+
+    <!-- 生命值與分數 -->
+    <div class="flex items-center space-x-4">
+      <!-- 護盾防禦力 (Hp Bar) -->
+      <div class="flex flex-col items-end">
+        <span class="text-[10px] text-rose-400 font-bold mb-1">SHIELD INTEGRITY</span>
+        <div class="w-24 bg-rose-950 h-2.5 rounded-full overflow-hidden border border-rose-500/30 flex">
+          <div id="hp-bar" class="bg-rose-500 h-full w-full transition-all duration-150 shadow-[0_0_10px_#f43f5e]"></div>
+        </div>
+      </div>
+      
+      <!-- 得分 -->
+      <div class="text-right">
+        <div class="text-[10px] text-amber-400 font-bold">SCORE</div>
+        <div id="score-display" class="text-white text-xl font-black neon-text-amber" style="font-family: 'Press Start 2P', monospace; font-size: 14px;">0000</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 遊戲主舞台區域 -->
+  <main class="w-full max-w-2xl bg-black/40 border border-emerald-950 rounded-2xl flex-grow my-2 relative overflow-hidden z-20 flex flex-col">
+    <!-- 遊戲畫布 -->
+    <canvas id="game-canvas" class="w-full h-full block bg-transparent cursor-none"></canvas>
+    
+    <!-- 連擊 Combo 水晶浮動標籤 -->
+    <div id="combo-container" class="absolute top-10 left-1/2 -translate-x-1/2 pointer-events-none text-center hidden z-30 scale-0 transition-transform duration-200">
+      <div class="text-pink-400 font-black text-3xl italic tracking-wider neon-text-pink animate-bounce">
+        <span id="combo-num">0</span> <span class="text-xl">COMBO!</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- 下方智慧觸控鍵盤區 -->
+  <footer class="w-full max-w-2xl bg-black/80 rounded-2xl p-1.5 border border-emerald-950 z-30 shadow-2xl">
+    <!-- 鍵盤與模式控制列 -->
+    <div class="flex justify-between items-center mb-2 px-1">
+      <div class="flex space-x-2">
+        <button id="mode-zhuyin" onclick="changeMode('zhuyin')" class="px-3 py-1 bg-emerald-900 text-emerald-200 border border-emerald-500 rounded-lg text-xs font-bold transition-all shadow-[0_0_8px_rgba(16,185,129,0.3)]">
+          ㄅㄆㄇ 注音戰場
+        </button>
+        <button id="mode-english" onclick="changeMode('english')" class="px-3 py-1 bg-stone-900 text-stone-400 border border-transparent rounded-lg text-xs font-bold transition-all">
+          A - Z 英文戰場
+        </button>
+      </div>
+      <div class="text-[10px] text-stone-400 font-bold">
+        支援實體鍵盤 & 螢幕觸控
+      </div>
+    </div>
+
+    <!-- 虛擬按鍵面板 -->
+    <div id="virtual-keyboard" class="grid grid-cols-1 gap-1">
+      <!-- 由 JS 動態依據模式產生鍵盤 -->
+    </div>
+  </footer>
+
+  <!-- 開始與結束覆蓋選單 (Modals) -->
+  <div id="menu-overlay" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex flex-center items-center justify-center p-4">
+    <div class="bg-stone-950 border border-emerald-500/30 rounded-3xl p-6 max-w-md w-full text-center shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+      <h1 class="text-3xl font-black text-emerald-400 mb-2 tracking-wider neon-text-green">
+        極速雷射：守護戰
+      </h1>
+      <p class="text-xs text-stone-300 mb-1 font-bold leading-relaxed">
+        打敗入侵的太空巨石！按下對應的鍵盤按鍵發射強力雷射！
+      </p>
+      <p class="text-[11px] text-amber-400 mb-5 font-black">
+        🧸 已為您開啟「小一友善慢速練習模式」，好玩不緊張！
+      </p>
+
+      <!-- 角色選單 -->
+      <div class="bg-black/40 border border-emerald-950 p-4 rounded-2xl mb-6">
+        <h3 class="text-xs text-emerald-500 font-black mb-3 tracking-widest">選擇你的雷射炮手</h3>
+        <div class="grid grid-cols-4 gap-2">
+          ${['bear', 'rabbit', 'cat', 'duck'].map(role => '').join('')} <!-- Placeholder, will inject dynamically -->
+          <div id="hero-selection" class="col-span-4 flex justify-around"></div>
+        </div>
+      </div>
+
+      <button onclick="startGame()" class="key-cap w-full bg-emerald-500 hover:bg-emerald-400 text-black text-lg font-black py-4 rounded-2xl shadow-[0_0_20px_#10b981]">
+        啟動雷射引擎 ⚡
+      </button>
+    </div>
+  </div>
+
+  <!-- 遊戲結束/結算選單 -->
+  <div id="gameover-overlay" class="fixed inset-0 bg-black/95 backdrop-blur-md z-50 hidden flex-center items-center justify-center p-4">
+    <div class="bg-stone-950 border border-rose-500/30 rounded-3xl p-6 max-w-sm w-full text-center shadow-[0_0_30px_rgba(244,63,94,0.2)]">
+      <div class="text-5xl mb-4">💥</div>
+      <h1 class="text-2xl font-black text-rose-500 mb-1 tracking-wider neon-text-pink">
+        防護罩已被摧毀！
+      </h1>
+      <p class="text-xs text-stone-400 mb-6 font-bold">
+        太刺激了！你的森林雷射大砲防守得非常出色！
+      </p>
+
+      <div class="bg-black/50 border border-stone-900 rounded-2xl p-4 mb-6">
+        <div class="text-stone-400 text-xs font-bold">最後防衛得分</div>
+        <div id="final-score" class="text-3xl font-black text-amber-400 mt-1 neon-text-amber" style="font-family: 'Press Start 2P', monospace; font-size: 24px;">0000</div>
+        <div class="text-[10px] text-stone-500 font-bold mt-2">獲得守護者星星數: <span id="reward-stars" class="text-amber-500">⭐️ x0</span></div>
+      </div>
+
+      <button onclick="restartGame()" class="key-cap w-full bg-rose-500 hover:bg-rose-400 text-black text-md font-black py-3.5 rounded-2xl shadow-[0_0_20px_#f43f5e]">
+        重新武裝戰鬥 🚀
+      </button>
+    </div>
+  </div>
+
+  <!-- 鍵盤佈局、對照表、SVG資料庫 -->
+  <script>
+    const SVGS = {
+      bear: `<svg viewBox="0 0 100 100" class="w-12 h-12"><circle cx="50" cy="55" r="35" fill="#a16207"/><circle cx="25" cy="28" r="12" fill="#a16207"/><circle cx="75" cy="28" r="12" fill="#a16207"/><circle cx="25" cy="28" r="6" fill="#fbcfe8"/><circle cx="75" cy="28" r="6" fill="#fbcfe8"/><circle cx="50" cy="62" r="18" fill="#fef3c7"/><circle cx="43" cy="48" r="4" fill="#000"/><circle cx="57" cy="48" r="4" fill="#000"/><ellipse cx="50" cy="56" rx="5" ry="3.5" fill="#000"/></svg>`,
+      rabbit: `<svg viewBox="0 0 100 100" class="w-12 h-12"><ellipse cx="50" cy="60" rx="32" ry="28" fill="#f3f4f6"/><ellipse cx="32" cy="25" rx="10" ry="22" fill="#f3f4f6" transform="rotate(-5 32 25)"/><ellipse cx="68" cy="25" rx="10" ry="22" fill="#f3f4f6" transform="rotate(5 68 25)"/><ellipse cx="32" cy="28" rx="5" ry="14" fill="#fbcfe8" transform="rotate(-5 32 28)"/><ellipse cx="68" cy="28" rx="5" ry="14" fill="#fbcfe8" transform="rotate(5 68 28)"/><circle cx="38" cy="52" r="3.5" fill="#000"/><circle cx="62" cy="52" r="3.5" fill="#000"/><ellipse cx="50" cy="58" rx="4" ry="2.5" fill="#f43f5e"/></svg>`,
+      cat: `<svg viewBox="0 0 100 100" class="w-12 h-12"><circle cx="50" cy="55" r="34" fill="#ea580c"/><polygon points="20,32 40,42 22,12" fill="#ea580c"/><polygon points="80,32 60,42 78,12" fill="#ea580c"/><polygon points="24,28 35,35 25,16" fill="#fbcfe8"/><polygon points="76,28 65,35 75,16" fill="#fbcfe8"/><circle cx="38" cy="50" r="4" fill="#000"/><circle cx="62" cy="50" r="4" fill="#000"/><polygon points="50,56 46,52 54,52" fill="#db2777"/></svg>`,
+      duck: `<svg viewBox="0 0 100 100" class="w-12 h-12"><circle cx="50" cy="55" r="34" fill="#fbbf24"/><circle cx="38" cy="48" r="4" fill="#000"/><circle cx="62" cy="48" r="4" fill="#000"/><ellipse cx="50" cy="58" rx="12" ry="7" fill="#ea580c"/></svg>`
+    };
+
+    // 鍵盤佈局對照
+    const KEYBOARD_LAYOUTS = {
+      zhuyin: [
+        ['ㄅ', 'ㄉ', 'ˇ', 'ˋ', 'ㄓ', 'ˊ', '˙', 'ㄚ', 'ㄛ', 'ㄦ'],
+        ['ㄆ', 'ㄊ', 'ㄋ', 'ㄌ', 'ㄍ', 'ㄎ', 'ㄏ', 'ㄐ', 'ㄑ', 'ㄒ'],
+        ['ㄇ', 'ㄈ', 'ㄔ', 'ㄕ', 'ㄖ', 'ㄗ', 'ㄘ', 'ㄙ', 'ㄧ', 'ㄨ'],
+        ['ㄩ', 'ㄚ', 'ㄛ', 'ㄜ', 'ㄝ', 'ㄞ', 'ㄟ', 'ㄠ', 'ㄡ', 'ㄢ'],
+        ['ㄣ', 'ㄤ', 'ㄥ', 'ㄦ']
+      ],
+      english: [
+        ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+        ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+        ['Z', 'X', 'C', 'V', 'B', 'N', 'M']
+      ]
+    };
+
+    // 注音與鍵盤對應對照表（用於偵測實體按鍵）
+    const ZHUYIN_TO_KEY_MAP = {
+      '1': 'ㄅ', 'q': 'ㄆ', 'a': 'ㄇ', 'z': 'ㄈ',
+      '2': 'ㄉ', 'w': 'ㄊ', 's': 'ㄋ', 'x': 'ㄌ',
+      'e': 'ㄍ', 'd': 'ㄎ', 'c': 'ㄏ',
+      'r': 'ㄐ', 'f': 'ㄑ', 'v': 'ㄒ',
+      '5': 'ㄓ', 't': 'ㄔ', 'g': 'ㄕ', 'b': 'ㄖ',
+      'y': 'ㄗ', 'h': 'ㄘ', 'n': 'ㄙ',
+      '8': 'ㄚ', 'i': 'ㄛ', 'k': 'ㄜ', ',': 'ㄝ',
+      '9': 'ㄞ', 'o': 'ㄟ', 'l': 'ㄠ', '.': 'ㄡ',
+      '0': 'ㄢ', 'p': 'ㄣ', ';': 'ㄤ', '/': 'ㄥ',
+      '-': 'ㄦ',
+      'u': 'ㄧ', 'j': 'ㄨ', 'm': 'ㄩ',
+      '3': 'ˇ', '4': 'ˋ', '6': 'ˊ', '7': '˙'
+    };
+
+    // 取得按鍵的反向對照（按注音找對應英文實體鍵，方便在按鍵上標記）
+    const KEY_TO_ZHUYIN_MAP = {};
+    for (const [key, val] of Object.entries(ZHUYIN_TO_KEY_MAP)) {
+      KEY_TO_ZHUYIN_MAP[val] = key;
+    }
+  </script>
+
+  <!-- Web Audio Synthesizer (動感街機電音合成) -->
+  <script>
+    const AudioEngine = {
+      ctx: null,
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      },
+      play(freq, type, duration, volume = 0.1, delay = 0) {
+        try {
+          this.init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          
+          osc.type = type || 'sine';
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + delay);
+          
+          gain.gain.setValueAtTime(volume, this.ctx.currentTime + delay);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + delay + duration);
+          
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          
+          osc.start(this.ctx.currentTime + delay);
+          osc.stop(this.ctx.currentTime + delay + duration);
+        } catch (e) {}
+      },
+      // 射擊雷射：極速頻率向上滑動
+      laser() {
+        try {
+          this.init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(1800, this.ctx.currentTime + 0.15);
+          
+          gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+          
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.15);
+        } catch(e) {}
+      },
+      // 爆炸：低頻向下猛砸加雜訊感
+      explosion() {
+        try {
+          this.init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.3);
+          
+          gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+          
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.3);
+        } catch(e) {}
+      },
+      // 連擊 Combo 和弦
+      combo(count) {
+        const step = Math.min(count, 10);
+        const baseFreq = 440 + (step * 80);
+        this.play(baseFreq, 'sine', 0.15, 0.08);
+        setTimeout(() => this.play(baseFreq * 1.25, 'sine', 0.15, 0.08), 50);
+      },
+      // 基地受傷：刺耳警報低音
+      damage() {
+        this.play(180, 'sawtooth', 0.25, 0.15);
+        setTimeout(() => this.play(120, 'sawtooth', 0.3, 0.15), 100);
+      },
+      // 進入 Fever 的華麗和弦
+      fever() {
+        const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((f, i) => {
+          setTimeout(() => this.play(f, 'sine', 0.3, 0.07), i * 60);
+        });
+      },
+      // 遊戲結束旋律
+      gameover() {
+        const notes = [440, 392, 349.23, 293.66, 220];
+        notes.forEach((f, i) => {
+          setTimeout(() => this.play(f, 'triangle', 0.4, 0.12), i * 150);
+        });
+      }
+    };
+  </script>
+
+  <!-- 遊戲核心引擎 -->
+  <script>
+    // 系統狀態 (調整為小一極慢、更輕鬆的練習模式)
+    const GameState = {
+      score: 0,
+      lives: 100, // 護盾值 (0-100)
+      activeHero: 'bear',
+      mode: 'zhuyin', // 'zhuyin' | 'english'
+      combo: 0,
+      fever: false,
+      feverTimer: 0,
+      playing: false,
+      entities: [], // 掉落的太空巨石/隕石
+      lasers: [], // 發射中的雷射光束
+      particles: [], // 爆裂粒子
+      spawnTimer: 0,
+      spawnRate: 4500, // 降速：改為 4.5 秒掉落一顆，給孩子極度充裕的尋字時間
+      speedMultiplier: 0.35, // 降速：大幅度調慢滑落速度
+      canvas: null,
+      ctx: null
+    };
+
+    const HEROES = {
+      bear: { name: '胖(ㄆㄤˋ)胖(ㄆㄤˋ)熊(ㄒㄧㄨㄥ)', color: '#d97706', laserColor: '#f59e0b' },
+      rabbit: { name: '軟(ㄖㄨㄢˇ)糖(ㄊㄤˊ)兔(ㄊㄨˋ)', color: '#ec4899', laserColor: '#f43f5e' },
+      cat: { name: '喵(ㄇㄧㄠ)喵(ㄇㄧㄠ)貓(ㄇㄠ)', color: '#ea580c', laserColor: '#fb923c' },
+      duck: { name: '萌(ㄇㄥˊ)萌(ㄇㄥˊ)鴨(ㄧㄚ)', color: '#eab308', laserColor: '#facc15' }
+    };
+
+    // 初始化頁面角色選單
+    function initHeroSelection() {
+      const container = document.getElementById('hero-selection');
+      container.innerHTML = Object.keys(HEROES).map(key => {
+        const isSel = GameState.activeHero === key;
+        const h = HEROES[key];
+        return `
+          <button onclick="selectHero('${key}')" id="hero-btn-${key}" class="flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-150 ${
+            isSel ? 'border-emerald-400 bg-emerald-950/40 scale-105' : 'border-stone-800 bg-transparent opacity-60'
+          }">
+            ${SVGS[key]}
+            <span class="text-[11px] font-black mt-1 text-stone-300">${h.name.replace(/\([^)]+\)/g, '')}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectHero(heroKey) {
+      AudioEngine.play(523, 'sine', 0.1, 0.05);
+      GameState.activeHero = heroKey;
+      
+      // 更新選取框樣式
+      Object.keys(HEROES).forEach(key => {
+        const btn = document.getElementById(`hero-btn-${key}`);
+        if (key === heroKey) {
+          btn.classList.add('border-emerald-400', 'bg-emerald-950/40', 'scale-105');
+          btn.classList.remove('border-stone-800', 'opacity-60');
+        } else {
+          btn.classList.remove('border-emerald-400', 'bg-emerald-950/40', 'scale-105');
+          btn.classList.add('border-stone-800', 'opacity-60');
+        }
+      });
+      
+      // 更新大頭貼
+      document.getElementById('player-avatar').innerHTML = SVGS[heroKey];
+      document.getElementById('player-name').innerText = HEROES[heroKey].name.replace(/\([^)]+\)/g, '');
+    }
+
+    // 切換打字模式 (注音 / 英文)
+    function changeMode(modeStr) {
+      AudioEngine.play(600, 'sine', 0.08, 0.05);
+      GameState.mode = modeStr;
+      
+      const zhBtn = document.getElementById('mode-zhuyin');
+      const enBtn = document.getElementById('mode-english');
+      
+      if (modeStr === 'zhuyin') {
+        zhBtn.className = "px-3 py-1 bg-emerald-900 text-emerald-200 border border-emerald-500 rounded-lg text-xs font-bold transition-all shadow-[0_0_8px_rgba(16,185,129,0.3)]";
+        enBtn.className = "px-3 py-1 bg-stone-900 text-stone-400 border border-transparent rounded-lg text-xs font-bold transition-all";
+      } else {
+        enBtn.className = "px-3 py-1 bg-emerald-900 text-emerald-200 border border-emerald-500 rounded-lg text-xs font-bold transition-all shadow-[0_0_8px_rgba(16,185,129,0.3)]";
+        zhBtn.className = "px-3 py-1 bg-stone-900 text-stone-400 border border-transparent rounded-lg text-xs font-bold transition-all";
+      }
+      
+      buildVirtualKeyboard();
+      
+      // 清空目前螢幕上的怪，重新生成，避免模式不對無法消除
+      GameState.entities = [];
+    }
+
+    // 建立虛擬鍵盤（小一友善適中按鈕，防佔用過大版面）
+    function buildVirtualKeyboard() {
+      const kbContainer = document.getElementById('virtual-keyboard');
+      const rows = KEYBOARD_LAYOUTS[GameState.mode];
+      
+      kbContainer.innerHTML = rows.map(row => {
+        return `
+          <div class="flex justify-center gap-1 my-0.5">
+            ${row.map(char => {
+              // 對於注音按鍵，如果存在對應英文字母，就把英文字母用極小的底字顯示在右下角，幫助實體鍵盤對照
+              const physicalKey = KEY_TO_ZHUYIN_MAP[char] ? KEY_TO_ZHUYIN_MAP[char].toUpperCase() : '';
+              const showSub = GameState.mode === 'zhuyin' && physicalKey;
+              return `
+                <button 
+                  id="vkey-${char}" 
+                  onclick="onVirtualKeyClick('${char}')"
+                  class="key-cap bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-lg py-2 flex-grow max-w-[36px] aspect-square text-lg flex flex-col items-center justify-center relative border border-stone-800"
+                >
+                  <span class="leading-none text-lg md:text-xl">${char}</span>
+                  ${showSub ? `<span class="absolute bottom-0.5 right-1 text-[7px] text-stone-500 leading-none">${physicalKey}</span>` : ''}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 初始化角色選單
+    initHeroSelection();
+    buildVirtualKeyboard();
+  </script>
+
+  <!-- 繪圖與物理粒子引擎 (Canvas Renderer) -->
+  <script>
+    // 實體種類定義
+    class Meteor {
+      constructor(text, speed, x, y, hp = 1) {
+        this.text = text;
+        this.x = x || Math.random() * (GameState.canvas.width - 90) + 45; // 增加邊界防止大隕石超出畫布
+        this.y = y || -30;
+        this.speed = speed * GameState.speedMultiplier;
+        this.radius = hp > 1 ? 46 : 38; // 大幅放大隕石半徑，以容納特大字體
+        this.hp = hp; // 1:普通巨石, 2:雙重防護罩巨石！
+        this.maxHp = hp;
+        this.angle = Math.random() * Math.PI * 2;
+        this.spin = (Math.random() - 0.5) * 0.05;
+        this.pulse = 0;
+      }
+
+      update() {
+        this.y += this.speed;
+        this.angle += this.spin;
+        this.pulse += 0.1;
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+
+        // 繪製巨石外觀 (SVG 風格向量繪製)
+        const pulseFactor = Math.sin(this.pulse) * 2;
+        const drawRadius = this.radius + pulseFactor;
+
+        // 巨石主體
+        const isShield = this.hp > 1;
+        ctx.beginPath();
+        ctx.arc(0, 0, drawRadius, 0, Math.PI * 2);
+        ctx.fillStyle = isShield ? '#1e1b4b' : '#1c1917'; // 深藍/深褐
+        ctx.fill();
+        
+        // 巨石外框霓虹線條
+        ctx.lineWidth = 3;
+        if (isShield) {
+          ctx.strokeStyle = '#6366f1'; // 亮藍色防護罩
+          ctx.shadowColor = '#6366f1';
+        } else {
+          ctx.strokeStyle = '#f97316'; // 亮橘色
+          ctx.shadowColor = '#f97316';
+        }
+        ctx.shadowBlur = GameState.fever ? 15 : 8;
+        ctx.stroke();
+
+        // 繪製細部岩石坑洞
+        ctx.beginPath();
+        ctx.arc(-drawRadius * 0.4, -drawRadius * 0.2, drawRadius * 0.2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+        ctx.fill();
+
+        ctx.restore();
+
+        // 繪製裡面要打的字體
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        // 將字體大小大幅調高（普通 36px，護盾 42px），讓小朋友看得清清楚楚！
+        ctx.font = `900 ${isShield ? '42px' : '36px'} 'Noto Sans TC'`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // 字體霓虹發光
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = isShield ? '#818cf8' : '#ffffff';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(this.text, 0, 1);
+        
+        // 如果有防護罩，繪製防護罩提示環
+        if (this.hp > 1) {
+          ctx.beginPath();
+          ctx.arc(0, 0, drawRadius + 8, 0, Math.PI * 2);
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = 'rgba(99, 102, 241, 0.6)';
+          ctx.stroke();
+        }
+        
+        ctx.restore();
+      }
+    }
+
+    // 發射出去的霓虹雷射光束
+    class LaserBeam {
+      constructor(startX, startY, targetX, targetY, color) {
+        this.startX = startX;
+        this.startY = startY;
+        this.targetX = targetX;
+        this.targetY = targetY;
+        this.color = color;
+        this.life = 1.0; // 壽命 (0-1)，用於雷射淡出
+      }
+
+      update() {
+        this.life -= 0.12; // 快速消退
+      }
+
+      draw(ctx) {
+        if (this.life <= 0) return;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(this.startX, this.startY);
+        ctx.lineTo(this.targetX, this.targetY);
+        
+        // 核心白光
+        ctx.lineWidth = 4 * this.life;
+        ctx.strokeStyle = '#ffffff';
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 20;
+        ctx.stroke();
+
+        // 外層寬霓虹光
+        ctx.lineWidth = 14 * this.life;
+        ctx.strokeStyle = this.color;
+        ctx.globalAlpha = this.life;
+        ctx.stroke();
+
+        ctx.restore();
+      }
+    }
+
+    // 噴發的火花粒子
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2 + Math.random() * 8;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed - 1; // 稍微帶點重力/上升
+        this.size = 2 + Math.random() * 4;
+        this.life = 1.0;
+        this.decay = 0.02 + Math.random() * 0.04;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.08; // 重力微調
+        this.life -= this.decay;
+      }
+
+      draw(ctx) {
+        if (this.life <= 0) return;
+        ctx.save();
+        ctx.globalAlpha = this.life;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+  </script>
+
+  <!-- 鍵盤偵測、觸控控制與事件分發 -->
+  <script>
+    // 初始化畫布
+    function initCanvas() {
+      const canvas = document.getElementById('game-canvas');
+      const container = canvas.parentElement;
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      
+      GameState.canvas = canvas;
+      GameState.ctx = canvas.getContext('2d');
+    }
+
+    // 生成隨機文字（依模式）
+    function getRandomChar() {
+      const mode = GameState.mode;
+      const arr = KEYBOARD_LAYOUTS[mode].flat();
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    // 啟動關卡與主體
+    function startGame() {
+      AudioEngine.init();
+      AudioEngine.fever();
+      
+      // 隱藏選單
+      document.getElementById('menu-overlay').classList.add('hidden');
+      document.getElementById('menu-overlay').classList.remove('flex');
+      
+      // 重置狀態 (小一極慢速設定)
+      GameState.score = 0;
+      GameState.lives = 100;
+      GameState.combo = 0;
+      GameState.fever = false;
+      GameState.entities = [];
+      GameState.lasers = [];
+      GameState.particles = [];
+      GameState.spawnTimer = 0;
+      GameState.spawnRate = 4500; // 4.5 秒一發，給小朋友充裕的尋鍵時間
+      GameState.speedMultiplier = 0.35; // 極慢速起點
+      GameState.playing = true;
+
+      document.getElementById('score-display').innerText = '0000';
+      document.getElementById('hp-bar').style.width = '100%';
+      document.getElementById('combo-container').style.transform = 'scale(0)';
+      document.getElementById('fever-badge').classList.add('hidden');
+      
+      initCanvas();
+      
+      // 開始主循環
+      requestAnimationFrame(gameLoop);
+    }
+
+    // 重新開始
+    function restartGame() {
+      document.getElementById('gameover-overlay').classList.add('hidden');
+      document.getElementById('gameover-overlay').classList.remove('flex');
+      
+      // 重回選角選單
+      document.getElementById('menu-overlay').classList.remove('hidden');
+      document.getElementById('menu-overlay').classList.add('flex');
+    }
+
+    // 遊戲核心主循環
+    function gameLoop(timestamp) {
+      if (!GameState.playing) return;
+
+      const ctx = GameState.ctx;
+      const canvas = GameState.canvas;
+
+      // 1. 清空畫布
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 繪製背景星空微粒
+      ctx.save();
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.02)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+
+      // 2. 更新與繪製雷射砲塔 (位於下方中心)
+      const turretX = canvas.width / 2;
+      const turretY = canvas.height - 40;
+      drawTurret(ctx, turretX, turretY);
+
+      // 3. 自動生成隕石
+      GameState.spawnTimer += 16.6; // 近似一幀時間
+      if (GameState.spawnTimer >= GameState.spawnRate) {
+        GameState.spawnTimer = 0;
+        
+        // 隨機生成有防護罩的巨石 (降為更低機率，避免挫折)
+        const isShield = Math.random() < 0.03 + (GameState.speedMultiplier * 0.01);
+        const meteorText = getRandomChar();
+        // 降速：原本為 0.6 到 1.4，現在降至極其平緩的 0.4 到 0.8 慢速滑行
+        const meteorSpeed = 0.4 + Math.random() * 0.4;
+        
+        GameState.entities.push(
+          new Meteor(meteorText, meteorSpeed, null, -30, isShield ? 2 : 1)
+        );
+
+        // 隨時間漸進加速（極限微調，幾乎不變快，避免給孩子壓力）
+        GameState.speedMultiplier += 0.001;
+        // 限制最快生成頻率：最快也維持在 3.5 秒掉落一顆，確保能輕鬆應對
+        GameState.spawnRate = Math.max(3500, 4500 - (GameState.speedMultiplier * 100));
+      }
+
+      // 4. 更新與繪製雷射光束
+      for (let i = GameState.lasers.length - 1; i >= 0; i--) {
+        const laser = GameState.lasers[i];
+        laser.update();
+        laser.draw(ctx);
+        if (laser.life <= 0) {
+          GameState.lasers.splice(i, 1);
+        }
+      }
+
+      // 5. 更新與繪製隕石
+      for (let i = GameState.entities.length - 1; i >= 0; i--) {
+        const ent = GameState.entities[i];
+        ent.update();
+        ent.draw(ctx);
+
+        // 檢測是否到達防衛線 (撞擊地底堡壘)
+        if (ent.y >= canvas.height - 75) {
+          // 扣除護盾
+          const damageAmount = ent.hp * 15;
+          GameState.lives = Math.max(0, GameState.lives - damageAmount);
+          document.getElementById('hp-bar').style.width = `${GameState.lives}%`;
+          
+          // 播效果
+          AudioEngine.damage();
+          triggerFlash('rgba(239, 68, 68, 0.4)'); // 紅色警告閃光
+          triggerScreenShake();
+          
+          // 扣分與斷 Combo
+          GameState.combo = 0;
+          updateComboUI();
+          
+          // 噴發岩石碎屑
+          createExplosion(ent.x, ent.y, '#f97316', 15);
+
+          // 刪除實體
+          GameState.entities.splice(i, 1);
+
+          // 檢查是否死亡
+          if (GameState.lives <= 0) {
+            endGame();
+            return;
+          }
+        }
+      }
+
+      // 6. 更新與繪製粒子
+      for (let i = GameState.particles.length - 1; i >= 0; i--) {
+        const p = GameState.particles[i];
+        p.update();
+        p.draw(ctx);
+        if (p.life <= 0) {
+          GameState.particles.splice(i, 1);
+        }
+      }
+
+      // 7. 更新 Fever 效果
+      if (GameState.fever) {
+        GameState.feverTimer -= 16.6;
+        if (GameState.feverTimer <= 0) {
+          GameState.fever = false;
+          document.getElementById('fever-badge').classList.add('hidden');
+          document.body.classList.remove('fever-bg');
+        }
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // 繪製地底雷射砲塔
+    function drawTurret(ctx, x, y) {
+      const hero = HEROES[GameState.activeHero];
+      ctx.save();
+      
+      // 砲塔基座環
+      ctx.beginPath();
+      ctx.arc(x, y + 20, 45, Math.PI, 0);
+      ctx.fillStyle = '#0f172a';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = hero.laserColor;
+      ctx.stroke();
+
+      // 能量核心發光
+      ctx.beginPath();
+      ctx.arc(x, y + 20, 20, Math.PI, 0);
+      ctx.fillStyle = GameState.fever ? '#f43f5e' : hero.color;
+      ctx.shadowColor = hero.laserColor;
+      ctx.shadowBlur = GameState.fever ? 20 : 10;
+      ctx.fill();
+
+      // 砲管 (面向前方)
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(x - 6, y - 25, 12, 30);
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = hero.laserColor;
+      ctx.strokeRect(x - 6, y - 25, 12, 30);
+
+      // 砲口能量球
+      ctx.beginPath();
+      ctx.arc(x, y - 25, 8, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = hero.laserColor;
+      ctx.shadowBlur = 15;
+      ctx.fill();
+
+      ctx.restore();
+    }
+  </script>
+
+  <!-- 核心配對擊毀與計分模組 -->
+  <script>
+    // 玩家輸入判定
+    function handleInput(pressedChar) {
+      if (!GameState.playing) return;
+
+      const upperChar = pressedChar.toUpperCase();
+      
+      // 尋找位置最低（最逼近地表）且字符對應正確的隕石
+      let targetIndex = -1;
+      let lowestY = -1;
+
+      for (let i = 0; i < GameState.entities.length; i++) {
+        const ent = GameState.entities[i];
+        if (ent.text.toUpperCase() === upperChar) {
+          if (ent.y > lowestY) {
+            lowestY = ent.y;
+            targetIndex = i;
+          }
+        }
+      }
+
+      // 找到匹配的目標
+      if (targetIndex !== -1) {
+        const target = GameState.entities[targetIndex];
+        const hero = HEROES[GameState.activeHero];
+
+        // 觸發虛擬按鍵發光高亮
+        highlightVirtualKey(target.text);
+
+        // 1. 發射雷射 (從大砲口發射至隕石核心)
+        const startX = GameState.canvas.width / 2;
+        const startY = GameState.canvas.height - 65;
+        GameState.lasers.push(
+          new LaserBeam(startX, startY, target.x, target.y, hero.laserColor)
+        );
+
+        AudioEngine.laser();
+
+        // 2. 扣除隕石 HP
+        target.hp--;
+
+        if (target.hp <= 0) {
+          // 徹底擊毀！
+          GameState.entities.splice(targetIndex, 1);
+          
+          // 增加連擊數
+          GameState.combo++;
+          
+          // 判斷是否觸發 FEVER 模式 (累積達 10 Combo 且尚未在 Fever 中)
+          if (GameState.combo >= 10 && !GameState.fever) {
+            activateFever();
+          }
+
+          // 增加得分 (Fever 模式得分翻倍！)
+          const pointsEarned = GameState.fever ? 200 : 100;
+          GameState.score += pointsEarned;
+          document.getElementById('score-display').innerText = String(GameState.score).padStart(4, '0');
+
+          // 清亮碎裂聲與大爆炸
+          AudioEngine.explosion();
+          if (GameState.combo > 1) {
+            AudioEngine.combo(GameState.combo);
+          }
+
+          createExplosion(target.x, target.y, hero.laserColor, 25);
+          triggerScreenShake();
+          triggerFlash('rgba(16, 185, 129, 0.15)'); // 綠色防護罩治癒閃光
+        } else {
+          // 只打掉了一層防護罩，隕石變紅，縮小，碎屑飛濺
+          AudioEngine.explosion();
+          createExplosion(target.x, target.y, '#6366f1', 12); // 防護罩爆裂粒子
+        }
+
+        updateComboUI();
+      } else {
+        // 漏按或打錯，重置連擊
+        if (GameState.combo > 0) {
+          GameState.combo = 0;
+          updateComboUI();
+          AudioEngine.play(180, 'triangle', 0.1, 0.08);
+        }
+      }
+    }
+
+    // 發動 Fever 暴衝模式
+    function activateFever() {
+      GameState.fever = true;
+      GameState.feverTimer = 8000; // Fever 持續 8 秒
+      AudioEngine.fever();
+      
+      document.getElementById('fever-badge').classList.remove('hidden');
+      document.body.classList.add('fever-bg');
+      
+      // 螢幕強烈綠/粉光彩閃爍
+      triggerFlash('rgba(244, 63, 94, 0.3)');
+    }
+
+    // 更新連擊 UI
+    function updateComboUI() {
+      const el = document.getElementById('combo-container');
+      const num = document.getElementById('combo-num');
+      
+      if (GameState.combo >= 2) {
+        num.innerText = GameState.combo;
+        el.style.transform = 'scale(1)';
+        el.classList.remove('hidden');
+      } else {
+        el.style.transform = 'scale(0)';
+        setTimeout(() => {
+          if (GameState.combo < 2) el.classList.add('hidden');
+        }, 200);
+      }
+    }
+
+    // 建立絢麗碎片粒子爆炸
+    function createExplosion(x, y, color, count) {
+      // 除了主色調，隨機穿插金色和亮白粒子，效果極其奢華
+      const colors = [color, '#ffffff', '#facc15', '#ec4899'];
+      for (let i = 0; i < count; i++) {
+        const randColor = colors[Math.floor(Math.random() * colors.length)];
+        GameState.particles.push(new Particle(x, y, randColor));
+      }
+    }
+
+    // 觸發全畫面瞬間閃光
+    function triggerFlash(rgbaColor) {
+      const flash = document.getElementById('screen-flash');
+      flash.style.backgroundColor = rgbaColor;
+      flash.classList.add('flash-white');
+      setTimeout(() => {
+        flash.classList.remove('flash-white');
+        flash.style.backgroundColor = 'transparent';
+      }, 300);
+    }
+
+    // 觸發網頁震動 (相機晃動感)
+    function triggerScreenShake() {
+      document.body.classList.add('shake-screen');
+      setTimeout(() => {
+        document.body.classList.remove('shake-screen');
+      }, 250);
+    }
+
+    // 高亮顯示虛擬按鍵 (觸摸或實體鍵盤時)
+    function highlightVirtualKey(char) {
+      const btn = document.getElementById(`vkey-${char}`);
+      if (btn) {
+        btn.classList.add('pressed', 'bg-emerald-600', 'border-emerald-400');
+        setTimeout(() => {
+          btn.classList.remove('pressed', 'bg-emerald-600', 'border-emerald-400');
+        }, 120);
+      }
+    }
+
+    // 處理虛擬鍵盤點擊 (行動裝置觸控)
+    function onVirtualKeyClick(char) {
+      handleInput(char);
+    }
+
+    // 偵聽實體鍵盤按鍵
+    window.addEventListener('keydown', (e) => {
+      if (!GameState.playing) return;
+      
+      const key = e.key.toLowerCase();
+      
+      // 依據目前遊玩模式解析輸入
+      if (GameState.mode === 'zhuyin') {
+        // 注音模式下：將實體按鍵對應至注音符號
+        if (ZHUYIN_TO_KEY_MAP[key]) {
+          handleInput(ZHUYIN_TO_KEY_MAP[key]);
+        }
+      } else {
+        // 英文模式下：直接傳入字母
+        if (key.length === 1 && key >= 'a' && key <= 'z') {
+          handleInput(key.toUpperCase());
+        }
+      }
+    });
+
+    // 遊戲結束結算
+    function endGame() {
+      GameState.playing = false;
+      AudioEngine.gameover();
+      
+      document.getElementById('final-score').innerText = String(GameState.score).padStart(4, '0');
+      
+      // 換算成星星數
+      const starsEarned = Math.floor(GameState.score / 200);
+      document.getElementById('reward-stars').innerText = `⭐️ x${starsEarned}`;
+
+      // 顯現結束視窗
+      document.getElementById('gameover-overlay').classList.remove('hidden');
+      document.getElementById('gameover-overlay').classList.add('flex');
+    }
+
+    // 自適應螢幕大小變更
+    window.addEventListener('resize', () => {
+      if (GameState.playing && GameState.canvas) {
+        initCanvas();
+      }
+    });
+  </script>
+</body>
+</html>

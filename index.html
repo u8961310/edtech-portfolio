@@ -354,6 +354,15 @@
                 <p class="card-score" id="unit12-score-badge" style="display:none;"></p>
                 <span class="play-btn">▶ 開始玩</span>
             </a>
+
+            <a href="./units/unit13-forest-typing-defense/index.html" class="card" style="--c: #10b981;">
+                <span class="skill-tag">霓虹打字</span>
+                <div class="card-cover">🌲⚡</div>
+                <h3 class="card-title">極速雷射森林戰</h3>
+                <p class="card-desc">霓虹森林裡守護小動物！注音／英打雙模式切換，雷射射擊風小一友善版。</p>
+                <p class="card-score" id="unit13-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
         </div>
     </section>
 
@@ -367,7 +376,7 @@
     function loadLocalScore(unitId) {
         return localStorage.getItem(`edtech-unit${unitId}-score`) || null;
     }
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].forEach((id) => {
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].forEach((id) => {
         const score = loadLocalScore(id);
         const badge = document.getElementById(`unit${id}-score-badge`);
         if (score && badge) {
