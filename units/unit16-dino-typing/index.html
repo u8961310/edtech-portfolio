@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>恐龍打字大冒險 3.0 - 兒童橫向跑酷指引樂園</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Playful Rounded Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Cute Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Quicksand', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #111827 0%, #311042 100%);
+            overflow-x: hidden;
+        }
+
+        /* 跑酷舞台背景滾動動畫 */
+        .scrolling-bg {
+            background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: bottom;
+            animation: scrollBg 25s linear infinite;
+        }
+        @keyframes scrollBg {
+            0% { background-position-x: 0px; }
+            100% { background-position-x: -1200px; }
+        }
+
+        /* 恐龍動畫 */
+        .dino-run {
+            animation: dinoBob 0.4s infinite alternate;
+        }
+        @keyframes dinoBob {
+            0% { transform: translateY(0px) rotate(0deg); }
+            100% { transform: translateY(-6px) rotate(2deg); }
+        }
+        .dino-jump {
+            animation: dinoJump 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        @keyframes dinoJump {
+            0% { transform: translateY(0px) scaleY(0.9); }
+            40% { transform: translateY(-110px) rotate(-10deg) scaleY(1.1); }
+            70% { transform: translateY(-110px) rotate(-5deg); }
+            100% { transform: translateY(0px) scaleY(1); }
+        }
+        .dino-hurt {
+            animation: dinoHurt 0.5s ease-out;
+        }
+        @keyframes dinoHurt {
+            0% { transform: translateX(0px) rotate(0deg); filter: cubic-bezier(0.1, 0.8, 0.3, 1) invert(30%) sepia(80%) saturate(500%) hue-rotate(350deg); }
+            20% { transform: translateX(-20px) rotate(-15deg); }
+            40% { transform: translateX(10px) rotate(10deg); }
+            60% { transform: translateX(-10px) rotate(-5deg); }
+            100% { transform: translateX(0px) rotate(0deg); filter: none; }
+        }
+
+        /* 彩虹無敵狀態狂暴效果 */
+        .rainbow-fever {
+            animation: feverRainbow 0.5s linear infinite alternate, dinoBob 0.2s infinite alternate;
+            filter: drop-shadow(0 0 15px #f43f5e) drop-shadow(0 0 25px #eab308);
+        }
+        @keyframes feverRainbow {
+            0% { border-color: #f43f5e; }
+            50% { border-color: #eab308; }
+            100% { border-color: #3b82f6; }
+        }
+
+        /* 火球法術軌跡 */
+        .fireball {
+            animation: spin 0.3s linear infinite;
+        }
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 鍵盤指法色彩 */
+        .finger-l-pinky { background-color: #ffe4e6; border-color: #fda4af; color: #9f1239; }
+        .finger-l-ring { background-color: #ffedd5; border-color: #fed7aa; color: #9a3412; }
+        .finger-l-middle { background-color: #fef9c3; border-color: #fef08a; color: #854d0e; }
+        .finger-l-index { background-color: #dcfce7; border-color: #bbf7d0; color: #166534; }
+        .finger-r-index { background-color: #e0f2fe; border-color: #bae6fd; color: #075985; }
+        .finger-r-middle { background-color: #e0e7ff; border-color: #c7d2fe; color: #3730a3; }
+        .finger-r-ring { background-color: #f3e8ff; border-color: #e9d5ff; color: #6b21a8; }
+        .finger-r-pinky { background-color: #fae8ff; border-color: #f5d0fe; color: #86198f; }
+        .finger-thumb { background-color: #f1f5f9; border-color: #e2e8f0; color: #475569; }
+
+        /* 提示按鍵發光 */
+        .key-active-highlight {
+            animation: keyGlow 0.6s infinite alternate;
+            background-color: #fbbf24 !important;
+            border-color: #f59e0b !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 20px #fbbf24, inset 0 0 10px #f59e0b;
+            transform: scale(1.15) translateY(-3px);
+            z-index: 40;
+        }
+        @keyframes keyGlow {
+            0% { box-shadow: 0 0 8px #fbbf24; }
+            100% { box-shadow: 0 0 25px #fbbf24, 0 0 35px #f59e0b; }
+        }
+
+        /* 手指發光 */
+        .finger-glow {
+            fill: #fbbf24 !important;
+            stroke: #f59e0b !important;
+            filter: drop-shadow(0px 0px 10px #fbbf24);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between select-none text-white transition-all duration-1000">
+<a href="../../index.html" class="kogao-home-btn" style="position:fixed;top:10px;left:10px;z-index:99999;background:rgba(255,255,255,.92);border:2px solid #f59e0b;color:#b45309;font-family:'Noto Sans TC',sans-serif;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.15)">🏠 首頁</a>
+
+    <header class="p-4 flex flex-wrap justify-between items-center bg-slate-900/90 backdrop-blur-md shadow-lg border-b-4 border-emerald-500 z-50" style="padding-left:6.5rem">
+        <div class="flex items-center space-x-3">
+            <span class="text-4xl animate-bounce">🦖</span>
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-emerald-400 tracking-wider font-['Fredoka_One']">恐龍打字大冒險 3.0</h1>
+                <p class="text-[11px] text-slate-400">專為一、二年級打造的橫向跑酷拼字樂園</p>
+            </div>
+        </div>
+        
+        <!-- 頂部即時數據 -->
+        <div class="flex flex-wrap items-center gap-3 mt-2 md:mt-0">
+            <!-- 金幣/積分 -->
+            <div class="bg-amber-950/80 px-3 py-1.5 rounded-full border-2 border-amber-400 flex items-center space-x-2 shadow-lg">
+                <span class="text-lg">🪙</span>
+                <span id="score" class="text-lg font-bold text-amber-300">0</span>
+            </div>
+            <!-- 連擊熱度 -->
+            <div id="combo-container" class="hidden bg-rose-950/80 px-3 py-1.5 rounded-full border-2 border-rose-500 flex items-center space-x-2 animate-pulse">
+                <span class="text-sm font-bold text-rose-300">連擊 🔥</span>
+                <span id="combo" class="text-lg font-black text-rose-200">0</span>
+            </div>
+            <!-- 護盾/生命 -->
+            <div class="bg-teal-950/80 px-3 py-1.5 rounded-full border-2 border-teal-400 flex items-center space-x-1">
+                <span class="text-sm text-teal-300">護盾:</span>
+                <span id="heart-container" class="text-rose-400 flex space-x-1">❤️ ❤️ ❤️</span>
+            </div>
+            <!-- 設定與主題 -->
+            <div class="flex items-center space-x-2">
+                <button id="btn-sound" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-full border border-slate-600 transition" title="切換語音/音效">🔊</button>
+                <select id="select-lang" onchange="changeLanguage(this.value)" class="bg-slate-800 text-white border border-slate-600 rounded-full px-3 py-1.5 text-xs focus:outline-none cursor-pointer font-bold">
+                    <option value="ZH">繁體注音 ㄅㄆㄇ</option>
+                    <option value="EN">英文 A - Z</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center justify-center relative p-4 overflow-hidden">
+        
+        <!-- 大廳與選單 -->
+        <div id="lobby" class="w-full max-w-4xl bg-slate-950/95 p-6 md:p-8 rounded-3xl shadow-2xl border-4 border-emerald-500 text-center space-y-6 z-10">
+            <div>
+                <h2 class="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-sky-400 font-['Fredoka_One']">
+                    跑啊！打字恐龍！🦖
+                </h2>
+                <p class="text-slate-300 text-sm mt-2">打對字，小恐龍就會「飛天跳躍」、「噴火球」和「吃草莓」！快來解鎖炫酷新皮膚！</p>
+            </div>
+
+            <!-- 皮膚解鎖商城 -->
+            <div class="bg-slate-900/80 p-4 rounded-2xl border-2 border-slate-700">
+                <p class="text-amber-400 font-bold text-sm mb-3">🦕 選擇你的冒險恐龍 (Skin Shop)</p>
+                <div class="grid grid-cols-3 gap-3">
+                    <button id="skin-trex" onclick="selectSkin('trex')" class="p-3 bg-emerald-900/60 border-2 border-emerald-400 rounded-xl flex flex-col items-center transition transform scale-105">
+                        <span class="text-5xl">🦖</span>
+                        <span class="text-xs mt-1 font-bold">霸王綠龍</span>
+                        <span class="text-[10px] text-emerald-300">預設角色</span>
+                    </button>
+                    <button id="skin-tricera" onclick="selectSkin('tricera')" class="p-3 bg-slate-800 border-2 border-transparent rounded-xl flex flex-col items-center opacity-70 transition hover:opacity-100">
+                        <span class="text-5xl">🦕</span>
+                        <span class="text-xs mt-1 font-bold">粉紅三角龍</span>
+                        <span class="text-[10px] text-amber-400"><i class="fa-solid fa-coins"></i> 30 幣解鎖</span>
+                    </button>
+                    <button id="skin-stego" onclick="selectSkin('stego')" class="p-3 bg-slate-800 border-2 border-transparent rounded-xl flex flex-col items-center opacity-70 transition hover:opacity-100">
+                        <span class="text-5xl">🐉</span>
+                        <span class="text-xs mt-1 font-bold">星際機械龍</span>
+                        <span class="text-[10px] text-amber-400"><i class="fa-solid fa-coins"></i> 80 幣解鎖</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 難度選擇 -->
+            <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-700 flex flex-wrap justify-around items-center gap-4">
+                <div class="text-left">
+                    <span class="text-xs text-emerald-400 font-bold block mb-1">🎮 挑戰難度：</span>
+                    <div class="flex space-x-2">
+                        <button id="diff-easy" onclick="setDifficulty('easy')" class="px-4 py-2 bg-emerald-600 border border-emerald-400 text-white font-bold rounded-xl text-xs transition">簡單 (慢速/單字)</button>
+                        <button id="diff-medium" onclick="setDifficulty('medium')" class="px-4 py-2 bg-slate-700 text-slate-400 rounded-xl text-xs transition">普通 (中速)</button>
+                        <button id="diff-hard" onclick="setDifficulty('hard')" class="px-4 py-2 bg-slate-700 text-slate-400 rounded-xl text-xs transition">困難 (瘋狂速度)</button>
+                    </div>
+                </div>
+                
+                <!-- 手指發光開關 -->
+                <div class="flex items-center space-x-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                    <span class="text-xs font-bold text-slate-300">手指指引提示</span>
+                    <input type="checkbox" id="toggle-finger-guide" checked class="w-10 h-5 bg-slate-600 rounded-full appearance-none checked:bg-emerald-500 relative cursor-pointer before:content-[''] before:absolute before:w-5 before:h-5 before:rounded-full before:bg-white before:transition-all checked:before:translate-x-5 shadow-inner">
+                </div>
+            </div>
+
+            <button onclick="startAdventure()" class="w-full md:w-2/3 py-5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-extrabold text-2xl rounded-2xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-400/40 transform hover:-translate-y-1 transition duration-200">
+                <i class="fa-solid fa-play mr-2"></i> 開始冒險！
+            </button>
+        </div>
+
+        <!-- 跑酷冒險主舞台 -->
+        <div id="adventure-stage" class="hidden w-full max-w-4xl h-[45vh] md:h-[50vh] rounded-3xl relative overflow-hidden border-4 border-emerald-500 bg-slate-950 shadow-inner">
+            <!-- 滾動背景 -->
+            <div class="scrolling-bg absolute inset-0 opacity-40"></div>
+            
+            <!-- 舞台軌道與地面線 -->
+            <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-emerald-950 to-emerald-900 border-t-4 border-emerald-400"></div>
+
+            <!-- 小恐龍容器 -->
+            <div id="dino-container" class="absolute bottom-16 left-12 w-24 h-24 flex items-center justify-center z-20 transition-all duration-75">
+                <span id="dino-character" class="text-7xl md:text-8xl dino-run select-none drop-shadow-lg">🦖</span>
+                <!-- 護盾發光特效 -->
+                <div id="dino-shield" class="absolute inset-0 border-4 border-cyan-400 rounded-full animate-ping opacity-0"></div>
+                <!-- 發射火球的發光口 -->
+                <div id="fire-nozzle" class="absolute -right-2 top-10 w-2 h-2 bg-red-500 rounded-full opacity-0"></div>
+            </div>
+
+            <!-- 障礙物與食物容納盒 -->
+            <div id="stage-items" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+
+            <!-- 炫酷彈幕反饋層 (火球、碎屑、愛心、狂暴提示) -->
+            <div id="fx-layer" class="absolute inset-0 pointer-events-none"></div>
+
+            <!-- 狂暴模式 Fever 發光邊框與進度條 -->
+            <div id="fever-banner" class="hidden absolute top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-rose-500 via-amber-400 to-indigo-500 text-slate-950 px-6 py-2 rounded-full font-black text-xl shadow-lg animate-bounce z-30">
+                🔥 狂暴彩虹模式 Fever Time !! 🔥
+            </div>
+            
+            <div class="absolute top-4 left-4 bg-slate-900/80 px-4 py-1.5 rounded-full border border-slate-700 z-30 flex items-center space-x-2">
+                <span class="text-xs font-bold text-rose-400">狂暴蓄力：</span>
+                <div class="w-24 bg-slate-800 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                    <div id="fever-gauge" class="bg-gradient-to-r from-amber-400 to-rose-500 h-full rounded-full transition-all duration-200" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 返回大廳按鈕 -->
+        <button id="btn-back" class="hidden mt-4 px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 font-bold rounded-full shadow-lg transition z-10 flex items-center space-x-2" onclick="backToLobby()">
+            <i class="fa-solid fa-house"></i> <span>返回大廳</span>
+        </button>
+
+    </main>
+
+    <footer class="p-4 bg-slate-950 border-t-8 border-slate-900 shadow-2xl relative">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            
+            <!-- 左手指引圖 (SVG) -->
+            <div id="left-hand-panel" class="w-24 h-24 hidden md:block">
+                <p class="text-[9px] text-center text-slate-500 mb-1">👈 左手提示</p>
+                <svg viewBox="0 0 100 100" class="w-full h-full opacity-80">
+                    <path d="M 15,80 C 15,60 25,50 35,50 C 45,50 55,55 55,75 C 55,85 50,95 30,95 C 10,95 15,90 15,80 Z" fill="#475569" stroke="#64748b" stroke-width="2"/>
+                    <path id="finger-l-thumb" d="M 50,75 C 55,65 65,65 72,68 C 75,70 70,80 55,82" fill="#475569" stroke="#64748b" stroke-width="2"/>
+                    <path id="finger-l-index" d="M 45,52 C 45,30 52,28 53,48" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+                    <path id="finger-l-middle" d="M 36,50 C 35,25 41,23 42,48" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+                    <path id="finger-l-ring" d="M 27,51 C 23,28 30,26 31,49" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+                    <path id="finger-l-pinky" d="M 19,56 C 12,35 18,33 21,54" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+
+            <!-- 中央主鍵盤 -->
+            <div class="flex-grow max-w-4xl space-y-1.5 w-full">
+                <!-- 第一排 -->
+                <div class="flex justify-center space-x-1" id="keyboard-row-1"></div>
+                <!-- 第二排 -->
+                <div class="flex justify-center space-x-1" id="keyboard-row-2"></div>
+                <!-- 第三排 -->
+                <div class="flex justify-center space-x-1" id="keyboard-row-3"></div>
+                <!-- 第四排 -->
+                <div class="flex justify-center space-x-1" id="keyboard-row-4"></div>
+                <!-- 空白鍵 -->
+                <div class="flex justify-center">
+                    <div class="key finger-thumb w-48 md:w-64 h-9 md:h-10 rounded-lg flex items-center justify-center font-black text-xs border-2 shadow-md cursor-pointer transition-all" id="key-space">SPACE</div>
+                </div>
+            </div>
+
+            <!-- 右手指引圖 (SVG) -->
+            <div id="right-hand-panel" class="w-24 h-24 hidden md:block">
+                <p class="text-[9px] text-center text-slate-500 mb-1">👉 右手提示</p>
+                <svg viewBox="0 0 100 100" class="w-full h-full opacity-88">
+                    <path d="M 85,80 C 85,60 75,50 65,50 C 55,50 45,55 45,75 C 45,85 50,95 70,95 C 90,95 85,90 85,80 Z" fill="#475569" stroke="#64748b" stroke-width="2"/>
+                    <path id="finger-r-thumb" d="M 50,75 C 45,65 35,65 28,68 C 25,70 30,80 45,82" fill="#475569" stroke="#64748b" stroke-width="2"/>
+                    <path id="finger-r-index" d="M 55,52 C 55,30 48,28 47,48" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+                    <path id="finger-r-middle" d="M 64,50 C 65,25 59,23 58,48" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+                    <path id="finger-r-ring" d="M 73,51 C 77,28 70,26 69,49" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+                    <path id="finger-r-pinky" d="M 81,56 C 88,35 82,33 79,54" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+
+        </div>
+    </footer>
+
+    <script>
+        // 音效系統 (Web Audio API)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let soundEnabled = true;
+
+        function playSound(freq, type, duration, volume = 0.15) {
+            if (!soundEnabled) return;
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (err) {
+                console.log("Audio feedback pending user action.", err);
+            }
+        }
+
+        const audioBank = {
+            jump: () => { playSound(220, 'sine', 0.1); setTimeout(() => playSound(440, 'sine', 0.2), 60); },
+            shoot: () => { playSound(680, 'triangle', 0.15); playSound(380, 'sawtooth', 0.1, 0.08); },
+            eat: () => { playSound(800, 'sine', 0.08); setTimeout(() => playSound(1200, 'sine', 0.1), 50); },
+            hit: () => { playSound(150, 'sawtooth', 0.3, 0.2); },
+            fever: () => { 
+                playSound(523, 'triangle', 0.2);
+                setTimeout(() => playSound(659, 'triangle', 0.2), 150);
+                setTimeout(() => playSound(784, 'triangle', 0.4), 300);
+            }
+        };
+
+        function speakText(text, lang = 'zh-TW') {
+            if (!soundEnabled) return;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = lang;
+                utterance.rate = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 鍵盤佈局定義與分區數據
+        const keyboardData = [
+            [
+                { key: '1', zh: 'ㄅ', finger: 'finger-l-pinky', hand: 'finger-l-pinky' },
+                { key: '2', zh: 'ㄉ', finger: 'finger-l-ring', hand: 'finger-l-ring' },
+                { key: '3', zh: 'ˇ', finger: 'finger-l-middle', hand: 'finger-l-middle' },
+                { key: '4', zh: 'ˋ', finger: 'finger-l-index', hand: 'finger-l-index' },
+                { key: '5', zh: 'ㄓ', finger: 'finger-l-index', hand: 'finger-l-index' },
+                { key: '6', zh: 'ˊ', finger: 'finger-r-index', hand: 'finger-r-index' },
+                { key: '7', zh: '˙', finger: 'finger-r-index', hand: 'finger-r-index' },
+                { key: '8', zh: 'ㄚ', finger: 'finger-r-middle', hand: 'finger-r-middle' },
+                { key: '9', zh: 'ㄞ', finger: 'finger-r-ring', hand: 'finger-r-ring' },
+                { key: '0', zh: 'ㄢ', finger: 'finger-r-pinky', hand: 'finger-r-pinky' },
+                { key: '-', zh: 'ㄦ', finger: 'finger-r-pinky', hand: 'finger-r-pinky' }
+            ],
+            [
+                { key: 'Q', zh: 'ㄆ', finger: 'finger-l-pinky', hand: 'finger-l-pinky' },
+                { key: 'W', zh: 'ㄊ', finger: 'finger-l-ring', hand: 'finger-l-ring' },
+                { key: 'E', zh: 'ㄍ', finger: 'finger-l-middle', hand: 'finger-l-middle' },
+                { key: 'R', zh: 'ㄐ', finger: 'finger-l-index', hand: 'finger-l-index' },
+                { key: 'T', zh: 'ㄔ', finger: 'finger-l-index', hand: 'finger-l-index' },
+                { key: 'Y', zh: 'ㄗ', finger: 'finger-r-index', hand: 'finger-r-index' },
+                { key: 'U', zh: 'ㄧ', finger: 'finger-r-index', hand: 'finger-r-index' },
+                { key: 'I', zh: 'ㄛ', finger: 'finger-r-middle', hand: 'finger-r-middle' },
+                { key: 'O', zh: 'ㄟ', finger: 'finger-r-ring', hand: 'finger-r-ring' },
+                { key: 'P', zh: 'ㄣ', finger: 'finger-r-pinky', hand: 'finger-r-pinky' }
+            ],
+            [
+                { key: 'A', zh: 'ㄇ', finger: 'finger-l-pinky', hand: 'finger-l-pinky' },
+                { key: 'S', zh: 'ㄋ', finger: 'finger-l-ring', hand: 'finger-l-ring' },
+                { key: 'D', zh: 'ㄎ', finger: 'finger-l-middle', hand: 'finger-l-middle' },
+                { key: 'F', zh: 'ㄑ', finger: 'finger-l-index', hand: 'finger-l-index' },
+                { key: 'G', zh: 'ㄕ', finger: 'finger-l-index', hand: 'finger-l-index' },
+                { key: 'H', zh: 'ㄘ', finger: 'finger-r-index', hand: 'finger-r-index' },
+                { key: 'J', zh: 'ㄨ', finger: 'finger-r-index', hand: 'finger-r-index' },
+                { key: 'K', zh: 'ㄜ', finger: 'finger-r-middle', hand: 'finger-r-middle' },
+                { key: 'L', zh: 'ㄠ', finger: 'finger-r-ring', hand: 'finger-r-ring' },
+                { key: ';', zh: 'ㄤ', finger: 'finger-r-pinky', hand: 'finger-r-pinky' }
+            ],
+            [
+                { key: 'Z', zh: 'ㄈ', finger: 'finger-l-pinky', hand: 'finger-l-pinky' },
+                { key: 'X', zh: 'ㄌ', finger: 'finger-l-ring', hand: 'finger-l-ring' },
+                { key: 'C', zh: 'ㄏ', finger: 'finger-l-middle', hand: 'finger-l-middle' },
+                { key: 'V', zh: 'ㄒ', finger: 'finger-l-index', hand: 'finger-l-index' },
+                { key: 'B', zh: 'ㄖ', finger: 'finger-l-index', hand: 'finger-l-index' },
+                { key: 'N', zh: 'ㄙ', finger: 'finger-r-index', hand: 'finger-r-index' },
+                { key: 'M', zh: 'ㄩ', finger: 'finger-r-index', hand: 'finger-r-index' },
+                { key: ',', zh: 'ㄝ', finger: 'finger-r-middle', hand: 'finger-r-middle' },
+                { key: '.', zh: 'ㄡ', finger: 'finger-r-ring', hand: 'finger-r-ring' },
+                { key: '/', zh: 'ㄥ', finger: 'finger-r-pinky', hand: 'finger-r-pinky' }
+            ]
+        ];
+
+        const keyMapDict = {};
+        const zhuyinToEngDict = {};
+
+        // 渲染底下的發光虛擬鍵盤
+        function renderKeyboard() {
+            for (let r = 0; r < 4; r++) {
+                const rowEl = document.getElementById(`keyboard-row-${r + 1}`);
+                rowEl.innerHTML = '';
+                keyboardData[r].forEach(btn => {
+                    const keyDiv = document.createElement('div');
+                    keyDiv.id = `key-dom-${btn.key}`;
+                    keyDiv.className = `key ${btn.finger} w-8 h-9 md:w-11 md:h-10 rounded-lg flex flex-col items-center justify-center font-bold border-2 shadow-md transition-all duration-150 cursor-pointer text-xs`;
+                    
+                    rowEl.appendChild(keyDiv);
+                    keyMapDict[btn.key] = keyDiv;
+                    zhuyinToEngDict[btn.zh] = btn.key;
+                });
+            }
+            updateKeyboardLabels();
+        }
+
+        let appConfig = {
+            lang: 'ZH', 
+            difficulty: 'easy',
+            unlockedSkins: ['trex'],
+            currentSkin: 'trex'
+        };
+
+        const skins = {
+            trex: { emoji: '🦖', name: '霸王綠龍', cost: 0 },
+            tricera: { emoji: '🦕', name: '粉紅三角龍', cost: 30 },
+            stego: { emoji: '🐉', name: '星際機械龍', cost: 80 }
+        };
+
+        let gameState = {
+            score: 0,
+            combo: 0,
+            shields: 3,
+            isActive: false,
+            feverVal: 0,      // 0 到 100
+            isFever: false,
+            feverTimer: null,
+            spawnTimer: null,
+            animationFrameId: null,
+            items: [],        // 當前舞台的所有元素
+            gameSpeed: 4,     // 跑酷橫向速度
+            lastSpawnTime: 0
+        };
+
+        // 依語言與鍵盤配置更新鍵盤貼紙
+        function updateKeyboardLabels() {
+            for (let r = 0; r < 4; r++) {
+                keyboardData[r].forEach(btn => {
+                    const el = keyMapDict[btn.key];
+                    if (el) {
+                        if (appConfig.lang === 'ZH') {
+                            el.innerHTML = `
+                                <span class="text-slate-400 text-[8px] leading-none">${btn.key}</span>
+                                <span class="text-base font-black leading-none mt-0.5">${btn.zh}</span>
+                            `;
+                        } else {
+                            el.innerHTML = `
+                                <span class="text-base font-black leading-none">${btn.key}</span>
+                                <span class="text-slate-400 text-[8px] leading-none mt-0.5">${btn.zh}</span>
+                            `;
+                        }
+                    }
+                });
+            }
+        }
+
+        function changeLanguage(lang) {
+            appConfig.lang = lang;
+            updateKeyboardLabels();
+            clearFingerGuides();
+            updateTargetGuide();
+        }
+
+        function setDifficulty(diff) {
+            appConfig.difficulty = diff;
+            ['easy', 'medium', 'hard'].forEach(d => {
+                document.getElementById(`diff-${d}`).className = d === diff ? 
+                    'px-4 py-2 bg-emerald-600 border border-emerald-400 text-white font-bold rounded-xl text-xs transition' : 
+                    'px-4 py-2 bg-slate-700 text-slate-400 rounded-xl text-xs transition';
+            });
+        }
+
+        // 皮膚商城交互
+        function selectSkin(skinId) {
+            if (skinId === 'tricera' && !appConfig.unlockedSkins.includes('tricera')) {
+                if (gameState.score >= 30) {
+                    gameState.score -= 30;
+                    appConfig.unlockedSkins.push('tricera');
+                    document.getElementById('score').innerText = gameState.score;
+                    document.getElementById('skin-tricera').querySelector('span:last-child').innerHTML = '<span class="text-emerald-400">已擁有</span>';
+                    document.getElementById('skin-tricera').classList.remove('opacity-70');
+                } else {
+                    alert("不夠金幣解鎖粉紅三角龍喔！快去冒險跑酷賺取吧！✨");
+                    return;
+                }
+            }
+            if (skinId === 'stego' && !appConfig.unlockedSkins.includes('stego')) {
+                if (gameState.score >= 80) {
+                    gameState.score -= 80;
+                    appConfig.unlockedSkins.push('stego');
+                    document.getElementById('score').innerText = gameState.score;
+                    document.getElementById('skin-stego').querySelector('span:last-child').innerHTML = '<span class="text-emerald-400">已擁有</span>';
+                    document.getElementById('skin-stego').classList.remove('opacity-70');
+                } else {
+                    alert("不夠金幣解鎖星際機械龍喔！快去挑戰狂暴模式吧！✨");
+                    return;
+                }
+            }
+
+            appConfig.currentSkin = skinId;
+            document.getElementById('dino-character').innerText = skins[skinId].emoji;
+
+            // 切換邊框高亮
+            ['trex', 'tricera', 'stego'].forEach(s => {
+                const btn = document.getElementById(`skin-${s}`);
+                if (s === skinId) {
+                    btn.classList.add('border-emerald-400', 'scale-105', 'bg-emerald-900/60');
+                } else {
+                    btn.classList.remove('border-emerald-400', 'scale-105', 'bg-emerald-900/60');
+                    btn.classList.add('border-transparent');
+                }
+            });
+        }
+
+        function clearFingerGuides() {
+            Object.values(keyMapDict).forEach(el => el.classList.remove('key-active-highlight'));
+            document.getElementById('key-space').classList.remove('key-active-highlight');
+            document.querySelectorAll('svg path').forEach(path => path.classList.remove('finger-glow'));
+        }
+
+        // 高亮提示下一個打擊按鍵與手指
+        function highlightFinger(char) {
+            clearFingerGuides();
+            if (!char) return;
+
+            let physicalKey = char.toUpperCase();
+            if (appConfig.lang === 'ZH' && zhuyinToEngDict[char]) {
+                physicalKey = zhuyinToEngDict[char];
+            }
+
+            const keyDom = keyMapDict[physicalKey];
+            if (keyDom) {
+                keyDom.classList.add('key-active-highlight');
+                
+                if (document.getElementById('toggle-finger-guide').checked) {
+                    // 尋找關聯手指
+                    let fingerId = null;
+                    for (let r = 0; r < 4; r++) {
+                        const match = keyboardData[r].find(btn => btn.key === physicalKey);
+                        if (match) {
+                            fingerId = match.hand;
+                            break;
+                        }
+                    }
+                    if (fingerId) {
+                        const path = document.getElementById(fingerId);
+                        if (path) path.classList.add('finger-glow');
+                    }
+                }
+            }
+        }
+
+        function startAdventure() {
+            document.getElementById('lobby').classList.add('hidden');
+            document.getElementById('adventure-stage').classList.remove('hidden');
+            document.getElementById('btn-back').classList.remove('hidden');
+
+            gameState.isActive = true;
+            gameState.shields = 3;
+            gameState.feverVal = 0;
+            gameState.isFever = false;
+            gameState.items = [];
+            gameState.combo = 0;
+            
+            // 根據難度設定初始速度
+            gameState.gameSpeed = appConfig.difficulty === 'easy' ? 3.5 : appConfig.difficulty === 'medium' ? 5.5 : 7.5;
+            
+            updateShieldDisplay();
+            updateScoreUI();
+            
+            document.getElementById('dino-character').innerText = skins[appConfig.currentSkin].emoji;
+            document.getElementById('dino-character').className = "text-7xl md:text-8xl dino-run select-none drop-shadow-lg";
+
+            // 清除舞台
+            document.getElementById('stage-items').innerHTML = '';
+            document.getElementById('fx-layer').innerHTML = '';
+
+            // 開始定時生成怪物/障礙與水果金幣
+            gameState.lastSpawnTime = Date.now();
+            
+            // 執行主遊戲動畫幀
+            if (gameState.animationFrameId) cancelAnimationFrame(gameState.animationFrameId);
+            gameLoop();
+        }
+
+        function updateShieldDisplay() {
+            let hStr = '';
+            for (let i = 0; i < gameState.shields; i++) {
+                hStr += '❤️ ';
+            }
+            if (gameState.shields === 0) hStr = '💀 虛弱';
+            document.getElementById('heart-container').innerText = hStr;
+        }
+
+        function updateScoreUI() {
+            document.getElementById('score').innerText = gameState.score;
+            document.getElementById('fever-gauge').style.width = `${gameState.feverVal}%`;
+
+            if (gameState.combo > 2) {
+                document.getElementById('combo-container').classList.remove('hidden');
+                document.getElementById('combo').innerText = gameState.combo;
+            } else {
+                document.getElementById('combo-container').classList.add('hidden');
+            }
+        }
+
+        // 隨機選字
+        function getRandomTargetChar() {
+            if (appConfig.lang === 'ZH') {
+                const list = 'ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙㄧㄨㄩㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦ';
+                return list[Math.floor(Math.random() * list.length)];
+            } else {
+                const list = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                return list[Math.floor(Math.random() * list.length)];
+            }
+        }
+
+        const OBSTACLE_EMOJIS = ['🌵', '🌋', '👾', '🕷️', '🦇'];
+        const FOOD_EMOJIS = ['🍓', '🍏', '🍌', '🍒', '🌟', '🍩'];
+
+        function spawnItem() {
+            if (!gameState.isActive) return;
+            
+            const isObstacle = Math.random() < 0.6; // 60% 機率是怪獸/障礙物，40% 是好吃的食物
+            const char = getRandomTargetChar();
+            const emoji = isObstacle ? OBSTACLE_EMOJIS[Math.floor(Math.random() * OBSTACLE_EMOJIS.length)] : FOOD_EMOJIS[Math.floor(Math.random() * FOOD_EMOJIS.length)];
+
+            // 隨機高度：地面(跳躍避開) 或 空中(噴火球/高跳)
+            const isAir = isObstacle ? (Math.random() < 0.5) : (Math.random() < 0.7);
+            const bottomVal = isAir ? (90 + Math.random() * 50) : 64; // 像素單位
+
+            const itemObj = {
+                id: 'item-' + Date.now() + Math.floor(Math.random()*100),
+                char: char,
+                emoji: emoji,
+                isObstacle: isObstacle,
+                isAir: isAir,
+                x: 900, // 初始位於舞台最右側
+                bottom: bottomVal,
+                dom: null,
+                cleared: false
+            };
+
+            // 建立 DOM
+            const div = document.createElement('div');
+            div.id = itemObj.id;
+            div.className = "absolute flex flex-col items-center justify-center transition-transform pointer-events-none";
+            div.style.bottom = `${itemObj.bottom}px`;
+            div.style.left = `${itemObj.x}px`;
+
+            // 超亮眼圓泡泡文字標籤，讓一二年級小朋友一眼看清
+            const labelBorder = isObstacle ? 'border-red-500 bg-red-950/90 text-red-200' : 'border-amber-400 bg-amber-950/90 text-amber-200';
+            div.innerHTML = `
+                <div class="relative flex items-center justify-center mb-1">
+                    <span class="text-4xl md:text-5xl select-none filter drop-shadow-md">${emoji}</span>
+                </div>
+                <div class="px-2.5 py-0.5 rounded-full border-2 ${labelBorder} text-lg font-black font-['Fredoka_One'] shadow-lg tracking-wider animate-pulse">
+                    ${char}
+                </div>
+            `;
+
+            document.getElementById('stage-items').appendChild(div);
+            itemObj.dom = div;
+            gameState.items.push(itemObj);
+
+            // 當生成新元素時，若當前需要指引，立即引導
+            updateTargetGuide();
+        }
+
+        function gameLoop() {
+            if (!gameState.isActive) return;
+
+            const now = Date.now();
+            // 每隔特定時間生成一隻，難度越高、生得越頻繁
+            const spawnInterval = appConfig.difficulty === 'easy' ? 3200 : appConfig.difficulty === 'medium' ? 2400 : 1600;
+            if (now - gameState.lastSpawnTime > spawnInterval) {
+                spawnItem();
+                gameState.lastSpawnTime = now;
+            }
+
+            const dinoEl = document.getElementById('dino-container');
+            const dinoWidth = dinoEl.offsetWidth;
+            const dinoX = 48; // 固定在左邊
+            
+            // 逐一更新物件位置
+            for (let i = gameState.items.length - 1; i >= 0; i--) {
+                const item = gameState.items[i];
+                item.x -= gameState.gameSpeed;
+                
+                if (item.dom) {
+                    item.dom.style.left = `${item.x}px`;
+                }
+
+                // 碰撞判定 (當物體滾動到恐龍的身前 48px ~ 130px 範圍時)
+                if (!item.cleared && item.x < (dinoX + 60) && item.x > dinoX) {
+                    // 若是障礙物且恐龍沒有在跳躍(地面的障礙) or 恐龍來不及消滅空中的
+                    let hit = false;
+                    
+                    if (item.isObstacle) {
+                        if (!item.isAir) {
+                            // 地面障礙：如果恐龍此時沒有進行 jump 動畫，則被撞擊
+                            const characterEl = document.getElementById('dino-character');
+                            if (!characterEl.classList.contains('dino-jump')) {
+                                hit = true;
+                            }
+                        } else {
+                            // 空中怪物沒被打掉直接撞擊
+                            hit = true;
+                        }
+                    }
+
+                    if (hit) {
+                        triggerDinoHurt();
+                        item.cleared = true;
+                        removeStageItem(item);
+                    }
+                }
+
+                // 超出左邊界 (沒打到而成功跳過，或食物沒吃到)
+                if (item.x < -100) {
+                    if (item.isObstacle && !item.cleared) {
+                        // 成功避開障礙物：微幅加分
+                        gameState.score += 5;
+                        updateScoreUI();
+                    }
+                    removeStageItem(item);
+                    gameState.items.splice(i, 1);
+                    updateTargetGuide();
+                }
+            }
+
+            gameState.animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function removeStageItem(item) {
+            if (item.dom && item.dom.parentNode) {
+                item.dom.parentNode.removeChild(item.dom);
+            }
+        }
+
+        // 當恐龍撞到障礙物受傷
+        function triggerDinoHurt() {
+            if (gameState.isFever) return; // 狂暴模式下無敵
+
+            audioBank.hit();
+            gameState.shields--;
+            gameState.combo = 0;
+            updateShieldDisplay();
+            updateScoreUI();
+
+            const characterEl = document.getElementById('dino-character');
+            characterEl.className = "text-7xl md:text-8xl dino-hurt select-none";
+            
+            // 閃爍護盾提示受傷
+            const shieldEl = document.getElementById('dino-shield');
+            shieldEl.className = "absolute inset-0 border-4 border-red-500 rounded-full animate-ping opacity-100";
+
+            setTimeout(() => {
+                if (gameState.isActive) {
+                    characterEl.className = "text-7xl md:text-8xl dino-run select-none";
+                    shieldEl.className = "absolute inset-0 border-4 border-cyan-400 rounded-full animate-ping opacity-0";
+                }
+            }, 600);
+
+            // 若護盾扣完，不執行 Game Over 以免打擊低年級孩子，改為彈出可愛的「補給愛心」並稍微降低積分
+            if (gameState.shields <= 0) {
+                gameState.shields = 3;
+                gameState.score = Math.max(0, gameState.score - 10);
+                updateShieldDisplay();
+                updateScoreUI();
+                createNotification("💡 沒關係！恐龍護盾已重新裝填！加油！", "rgba(14, 165, 233, 0.95)");
+            }
+        }
+
+        // 取得距離恐龍最近且未被清除的物體作為當前主要輸入目標
+        function updateTargetGuide() {
+            const activeItems = gameState.items.filter(item => !item.cleared);
+            if (activeItems.length > 0) {
+                // 最左邊(最近)的為第一目標
+                const target = activeItems[0];
+                highlightFinger(target.char);
+            } else {
+                clearFingerGuides();
+            }
+        }
+
+        // 訊息氣泡通知
+        function createNotification(msg, bgColor = "rgba(16, 185, 129, 0.95)") {
+            const stage = document.getElementById('fx-layer');
+            const alertBox = document.createElement('div');
+            alertBox.className = "absolute top-16 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-xl text-sm font-bold text-white z-40 shadow-xl transition-all duration-300";
+            alertBox.style.backgroundColor = bgColor;
+            alertBox.innerText = msg;
+            stage.appendChild(alertBox);
+            
+            setTimeout(() => {
+                alertBox.style.opacity = '0';
+                setTimeout(() => alertBox.remove(), 400);
+            }, 2000);
+        }
+
+        // 當打對按鍵時的超級反饋！
+        function triggerActionOnSuccess(item) {
+            item.cleared = true;
+            gameState.score += 10;
+            gameState.combo++;
+            
+            // 累積狂暴能量
+            if (!gameState.isFever) {
+                gameState.feverVal = Math.min(100, gameState.feverVal + 10);
+                if (gameState.feverVal >= 100) {
+                    triggerFeverMode();
+                }
+            }
+
+            updateScoreUI();
+            
+            // 播放該字發音 (中文或英文)
+            speakText(item.char, appConfig.lang === 'ZH' ? 'zh-TW' : 'en-US');
+
+            const dinoEl = document.getElementById('dino-container');
+            const charEl = document.getElementById('dino-character');
+
+            if (item.isObstacle) {
+                if (!item.isAir) {
+                    // 1. 地面障礙：恐龍華麗一躍！
+                    audioBank.jump();
+                    charEl.className = "text-7xl md:text-8xl dino-jump select-none";
+                    createJumpCloud(dinoEl.offsetLeft + 40, dinoEl.offsetTop + 80);
+                    
+                    setTimeout(() => {
+                        if (gameState.isActive && !gameState.isFever) {
+                            charEl.className = "text-7xl md:text-8xl dino-run select-none";
+                        }
+                    }, 600);
+                } else {
+                    // 2. 空中怪獸：恐龍吐大火球射擊！
+                    audioBank.shoot();
+                    createFireballEffect(dinoEl.offsetLeft + 80, dinoEl.offsetTop + 40, item.x, item.bottom);
+                }
+
+                // 怪物爆炸特效
+                setTimeout(() => {
+                    createExplosion(item.x + 30, item.bottom + 30, "💥");
+                    removeStageItem(item);
+                }, item.isAir ? 250 : 0);
+
+            } else {
+                // 3. 吃到美味水果食物：舌頭特效與吞嚥
+                audioBank.eat();
+                createExplosion(item.x + 30, item.bottom + 30, "✨");
+                createFloatingScore(item.x, item.bottom, "Yum! +10 🪙");
+                removeStageItem(item);
+            }
+
+            // 更新下一個導引
+            setTimeout(updateTargetGuide, 50);
+        }
+
+        // 浮動文字特效
+        function createFloatingScore(x, bottom, text) {
+            const stage = document.getElementById('fx-layer');
+            const el = document.createElement('div');
+            el.className = "absolute font-black text-amber-300 text-lg drop-shadow-md transition-all pointer-events-none";
+            el.style.left = `${x}px`;
+            el.style.bottom = `${bottom + 40}px`;
+            el.innerText = text;
+            stage.appendChild(el);
+
+            el.animate([
+                { transform: 'translateY(0px)', opacity: 1 },
+                { transform: 'translateY(-60px)', opacity: 0 }
+            ], { duration: 800, easing: 'ease-out' }).onfinish = () => el.remove();
+        }
+
+        // 跳躍落塵雲煙
+        function createJumpCloud(x, top) {
+            const stage = document.getElementById('fx-layer');
+            for (let i = 0; i < 4; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = "absolute bg-slate-100/40 rounded-full w-4 h-4 pointer-events-none";
+                cloud.style.left = `${x + (i - 1.5) * 15}px`;
+                cloud.style.top = `${top}px`;
+                stage.appendChild(cloud);
+
+                cloud.animate([
+                    { transform: 'scale(0.8)', opacity: 0.8 },
+                    { transform: 'scale(2.5) translateY(10px)', opacity: 0 }
+                ], { duration: 500 }).onfinish = () => cloud.remove();
+            }
+        }
+
+        // 火球射擊動畫
+        function createFireballEffect(startX, startY, endX, endBottom) {
+            const stage = document.getElementById('fx-layer');
+            const ball = document.createElement('div');
+            ball.className = "absolute text-3xl fireball pointer-events-none select-none z-30";
+            ball.innerText = "🔥";
+            ball.style.left = `${startX}px`;
+            ball.style.top = `${startY}px`;
+            stage.appendChild(ball);
+
+            // 計算目標高度
+            const stageHeight = document.getElementById('adventure-stage').offsetHeight;
+            const targetTop = stageHeight - endBottom - 48;
+
+            ball.animate([
+                { left: `${startX}px`, top: `${startY}px` },
+                { left: `${endX}px`, top: `${targetTop}px` }
+            ], { duration: 250, easing: 'linear' }).onfinish = () => ball.remove();
+        }
+
+        // 爆炸粒子
+        function createExplosion(x, bottom, emoji) {
+            const stage = document.getElementById('fx-layer');
+            const stageHeight = document.getElementById('adventure-stage').offsetHeight;
+            const targetTop = stageHeight - bottom - 40;
+
+            for (let i = 0; i < 8; i++) {
+                const star = document.createElement('div');
+                star.className = "absolute text-xl pointer-events-none select-none";
+                star.innerText = emoji === "💥" ? "🔥" : "⭐";
+                star.style.left = `${x}px`;
+                star.style.top = `${targetTop}px`;
+                stage.appendChild(star);
+
+                const angle = Math.random() * Math.PI * 2;
+                const dist = Math.random() * 80 + 20;
+
+                star.animate([
+                    { transform: 'translate(0, 0) scale(1.2)', opacity: 1 },
+                    { transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px) scale(0)`, opacity: 0 }
+                ], { duration: 500, easing: 'ease-out' }).onfinish = () => star.remove();
+            }
+        }
+
+        // 進入狂暴彩虹狂歡模式！
+        function triggerFeverMode() {
+            if (gameState.isFever) return;
+            gameState.isFever = true;
+            audioBank.fever();
+
+            document.getElementById('fever-banner').classList.remove('hidden');
+            const characterEl = document.getElementById('dino-character');
+            characterEl.className = "text-8xl dino-run rainbow-fever select-none";
+
+            createNotification("🌈 進入狂暴彩虹時間！小恐龍無敵啦！", "rgba(244, 63, 94, 0.95)");
+
+            // 速度提升，召喚大量滿地金幣
+            gameState.gameSpeed *= 1.8;
+
+            let coinSpawnCounter = 0;
+            const intervalId = setInterval(() => {
+                if (!gameState.isActive || !gameState.isFever) {
+                    clearInterval(intervalId);
+                    return;
+                }
+                // 生成金幣食物
+                const char = getRandomTargetChar();
+                const itemObj = {
+                    id: 'fever-coin-' + Date.now(),
+                    char: char,
+                    emoji: "🪙",
+                    isObstacle: false,
+                    isAir: Math.random() < 0.5,
+                    x: 900,
+                    bottom: 80 + Math.random() * 80,
+                    dom: null,
+                    cleared: false
+                };
+
+                const div = document.createElement('div');
+                div.className = "absolute flex flex-col items-center justify-center pointer-events-none z-30";
+                div.style.bottom = `${itemObj.bottom}px`;
+                div.style.left = `${itemObj.x}px`;
+                div.innerHTML = `
+                    <span class="text-4xl animate-bounce select-none">🪙</span>
+                    <div class="px-2 py-0.5 rounded-full border-2 border-yellow-400 bg-yellow-950/90 text-yellow-300 text-xs font-black">${char}</div>
+                `;
+                document.getElementById('stage-items').appendChild(div);
+                itemObj.dom = div;
+                gameState.items.push(itemObj);
+
+                updateTargetGuide();
+                coinSpawnCounter++;
+                if (coinSpawnCounter > 12) clearInterval(intervalId);
+            }, 400);
+
+            // 8 秒後解除狂暴
+            setTimeout(() => {
+                gameState.isFever = false;
+                gameState.feverVal = 0;
+                gameState.gameSpeed /= 1.8;
+                document.getElementById('fever-banner').classList.add('hidden');
+                if (gameState.isActive) {
+                    characterEl.className = "text-7xl md:text-8xl dino-run select-none";
+                }
+                updateScoreUI();
+                updateTargetGuide();
+            }, 8000);
+        }
+
+        // 實體鍵盤事件攔截
+        window.addEventListener('keydown', (e) => {
+            if (!gameState.isActive) return;
+            
+            let pressedKey = e.key.toUpperCase();
+            if (e.key.length !== 1) return; // 略過 Shift/Control 等
+
+            let targetChar = pressedKey;
+            
+            // 注音佈局轉譯判定
+            if (appConfig.lang === 'ZH') {
+                const physicalObj = keyboardData.flat().find(btn => btn.key.toUpperCase() === pressedKey);
+                if (physicalObj) {
+                    targetChar = physicalObj.zh; // 例如把 Q 對應到 ㄆ
+                }
+            }
+
+            // 視覺鍵盤高亮效果
+            const keyDom = keyMapDict[pressedKey];
+            if (keyDom) {
+                keyDom.classList.add('scale-90', 'brightness-125');
+                setTimeout(() => keyDom.classList.remove('scale-90', 'brightness-125'), 100);
+            }
+
+            // 比對是否擊中距離最近的項目
+            const activeItems = gameState.items.filter(item => !item.cleared);
+            if (activeItems.length > 0) {
+                const target = activeItems[0];
+                if (target.char.toUpperCase() === targetChar.toUpperCase()) {
+                    triggerActionOnSuccess(target);
+                } else {
+                    // 打錯字
+                    audioBank.hit();
+                    gameState.combo = 0;
+                    updateScoreUI();
+                }
+            }
+        });
+
+        // 返回大廳
+        function backToLobby() {
+            gameState.isActive = false;
+            if (gameState.animationFrameId) cancelAnimationFrame(gameState.animationFrameId);
+            
+            document.getElementById('adventure-stage').classList.add('hidden');
+            document.getElementById('btn-back').classList.add('hidden');
+            document.getElementById('lobby').classList.remove('hidden');
+            document.getElementById('combo-container').classList.add('hidden');
+            
+            clearFingerGuides();
+        }
+
+        // 初始化
+        window.onload = function() {
+            renderKeyboard();
+            // 音訊交互保護解除
+            document.body.addEventListener('click', () => {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+            }, { once: true });
+        };
+    </script>
+</body>
+</html>

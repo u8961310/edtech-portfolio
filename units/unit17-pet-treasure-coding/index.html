@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>程式小勇士：萌寵尋寶大冒險 - 兒童運算思維啟蒙 1.2</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Playful Rounded Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght=500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Quicksand', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0fdf4 100%);
+            overscroll-behavior: none;
+            user-select: none;
+        }
+
+        /* 遊戲地圖網格 */
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            background-color: #f1f5f9;
+            border: 6px solid #fbcfe8;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        /* 蹦跳與搖擺動畫 */
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .bouncy {
+            animation: bounce-gentle 1.5s infinite ease-in-out;
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+        .wiggly {
+            animation: wiggle 0.5s infinite ease-in-out;
+        }
+
+        /* 指令卡片特殊效果 */
+        .command-card {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .command-card:active {
+            transform: scale(0.9);
+        }
+        .executing-highlight {
+            transform: scale(1.15) !important;
+            box-shadow: 0 0 20px #facc15, inset 0 0 10px #facc15 !important;
+            border-color: #facc15 !important;
+            z-index: 10;
+        }
+
+        /* 角色旋轉過渡效果 */
+        #player {
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* 粒子煙霧 */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            animation: particle-fade 0.6s forwards ease-out;
+        }
+        @keyframes particle-fade {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        /* 獎狀專用列印與排版設定 */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-certificate, #printable-certificate * {
+                visibility: visible;
+            }
+            #printable-certificate {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%) scale(1.2);
+                width: 90%;
+                border: none;
+                box-shadow: none;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-3">
+<a href="../../index.html" class="kogao-home-btn" style="position:fixed;top:10px;left:10px;z-index:99999;background:rgba(255,255,255,.92);border:2px solid #f59e0b;color:#b45309;font-family:'Noto Sans TC',sans-serif;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.15)">🏠 首頁</a>
+
+    <!-- 頂部列：關卡與分數 -->
+    <header class="w-full max-w-4xl mx-auto flex justify-between items-center bg-white/90 p-3 rounded-2xl shadow-sm border-2 border-pink-200 mb-2 no-print">
+        <div class="flex items-center space-x-2">
+            <span class="text-3xl bouncy">🐶</span>
+            <div>
+                <h1 class="text-lg md:text-xl font-extrabold text-blue-600 font-['Fredoka_One']">程式小勇士</h1>
+                <p class="text-[10px] text-slate-500">幫小狗波波排好指令，避開水坑、吃到骨頭！🍖</p>
+            </div>
+        </div>
+        
+        <!-- 關卡選擇器 -->
+        <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold text-slate-500">關卡:</span>
+            <div id="level-dots" class="flex space-x-1">
+                <!-- 動態產生關卡點點 -->
+            </div>
+        </div>
+    </header>
+
+    <!-- 主遊戲區：左邊地圖，右邊程式排程區 -->
+    <main class="w-full max-w-4xl mx-auto flex-grow grid grid-cols-1 md:grid-cols-12 gap-3 my-1 no-print">
+        
+        <!-- 左邊：6x6 地圖 (佔 7 格) -->
+        <section class="md:col-span-7 flex flex-col justify-center items-center relative">
+            <div id="game-map" class="map-grid w-full aspect-square rounded-2xl overflow-hidden relative">
+                <!-- 網格與物件將由 JavaScript 動態填入 -->
+                
+                <!-- 小狗波波主體（置於地圖上層） -->
+                <div id="player" class="absolute flex items-center justify-center pointer-events-none z-20" style="width: 16.66%; height: 16.66%;">
+                    <div class="text-4xl md:text-5xl bouncy">🐶</div>
+                </div>
+            </div>
+            
+            <!-- 地圖下方指引說明 -->
+            <div class="w-full bg-blue-50/80 border border-blue-200 rounded-xl p-2 mt-2 text-center">
+                <span class="text-xs font-bold text-blue-700" id="tutorial-text">載入中...</span>
+            </div>
+        </section>
+
+        <!-- 右邊：程式積木排列與控制區 (佔 5 格) -->
+        <section class="md:col-span-5 flex flex-col justify-between bg-white/90 p-3 rounded-2xl border-2 border-blue-100 shadow-sm space-y-3">
+            
+            <!-- 控制區：開始與清除 -->
+            <div class="flex justify-between items-center bg-slate-50 p-2 rounded-xl">
+                <span class="text-sm font-extrabold text-slate-700 flex items-center">
+                    <span class="text-lg mr-1">📝</span> 程式工作區
+                </span>
+                <div class="flex space-x-1.5">
+                    <button id="btn-run" onclick="runProgram()" class="command-card bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1 shadow border-b-4 border-emerald-700">
+                        <span>▶️</span> <span>執行</span>
+                    </button>
+                    <button id="btn-reset" onclick="resetPlayerAndLevel()" class="command-card bg-orange-400 hover:bg-orange-500 text-white font-extrabold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1 shadow border-b-4 border-orange-600">
+                        <span>🔄</span> <span>重置</span>
+                    </button>
+                    <button onclick="clearCommands()" class="command-card bg-red-400 hover:bg-red-500 text-white font-extrabold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1 shadow border-b-4 border-red-600">
+                        <span>🗑️</span> <span>清空</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 排好的指令展示區 (最多可擺 24 個指令) -->
+            <div class="flex-grow border-2 border-dashed border-blue-200 rounded-xl bg-blue-50/30 p-2 flex flex-wrap content-start gap-1.5 overflow-y-auto max-h-[160px] md:max-h-[220px]" id="program-tray">
+                <!-- 點擊添加的指令將會出現在這裡 -->
+            </div>
+
+            <!-- 指令積木選擇區 -->
+            <div class="space-y-2">
+                <p class="text-xs font-bold text-slate-400 text-center">👇 點擊卡片，把指令排進工作區吧！</p>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="addCommand('forward')" class="command-card flex flex-col items-center justify-center p-2 bg-pink-100 hover:bg-pink-200 border-2 border-pink-300 rounded-xl text-pink-700">
+                        <span class="text-2xl">➡️</span>
+                        <span class="text-xs font-extrabold mt-1">往前走</span>
+                    </button>
+                    <button onclick="addCommand('left')" class="command-card flex flex-col items-center justify-center p-2 bg-amber-100 hover:bg-amber-200 border-2 border-amber-300 rounded-xl text-amber-700">
+                        <span class="text-2xl">↩️</span>
+                        <span class="text-xs font-extrabold mt-1">向左轉</span>
+                    </button>
+                    <button onclick="addCommand('right')" class="command-card flex flex-col items-center justify-center p-2 bg-indigo-100 hover:bg-indigo-200 border-2 border-indigo-300 rounded-xl text-indigo-700">
+                        <span class="text-2xl">↪️</span>
+                        <span class="text-xs font-extrabold mt-1">向右轉</span>
+                    </button>
+                </div>
+                
+                <!-- 進階重複卡（二、三年級學習點） -->
+                <div id="loop-container" class="grid grid-cols-2 gap-2 mt-1 hidden">
+                    <button onclick="addCommand('loop2')" class="command-card flex items-center justify-center space-x-1.5 p-1.5 bg-purple-100 hover:bg-purple-200 border-2 border-purple-300 rounded-xl text-purple-700">
+                        <span class="text-xl">🔁×2</span>
+                        <span class="text-[10px] font-extrabold">重複前進2次</span>
+                    </button>
+                    <button onclick="addCommand('loop3')" class="command-card flex items-center justify-center space-x-1.5 p-1.5 bg-purple-100 hover:bg-purple-200 border-2 border-purple-300 rounded-xl text-purple-700">
+                        <span class="text-xl">🔁×3</span>
+                        <span class="text-[10px] font-extrabold">重複前進3次</span>
+                    </button>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- 底部資訊與引導 -->
+    <footer class="w-full max-w-4xl mx-auto flex justify-between items-center bg-white/70 px-4 py-2 rounded-xl text-xs text-slate-500 no-print">
+        <span>💡 運算思維：學會「拆解路徑」與「排錯」是程式設計最重要的起步喔！</span>
+        <button onclick="showHelpModal()" class="font-bold text-blue-500 underline hover:text-blue-700">遊戲玩法說明 ❓</button>
+    </footer>
+
+    <!-- 成功過關對話框 -->
+    <div id="win-modal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 hidden no-print">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center border-4 border-yellow-300 shadow-2xl transform scale-95 transition-all duration-300">
+            <span class="text-6xl bouncy block mb-2">🎉</span>
+            <h2 id="win-title" class="text-2xl font-extrabold text-pink-500 mb-1">太厲害了！</h2>
+            <p id="win-desc" class="text-sm text-slate-600 mb-4">你寫的程式非常完美，成功幫助小狗尋寶！🐶🍖</p>
+            <div id="star-reward" class="text-3xl text-yellow-400 mb-4 animate-bounce">⭐⭐⭐</div>
+            <button onclick="nextLevel()" class="command-card bg-gradient-to-r from-pink-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600 text-white font-extrabold text-base px-6 py-3 rounded-2xl shadow-lg border-b-4 border-yellow-700 w-full">
+                挑戰下一關！🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- 玩法說明對話框 -->
+    <div id="help-modal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 hidden no-print">
+        <div class="bg-white rounded-3xl p-5 max-w-md w-full border-4 border-blue-300 shadow-2xl">
+            <h3 class="text-xl font-extrabold text-blue-600 text-center mb-3">🎮 如何和孩子一起玩？</h3>
+            <ul class="text-sm text-slate-600 space-y-2 mb-4 list-decimal pl-5">
+                <li>觀察地圖上的 **小狗 🐶**、**星星 ⭐** 和最愛的 **骨頭 🍖**。</li>
+                <li>想一想，小狗需要先走幾步？轉哪一邊？</li>
+                <li>點擊下方的 **「往前走、向左轉、向右轉」** 排出指令。</li>
+                <li>如果不小心排錯了，在工作區 **點一下排錯的卡片** 就可以單獨刪掉它！</li>
+                <li>點擊 **「▶️ 執行」** 來看小狗行動，如果不對，隨時點 **「🔄 重置」** 修改，完全不用害怕失敗喔！</li>
+            </ul>
+            <button onclick="hideHelpModal()" class="bg-blue-500 hover:bg-blue-600 text-white font-extrabold px-4 py-2 rounded-xl text-sm w-full">
+                我知道了，開始冒險！🌟
+            </button>
+        </div>
+    </div>
+
+    <!-- 🏆 最終關卡：程式大勇士榮譽證書 Modal -->
+    <div id="certificate-modal" class="fixed inset-0 bg-black/75 flex flex-col items-center justify-center z-50 p-4 hidden">
+        
+        <!-- 獎狀主體（支援列印） -->
+        <div id="printable-certificate" class="bg-gradient-to-br from-amber-50 to-orange-100/70 border-[12px] border-amber-400 max-w-xl w-full rounded-3xl p-6 md:p-8 shadow-2xl text-center relative overflow-hidden">
+            <!-- 四角古典花紋 -->
+            <div class="absolute top-2 left-2 text-2xl text-amber-500">✦</div>
+            <div class="absolute top-2 right-2 text-2xl text-amber-500">✦</div>
+            <div class="absolute bottom-2 left-2 text-2xl text-amber-500">✦</div>
+            <div class="absolute bottom-2 right-2 text-2xl text-amber-500">✦</div>
+            
+            <!-- 閃亮背景緞帶 -->
+            <div class="flex justify-center mb-3">
+                <span class="text-6xl bouncy">🏅</span>
+            </div>
+            
+            <h2 class="text-3xl font-extrabold text-amber-600 tracking-wider font-['Fredoka_One'] mb-1">榮譽證書</h2>
+            <p class="text-xs font-bold text-amber-700/80 uppercase tracking-widest mb-4">— Coding Hero Certificate —</p>
+            
+            <!-- 證書文字 -->
+            <div class="space-y-4 text-slate-700">
+                <p class="text-sm">恭喜優秀的程式設計小大師：</p>
+                
+                <!-- 名字動態輸入顯示 -->
+                <div class="inline-block border-b-2 border-dashed border-amber-600 px-6 py-1">
+                    <span id="cert-name-display" class="text-2xl md:text-3xl font-extrabold text-blue-600 tracking-wide">小波波</span>
+                </div>
+                
+                <p class="text-sm md:text-base leading-relaxed px-4">
+                    在《萌寵尋寶大冒險》中展現了非凡的<br>
+                    <span class="font-extrabold text-pink-500">【問題拆解】</span>與<span class="font-extrabold text-purple-600">【邏輯設計】</span>能力，<br>
+                    成功帶領波波走過重重考驗，獲得滿滿的美味骨頭！<br>
+                    特頒此證，以資鼓勵！
+                </p>
+            </div>
+
+            <!-- 底部簽章與時間 -->
+            <div class="mt-8 flex justify-between items-end px-4 text-left">
+                <div>
+                    <p class="text-[10px] text-slate-400">大冒險認證官</p>
+                    <p class="text-sm font-bold text-slate-600">小狗波波 🐶 敬上</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-slate-400">認證日期</p>
+                    <p id="cert-date" class="text-xs font-mono font-bold text-slate-600">2026 / 06 / 03</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 獎狀控制面板（列印時會隱藏） -->
+        <div class="max-w-xl w-full mt-4 bg-white p-4 rounded-2xl shadow-xl flex flex-col space-y-3 no-print">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1">✍️ 在這裡輸入你的名字，客製化你的專屬獎狀：</label>
+                <input type="text" id="cert-name-input" oninput="updateCertName(this.value)" value="小波波" maxlength="10" 
+                       class="w-full px-3 py-2 border-2 border-amber-300 rounded-xl focus:outline-none focus:border-amber-500 text-center font-bold text-slate-700">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="printCertificate()" class="command-card bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3 rounded-xl shadow-md text-sm flex items-center justify-center space-x-1.5 border-b-4 border-amber-700">
+                    <span>🖨️</span> <span>列印 / 存成 PDF</span>
+                </button>
+                <button onclick="restartGame()" class="command-card bg-blue-500 hover:bg-blue-600 text-white font-extrabold py-3 rounded-xl shadow-md text-sm flex items-center justify-center space-x-1.5 border-b-4 border-blue-700">
+                    <span>🔄</span> <span>重新挑戰</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. 極簡 Web Audio API 音樂鋼琴聲系統 ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playNote(frequency, type = 'sine', duration = 0.3, volume = 0.1) {
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+                
+                gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (err) {
+                console.log("Audio deferred", err);
+            }
+        }
+
+        // 溫馨和諧音效
+        const sfx = {
+            click: () => playNote(440, 'sine', 0.1, 0.1),
+            add: () => playNote(587.33, 'sine', 0.12, 0.12),
+            remove: () => playNote(293.66, 'triangle', 0.15, 0.1),
+            step: () => playNote(523.25, 'triangle', 0.08, 0.08),
+            turn: () => playNote(392, 'sine', 0.15, 0.08),
+            star: () => {
+                playNote(523.25, 'sine', 0.1, 0.12);
+                setTimeout(() => playNote(659.25, 'sine', 0.1, 0.12), 80);
+                setTimeout(() => playNote(783.99, 'sine', 0.2, 0.15), 160);
+            },
+            fail: () => {
+                playNote(220, 'sawtooth', 0.2, 0.1);
+                setTimeout(() => playNote(146.83, 'sawtooth', 0.3, 0.15), 120);
+            },
+            win: () => {
+                const notes = [261.63, 329.63, 392, 523.25, 659.25, 1046.50];
+                notes.forEach((freq, i) => {
+                    setTimeout(() => playNote(freq, 'sine', 0.3, 0.12), i * 90);
+                });
+            }
+        };
+
+        // --- 2. 遊戲關卡設定 (Progressive Level Design) ---
+        // 0: 草地, 1: 水坑(障礙物), 2: 星星(加分), 3: 骨頭(終點)
+        // 玩家起始位置由 playerStart 決定
+        // 方向：0=上(North), 1=右(East), 2=下(South), 3=左(West)
+        const LEVELS = [
+            {
+                id: 1,
+                title: "第 1 關：直線大前進！",
+                desc: "點擊 2 次「往前走 ➡️」，然後按「▶️ 執行」，帶小狗拿到骨頭！",
+                playerStart: { x: 1, y: 3, dir: 1 },
+                target: { x: 3, y: 3 },
+                stars: [],
+                obstacles: [],
+                hasLoops: false
+            },
+            {
+                id: 2,
+                title: "第 2 關：神奇轉彎處！",
+                desc: "小狗要先往前走，向右轉，再往前走！試試看！",
+                playerStart: { x: 1, y: 1, dir: 1 },
+                target: { x: 3, y: 3 },
+                stars: [],
+                obstacles: [
+                    { x: 3, y: 1 } // 水坑阻擋
+                ],
+                hasLoops: false
+            },
+            {
+                id: 3,
+                title: "第 3 關：好吃的亮晶晶星星！",
+                desc: "先走到星星 ⭐ 上收集它，再開心地走到終點喔！",
+                playerStart: { x: 1, y: 4, dir: 0 },
+                target: { x: 4, y: 2 },
+                stars: [
+                    { x: 1, y: 2 }
+                ],
+                obstacles: [
+                    { x: 2, y: 2 }, { x: 2, y: 4 }
+                ],
+                hasLoops: false
+            },
+            {
+                id: 4,
+                title: "第 4 關：繞過泥巴水坑！",
+                desc: "注意！千萬不要踩到深藍色的水坑 💦，繞過去尋寶吧！",
+                playerStart: { x: 1, y: 5, dir: 1 },
+                target: { x: 4, y: 1 },
+                stars: [
+                    { x: 4, y: 5 }
+                ],
+                obstacles: [
+                    { x: 1, y: 3 }, { x: 2, y: 3 }, { x: 3, y: 3 }, { x: 4, y: 3 }
+                ],
+                hasLoops: false
+            },
+            {
+                id: 5,
+                title: "第 5 關：迷宮大作戰！",
+                desc: "這是一條曲折的道路，靜下心來，把指令一步一步拆解吧！",
+                playerStart: { x: 1, y: 1, dir: 2 },
+                target: { x: 4, y: 4 },
+                stars: [
+                    { x: 1, y: 4 }, { x: 4, y: 1 }
+                ],
+                obstacles: [
+                    { x: 2, y: 1 }, { x: 2, y: 2 }, { x: 3, y: 3 }, { x: 2, y: 4 }, { x: 3, y: 1 }
+                ],
+                hasLoops: false
+            },
+            {
+                id: 6,
+                title: "第 6 關：超級遠路（重複卡解禁！）",
+                desc: "這條路好長！試試看新解鎖的「重複卡 🔁」幫你一次走好多步！",
+                playerStart: { x: 0, y: 5, dir: 0 },
+                target: { x: 4, y: 1 },
+                stars: [
+                    { x: 0, y: 1 }, { x: 4, y: 5 }
+                ],
+                obstacles: [
+                    { x: 1, y: 2 }, { x: 2, y: 2 }, { x: 3, y: 2 }, { x: 1, y: 4 }, { x: 2, y: 4 }, { x: 3, y: 4 }
+                ],
+                hasLoops: true
+            }
+        ];
+
+        // --- 3. 遊戲核心狀態變數 ---
+        let currentLevelIndex = 0;
+        let commandQueue = []; // 目前排進去的指令 ['forward', 'left', ...]
+        let currentLevelState = null; // 當前關卡副本
+        let playerState = { x: 0, y: 0, dir: 1 }; // 小狗當前座標與朝向
+        let collectedStarsInPlay = 0; // 執行中收集到的星星
+        let isRunningProgram = false; // 是否正在執行中
+
+        // --- 4. 畫面與地圖初始化渲染 ---
+        function initLevelDots() {
+            const container = document.getElementById('level-dots');
+            container.innerHTML = '';
+            LEVELS.forEach((lvl, idx) => {
+                const dot = document.createElement('button');
+                dot.className = `w-6 h-6 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
+                    idx === currentLevelIndex 
+                    ? 'bg-pink-500 text-white scale-110 ring-2 ring-pink-300' 
+                    : 'bg-pink-100 text-pink-500 hover:bg-pink-200'
+                }`;
+                dot.innerText = lvl.id;
+                dot.onclick = () => {
+                    if (isRunningProgram) return;
+                    currentLevelIndex = idx;
+                    sfx.click();
+                    loadLevel(idx);
+                };
+                container.appendChild(dot);
+            });
+        }
+
+        function loadLevel(idx) {
+            const lvl = LEVELS[idx];
+            currentLevelState = JSON.parse(JSON.stringify(lvl)); // 深拷貝
+            playerState = { ...currentLevelState.playerStart };
+            collectedStarsInPlay = 0;
+            isRunningProgram = false;
+
+            // 修正 Bug：確保切換關卡或挑戰下一關時，徹底釋放執行按鈕的 Disabled 狀態
+            document.getElementById('btn-run').disabled = false;
+            
+            // 決定是否開啟重複卡 (迴圈概念)
+            const loopContainer = document.getElementById('loop-container');
+            if (currentLevelState.hasLoops) {
+                loopContainer.classList.remove('hidden');
+            } else {
+                loopContainer.classList.add('hidden');
+            }
+
+            // 更新文字與說明
+            document.getElementById('tutorial-text').innerText = `${currentLevelState.title} - ${currentLevelState.desc}`;
+            
+            // 重新渲染地圖網格
+            renderMap();
+            
+            // 重設玩家位置與朝向
+            updatePlayerVisual();
+            
+            // 清空目前的指令區
+            clearCommands();
+            initLevelDots();
+        }
+
+        function renderMap() {
+            const mapContainer = document.getElementById('game-map');
+            // 只保留玩家角色 DOM 元素，清除其他格點
+            const playerDOM = document.getElementById('player');
+            mapContainer.innerHTML = '';
+            mapContainer.appendChild(playerDOM);
+
+            // 產生 6x6 的棋盤格
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 6; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'relative flex items-center justify-center border border-slate-200/50 transition-colors duration-200';
+                    
+                    // 棋盤格色調交錯，更精緻
+                    if ((r + c) % 2 === 0) {
+                        cell.style.backgroundColor = '#f8fafc';
+                    } else {
+                        cell.style.backgroundColor = '#f1f5f9';
+                    }
+
+                    cell.dataset.x = c;
+                    cell.dataset.y = r;
+
+                    // 檢查是否有障礙物 (水坑 💦)
+                    const isObstacle = currentLevelState.obstacles.some(o => o.x === c && o.y === r);
+                    if (isObstacle) {
+                        cell.innerHTML = '<span class="text-3xl md:text-4xl filter drop-shadow">💦</span>';
+                        cell.style.backgroundColor = '#bfdbfe'; // 水坑給予藍色底層
+                    }
+
+                    // 檢查是否有星星 ⭐
+                    const isStar = currentLevelState.stars.some(s => s.x === c && s.y === r);
+                    if (isStar) {
+                        cell.innerHTML = '<span class="text-2xl md:text-3xl bouncy filter drop-shadow animate-pulse" id="star-'+c+'-'+r+'">⭐</span>';
+                    }
+
+                    // 檢查是否是終點 🍖
+                    if (currentLevelState.target.x === c && currentLevelState.target.y === r) {
+                        cell.innerHTML = '<span class="text-3xl md:text-4xl bouncy filter drop-shadow" style="animation-delay: 0.3s">🍖</span>';
+                        cell.style.backgroundColor = '#fef08a'; // 終點給亮黃色底
+                    }
+
+                    mapContainer.appendChild(cell);
+                }
+            }
+        }
+
+        // 依據玩家最新狀態更新畫面上的小狗
+        // 0:上, 1:右, 2:下, 3:左
+        function updatePlayerVisual() {
+            const playerDOM = document.getElementById('player');
+            const percentWidth = 16.6666; // 6x6 網格每一格約 16.66%
+            
+            // 利用百分比精準定位，無懼響應式拉伸
+            playerDOM.style.left = `${playerState.x * percentWidth}%`;
+            playerDOM.style.top = `${playerState.y * percentWidth}%`;
+
+            // 方向轉換為旋轉角度
+            const angle = playerState.dir * 90;
+            playerDOM.style.transform = `rotate(${angle}deg)`;
+        }
+
+        // --- 5. 指令卡片佇列操作 ---
+        function addCommand(type) {
+            if (isRunningProgram) return; // 執行中不可添加
+            
+            // 將指令卡上限從原本的 12 提升至 24，讓小朋友在困難迷宮中可以盡情繞道設計！
+            if (commandQueue.length >= 24) {
+                playNote(200, 'triangle', 0.2);
+                alert("指令區滿囉（最多 24 個指令）！點擊程式工作區的卡片，可以拿掉排錯的指令喔。");
+                return;
+            }
+
+            commandQueue.push(type);
+            sfx.add();
+            renderProgramTray();
+        }
+
+        // 刪除特定索引的指令 (除錯 Debugging 功能)
+        function removeCommandAt(index) {
+            if (isRunningProgram) return;
+            commandQueue.splice(index, 1);
+            sfx.remove();
+            renderProgramTray();
+        }
+
+        function clearCommands() {
+            if (isRunningProgram) return;
+            commandQueue = [];
+            renderProgramTray();
+        }
+
+        // 渲染程式工作區
+        function renderProgramTray() {
+            const tray = document.getElementById('program-tray');
+            tray.innerHTML = '';
+
+            if (commandQueue.length === 0) {
+                tray.innerHTML = `
+                    <div class="w-full h-full flex flex-col items-center justify-center text-slate-400 py-6">
+                        <span class="text-3xl mb-1">👈</span>
+                        <p class="text-xs font-bold text-center">請點擊下方的「方向卡片」<br>幫小狗規劃路線吧！</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 動態產生可愛卡片
+            commandQueue.forEach((cmd, idx) => {
+                const card = document.createElement('div');
+                card.id = `cmd-card-${idx}`;
+                card.className = 'command-card relative flex items-center bg-white border-2 border-slate-300 px-2 py-1.5 rounded-xl text-xs font-bold shadow-sm cursor-pointer hover:border-red-400 group';
+                
+                // 點擊即刪除 (極簡直覺除錯)
+                card.onclick = () => removeCommandAt(idx);
+
+                let icon = '';
+                let label = '';
+                let colorClass = '';
+
+                if (cmd === 'forward') { icon = '➡️'; label = '前進'; colorClass = 'text-pink-600 bg-pink-50'; }
+                else if (cmd === 'left') { icon = '↩️'; label = '左轉'; colorClass = 'text-amber-600 bg-amber-50'; }
+                else if (cmd === 'right') { icon = '↪️'; label = '右轉'; colorClass = 'text-indigo-600 bg-indigo-50'; }
+                else if (cmd === 'loop2') { icon = '🔁'; label = '走兩步'; colorClass = 'text-purple-600 bg-purple-50'; }
+                else if (cmd === 'loop3') { icon = '🔁'; label = '走三步'; colorClass = 'text-purple-600 bg-purple-50'; }
+
+                card.className += ` ${colorClass}`;
+                card.innerHTML = `
+                    <span class="mr-1">${icon}</span>
+                    <span>${label}</span>
+                    <!-- 懸停顯示垃圾桶 -->
+                    <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-4 h-4 items-center justify-center text-[8px] hidden group-hover:flex">❌</span>
+                `;
+                
+                tray.appendChild(card);
+            });
+        }
+
+        // --- 6. 程式核心解譯與執行引擎 ---
+        function runProgram() {
+            if (isRunningProgram) return;
+            if (commandQueue.length === 0) {
+                playNote(220, 'triangle', 0.2);
+                alert("你還沒有寫任何程式喔！先點擊下方按鈕加入一些指令。");
+                return;
+            }
+
+            isRunningProgram = true;
+            document.getElementById('btn-run').disabled = true;
+            
+            // 先重置玩家狀態，準備開始演繹
+            playerState = { ...currentLevelState.playerStart };
+            collectedStarsInPlay = 0;
+            updatePlayerVisual();
+            renderMap(); // 刷新星星、障礙物
+
+            // 將重複指令（Loops）展開成標準指令陣列
+            let flatCommands = [];
+            let originIndices = []; // 對應回畫面卡片的索引
+
+            commandQueue.forEach((cmd, idx) => {
+                if (cmd === 'loop2') {
+                    flatCommands.push('forward', 'forward');
+                    originIndices.push(idx, idx);
+                } else if (cmd === 'loop3') {
+                    flatCommands.push('forward', 'forward', 'forward');
+                    originIndices.push(idx, idx);
+                } else {
+                    flatCommands.push(cmd);
+                    originIndices.push(idx);
+                }
+            });
+
+            // 逐步執行
+            executeStep(flatCommands, originIndices, 0);
+        }
+
+        function executeStep(commands, originIndices, stepIdx) {
+            if (!isRunningProgram) return;
+
+            // 1. 清除先前的高亮
+            document.querySelectorAll('.command-card').forEach(c => c.classList.remove('executing-highlight'));
+
+            // 如果全部步數執行完畢
+            if (stepIdx >= commands.length) {
+                checkFinalOutcome();
+                return;
+            }
+
+            const currentCmd = commands[stepIdx];
+            const originalCardIndex = originIndices[stepIdx];
+
+            // 2. 高亮目前正在執行的那一張卡片
+            const currentCardDOM = document.getElementById(`cmd-card-${originalCardIndex}`);
+            if (currentCardDOM) {
+                currentCardDOM.classList.add('executing-highlight');
+                currentCardDOM.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            // 3. 根據指令執行動作
+            let isCrashed = false;
+            
+            if (currentCmd === 'forward') {
+                // 計算前方位置
+                let nextX = playerState.x;
+                let nextY = playerState.y;
+
+                // 0:上, 1:右, 2:下, 3:左
+                if (playerState.dir === 0) nextY -= 1;
+                else if (playerState.dir === 1) nextX += 1;
+                else if (playerState.dir === 2) nextY += 1;
+                else if (playerState.dir === 3) nextX -= 1;
+
+                // 邊界檢查與障礙物檢查
+                if (nextX < 0 || nextX >= 6 || nextY < 0 || nextY >= 6) {
+                    isCrashed = true;
+                } else {
+                    // 檢查水坑
+                    const hitObstacle = currentLevelState.obstacles.some(o => o.x === nextX && o.y === nextY);
+                    if (hitObstacle) {
+                        isCrashed = true;
+                    } else {
+                        // 正常移動
+                        playerState.x = nextX;
+                        playerState.y = nextY;
+                        sfx.step();
+                        spawnSmokeParticle(playerState.x, playerState.y);
+                    }
+                }
+            } else if (currentCmd === 'left') {
+                playerState.dir = (playerState.dir + 3) % 4;
+                sfx.turn();
+            } else if (currentCmd === 'right') {
+                playerState.dir = (playerState.dir + 1) % 4;
+                sfx.turn();
+            }
+
+            // 更新畫面
+            updatePlayerVisual();
+
+            // 檢查是否在中途踩到星星 ⭐
+            checkStarCollection();
+
+            if (isCrashed) {
+                handleCrash();
+                return;
+            }
+
+            // 4. 等待 600 毫秒後，執行下一個指令 (創造流暢的動態感)
+            setTimeout(() => {
+                executeStep(commands, originIndices, stepIdx + 1);
+            }, 600);
+        }
+
+        // 產生移動的小灰塵粒子
+        function spawnSmokeParticle(gridX, gridY) {
+            const mapContainer = document.getElementById('game-map');
+            const rect = mapContainer.getBoundingClientRect();
+            const cellW = rect.width / 6;
+
+            const p = document.createElement('div');
+            p.className = 'particle bg-slate-400/40';
+            p.style.width = `${cellW * 0.3}px`;
+            p.style.height = `${cellW * 0.3}px`;
+            // 粒子置於格子中心微調
+            p.style.left = `${(gridX + 0.5) * cellW - (cellW * 0.15)}px`;
+            p.style.top = `${(gridY + 0.5) * cellW - (cellW * 0.15)}px`;
+            
+            mapContainer.appendChild(p);
+            setTimeout(() => p.remove(), 600);
+        }
+
+        // 檢查星星
+        function checkStarCollection() {
+            const stars = currentLevelState.stars;
+            for (let i = stars.length - 1; i >= 0; i--) {
+                if (stars[i].x === playerState.x && stars[i].y === playerState.y) {
+                    // 吃掉星星！
+                    stars.splice(i, 1);
+                    collectedStarsInPlay++;
+                    sfx.star();
+                    
+                    // 煙花特效
+                    for (let d = 0; d < 8; d++) {
+                        spawnSparkleParticle(playerState.x, playerState.y);
+                    }
+                    
+                    // 重新繪製地圖排除該星星
+                    renderMap();
+                }
+            }
+        }
+
+        // 爆炸星星特效
+        function spawnSparkleParticle(gridX, gridY) {
+            const mapContainer = document.getElementById('game-map');
+            const rect = mapContainer.getBoundingClientRect();
+            const cellW = rect.width / 6;
+
+            const p = document.createElement('div');
+            p.className = 'particle bg-yellow-400';
+            p.style.width = '8px';
+            p.style.height = '8px';
+            p.style.left = `${(gridX + 0.5) * cellW}px`;
+            p.style.top = `${(gridY + 0.5) * cellW}px`;
+            
+            // 隨機發散
+            const angle = Math.random() * Math.PI * 2;
+            const distance = Math.random() * 30 + 10;
+            p.style.setProperty('--tx', `${Math.cos(angle) * distance}px`);
+            p.style.setProperty('--ty', `${Math.sin(angle) * distance}px`);
+            
+            p.style.animation = 'sparkle-fade 0.6s forwards ease-out';
+            
+            const style = document.createElement('style');
+            style.innerHTML = `
+                @keyframes sparkle-fade {
+                    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+                    100% { transform: translate(var(--tx), var(--ty)) scale(0.2); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+
+            mapContainer.appendChild(p);
+            setTimeout(() => {
+                p.remove();
+                style.remove();
+            }, 600);
+        }
+
+        // 發生撞擊牆面或掉水坑
+        function handleCrash() {
+            sfx.fail();
+            document.getElementById('player').classList.add('wiggly');
+            
+            // 紅色閃爍提示
+            const mapDOM = document.getElementById('game-map');
+            mapDOM.classList.add('border-red-400', 'bg-red-50');
+            
+            setTimeout(() => {
+                document.getElementById('player').classList.remove('wiggly');
+                mapDOM.classList.remove('border-red-400', 'bg-red-50');
+                
+                alert("💥 哎呀！小狗波波不小心掉進水坑或撞牆囉！\n沒關係，排程邏輯可以再調整，我們重寫指令試試看！");
+                resetPlayerAndLevel();
+            }, 800);
+        }
+
+        // 當所有指令走完，檢查終點
+        function checkFinalOutcome() {
+            document.querySelectorAll('.command-card').forEach(c => c.classList.remove('executing-highlight'));
+            
+            const reachedTarget = playerState.x === currentLevelState.target.x && playerState.y === currentLevelState.target.y;
+            
+            if (reachedTarget) {
+                sfx.win();
+                
+                // 判斷是否為最後一關 (第 6 關，索引為 5)
+                const isLastLevel = currentLevelIndex === LEVELS.length - 1;
+                
+                if (isLastLevel) {
+                    // 顯示最終榮譽小獎狀
+                    showCertificate();
+                } else {
+                    // 計算星星給予評價，顯示一般過關畫面
+                    const totalStarsInLevel = LEVELS[currentLevelIndex].stars.length;
+                    let ratingStr = '⭐⭐⭐';
+                    if (totalStarsInLevel > 0) {
+                        const ratio = collectedStarsInPlay / totalStarsInLevel;
+                        if (ratio === 1) ratingStr = '⭐⭐⭐ 太完美了！';
+                        else if (ratio >= 0.5) ratingStr = '⭐⭐ 很好喔！';
+                        else ratingStr = '⭐ 成功抵達！';
+                    }
+
+                    document.getElementById('star-reward').innerText = ratingStr;
+                    document.getElementById('win-modal').classList.remove('hidden');
+                }
+            } else {
+                // 沒走到終點
+                sfx.fail();
+                alert("🦴 小狗波波還沒有拿到骨頭喔！\n試著增加更多前進指令，或是檢查轉彎方向對不對！");
+                resetPlayerAndLevel();
+            }
+        }
+
+        // --- 7. 最終大獎狀控制系統 ---
+        function showCertificate() {
+            // 自動將今日日期塞進獎狀
+            const now = new Date();
+            const dateString = `${now.getFullYear()} / ${String(now.getMonth() + 1).padStart(2, '0')} / ${String(now.getDate()).padStart(2, '0')}`;
+            document.getElementById('cert-date').innerText = dateString;
+            
+            // 顯示獎狀 Modal
+            document.getElementById('certificate-modal').classList.remove('hidden');
+        }
+
+        function updateCertName(name) {
+            const displayName = name.trim() || "小勇士";
+            document.getElementById('cert-name-display').innerText = displayName;
+        }
+
+        function printCertificate() {
+            window.print();
+        }
+
+        function restartGame() {
+            // 隱藏獎狀並回到第一關
+            document.getElementById('certificate-modal').classList.add('hidden');
+            currentLevelIndex = 0;
+            loadLevel(0);
+        }
+
+        // --- 8. 重置與關卡切換 ---
+        function resetPlayerAndLevel() {
+            isRunningProgram = false;
+            document.getElementById('btn-run').disabled = false;
+            document.querySelectorAll('.command-card').forEach(c => c.classList.remove('executing-highlight'));
+
+            // 還原當前關卡的星星與位置
+            const originalLvl = LEVELS[currentLevelIndex];
+            currentLevelState = JSON.parse(JSON.stringify(originalLvl));
+            playerState = { ...currentLevelState.playerStart };
+            collectedStarsInPlay = 0;
+
+            renderMap();
+            updatePlayerVisual();
+        }
+
+        function nextLevel() {
+            document.getElementById('win-modal').classList.add('hidden');
+            
+            // 下一關
+            currentLevelIndex = (currentLevelIndex + 1) % LEVELS.length;
+            loadLevel(currentLevelIndex);
+        }
+
+        // --- 9. 說明模態視窗 ---
+        function showHelpModal() {
+            sfx.click();
+            document.getElementById('help-modal').classList.remove('hidden');
+        }
+
+        function hideHelpModal() {
+            sfx.click();
+            document.getElementById('help-modal').classList.add('hidden');
+        }
+
+        // --- 10. 視窗載入啟動 ---
+        window.onload = function() {
+            loadLevel(0); // 載入第一關
+
+            // 點擊即解鎖 Web Audio API 鎖定
+            document.body.addEventListener('pointerdown', () => {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            }, { once: true });
+        };
+    </script>
+</body>
+</html>

@@ -328,6 +328,30 @@
                 <p class="card-score" id="unit15-score-badge" style="display:none;"></p>
                 <span class="play-btn">▶ 開始玩</span>
             </a>
+            <a href="./units/unit16-dino-typing/index.html" class="card" style="--c: #65a30d;">
+                <span class="skill-tag">打字闖關</span>
+                <div class="card-cover">🦕⌨️</div>
+                <h3 class="card-title">恐龍打字大冒險</h3>
+                <p class="card-desc">騎著恐龍橫向跑酷，按出正確的字母衝過障礙，邊跑邊練打字超刺激！</p>
+                <p class="card-score" id="unit16-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+            <a href="./units/unit17-pet-treasure-coding/index.html" class="card" style="--c: #f97316;">
+                <span class="skill-tag">運算思維</span>
+                <div class="card-cover">🐾🗺️</div>
+                <h3 class="card-title">程式小勇士：萌寵尋寶</h3>
+                <p class="card-desc">帶著萌寵用指令一步步尋寶，學會拆解步驟、找出規律，運算思維從這裡啟蒙！</p>
+                <p class="card-score" id="unit17-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+            <a href="./units/unit18-magic-paint/index.html" class="card" style="--c: #d946ef;">
+                <span class="skill-tag">數位創作</span>
+                <div class="card-cover">🎨✨</div>
+                <h3 class="card-title">魔法簡約畫畫屋</h3>
+                <p class="card-desc">用聲光畫筆自由塗鴉，邊畫邊有音效與光效，創作專屬你的魔法作品！</p>
+                <p class="card-score" id="unit18-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
         </div>
     </section>
 
@@ -394,7 +418,7 @@
     function loadLocalScore(unitId) {
         return localStorage.getItem(`edtech-unit${unitId}-score`) || null;
     }
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].forEach((id) => {
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].forEach((id) => {
         const score = loadLocalScore(id);
         const badge = document.getElementById(`unit${id}-score-badge`);
         if (score && badge) {

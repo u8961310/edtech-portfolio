@@ -39,6 +39,9 @@
 | 🎒 一年級 | `unit13-forest-typing-defense` | 極速雷射森林戰 | 注音／英打雙模式切換、霓虹雷射射擊、小一友善慢速版 |
 | 🎓 三年級 | `unit14-magic-word-bullet` | 魔法字彈極速覺醒 | 英文打字、時間模式（2/10 分）、RPG 魔法主題 |
 | 🎒 一年級 | `unit15-computational-thinking` | 運算思維挑戰營 | 四階段運算思維（拆解／模式／抽象／演算法），小一友善關卡 |
+| 🎒 一年級 | `unit16-dino-typing` | 恐龍打字大冒險 | 橫向跑酷打字、字母輸入、邊跑邊練（小一友善） |
+| 🎒 一年級 | `unit17-pet-treasure-coding` | 程式小勇士：萌寵尋寶 | 運算思維啟蒙：指令序列、拆解步驟、找規律 |
+| 🎒 一年級 | `unit18-magic-paint` | 魔法簡約畫畫屋 | 數位創作、聲光畫圖、自由塗鴉 |
 
 ## 🚀 快速開始
 
@@ -88,7 +91,13 @@ edtech-portfolio/
     │   └── index.html
     ├── unit14-magic-word-bullet/
     │   └── index.html
-    └── unit15-computational-thinking/
+    ├── unit15-computational-thinking/
+    │   └── index.html
+    ├── unit16-dino-typing/
+    │   └── index.html
+    ├── unit17-pet-treasure-coding/
+    │   └── index.html
+    └── unit18-magic-paint/
         └── index.html
 ```
 
