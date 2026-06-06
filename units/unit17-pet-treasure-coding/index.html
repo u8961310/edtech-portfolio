@@ -447,6 +447,7 @@
         let currentLevelState = null; // 當前關卡副本
         let playerState = { x: 0, y: 0, dir: 1 }; // 小狗當前座標與朝向
         let collectedStarsInPlay = 0; // 執行中收集到的星星
+        let totalStarsCollected = 0; // 整輪累計星星（給首頁徽章分數）
         let isRunningProgram = false; // 是否正在執行中
 
         // --- 4. 畫面與地圖初始化渲染 ---
@@ -859,6 +860,8 @@
             
             if (reachedTarget) {
                 sfx.win();
+                totalStarsCollected += collectedStarsInPlay;
+                { const _p = parseInt(localStorage.getItem('edtech-unit17-score')||'0',10); if (totalStarsCollected > _p) localStorage.setItem('edtech-unit17-score', totalStarsCollected); }
                 
                 // 判斷是否為最後一關 (第 6 關，索引為 5)
                 const isLastLevel = currentLevelIndex === LEVELS.length - 1;
@@ -911,6 +914,7 @@
         function restartGame() {
             // 隱藏獎狀並回到第一關
             document.getElementById('certificate-modal').classList.add('hidden');
+            totalStarsCollected = 0;
             currentLevelIndex = 0;
             loadLevel(0);
         }

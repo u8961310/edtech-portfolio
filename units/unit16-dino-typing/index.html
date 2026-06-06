@@ -127,7 +127,7 @@
         <div class="flex flex-wrap items-center gap-3 mt-2 md:mt-0">
             <!-- 金幣/積分 -->
             <div class="bg-amber-950/80 px-3 py-1.5 rounded-full border-2 border-amber-400 flex items-center space-x-2 shadow-lg">
-                <span class="text-lg">🪙</span>
+                <span class="text-lg">💰</span>
                 <span id="score" class="text-lg font-bold text-amber-300">0</span>
             </div>
             <!-- 連擊熱度 -->
@@ -613,6 +613,7 @@
 
         function updateScoreUI() {
             document.getElementById('score').innerText = gameState.score;
+            { const _p = parseInt(localStorage.getItem('edtech-unit16-score')||'0',10); if (gameState.score > _p) localStorage.setItem('edtech-unit16-score', gameState.score); }
             document.getElementById('fever-gauge').style.width = `${gameState.feverVal}%`;
 
             if (gameState.combo > 2) {
@@ -868,7 +869,7 @@
                 // 3. 吃到美味水果食物：舌頭特效與吞嚥
                 audioBank.eat();
                 createExplosion(item.x + 30, item.bottom + 30, "✨");
-                createFloatingScore(item.x, item.bottom, "Yum! +10 🪙");
+                createFloatingScore(item.x, item.bottom, "Yum! +10 💰");
                 removeStageItem(item);
             }
 
@@ -979,7 +980,7 @@
                 const itemObj = {
                     id: 'fever-coin-' + Date.now(),
                     char: char,
-                    emoji: "🪙",
+                    emoji: "💰",
                     isObstacle: false,
                     isAir: Math.random() < 0.5,
                     x: 900,
@@ -993,7 +994,7 @@
                 div.style.bottom = `${itemObj.bottom}px`;
                 div.style.left = `${itemObj.x}px`;
                 div.innerHTML = `
-                    <span class="text-4xl animate-bounce select-none">🪙</span>
+                    <span class="text-4xl animate-bounce select-none">💰</span>
                     <div class="px-2 py-0.5 rounded-full border-2 border-yellow-400 bg-yellow-950/90 text-yellow-300 text-xs font-black">${char}</div>
                 `;
                 document.getElementById('stage-items').appendChild(div);

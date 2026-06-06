@@ -71,7 +71,7 @@
         <div class="flex items-center space-x-1.5 md:space-x-2">
             <!-- 核心亮點：魔法動起來按鈕 -->
             <button id="btn-magic-move" onclick="toggleMagicMove()" class="magic-glowing-btn giant-btn bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white font-extrabold px-3 py-2 rounded-xl text-sm flex items-center space-x-1 shadow-lg">
-                <span id="magic-btn-emoji">🪄</span> <span id="magic-btn-text">魔法動起來</span>
+                <span id="magic-btn-emoji">✨</span> <span id="magic-btn-text">魔法動起來</span>
             </button>
             <button id="btn-clear" onclick="clearCanvas()" class="giant-btn bg-red-400 border-b-4 border-red-600 text-white font-extrabold px-3 py-2 rounded-xl text-sm flex items-center space-x-1 shadow">
                 <span>🗑️</span> <span class="hidden md:inline">重畫</span>
@@ -223,6 +223,7 @@
         let backupCanvas = null; // 備份原圖用的 offscreen canvas
         let croppedDrawing = null; // 裁剪並去背後的小貼圖 canvas
         let bouncingClones = []; // 所有分身
+        let magicSummonCount = 0; // 召喚分身數（給首頁徽章分數）
 
         // 核心：自適應大小並保持畫作
         function resizeCanvas() {
@@ -691,7 +692,7 @@
                 }
 
                 // 還原 UI 狀態
-                document.getElementById('magic-btn-emoji').innerText = '🪄';
+                document.getElementById('magic-btn-emoji').innerText = '✨';
                 document.getElementById('magic-btn-text').innerText = '魔法動起來';
                 document.getElementById('sub-title-desc').innerText = '點顏色就能畫畫，還有好聽的音樂喔！🌟';
                 
@@ -706,6 +707,8 @@
         // 3. 在點擊滑鼠/觸控位置召喚新分身
         function spawnCloneAt(x, y) {
             if (!croppedDrawing) return;
+            magicSummonCount++;
+            { const _p = parseInt(localStorage.getItem('edtech-unit18-score')||'0',10); if (magicSummonCount > _p) localStorage.setItem('edtech-unit18-score', magicSummonCount); }
 
             bouncingClones.push({
                 x: x,
