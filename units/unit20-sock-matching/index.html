@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>瘋狂襪子配對線 - 運算思維大挑戰</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Animate.css for cute animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <!-- Google Fonts for playful text -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka One', 'Noto Sans TC', sans-serif;
+            background: radial-gradient(circle, #fef3c7 0%, #fbcfe8 100%);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .bouncy {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .sock-shadow {
+            filter: drop-shadow(0px 8px 4px rgba(0, 0, 0, 0.15));
+        }
+        .glow-green {
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.8);
+        }
+        .glow-red {
+            box-shadow: 0 0 20px rgba(248, 113, 113, 0.8);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-4 overflow-x-hidden">
+<a href="../../index.html" class="kogao-home-btn" style="position:fixed;top:10px;left:10px;z-index:99999;background:rgba(255,255,255,.92);border:2px solid #f59e0b;color:#b45309;font-family:'Noto Sans TC',sans-serif;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.15)">🏠 首頁</a>
+
+    <!-- Sound & Music Control (Using Web Audio API) -->
+    <div class="fixed top-4 right-4 z-50 flex gap-2">
+        <button id="btn-sound" class="bg-white/80 hover:bg-white text-pink-500 p-3 rounded-full shadow-lg transition transform hover:scale-110 active:scale-95">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="w-full max-w-4xl bg-white/90 backdrop-blur-md rounded-[2.5rem] shadow-2xl p-6 md:p-8 flex-grow flex flex-col justify-between border-4 border-pink-300 relative overflow-hidden">
+        
+        <!-- Background Decorations -->
+        <div class="absolute -top-10 -left-10 w-40 h-40 bg-yellow-200/40 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-pink-200/40 rounded-full blur-2xl pointer-events-none"></div>
+
+        <!-- HEADER: Title & Score -->
+        <header class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4 border-b-2 border-dashed border-pink-200 pb-4 relative z-10">
+            <div class="flex items-center gap-3">
+                <div class="bg-pink-400 text-white p-3 rounded-2xl shadow-md transform -rotate-3 text-2xl">🧦</div>
+                <div>
+                    <h1 class="text-3xl font-extrabold text-pink-600 tracking-wider">瘋狂襪子配對線</h1>
+                    <p class="text-xs text-gray-500 font-bold">小學一年級邏輯與運算思維大挑戰！</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- Stars Count -->
+                <div class="bg-amber-100 border-2 border-amber-300 px-4 py-2 rounded-full flex items-center gap-2">
+                    <span class="text-2xl">⭐</span>
+                    <span id="score-val" class="text-xl font-black text-amber-600">0</span>
+                </div>
+                <!-- Current Level Banner -->
+                <div class="bg-purple-100 border-2 border-purple-300 px-4 py-2 rounded-full">
+                    <span id="stage-badge" class="text-sm font-black text-purple-700">準備開始</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- GAME AREA (Dynamic Screens) -->
+        <main id="game-screen" class="flex-grow flex flex-col justify-center items-center py-4 relative z-10">
+            
+            <!-- SCREEN 1: Welcome / Main Menu -->
+            <div id="scr-welcome" class="flex flex-col items-center text-center gap-6 py-6 animate__animated animate__fadeIn">
+                <div class="relative bouncy my-4">
+                    <!-- Big playful SVG Sock -->
+                    <div class="w-32 h-32 bg-pink-100 rounded-full flex items-center justify-center shadow-inner border-2 border-pink-200">
+                        <span class="text-7xl">🧦</span>
+                    </div>
+                    <span class="absolute -top-2 -right-2 text-4xl animate__animated animate__pulse animate__infinite">✨</span>
+                </div>
+                <h2 class="text-4xl font-extrabold text-purple-800">歡迎來到襪子樂園！</h2>
+                <p class="text-lg text-gray-600 max-w-md font-bold leading-relaxed">
+                    這裡有一大群調皮的襪子，它們最喜歡玩「連連看」和「找規律」了！快用你的金頭腦幫它們排排隊吧！
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-4 mt-4 w-full max-w-md">
+                    <button id="btn-start-game" class="flex-1 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white text-2xl font-black py-5 px-8 rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:translate-y-0 transition duration-150">
+                        開始大挑戰 🚀
+                    </button>
+                </div>
+            </div>
+
+            <!-- SCREEN 2: Stage 1 (Find the Spy) -->
+            <div id="scr-stage1" class="hidden w-full flex flex-col items-center gap-6 animate__animated animate__fadeIn">
+                <div class="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 w-full text-center">
+                    <h3 class="text-xl font-extrabold text-blue-700 mb-1">🔍 關卡一：尋找神祕間諜</h3>
+                    <p class="text-base text-gray-600 font-bold">有四隻襪子掛在繩子上，其中三隻有一樣的秘密特徵，快找出哪一隻是<span class="text-red-500">不一樣的間諜</span>！</p>
+                </div>
+
+                <!-- Clothesline visual -->
+                <div class="w-full relative py-8 px-4 bg-amber-50/50 rounded-3xl border-2 border-dashed border-amber-200 flex justify-around items-end min-h-[220px]">
+                    <!-- The Rope -->
+                    <div class="absolute top-12 left-0 right-0 h-1 bg-amber-800/40 z-0"></div>
+                    
+                    <!-- 4 Sock Slots -->
+                    <div id="s1-socks-container" class="w-full flex justify-around z-10">
+                        <!-- Dynamic socks will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Feedback Area -->
+                <div id="s1-feedback" class="min-h-[60px] flex items-center justify-center text-center px-4">
+                    <p class="text-xl font-bold text-gray-500">點擊你覺得是間諜的那隻襪子吧！</p>
+                </div>
+
+                <!-- Navigation -->
+                <button id="s1-next" class="hidden bg-green-500 hover:bg-green-600 text-white text-xl font-black py-4 px-10 rounded-2xl shadow-md transition transform hover:scale-105 active:scale-95">
+                    下一題 ➡️
+                </button>
+            </div>
+
+            <!-- SCREEN 3: Stage 2 (Filter Conveyor) -->
+            <div id="scr-stage2" class="hidden w-full flex flex-col items-center gap-6 animate__animated animate__fadeIn">
+                <div class="bg-green-50 border-2 border-green-200 rounded-2xl p-4 w-full text-center">
+                    <h3 class="text-xl font-extrabold text-green-700 mb-1">🤖 關卡二：襪子工廠篩選機</h3>
+                    <p class="text-base text-gray-600 font-bold">篩選機亮起了規則燈！如果是符合規則的襪子，請按綠色按鈕；不符的請按紅色按鈕！</p>
+                </div>
+
+                <!-- Rules Board -->
+                <div class="flex gap-4 justify-center items-center w-full max-w-md bg-yellow-100 border-4 border-yellow-400 rounded-3xl p-4 shadow-md">
+                    <div class="text-center font-black text-yellow-800 text-lg w-1/3 border-r-2 border-dashed border-yellow-300 pr-2">
+                        🤖<br>目前規則
+                    </div>
+                    <div id="s2-rule-display" class="w-2/3 flex flex-wrap gap-2 justify-center font-bold text-gray-700">
+                        <!-- Rule tags injected here -->
+                    </div>
+                </div>
+
+                <!-- The Conveyor Belt Visual -->
+                <div class="w-full max-w-md bg-slate-800 rounded-3xl p-6 shadow-inner relative flex flex-col items-center min-h-[220px] justify-center overflow-hidden border-4 border-slate-600">
+                    <div class="absolute inset-x-0 bottom-2 h-4 bg-slate-700 flex justify-around items-center opacity-50">
+                        <div class="w-8 h-2 bg-slate-900 rounded-full"></div>
+                        <div class="w-8 h-2 bg-slate-900 rounded-full"></div>
+                        <div class="w-8 h-2 bg-slate-900 rounded-full"></div>
+                        <div class="w-8 h-2 bg-slate-900 rounded-full"></div>
+                    </div>
+                    <!-- Current Sock Display -->
+                    <div id="s2-sock-wrapper" class="z-10 transform scale-110">
+                        <!-- Dynamic conveyor sock injected here -->
+                    </div>
+                </div>
+
+                <!-- Score Counter for S2 -->
+                <div class="text-center font-bold text-gray-600">
+                    進度：<span id="s2-progress" class="text-purple-600 font-black">0 / 8</span>
+                </div>
+
+                <!-- Control Buttons (Big & Touch Friendly) -->
+                <div class="flex gap-6 w-full max-w-md justify-center">
+                    <!-- Discard (Red Cross) -->
+                    <button id="s2-btn-no" class="flex-1 bg-red-500 hover:bg-red-600 text-white rounded-3xl p-6 shadow-lg transform active:scale-95 transition flex flex-col items-center justify-center gap-2 border-b-8 border-red-700">
+                        <span class="text-4xl">❌</span>
+                        <span class="text-lg font-black">不符合</span>
+                    </button>
+                    <!-- Keep (Green Tick) -->
+                    <button id="s2-btn-yes" class="flex-1 bg-green-500 hover:bg-green-600 text-white rounded-3xl p-6 shadow-lg transform active:scale-95 transition flex flex-col items-center justify-center gap-2 border-b-8 border-green-700">
+                        <span class="text-4xl">✅</span>
+                        <span class="text-lg font-black">符合！</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SCREEN 4: Stage 3 (Connection Bridge) -->
+            <div id="scr-stage3" class="hidden w-full flex flex-col items-center gap-4 animate__animated animate__fadeIn">
+                <div class="bg-purple-50 border-2 border-purple-200 rounded-2xl p-4 w-full text-center">
+                    <h3 class="text-xl font-extrabold text-purple-700 mb-1">🌉 關卡三：襪子連線大作戰</h3>
+                    <p class="text-base text-gray-600 font-bold">用襪子搭起邏輯橋樑！相鄰的兩隻襪子，<span class="text-purple-600 font-black">必須「剛好只有一種特徵」相同</span>！</p>
+                </div>
+
+                <!-- The Connection Path -->
+                <div class="w-full flex flex-col md:flex-row justify-between items-center gap-4 bg-purple-100/50 p-6 rounded-[2rem] border-2 border-purple-200">
+                    
+                    <!-- Left Start Sock (Locked) -->
+                    <div class="flex flex-col items-center gap-1 bg-white p-3 rounded-2xl border-4 border-amber-400 shadow-md">
+                        <span class="bg-amber-400 text-white px-2 py-0.5 rounded text-xs font-bold">起點 🚩</span>
+                        <div id="s3-start-sock" class="w-20 h-24 flex items-center justify-center"></div>
+                    </div>
+
+                    <!-- Connection Line 1 -->
+                    <div id="s3-line-1" class="h-4 w-1 bg-gray-300 md:h-1 md:w-8 transition-colors duration-300"></div>
+
+                    <!-- Middle Slot 1 (Drop/Click Target) -->
+                    <div id="s3-slot-1" onclick="game.handleSlotClick(1)" class="cursor-pointer flex flex-col items-center gap-1 bg-white/80 p-3 rounded-2xl border-4 border-dashed border-purple-400 w-28 h-32 justify-center hover:bg-white transition shadow-sm">
+                        <span class="text-xs text-purple-500 font-bold">空位 A</span>
+                        <div id="s3-slot-1-content" class="w-20 h-24 flex items-center justify-center">
+                            <span class="text-gray-300 text-4xl font-bold">+</span>
+                        </div>
+                    </div>
+
+                    <!-- Connection Line 2 -->
+                    <div id="s3-line-2" class="h-4 w-1 bg-gray-300 md:h-1 md:w-8 transition-colors duration-300"></div>
+
+                    <!-- Middle Slot 2 (Drop/Click Target) -->
+                    <div id="s3-slot-2" onclick="game.handleSlotClick(2)" class="cursor-pointer flex flex-col items-center gap-1 bg-white/80 p-3 rounded-2xl border-4 border-dashed border-purple-400 w-28 h-32 justify-center hover:bg-white transition shadow-sm">
+                        <span class="text-xs text-purple-500 font-bold">空位 B</span>
+                        <div id="s3-slot-2-content" class="w-20 h-24 flex items-center justify-center">
+                            <span class="text-gray-300 text-4xl font-bold">+</span>
+                        </div>
+                    </div>
+
+                    <!-- Connection Line 3 -->
+                    <div id="s3-line-3" class="h-4 w-1 bg-gray-300 md:h-1 md:w-8 transition-colors duration-300"></div>
+
+                    <!-- Right End Sock (Locked) -->
+                    <div class="flex flex-col items-center gap-1 bg-white p-3 rounded-2xl border-4 border-amber-400 shadow-md">
+                        <span class="bg-amber-400 text-white px-2 py-0.5 rounded text-xs font-bold">終點 🏁</span>
+                        <div id="s3-end-sock" class="w-20 h-24 flex items-center justify-center"></div>
+                    </div>
+
+                </div>
+
+                <!-- Tray of Available Socks -->
+                <div class="w-full bg-amber-50 p-4 rounded-2xl border-2 border-amber-200">
+                    <p class="text-sm font-bold text-amber-800 text-center mb-2">🎈 你的候選箱：(點擊襪子放入目前選擇的空位)</p>
+                    <div id="s3-tray" class="flex flex-wrap justify-center gap-3">
+                        <!-- Candidate socks injected here -->
+                    </div>
+                </div>
+
+                <!-- Helper Feedback -->
+                <div class="min-h-[40px] flex items-center justify-center text-center">
+                    <p id="s3-feedback" class="text-md font-bold text-gray-500">試著選取下方的襪子來填滿 空位 A 與 空位 B 吧！</p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4">
+                    <button id="s3-btn-hint" class="bg-amber-400 hover:bg-amber-500 text-white text-base font-black py-3 px-6 rounded-xl shadow-md transition transform active:scale-95">
+                        💡 提示
+                    </button>
+                    <button id="s3-btn-reset" class="bg-slate-400 hover:bg-slate-500 text-white text-base font-black py-3 px-6 rounded-xl shadow-md transition transform active:scale-95">
+                        🧹 重來
+                    </button>
+                    <button id="s3-btn-submit" class="bg-purple-600 hover:bg-purple-700 text-white text-lg font-black py-3 px-8 rounded-xl shadow-md transition transform active:scale-95">
+                        🌉 檢查橋樑！
+                    </button>
+                </div>
+            </div>
+
+            <!-- SCREEN 5: Victory / Game End -->
+            <div id="scr-victory" class="hidden w-full flex flex-col items-center text-center gap-6 py-6 animate__animated animate__zoomIn">
+                <div class="text-7xl animate__bounce animate__infinite bouncy">🏆</div>
+                <h2 class="text-4xl font-extrabold text-pink-600">超級邏輯小達人！</h2>
+                <p class="text-xl text-gray-700 font-bold max-w-md">
+                    太厲害了！你成功通過了「瘋狂襪子配對線」的所有考驗！你已經掌握了運算思維的精髓囉！
+                </p>
+                <div class="bg-pink-100 p-6 rounded-3xl border-2 border-pink-300 w-full max-w-sm">
+                    <p class="text-lg font-bold text-gray-600">你總共獲得了</p>
+                    <p class="text-5xl font-black text-amber-500 my-2">⭐ <span id="victory-stars">0</span></p>
+                    <p class="text-sm text-gray-500 font-bold">滿分表現！再接再厲！</p>
+                </div>
+                <button id="btn-restart" class="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white text-xl font-black py-4 px-10 rounded-2xl shadow-lg transition transform hover:-translate-y-1 active:translate-y-0">
+                    再玩一次 🔄
+                </button>
+            </div>
+
+        </main>
+
+        <!-- FOOTER: Hint & Help Dialog -->
+        <footer class="mt-4 border-t-2 border-dashed border-pink-200 pt-4 flex flex-col md:flex-row justify-between items-center gap-2 relative z-10 text-xs text-gray-500 font-bold">
+            <div>💡 提示：分類與連線時，注意襪子的「顏色」、「長短」和「圖案」喔！</div>
+            <div class="flex gap-4">
+                <a href="#" id="link-howtoplay" class="text-pink-500 hover:underline">遊戲說明 📖</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- HOW TO PLAY MODAL -->
+    <div id="modal-howtoplay" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 border-4 border-pink-400 animate__animated animate__bounceIn">
+            <h3 class="text-2xl font-black text-pink-600 mb-4 text-center">📖 怎麼玩這款遊戲？</h3>
+            <div class="space-y-4 text-gray-700 font-bold text-sm leading-relaxed">
+                <div>
+                    <span class="text-blue-500 text-base">🔍 第一關 (尋找神祕間諜)：</span>
+                    <p class="font-normal pl-4">找出 4 隻襪子裡特徵最奇怪、沒跟大家一樣的那隻。</p>
+                </div>
+                <div>
+                    <span class="text-green-500 text-base">🤖 第二關 (工廠篩選機)：</span>
+                    <p class="font-normal pl-4">看看上方的規則，如果滾下來的襪子符合規則按 ✅，不符合按 ❌。</p>
+                </div>
+                <div>
+                    <span class="text-purple-500 text-base">🌉 第三關 (連線大作戰)：</span>
+                    <p class="font-normal pl-4">把兩隻空位補上。記得，排在旁邊的襪子，<b>只能有一種特徵（顏色、長度、圖案之一）是相同的</b>。剛好一個一樣才算成功哦！</p>
+                </div>
+            </div>
+            <button id="btn-close-modal" class="w-full mt-6 bg-pink-500 hover:bg-pink-600 text-white font-black py-3 rounded-2xl shadow-md transition">
+                我知道了！
+            </button>
+        </div>
+    </div>
+
+    <!-- SOUND EFFECTS SYSTEM (Web Audio API) -->
+    <script>
+        class SoundEffects {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playTone(freq, type, duration, delay = 0) {
+                if (this.muted) return;
+                this.init();
+                setTimeout(() => {
+                    try {
+                        let osc = this.ctx.createOscillator();
+                        let gain = this.ctx.createGain();
+                        osc.type = type;
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + duration);
+                    } catch (e) {
+                        console.log("Audio Error:", e);
+                    }
+                }, delay * 1000);
+            }
+            correct() {
+                this.playTone(523.25, 'sine', 0.1, 0); // C5
+                this.playTone(659.25, 'sine', 0.1, 0.08); // E5
+                this.playTone(783.99, 'sine', 0.15, 0.16); // G5
+                this.playTone(1046.50, 'sine', 0.25, 0.24); // C6
+            }
+            wrong() {
+                this.playTone(220, 'triangle', 0.15, 0); // A3
+                this.playTone(180, 'triangle', 0.3, 0.12); // F#3
+            }
+            click() {
+                this.playTone(600, 'sine', 0.05);
+            }
+            victory() {
+                // Happy chord arpeggio
+                let notes = [523, 659, 784, 1046, 1318, 1568, 2093];
+                notes.forEach((freq, idx) => {
+                    this.playTone(freq, 'sine', 0.3, idx * 0.1);
+                });
+            }
+        }
+        const sfx = new SoundEffects();
+    </script>
+
+    <!-- GAME ENGINE CODE -->
+    <script>
+        // Game Attributes Definitions
+        const COLORS = [
+            { id: 'red', name: '紅色', value: '#EF4444', class: 'bg-red-500' },
+            { id: 'blue', name: '藍色', value: '#3B82F6', class: 'bg-blue-500' },
+            { id: 'yellow', name: '黃色', value: '#FBBF24', class: 'bg-yellow-400' }
+        ];
+        const LENGTHS = [
+            { id: 'long', name: '長襪' },
+            { id: 'short', name: '短襪' }
+        ];
+        const PATTERNS = [
+            { id: 'dots', name: '點點' },
+            { id: 'stripes', name: '條紋' },
+            { id: 'stars', name: '星星' }
+        ];
+
+        // Unique CSS IDs for styling/drawing Socks
+        function getAccentColor(colorId) {
+            if (colorId === 'red') return '#FEE2E2';
+            if (colorId === 'blue') return '#DBEAFE';
+            return '#FEF3C7';
+        }
+
+        // Beautiful Dynamic SVG generation for Socks
+        function generateSockSVG(color, length, pattern, isSelected = false) {
+            const colObj = COLORS.find(c => c.id === color);
+            const hexColor = colObj ? colObj.value : '#EF4444';
+            const accentColor = getAccentColor(color);
+            
+            // Adjust body shape paths based on length
+            let bodyPath = "";
+            let patternMarkup = "";
+            let width = 100;
+            let height = 120;
+
+            if (length === 'long') {
+                // Long stocking shape
+                bodyPath = `M 35 15 L 65 15 C 65 15, 65 65, 65 75 C 65 85, 75 88, 85 92 C 92 95, 92 105, 82 110 C 72 115, 55 110, 48 105 C 40 98, 35 88, 35 75 Z`;
+            } else {
+                // Short ankle sock shape
+                bodyPath = `M 35 45 L 65 45 C 65 45, 65 68, 65 73 C 65 83, 75 86, 85 90 C 92 93, 92 105, 82 110 C 72 115, 55 110, 48 105 C 40 98, 35 88, 35 75 Z`;
+            }
+
+            // Patterns injection inside the sock using boundaries/coordinate approximations
+            if (pattern === 'dots') {
+                patternMarkup = `
+                    <circle cx="50" cy="55" r="5" fill="${accentColor}" />
+                    <circle cx="45" cy="75" r="5" fill="${accentColor}" />
+                    <circle cx="58" cy="85" r="5" fill="${accentColor}" />
+                    ${length === 'long' ? `<circle cx="50" cy="35" r="5" fill="${accentColor}" />` : ''}
+                `;
+            } else if (pattern === 'stripes') {
+                patternMarkup = `
+                    <path d="M 35 60 L 65 60" stroke="${accentColor}" stroke-width="6" />
+                    <path d="M 35 75 L 65 75" stroke="${accentColor}" stroke-width="6" />
+                    <path d="M 40 90 L 70 85" stroke="${accentColor}" stroke-width="6" />
+                    ${length === 'long' ? `<path d="M 35 40 L 65 40" stroke="${accentColor}" stroke-width="6" />` : ''}
+                `;
+            } else if (pattern === 'stars') {
+                // Standard mini polygon stars
+                const starPath = (cx, cy) => `
+                    <polygon points="${cx},${cy-6} ${cx+2},${cy-2} ${cx+6},${cy-2} ${cx+3},${cy+1} ${cx+4},${cy+5} ${cx},${cy+2} ${cx-4},${cy+5} ${cx-3},${cy+1} ${cx-6},${cy-2} ${cx-2},${cy-2}" fill="${accentColor}" />
+                `;
+                patternMarkup = `
+                    ${starPath(50, 55)}
+                    ${starPath(45, 78)}
+                    ${starPath(60, 88)}
+                    ${length === 'long' ? starPath(50, 32) : ''}
+                `;
+            }
+
+            // Heel and toe highlight
+            let toeMarkup = "";
+            let heelMarkup = "";
+            if (length === 'long') {
+                toeMarkup = `<path d="M 72 110 C 72 110, 82 110, 85 96 C 81 100, 75 106, 72 110 Z" fill="${accentColor}" opacity="0.8" />`;
+                heelMarkup = `<circle cx="38" cy="82" r="10" fill="${accentColor}" opacity="0.8" />`;
+            } else {
+                toeMarkup = `<path d="M 72 110 C 72 110, 82 110, 85 96 C 81 100, 75 106, 72 110 Z" fill="${accentColor}" opacity="0.8" />`;
+                heelMarkup = `<circle cx="38" cy="82" r="8" fill="${accentColor}" opacity="0.8" />`;
+            }
+
+            const selectionBorder = isSelected ? `stroke="#D946EF" stroke-width="4" stroke-dasharray="4,4"` : 'stroke="#475569" stroke-width="3"';
+
+            return `
+                <svg width="${width}" height="${height}" viewBox="0 0 100 120" class="sock-shadow transition-all duration-300 transform hover:scale-105">
+                    <!-- Sock main body -->
+                    <path d="${bodyPath}" fill="${hexColor}" ${selectionBorder} stroke-linejoin="round" />
+                    
+                    <!-- Decorative Patterns -->
+                    ${patternMarkup}
+                    
+                    <!-- Top trim -->
+                    <rect x="33" y="${length === 'long' ? '11' : '41'}" width="34" height="6" rx="2" fill="${accentColor}" stroke="#475569" stroke-width="2" />
+                    
+                    <!-- Toe & Heel -->
+                    ${toeMarkup}
+                    ${heelMarkup}
+                </svg>
+            `;
+        }
+
+        // Helper: deep equality or attributes comparison
+        function countMatchingAttributes(sock1, sock2) {
+            let matches = 0;
+            if (sock1.color === sock2.color) matches++;
+            if (sock1.length === sock2.length) matches++;
+            if (sock1.pattern === sock2.pattern) matches++;
+            return matches;
+        }
+
+        class GameController {
+            constructor() {
+                this.stars = 0;
+                this.currentStage = 0; // 0: Menu, 1, 2, 3, 4: Victory
+                this.stage1Data = {
+                    roundsPlayed: 0,
+                    maxRounds: 3,
+                    currentSocks: [],
+                    spyIndex: -1,
+                    spyReason: ""
+                };
+                this.stage2Data = {
+                    currentRule: {},
+                    currentSock: {},
+                    count: 0,
+                    targetCount: 8
+                };
+                this.stage3Data = {
+                    startSock: {},
+                    endSock: {},
+                    slot1: null,
+                    slot2: null,
+                    traySocks: [],
+                    selectedSlot: 1 // 1 or 2
+                };
+            }
+
+            init() {
+                this.bindEvents();
+                this.showScreen('scr-welcome');
+                this.updateUI();
+            }
+
+            bindEvents() {
+                // Navigation / Welcome
+                document.getElementById('btn-start-game').addEventListener('click', () => {
+                    sfx.click();
+                    this.startStage(1);
+                });
+                document.getElementById('btn-restart').addEventListener('click', () => {
+                    sfx.click();
+                    this.stars = 0;
+                    this.startStage(1);
+                });
+
+                // Sound Toggle
+                document.getElementById('btn-sound').addEventListener('click', () => {
+                    sfx.muted = !sfx.muted;
+                    document.getElementById('btn-sound').classList.toggle('bg-red-100', sfx.muted);
+                    document.getElementById('btn-sound').classList.toggle('text-red-500', sfx.muted);
+                });
+
+                // Stage 1 Buttons
+                document.getElementById('s1-next').addEventListener('click', () => {
+                    sfx.click();
+                    this.nextRoundStage1();
+                });
+
+                // Stage 2 Buttons
+                document.getElementById('s2-btn-yes').addEventListener('click', () => this.handleStage2Choice(true));
+                document.getElementById('s2-btn-no').addEventListener('click', () => this.handleStage2Choice(false));
+
+                // Stage 3 Buttons
+                document.getElementById('s3-btn-submit').addEventListener('click', () => this.validateStage3Bridge());
+                document.getElementById('s3-btn-reset').addEventListener('click', () => this.resetStage3Slots());
+                document.getElementById('s3-btn-hint').addEventListener('click', () => this.showStage3Hint());
+
+                // Modal instructions
+                document.getElementById('link-howtoplay').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('modal-howtoplay').classList.remove('hidden');
+                });
+                document.getElementById('btn-close-modal').addEventListener('click', () => {
+                    document.getElementById('modal-howtoplay').classList.add('hidden');
+                });
+            }
+
+            showScreen(screenId) {
+                const screens = ['scr-welcome', 'scr-stage1', 'scr-stage2', 'scr-stage3', 'scr-victory'];
+                screens.forEach(id => {
+                    document.getElementById(id).classList.add('hidden');
+                });
+                document.getElementById(screenId).classList.remove('hidden');
+            }
+
+            updateUI() {
+                document.getElementById('score-val').textContent = this.stars;
+                
+                let badgeText = "準備開始";
+                if (this.currentStage === 1) badgeText = "關卡一：找間諜 🔍";
+                if (this.currentStage === 2) badgeText = "關卡二：篩選機 🤖";
+                if (this.currentStage === 3) badgeText = "關卡三：連線橋 🌉";
+                if (this.currentStage === 4) badgeText = "順利通關 🎉";
+                document.getElementById('stage-badge').textContent = badgeText;
+            }
+
+            // --- STAGE ROUTER ---
+            startStage(stageNum) {
+                this.currentStage = stageNum;
+                this.updateUI();
+                
+                if (stageNum === 1) {
+                    this.stage1Data.roundsPlayed = 0;
+                    this.showScreen('scr-stage1');
+                    this.generateStage1Round();
+                } else if (stageNum === 2) {
+                    this.stage2Data.count = 0;
+                    this.showScreen('scr-stage2');
+                    this.generateStage2Round();
+                } else if (stageNum === 3) {
+                    this.showScreen('scr-stage3');
+                    this.setupStage3();
+                } else if (stageNum === 4) {
+                    this.showScreen('scr-victory');
+                    document.getElementById('victory-stars').textContent = this.stars;
+                    sfx.victory();
+                }
+            }
+
+            // ==========================================
+            // STAGE 1: FIND THE SPY LOGIC
+            // ==========================================
+            generateStage1Round() {
+                document.getElementById('s1-next').classList.add('hidden');
+                document.getElementById('s1-feedback').innerHTML = '<p class="text-xl font-bold text-gray-500 animate__animated animate__fadeIn">正在思考新謎題... 🤔</p>';
+
+                // Decide a rule that 3 socks will share, and 1 won't
+                const ruleTypes = ['color', 'length', 'pattern'];
+                const chosenRuleType = ruleTypes[Math.floor(Math.random() * ruleTypes.length)];
+                
+                let commonVal, oddVal;
+                let spyReason = "";
+
+                if (chosenRuleType === 'color') {
+                    const pool = [...COLORS];
+                    const shuffled = pool.sort(() => 0.5 - Math.random());
+                    commonVal = shuffled[0].id;
+                    oddVal = shuffled[1].id;
+                    spyReason = `因為其他三隻都是<span class="text-pink-600 font-extrabold">${shuffled[0].name}</span>的，只有它是${shuffled[1].name}的！`;
+                } else if (chosenRuleType === 'length') {
+                    const pool = [...LENGTHS];
+                    const shuffled = pool.sort(() => 0.5 - Math.random());
+                    commonVal = shuffled[0].id;
+                    oddVal = shuffled[1].id;
+                    spyReason = `因為其他三隻都是<span class="text-pink-600 font-extrabold">${shuffled[0].name}</span>，只有它是${shuffled[1].name}！`;
+                } else {
+                    const pool = [...PATTERNS];
+                    const shuffled = pool.sort(() => 0.5 - Math.random());
+                    commonVal = shuffled[0].id;
+                    oddVal = shuffled[1].id;
+                    spyReason = `因為其他三隻都有<span class="text-pink-600 font-extrabold">${shuffled[0].name}</span>圖案，只有它是${shuffled[1].name}！`;
+                }
+
+                // Generate socks
+                let socks = [];
+                // 3 Normal socks matching the rule
+                for (let i = 0; i < 3; i++) {
+                    socks.push(this.generateRandomSockWithConstraint(chosenRuleType, commonVal));
+                }
+                // 1 Spy sock
+                socks.push(this.generateRandomSockWithConstraint(chosenRuleType, oddVal));
+
+                // Let's make sure the normal socks are not perfectly identical to keep it interesting
+                // (Though sharing the chosen attribute is enough)
+
+                // Shuffle socks and remember the index of the spy
+                let zipped = socks.map((s, idx) => ({ sock: s, originalIdx: idx }));
+                zipped.sort(() => 0.5 - Math.random());
+
+                this.stage1Data.currentSocks = zipped.map(z => z.sock);
+                this.stage1Data.spyIndex = zipped.findIndex(z => z.originalIdx === 3); // 3 was the spy
+                this.stage1Data.spyReason = spyReason;
+
+                // Render socks
+                const container = document.getElementById('s1-socks-container');
+                container.innerHTML = "";
+                
+                this.stage1Data.currentSocks.forEach((sock, index) => {
+                    const sockDiv = document.createElement('div');
+                    sockDiv.className = "cursor-pointer p-2 rounded-2xl hover:bg-amber-100/80 transition transform duration-150 flex flex-col items-center gap-1 active:scale-95";
+                    sockDiv.innerHTML = `
+                        <!-- Tiny clothespin visual -->
+                        <div class="w-3 h-6 bg-amber-600 rounded shadow-sm mb-1 z-10"></div>
+                        <div class="sock-wrapper">${generateSockSVG(sock.color, sock.length, sock.pattern)}</div>
+                    `;
+                    sockDiv.addEventListener('click', () => this.handleStage1Click(index, sockDiv));
+                    container.appendChild(sockDiv);
+                });
+
+                document.getElementById('s1-feedback').innerHTML = '<p class="text-xl font-bold text-purple-700 animate__animated animate__bounceIn">新挑戰來了！快找出間諜襪子吧！🕵️</p>';
+                this.stage1Data.hasAnswered = false;
+            }
+
+            generateRandomSockWithConstraint(ruleType, value) {
+                let color = COLORS[Math.floor(Math.random() * COLORS.length)].id;
+                let length = LENGTHS[Math.floor(Math.random() * LENGTHS.length)].id;
+                let pattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)].id;
+
+                if (ruleType === 'color') color = value;
+                else if (ruleType === 'length') length = value;
+                else if (ruleType === 'pattern') pattern = value;
+
+                return { color, length, pattern };
+            }
+
+            handleStage1Click(clickedIndex, element) {
+                if (this.stage1Data.hasAnswered) return;
+
+                const feedback = document.getElementById('s1-feedback');
+                
+                if (clickedIndex === this.stage1Data.spyIndex) {
+                    sfx.correct();
+                    this.stars += 5;
+                    this.updateUI();
+                    
+                    element.classList.add('bg-green-100', 'border-2', 'border-green-400', 'animate__animated', 'animate__tada');
+                    feedback.innerHTML = `
+                        <div class="animate__animated animate__fadeIn">
+                            <span class="text-2xl">🎉 答對了！過關！</span>
+                            <p class="text-base text-gray-700 font-bold mt-1">${this.stage1Data.spyReason}</p>
+                        </div>
+                    `;
+                    this.stage1Data.hasAnswered = true;
+                    document.getElementById('s1-next').classList.remove('hidden');
+                } else {
+                    sfx.wrong();
+                    element.classList.add('bg-red-100', 'border-2', 'border-red-400', 'animate__animated', 'animate__headShake');
+                    feedback.innerHTML = `
+                        <p class="text-xl font-bold text-red-500 animate__animated animate__fadeIn">不對喔，這隻是好襪子！再找找看！👀</p>
+                    `;
+                    // Let them try again
+                }
+            }
+
+            nextRoundStage1() {
+                this.stage1Data.roundsPlayed++;
+                if (this.stage1Data.roundsPlayed < this.stage1Data.maxRounds) {
+                    this.generateStage1Round();
+                } else {
+                    // Stage 1 complete! Move to Stage 2 with modal celebration
+                    this.stars += 10; // Stage clear bonus
+                    this.updateUI();
+                    this.showTransitionModal("關卡一完成！🌟", "你太棒了！接下來挑戰「工廠篩選機」，跟著規則挑選吧！", () => {
+                        this.startStage(2);
+                    });
+                }
+            }
+
+
+            // ==========================================
+            // STAGE 2: FILTER CONVEYOR BELT LOGIC
+            // ==========================================
+            generateStage2Round() {
+                // Update progress
+                document.getElementById('s2-progress').textContent = `${this.stage2Data.count} / ${this.stage2Data.targetCount}`;
+
+                if (this.stage2Data.count >= this.stage2Data.targetCount) {
+                    this.stars += 15; // bonus
+                    this.updateUI();
+                    this.showTransitionModal("關卡二完成！🌟", "超級篩選機器人！現在要進行難度最高的「連線大作戰」囉！", () => {
+                        this.startStage(3);
+                    });
+                    return;
+                }
+
+                // Setup active rule (can be color, length, or pattern, or combination of 2 properties for higher levels)
+                // Let's generate a single-attribute rule or a multi-attribute rule based on progress
+                const useDoubleRule = this.stage2Data.count >= 4; // Harder after 4 rounds
+                
+                let rules = [];
+                const col = COLORS[Math.floor(Math.random() * COLORS.length)];
+                const len = LENGTHS[Math.floor(Math.random() * LENGTHS.length)];
+                const pat = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
+
+                if (!useDoubleRule) {
+                    // Single attribute
+                    const type = ['color', 'length', 'pattern'][Math.floor(Math.random() * 3)];
+                    if (type === 'color') rules.push({ type: 'color', val: col.id, name: col.name });
+                    else if (type === 'length') rules.push({ type: 'length', val: len.id, name: len.name });
+                    else rules.push({ type: 'pattern', val: pat.id, name: pat.name });
+                } else {
+                    // Double attributes
+                    rules.push({ type: 'color', val: col.id, name: col.name });
+                    rules.push({ type: 'length', val: len.id, name: len.name });
+                }
+
+                this.stage2Data.currentRule = rules;
+
+                // Render Rule Tags
+                const ruleDisplay = document.getElementById('s2-rule-display');
+                ruleDisplay.innerHTML = "";
+                rules.forEach(r => {
+                    const badge = document.createElement('span');
+                    badge.className = "bg-white text-purple-700 px-3 py-1.5 rounded-xl border border-purple-300 shadow-sm text-sm font-extrabold flex items-center gap-1";
+                    if (r.type === 'color') {
+                        const colObj = COLORS.find(c => c.id === r.val);
+                        badge.innerHTML = `<span class="inline-block w-4 h-4 rounded-full ${colObj.class} border border-gray-400"></span> ${r.name}`;
+                    } else if (r.type === 'length') {
+                        badge.innerHTML = `📏 ${r.name}`;
+                    } else {
+                        badge.innerHTML = `🎨 ${r.name}`;
+                    }
+                    ruleDisplay.appendChild(badge);
+                });
+
+                // Generate a random sock (50% chance it matches the rule perfectly)
+                const matchesRule = Math.random() < 0.5;
+                let activeSock = {};
+
+                if (matchesRule) {
+                    // Must match all rules
+                    activeSock.color = COLORS[Math.floor(Math.random() * COLORS.length)].id;
+                    activeSock.length = LENGTHS[Math.floor(Math.random() * LENGTHS.length)].id;
+                    activeSock.pattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)].id;
+
+                    rules.forEach(r => {
+                        if (r.type === 'color') activeSock.color = r.val;
+                        else if (r.type === 'length') activeSock.length = r.val;
+                        else if (r.type === 'pattern') activeSock.pattern = r.val;
+                    });
+                } else {
+                    // Must fail at least one rule
+                    activeSock.color = COLORS[Math.floor(Math.random() * COLORS.length)].id;
+                    activeSock.length = LENGTHS[Math.floor(Math.random() * LENGTHS.length)].id;
+                    activeSock.pattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)].id;
+
+                    // Ensure it breaks at least one rule
+                    let ruleToBreak = rules[Math.floor(Math.random() * rules.length)];
+                    if (ruleToBreak.type === 'color') {
+                        const pool = COLORS.filter(c => c.id !== ruleToBreak.val);
+                        activeSock.color = pool[Math.floor(Math.random() * pool.length)].id;
+                    } else if (ruleToBreak.type === 'length') {
+                        const pool = LENGTHS.filter(l => l.id !== ruleToBreak.val);
+                        activeSock.length = pool[Math.floor(Math.random() * pool.length)].id;
+                    } else {
+                        const pool = PATTERNS.filter(p => p.id !== ruleToBreak.val);
+                        activeSock.pattern = pool[Math.floor(Math.random() * pool.length)].id;
+                    }
+                }
+
+                this.stage2Data.currentSock = activeSock;
+                this.stage2Data.expectedMatch = matchesRule;
+
+                // Render Sock in the Conveyor Belt
+                const sockWrapper = document.getElementById('s2-sock-wrapper');
+                sockWrapper.innerHTML = generateSockSVG(activeSock.color, activeSock.length, activeSock.pattern);
+                sockWrapper.className = "z-10 transform scale-110 animate__animated animate__slideInRight";
+            }
+
+            handleStage2Choice(playerChoiceMatches) {
+                const sockWrapper = document.getElementById('s2-sock-wrapper');
+                
+                if (playerChoiceMatches === this.stage2Data.expectedMatch) {
+                    sfx.correct();
+                    this.stars += 3;
+                    this.stage2Data.count++;
+                    this.updateUI();
+
+                    sockWrapper.className = "z-10 transform scale-110 animate__animated animate__bounceOutUp";
+                } else {
+                    sfx.wrong();
+                    // Give subtle feedback but keep going
+                    sockWrapper.className = "z-10 transform scale-110 animate__animated animate__shakeX";
+                }
+
+                // Trigger next conveyor item after delay
+                setTimeout(() => {
+                    this.generateStage2Round();
+                }, 800);
+            }
+
+
+            // ==========================================
+            // STAGE 3: CONNECTION BRIDGE LOGIC (Advancing Logic)
+            // ==========================================
+            setupStage3() {
+                this.stage3Data.slot1 = null;
+                this.stage3Data.slot2 = null;
+                this.stage3Data.selectedSlot = 1;
+
+                // Select slot visual helper
+                this.highlightActiveSlot();
+
+                // Generate distinct Start and End socks
+                this.stage3Data.startSock = {
+                    color: COLORS[Math.floor(Math.random() * COLORS.length)].id,
+                    length: LENGTHS[Math.floor(Math.random() * LENGTHS.length)].id,
+                    pattern: PATTERNS[Math.floor(Math.random() * PATTERNS.length)].id
+                };
+
+                // End sock is generated ensuring there exists a valid mathematical path
+                // For simplicity, generate the End sock to be moderately different
+                this.stage3Data.endSock = {
+                    color: COLORS[Math.floor(Math.random() * COLORS.length)].id,
+                    length: LENGTHS[Math.floor(Math.random() * LENGTHS.length)].id,
+                    pattern: PATTERNS[Math.floor(Math.random() * PATTERNS.length)].id
+                };
+                // Make sure they aren't identical to begin with
+                while (countMatchingAttributes(this.stage3Data.startSock, this.stage3Data.endSock) === 3) {
+                    this.stage3Data.endSock.color = COLORS[Math.floor(Math.random() * COLORS.length)].id;
+                }
+
+                // Generate 5 candidate socks in tray
+                // Some are strategically designed to satisfy the chain rule
+                this.stage3Data.traySocks = this.generateStage3TrayCandidates();
+
+                // Render Left & Right Locked Socks
+                document.getElementById('s3-start-sock').innerHTML = generateSockSVG(this.stage3Data.startSock.color, this.stage3Data.startSock.length, this.stage3Data.startSock.pattern);
+                document.getElementById('s3-end-sock').innerHTML = generateSockSVG(this.stage3Data.endSock.color, this.stage3Data.endSock.length, this.stage3Data.endSock.pattern);
+
+                this.renderStage3Tray();
+                this.renderStage3Slots();
+                
+                document.getElementById('s3-line-1').className = "h-4 w-1 bg-gray-300 md:h-1 md:w-8";
+                document.getElementById('s3-line-2').className = "h-4 w-1 bg-gray-300 md:h-1 md:w-8";
+                document.getElementById('s3-line-3').className = "h-4 w-1 bg-gray-300 md:h-1 md:w-8";
+                
+                document.getElementById('s3-feedback').className = "text-md font-bold text-gray-500 animate__animated animate__fadeIn";
+                document.getElementById('s3-feedback').textContent = "點選上方的「空位 A」或「空位 B」，然後挑選合適的襪子放進去！";
+            }
+
+            generateStage3TrayCandidates() {
+                // To guarantee a solvable state, we explicitly construct a chain:
+                // Start -> C1 -> C2 -> End, where each link has EXACTLY 1 matching attribute.
+                
+                let attempts = 0;
+                while (attempts < 100) {
+                    // Try to generate standard middle solutions
+                    let c1 = this.generateRandomSock();
+                    let c2 = this.generateRandomSock();
+
+                    if (countMatchingAttributes(this.stage3Data.startSock, c1) === 1 &&
+                        countMatchingAttributes(c1, c2) === 1 &&
+                        countMatchingAttributes(c2, this.stage3Data.endSock) === 1) {
+                        
+                        // We found a working solution pair! Include them, plus 3 random decoys.
+                        let tray = [c1, c2];
+                        while (tray.length < 5) {
+                            let decoy = this.generateRandomSock();
+                            // avoid exact duplicates in tray
+                            if (!tray.some(s => s.color === decoy.color && s.length === decoy.length && s.pattern === decoy.pattern)) {
+                                tray.push(decoy);
+                            }
+                        }
+                        // Shuffle tray
+                        return tray.sort(() => 0.5 - Math.random());
+                    }
+                    attempts++;
+                }
+
+                // Absolute fallback in case search takes too long (procedural generation fallback)
+                let c1 = this.makeOneDiff(this.stage3Data.startSock);
+                let c2 = this.makeOneDiff(c1);
+                // ensure c2 also shares 1 with endSock
+                let tray = [c1, c2];
+                while(tray.length < 5) {
+                    tray.push(this.generateRandomSock());
+                }
+                return tray.sort(() => 0.5 - Math.random());
+            }
+
+            generateRandomSock() {
+                return {
+                    color: COLORS[Math.floor(Math.random() * COLORS.length)].id,
+                    length: LENGTHS[Math.floor(Math.random() * LENGTHS.length)].id,
+                    pattern: PATTERNS[Math.floor(Math.random() * PATTERNS.length)].id
+                };
+            }
+
+            makeOneDiff(baseSock) {
+                // Change exactly two attributes, leaving one identical (so matchCount is 1)
+                const attribs = ['color', 'length', 'pattern'];
+                // pick 1 to keep
+                const keep = attribs[Math.floor(Math.random() * 3)];
+                let newSock = { ...baseSock };
+
+                if (keep !== 'color') {
+                    const others = COLORS.filter(c => c.id !== baseSock.color);
+                    newSock.color = others[Math.floor(Math.random() * others.length)].id;
+                }
+                if (keep !== 'length') {
+                    const others = LENGTHS.filter(l => l.id !== baseSock.length);
+                    newSock.length = others[Math.floor(Math.random() * others.length)].id;
+                }
+                if (keep !== 'pattern') {
+                    const others = PATTERNS.filter(p => p.id !== baseSock.pattern);
+                    newSock.pattern = others[Math.floor(Math.random() * others.length)].id;
+                }
+                return newSock;
+            }
+
+            renderStage3Tray() {
+                const trayContainer = document.getElementById('s3-tray');
+                trayContainer.innerHTML = "";
+
+                this.stage3Data.traySocks.forEach((sock, idx) => {
+                    const sockBtn = document.createElement('button');
+                    sockBtn.className = "p-2 bg-white rounded-2xl border-2 border-purple-200 hover:border-purple-500 shadow-sm transition transform hover:scale-105 active:scale-95";
+                    sockBtn.innerHTML = generateSockSVG(sock.color, sock.length, sock.pattern);
+                    sockBtn.addEventListener('click', () => {
+                        sfx.click();
+                        this.assignSockToActiveSlot(sock);
+                    });
+                    trayContainer.appendChild(sockBtn);
+                });
+            }
+
+            renderStage3Slots() {
+                const slot1Div = document.getElementById('s3-slot-1-content');
+                const slot2Div = document.getElementById('s3-slot-2-content');
+
+                if (this.stage3Data.slot1) {
+                    slot1Div.innerHTML = generateSockSVG(this.stage3Data.slot1.color, this.stage3Data.slot1.length, this.stage3Data.slot1.pattern);
+                } else {
+                    slot1Div.innerHTML = '<span class="text-purple-300 text-5xl font-black">+</span>';
+                }
+
+                if (this.stage3Data.slot2) {
+                    slot2Div.innerHTML = generateSockSVG(this.stage3Data.slot2.color, this.stage3Data.slot2.length, this.stage3Data.slot2.pattern);
+                } else {
+                    slot2Div.innerHTML = '<span class="text-purple-300 text-5xl font-black">+</span>';
+                }
+
+                // Check link status dynamically to provide instant logical feedback
+                this.updateBridgeLinesRealtime();
+            }
+
+            handleSlotClick(slotNum) {
+                sfx.click();
+                this.stage3Data.selectedSlot = slotNum;
+                this.highlightActiveSlot();
+            }
+
+            highlightActiveSlot() {
+                const slot1 = document.getElementById('s3-slot-1');
+                const slot2 = document.getElementById('s3-slot-2');
+
+                if (this.stage3Data.selectedSlot === 1) {
+                    slot1.classList.add('border-purple-600', 'bg-purple-100/50');
+                    slot1.classList.remove('border-purple-400', 'bg-white/80');
+                    
+                    slot2.classList.add('border-purple-400', 'bg-white/80');
+                    slot2.classList.remove('border-purple-600', 'bg-purple-100/50');
+                } else {
+                    slot2.classList.add('border-purple-600', 'bg-purple-100/50');
+                    slot2.classList.remove('border-purple-400', 'bg-white/80');
+                    
+                    slot1.classList.add('border-purple-400', 'bg-white/80');
+                    slot1.classList.remove('border-purple-600', 'bg-purple-100/50');
+                }
+            }
+
+            assignSockToActiveSlot(sock) {
+                if (this.stage3Data.selectedSlot === 1) {
+                    this.stage3Data.slot1 = sock;
+                    // Auto advance focus to slot 2 for smooth UX
+                    this.stage3Data.selectedSlot = 2;
+                } else {
+                    this.stage3Data.slot2 = sock;
+                }
+                this.renderStage3Slots();
+                this.highlightActiveSlot();
+            }
+
+            resetStage3Slots() {
+                sfx.click();
+                this.stage3Data.slot1 = null;
+                this.stage3Data.slot2 = null;
+                this.stage3Data.selectedSlot = 1;
+                this.renderStage3Slots();
+                this.highlightActiveSlot();
+                document.getElementById('s3-feedback').textContent = "已重置空位。重新開始挑戰吧！";
+                document.getElementById('s3-feedback').className = "text-md font-bold text-gray-500";
+            }
+
+            updateBridgeLinesRealtime() {
+                const line1 = document.getElementById('s3-line-1');
+                const line2 = document.getElementById('s3-line-2');
+                const line3 = document.getElementById('s3-line-3');
+
+                // Helper to color correct connections green and incorrect red
+                const setLineState = (line, sockA, sockB) => {
+                    if (!sockA || !sockB) {
+                        line.className = "h-4 w-1 bg-gray-300 md:h-1 md:w-8";
+                    } else if (countMatchingAttributes(sockA, sockB) === 1) {
+                        line.className = "h-4 w-2 bg-green-500 md:h-2 md:w-8 glow-green";
+                    } else {
+                        line.className = "h-4 w-2 bg-red-400 md:h-2 md:w-8 glow-red";
+                    }
+                };
+
+                setLineState(line1, this.stage3Data.startSock, this.stage3Data.slot1);
+                setLineState(line2, this.stage3Data.slot1, this.stage3Data.slot2);
+                setLineState(line3, this.stage3Data.slot2, this.stage3Data.endSock);
+            }
+
+            validateStage3Bridge() {
+                const s1 = this.stage3Data.slot1;
+                const s2 = this.stage3Data.slot2;
+                const feedback = document.getElementById('s3-feedback');
+
+                if (!s1 || !s2) {
+                    sfx.wrong();
+                    feedback.textContent = "⚠️ 請把「空位 A」與「空位 B」都填滿才可以檢查喔！";
+                    feedback.className = "text-md font-bold text-red-500 animate__animated animate__shakeX";
+                    return;
+                }
+
+                const m1 = countMatchingAttributes(this.stage3Data.startSock, s1);
+                const m2 = countMatchingAttributes(s1, s2);
+                const m3 = countMatchingAttributes(s2, this.stage3Data.endSock);
+
+                if (m1 === 1 && m2 === 1 && m3 === 1) {
+                    sfx.correct();
+                    this.stars += 30; // Maximum bounty for the ultimate puzzle
+                    this.updateUI();
+
+                    feedback.textContent = "🎉 太棒了！連線大成功！所有橋樑都剛好只有一個特徵相同！";
+                    feedback.className = "text-lg font-black text-green-600 animate__animated animate__tada";
+
+                    setTimeout(() => {
+                        this.startStage(4); // Trigger End game screen
+                    }, 2000);
+                } else {
+                    sfx.wrong();
+                    // Provide helpful analytical hints for First Graders
+                    let tip = "Oops! 有人沒遵守規則喔。";
+                    if (m1 !== 1) tip = "「起點 🚩」和「空位 A」的襪子，相同的特徵不是剛好一個喔！";
+                    else if (m2 !== 1) tip = "「空位 A」和「空位 B」之間的特徵，不符合剛好一個相同的規則。";
+                    else if (m3 !== 1) tip = "「空位 B」和「終點 🏁」之間的特徵不符合規則。";
+
+                    feedback.innerHTML = `❌ ${tip}<br><span class="text-sm font-normal text-gray-500">(亮紅色代表是不對的連線，再調整一下吧！)</span>`;
+                    feedback.className = "text-md font-bold text-red-500 animate__animated animate__shakeX";
+                }
+            }
+
+            showStage3Hint() {
+                sfx.click();
+                const feedback = document.getElementById('s3-feedback');
+                
+                // Detailed diagnostic hint
+                const getFeatureList = (s) => {
+                    const cObj = COLORS.find(c => c.id === s.color);
+                    const lObj = LENGTHS.find(l => l.id === s.length);
+                    const pObj = PATTERNS.find(p => p.id === s.pattern);
+                    return `「${cObj.name}、${lObj.name}、${pObj.name}」`;
+                };
+
+                const startFeatures = getFeatureList(this.stage3Data.startSock);
+                const endFeatures = getFeatureList(this.stage3Data.endSock);
+
+                feedback.innerHTML = `
+                    <div class="text-left text-xs text-purple-800 bg-purple-50 p-3 rounded-xl border border-purple-200">
+                        💡 <b>悄悄話提示：</b><br>
+                        • 起點襪子的特徵有：${startFeatures}<br>
+                        • 終點襪子的特徵有：${endFeatures}<br>
+                        • <b>空位 A</b> 的襪子必須與起點<b>剛好只有一種特徵</b>相同！
+                    </div>
+                `;
+                feedback.className = "animate__animated animate__fadeIn";
+            }
+
+            // --- ANIMATED SUCCESS DIALOG (CUSTOM MODAL REPLACEMENT) ---
+            showTransitionModal(title, text, onConfirm) {
+                const modal = document.createElement('div');
+                modal.className = "fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 animate__animated animate__fadeIn";
+                modal.innerHTML = `
+                    <div class="bg-white rounded-[2.5rem] max-w-md w-full p-8 border-4 border-pink-400 text-center shadow-2xl animate__animated animate__zoomIn">
+                        <div class="text-6xl mb-4">⭐</div>
+                        <h3 class="text-3xl font-black text-pink-600 mb-2">${title}</h3>
+                        <p class="text-gray-700 font-bold mb-6 text-base leading-relaxed">${text}</p>
+                        <button id="modal-trans-btn" class="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white text-xl font-black py-4 rounded-2xl shadow-md transition transform hover:scale-105">
+                            繼續前進 Let's Go! 🚀
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                document.getElementById('modal-trans-btn').addEventListener('click', () => {
+                    sfx.click();
+                    modal.classList.add('animate__fadeOut');
+                    setTimeout(() => {
+                        modal.remove();
+                        onConfirm();
+                    }, 400);
+                });
+            }
+        }
+
+        // Global Instance
+        let game;
+        window.onload = function() {
+            game = new GameController();
+            game.init();
+        };
+    </script>
+</body>
+</html>

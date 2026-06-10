@@ -42,6 +42,9 @@
 | 🎒 一年級 | `unit16-dino-typing` | 恐龍打字大冒險 | 橫向跑酷打字、字母輸入、邊跑邊練（小一友善） |
 | 🎒 一年級 | `unit17-pet-treasure-coding` | 程式小勇士：萌寵尋寶 | 運算思維啟蒙：指令序列、拆解步驟、找規律 |
 | 🎒 一年級 | `unit18-magic-paint` | 魔法簡約畫畫屋 | 數位創作、聲光畫圖、自由塗鴉 |
+| 🎒 一年級 | `unit19-farm-harvest` | 快樂農場：蔬菜拔拔樂 | 滑鼠拖曳收成、手眼協調、專注力（難度可選） |
+| 🎒 一年級 | `unit20-sock-matching` | 瘋狂襪子配對線 | 連線配對、觀察規律、運算思維邏輯 |
+| 🎒 一年級 | `unit21-mouse-challenge` | 滑鼠小勇士大冒險 | 滑鼠綜合技巧：點擊／拖曳／按住／雙擊 |
 
 ## 🚀 快速開始
 
@@ -97,7 +100,13 @@ edtech-portfolio/
     │   └── index.html
     ├── unit17-pet-treasure-coding/
     │   └── index.html
-    └── unit18-magic-paint/
+    ├── unit18-magic-paint/
+        └── index.html
+    ├── unit19-farm-harvest/
+    │   └── index.html
+    ├── unit20-sock-matching/
+    │   └── index.html
+    └── unit21-mouse-challenge/
         └── index.html
 ```
 

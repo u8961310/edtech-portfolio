@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>滑鼠大冒險！一年級小勇士的滑鼠挑戰</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Comic/Round font for kids -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', 'Fredoka One', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+        }
+        .wood-border {
+            border: 8px solid #8B4513;
+            border-radius: 20px;
+        }
+        /* 關卡2專用：遮罩效果 */
+        #flashlight-canvas {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-yellow-100 to-green-100 h-screen flex flex-col justify-between p-4 overflow-hidden">
+<a href="../../index.html" class="kogao-home-btn" style="position:fixed;top:10px;left:10px;z-index:99999;background:rgba(255,255,255,.92);border:2px solid #f59e0b;color:#b45309;font-family:'Noto Sans TC',sans-serif;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.15)">🏠 首頁</a>
+
+    <!-- 頂部狀態列 -->
+    <header class="bg-white/80 backdrop-blur-md rounded-2xl p-4 shadow-md flex justify-between items-center max-w-5xl mx-auto w-full">
+        <div class="flex items-center space-x-3">
+            <span class="text-4xl">🖱️</span>
+            <div>
+                <h1 class="text-2xl font-black text-amber-700 tracking-wider">滑鼠小勇士大冒險</h1>
+                <p class="text-xs text-amber-600/80 font-bold">小學一年級專屬滑鼠訓練課</p>
+            </div>
+        </div>
+        
+        <!-- 關卡進度條 -->
+        <div class="flex items-center space-x-2">
+            <div class="flex space-x-1" id="level-dots">
+                <span class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-amber-500 text-white" id="dot-1">1</span>
+                <span class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-gray-200 text-gray-500" id="dot-2">2</span>
+                <span class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-gray-200 text-gray-500" id="dot-3">3</span>
+                <span class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-gray-200 text-gray-500" id="dot-4">4</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 遊戲主舞台 -->
+    <main class="flex-grow max-w-5xl w-full mx-auto my-4 bg-white rounded-3xl shadow-xl relative overflow-hidden flex flex-col items-center justify-center wood-border">
+        
+        <!-- 遊戲引導/開始畫面 -->
+        <div id="start-screen" class="absolute inset-0 bg-amber-50/95 flex flex-col items-center justify-center p-8 z-50 text-center">
+            <span class="text-8xl animate-bounce mb-4">🏆</span>
+            <h2 class="text-4xl font-black text-amber-800 mb-2">準備好接受滑鼠挑戰了嗎？</h2>
+            <p class="text-lg text-amber-700/80 mb-6 font-medium max-w-md">
+                這裡有四個好玩的關卡，可以幫你變成滑鼠小高手喔！我們不點氣球，一起來餵貓咪、找動物、吸灰塵吧！
+            </p>
+            <button onclick="startGame()" class="bg-amber-500 hover:bg-amber-600 hover:scale-105 active:scale-95 text-white font-black text-2xl px-12 py-5 rounded-full shadow-lg transition transform duration-200">
+                出發！開始遊戲 🚀
+            </button>
+        </div>
+
+        <!-- 關卡指示與說明 -->
+        <div id="level-header" class="absolute top-4 left-4 right-4 flex justify-between items-center z-40 bg-white/90 p-3 rounded-xl shadow-sm pointer-events-none">
+            <div>
+                <span id="level-badge" class="bg-amber-500 text-white px-3 py-1 rounded-full text-sm font-bold">關卡 1</span>
+                <span id="level-title" class="text-xl font-bold ml-2 text-gray-800">貓咪餵食秀</span>
+            </div>
+            <div id="level-instruction" class="text-sm font-bold text-amber-700">
+                💡 任務：把食物移到貓咪嘴巴裡！
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- 關卡 1：貓咪餵食秀 (滑鼠精準移動) -->
+        <!-- ============================================== -->
+        <div id="level1-container" class="hidden absolute inset-0 bg-yellow-50/50 flex flex-col items-center justify-between p-12">
+            <!-- 貓咪頭像 -->
+            <div class="relative mt-12 flex flex-col items-center">
+                <!-- 貓咪 SVG -->
+                <div id="cat" class="w-64 h-64 transition-transform duration-200 flex items-center justify-center relative">
+                    <!-- 可愛貓咪 -->
+                    <svg viewBox="0 0 200 200" class="w-full h-full">
+                        <!-- 耳朵 -->
+                        <polygon points="30,80 50,20 90,60" fill="#FFA500" stroke="#8B4513" stroke-width="4"/>
+                        <polygon points="170,80 150,20 110,60" fill="#FFA500" stroke="#8B4513" stroke-width="4"/>
+                        <polygon points="40,75 52,35 80,60" fill="#FFC0CB"/>
+                        <polygon points="160,75 148,35 120,60" fill="#FFC0CB"/>
+                        <!-- 臉 -->
+                        <circle cx="100" cy="110" r="70" fill="#FFB74D" stroke="#8B4513" stroke-width="4"/>
+                        <!-- 眼睛 -->
+                        <circle cx="70" cy="95" r="12" fill="#333"/>
+                        <circle cx="70" cy="92" r="4" fill="#FFF"/>
+                        <circle cx="130" cy="95" r="12" fill="#333"/>
+                        <circle cx="130" cy="92" r="4" fill="#FFF"/>
+                        <!-- 腮紅 -->
+                        <circle cx="50" cy="115" r="10" fill="#FF8A80" opacity="0.6"/>
+                        <circle cx="150" cy="115" r="10" fill="#FF8A80" opacity="0.6"/>
+                        <!-- 鼻子 -->
+                        <polygon points="95,115 105,115 100,121" fill="#FF8A80"/>
+                        <!-- 嘴巴（張大嘴） -->
+                        <ellipse id="cat-mouth" cx="100" cy="140" rx="20" ry="20" fill="#D32F2F" stroke="#8B4513" stroke-width="3"/>
+                        <ellipse id="cat-tongue" cx="100" cy="150" rx="12" ry="8" fill="#FF8A80"/>
+                    </svg>
+                    <!-- 嘴巴觸發判定區 -->
+                    <div id="mouth-target" class="absolute" style="width: 70px; height: 70px; bottom: 25px; left: calc(50% - 35px); border-radius: 50%;"></div>
+                </div>
+                <div class="mt-2 bg-amber-100 px-4 py-1 rounded-full border border-amber-300 font-bold text-amber-800">
+                    飽食度：<span id="cat-score">0</span> / 5 🍖
+                </div>
+            </div>
+
+            <!-- 食物 (滑鼠追蹤對象) -->
+            <div id="food-container" class="absolute inset-0 pointer-events-none">
+                <div id="game-food" class="absolute w-16 h-16 pointer-events-auto cursor-pointer transition-all duration-100 hover:scale-125 flex items-center justify-center text-4xl select-none bg-white/40 rounded-full shadow-inner border border-white/60">
+                    🐟
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- 關卡 2：手電筒探險 (移動與單擊) -->
+        <!-- ============================================== -->
+        <div id="level2-container" class="hidden absolute inset-0 bg-slate-900 overflow-hidden">
+            <!-- 隱藏在暗處的動物們 -->
+            <div id="forest-animals" class="absolute inset-0 z-0">
+                <!-- 由 JS 動態生成動物 -->
+            </div>
+
+            <!-- 畫布：用來畫全黑與手電筒光圈 (置於最上層接收事件) -->
+            <canvas id="flashlight-canvas" class="absolute inset-0 w-full h-full z-10"></canvas>
+
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-black/60 backdrop-blur-sm text-white px-6 py-2 rounded-full font-bold text-sm tracking-wide">
+                找到奇妙小動物：<span id="animal-score" class="text-yellow-400">0</span> / 5 🐾
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- 關卡 3：吸塵器大掃除 (拖曳與大範圍移動) -->
+        <!-- ============================================== -->
+        <div id="level3-container" class="hidden absolute inset-0 bg-emerald-50/40 cursor-none select-none overflow-hidden">
+            <canvas id="cleanup-canvas" class="absolute inset-0 w-full h-full z-10"></canvas>
+            
+            <!-- 灰塵與阻礙物 -->
+            <div id="cleanup-area" class="absolute inset-0 z-0">
+                <!-- 灰塵點與大石頭會呈現在這裡 -->
+            </div>
+
+            <!-- 吸塵器游標模擬 -->
+            <div id="vacuum-cursor" class="absolute pointer-events-none z-20 w-16 h-16 -translate-x-1/2 -translate-y-1/2 text-5xl flex items-center justify-center transition-transform duration-75">
+                🧹
+            </div>
+
+            <!-- 進度條 -->
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-white/95 border border-amber-200 px-6 py-3 rounded-2xl shadow-lg flex items-center space-x-4 min-w-[320px]">
+                <span class="font-black text-amber-800 text-sm whitespace-nowrap">乾淨程度</span>
+                <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden border">
+                    <div id="cleanup-progress" class="bg-green-500 h-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <span id="cleanup-percentage" class="font-black text-green-600 text-sm">0%</span>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- 關卡 4：分類連連看 (拖曳與放開) -->
+        <!-- ============================================== -->
+        <div id="level4-container" class="hidden absolute inset-0 bg-blue-50/50 p-8 flex flex-col justify-between">
+            <div class="flex-grow flex justify-between items-center w-full max-w-4xl mx-auto my-auto relative">
+                
+                <!-- 左側：待回收物品 -->
+                <div class="flex flex-col space-y-6 justify-center items-center w-1/3 h-full" id="trash-source-container">
+                    <!-- 由 JS 動態產生，每次只出現一個 -->
+                    <div id="active-trash" class="w-24 h-24 bg-white border-4 border-dashed border-amber-300 rounded-3xl flex flex-col items-center justify-center text-5xl shadow-md cursor-grab active:cursor-grabbing transition-transform hover:scale-105 relative z-10">
+                        🍌
+                    </div>
+                    <div class="text-sm font-bold text-amber-700 bg-amber-100 px-3 py-1 rounded-full">
+                        把東西拖曳到右邊的桶子裡！
+                    </div>
+                </div>
+
+                <!-- 中間：拖曳提示連線 Canvas -->
+                <div class="absolute inset-0 pointer-events-none z-0">
+                    <svg id="drag-line-svg" class="w-full h-full">
+                        <!-- 可以畫拖曳輔助線 -->
+                    </svg>
+                </div>
+
+                <!-- 右側：三個分類垃圾桶 -->
+                <div class="flex flex-col space-y-4 justify-center items-center w-1/2 h-full z-10" id="bins-container">
+                    
+                    <!-- 一般垃圾桶 -->
+                    <div data-bin="general" class="bin-target w-72 p-4 bg-gray-100 hover:bg-gray-200 border-4 border-gray-400 rounded-2xl flex items-center space-x-4 transition-all shadow-md">
+                        <span class="text-5xl">🗑️</span>
+                        <div>
+                            <h3 class="text-xl font-black text-gray-700">一般垃圾</h3>
+                            <p class="text-xs text-gray-500">髒髒的紙、衛生紙、點心袋</p>
+                        </div>
+                    </div>
+
+                    <!-- 資源回收桶 -->
+                    <div data-bin="recycle" class="bin-target w-72 p-4 bg-blue-50 hover:bg-blue-100 border-4 border-blue-400 rounded-2xl flex items-center space-x-4 transition-all shadow-md">
+                        <span class="text-5xl">♻️</span>
+                        <div>
+                            <h3 class="text-xl font-black text-blue-700">資源回收</h3>
+                            <p class="text-xs text-blue-500">寶特瓶、乾淨紙箱、鋁罐</p>
+                        </div>
+                    </div>
+
+                    <!-- 廚餘桶 -->
+                    <div data-bin="kitchen" class="bin-target w-72 p-4 bg-green-50 hover:bg-green-100 border-4 border-green-400 rounded-2xl flex items-center space-x-4 transition-all shadow-md">
+                        <span class="text-5xl">🐷</span>
+                        <div>
+                            <h3 class="text-xl font-black text-green-700">廚餘桶</h3>
+                            <p class="text-xs text-green-500">香蕉皮、蘋果核、吃不完的飯</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 計分 -->
+            <div class="flex justify-center items-center space-x-2">
+                <span class="font-bold text-blue-800">成功分類：</span>
+                <div class="flex space-x-1" id="star-score">
+                    <span class="text-2xl text-gray-300">⭐</span>
+                    <span class="text-2xl text-gray-300">⭐</span>
+                    <span class="text-2xl text-gray-300">⭐</span>
+                    <span class="text-2xl text-gray-300">⭐</span>
+                    <span class="text-2xl text-gray-300">⭐</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- 結算/過關畫面 -->
+        <!-- ============================================== -->
+        <div id="success-screen" class="hidden absolute inset-0 bg-white/95 flex flex-col items-center justify-center p-8 z-50 text-center">
+            <span class="text-9xl animate-bounce mb-4">👑</span>
+            <h2 class="text-5xl font-black text-green-600 mb-2">太棒了！挑戰成功！</h2>
+            <p class="text-2xl font-bold text-amber-800 mb-6">
+                你已經是超級無敵「滑鼠大師」囉！🌟
+            </p>
+            <div class="bg-amber-50 p-6 rounded-2xl max-w-md border-2 border-amber-200 mb-6">
+                <h3 class="font-black text-amber-700 mb-2 text-lg">獲得榮譽獎章</h3>
+                <div class="flex justify-center space-x-4 text-5xl my-2">
+                    <span>🐱</span><span>🔦</span><span>🧹</span><span>♻️</span>
+                </div>
+            </div>
+            <button onclick="restartGame()" class="bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 text-white font-black text-2xl px-12 py-5 rounded-full shadow-lg transition transform duration-200">
+                再玩一次 🔄
+            </button>
+        </div>
+
+    </main>
+
+    <!-- 底部操作提示與音量調整 -->
+    <footer class="max-w-5xl w-full mx-auto flex justify-between items-center text-xs font-bold text-amber-800/80 bg-white/60 backdrop-blur-sm p-3 rounded-xl shadow-inner">
+        <div>
+            提示：本遊戲適合使用一般的「滑鼠」操作。不要著急，慢慢來！
+        </div>
+        <div class="flex items-center space-x-2">
+            <span>🔊 語音提示已啟用</span>
+        </div>
+    </footer>
+
+    <!-- 音效 & 語音設定 -->
+    <script>
+        // 簡易的網頁語音合成播報，給小朋友親切的指引
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                // 先取消之前的播報以免重疊
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 可愛音效生成器 (不需加載外部音效檔，避免加載失敗)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playTone(freq, type, duration) {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio play failed: ", e);
+            }
+        }
+
+        function playSuccessSound() {
+            playTone(523.25, 'sine', 0.1); // C5
+            setTimeout(() => playTone(659.25, 'sine', 0.1), 100); // E5
+            setTimeout(() => playTone(783.99, 'sine', 0.15), 200); // G5
+            setTimeout(() => playTone(1046.50, 'sine', 0.25), 300); // C6
+        }
+
+        function playCorrectSound() {
+            playTone(600, 'triangle', 0.1);
+            setTimeout(() => playTone(900, 'triangle', 0.15), 100);
+        }
+
+        function playErrorSound() {
+            playTone(220, 'sawtooth', 0.2);
+        }
+
+        function playCatMeow() {
+            // 模擬可愛貓叫
+            playTone(880, 'triangle', 0.15);
+            setTimeout(() => {
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.3);
+                    gain.connect(audioCtx.destination);
+                    osc.connect(gain);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } catch(e){}
+            }, 50);
+        }
+    </script>
+
+    <!-- 遊戲邏輯核心 -->
+    <script>
+        let currentLevel = 1;
+        const totalLevels = 4;
+        let isLevelTransitioning = false; // 全域防重入鎖，避免瞬間跳關
+
+        // 初始化/開始遊戲
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            loadLevel(1);
+        }
+
+        function restartGame() {
+            document.getElementById('success-screen').classList.add('hidden');
+            currentLevel = 1;
+            loadLevel(1);
+        }
+
+        // 切換與載入關卡
+        function loadLevel(levelNum) {
+            currentLevel = levelNum;
+            isLevelTransitioning = false; // 載入新關卡時解鎖
+            
+            // 隱藏所有關卡容器
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`level${i}-container`).classList.add('hidden');
+                const dot = document.getElementById(`dot-${i}`);
+                dot.className = "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-gray-200 text-gray-500";
+            }
+            
+            // 點亮當前進度點
+            for (let i = 1; i <= levelNum; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if (i === levelNum) {
+                    dot.className = "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-amber-500 text-white animate-pulse";
+                } else {
+                    dot.className = "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-green-500 text-white";
+                }
+            }
+
+            // 顯示當前關卡容器
+            document.getElementById(`level${levelNum}-container`).classList.remove('hidden');
+
+            // 設置關卡資訊
+            const badge = document.getElementById('level-badge');
+            const title = document.getElementById('level-title');
+            const instruction = document.getElementById('level-instruction');
+
+            badge.className = `px-3 py-1 rounded-full text-sm font-bold text-white bg-amber-500`;
+
+            // 初始化特定關卡邏輯
+            if (levelNum === 1) {
+                badge.innerText = "第一關：精準移動";
+                title.innerText = "可愛貓咪餵食秀";
+                instruction.innerText = "💡 任務：把食物移到小貓的嘴巴裡！";
+                speak("第一關，貓咪餵食秀。請移動滑鼠，把好吃的食物送到小貓咪嘴巴裡喔！");
+                initLevel1();
+            } else if (levelNum === 2) {
+                badge.className = `px-3 py-1 rounded-full text-sm font-bold text-white bg-indigo-600`;
+                badge.innerText = "第二關：移動與點擊";
+                title.innerText = "森林手電筒探險";
+                instruction.innerText = "💡 任務：用手電筒照亮暗處，點擊找到 5 隻動物！";
+                speak("第二關，森林手電筒探險。用滑鼠手電筒照亮黑黑的森林，找到五隻小動物，並在牠們身上點一下。");
+                initLevel2();
+            } else if (levelNum === 3) {
+                badge.className = `px-3 py-1 rounded-full text-sm font-bold text-white bg-emerald-600`;
+                badge.innerText = "第三關：按住拖曳";
+                title.innerText = "神奇吸塵器大掃除";
+                instruction.innerText = "💡 任務：按住滑鼠左鍵不放，把地上的灰塵吸乾淨！";
+                speak("第三關，吸塵器大掃除。按住滑鼠左鍵不要放開，把地上的落葉和灰塵都吸乾淨。要小心繞過大石頭喔。");
+                initLevel3();
+            } else if (levelNum === 4) {
+                badge.className = `px-3 py-1 rounded-full text-sm font-bold text-white bg-blue-600`;
+                badge.innerText = "第四關：拖曳與放開";
+                title.innerText = "魔法資源回收分類";
+                instruction.innerText = "💡 任務：按住垃圾，拖曳到正確的桶子裡放開！";
+                speak("最後一關，魔法資源回收。按住左側的垃圾，拖曳到右邊對應的垃圾桶，然後放開滑鼠！");
+                initLevel4();
+            }
+        }
+
+        // 通關處理
+        function completeLevel() {
+            playSuccessSound();
+            if (currentLevel < totalLevels) {
+                const next = currentLevel + 1;
+                loadLevel(next);
+            } else {
+                // 全部通關
+                document.getElementById('success-screen').classList.remove('hidden');
+                speak("恭喜你！完成了所有考驗，你現在是超級滑鼠大師了！");
+            }
+        }
+
+
+        // ==============================================
+        // 第一關邏輯：貓咪餵食秀 (滑鼠精準移動)
+        // ==============================================
+        let catScore = 0;
+        const foods = ['🐟', '🥛', '🍖', '🦐', '🐭', '🥩'];
+        let currentFoodIndex = 0;
+        let isEating = false;       // 咀嚼狀態鎖，避免連續碰撞、重複算分
+        let level1Finished = false; // 第一關過關狀態鎖
+
+        function initLevel1() {
+            catScore = 0;
+            currentFoodIndex = 0;
+            isEating = false;
+            level1Finished = false;
+            document.getElementById('cat-score').innerText = catScore;
+            
+            // 恢復貓咪嘴巴大小
+            document.getElementById('cat-mouth').setAttribute('ry', '20');
+            document.getElementById('cat-mouth').setAttribute('fill', '#D32F2F');
+
+            // 確保食物是可以被看見並接受事件的
+            const foodEl = document.getElementById('game-food');
+            foodEl.classList.remove('opacity-0');
+            foodEl.style.pointerEvents = 'auto';
+
+            spawnFood();
+            setupLevel1Listeners();
+        }
+
+        function spawnFood() {
+            if (level1Finished) return;
+            const foodEl = document.getElementById('game-food');
+            const container = document.getElementById('level1-container');
+            
+            // 隨機更換食物 Emoji
+            foodEl.innerText = foods[currentFoodIndex % foods.length];
+            currentFoodIndex++;
+
+            const rect = container.getBoundingClientRect();
+            let x, y;
+            const side = Math.floor(Math.random() * 4); // 0: 上, 1: 右, 2: 下, 3: 左
+
+            // 讓新食物生成在靠近邊緣的位置，避免剛好刷在滑鼠上
+            if (side === 0) { // 上
+                x = Math.random() * (rect.width - 120) + 40;
+                y = 50;
+            } else if (side === 1) { // 右
+                x = rect.width - 120;
+                y = Math.random() * (rect.height - 180) + 50;
+            } else if (side === 2) { // 下
+                x = Math.random() * (rect.width - 120) + 40;
+                y = rect.height - 140;
+            } else { // 左
+                x = 50;
+                y = Math.random() * (rect.height - 180) + 50;
+            }
+
+            foodEl.style.left = `${x}px`;
+            foodEl.style.top = `${y}px`;
+            foodEl.classList.remove('opacity-0');
+            foodEl.style.pointerEvents = 'auto';
+            isEating = false; // 重新開放吃食物
+        }
+
+        function setupLevel1Listeners() {
+            const foodEl = document.getElementById('game-food');
+            const target = document.getElementById('mouth-target');
+            const catMouth = document.getElementById('cat-mouth');
+            const cat = document.getElementById('cat');
+
+            // 游標移入食物：食物產生回饋
+            foodEl.onmouseenter = () => {
+                if (isEating || level1Finished) return;
+                foodEl.classList.add('scale-125');
+                catMouth.setAttribute('ry', '30'); // 貓咪張大嘴巴期待
+            };
+
+            foodEl.onmouseleave = () => {
+                foodEl.classList.remove('scale-125');
+            };
+
+            // 滑鼠正在移動
+            document.getElementById('level1-container').onmousemove = (e) => {
+                if (isEating || level1Finished) return;
+
+                const containerRect = document.getElementById('level1-container').getBoundingClientRect();
+                const mx = e.clientX - containerRect.left;
+                const my = e.clientY - containerRect.top;
+
+                // 計算食物中心與滑鼠游標距離
+                const fx = foodEl.offsetLeft + 32;
+                const fy = foodEl.offsetTop + 32;
+                const dist = Math.hypot(mx - fx, my - fy);
+
+                // 靈敏度：160px 內平滑黏在滑鼠上
+                if (dist < 160) {
+                    foodEl.style.left = `${mx - 32}px`;
+                    foodEl.style.top = `${my - 32}px`;
+                    
+                    // 偵測是否碰到貓咪嘴巴
+                    const targetRect = target.getBoundingClientRect();
+                    const distanceToMouth = Math.hypot(
+                        e.clientX - (targetRect.left + targetRect.width/2),
+                        e.clientY - (targetRect.top + targetRect.height/2)
+                    );
+
+                    // 60px 內視為吃到了
+                    if (distanceToMouth < 60) {
+                        isEating = true; // 立刻上鎖，不再重複計分與重新黏附
+                        playCatMeow();
+                        
+                        // 食物先隱藏、關閉事件觸發
+                        foodEl.classList.add('opacity-0');
+                        foodEl.style.pointerEvents = 'none';
+
+                        // 貓咪閉嘴嚼一嚼的動畫
+                        cat.classList.add('scale-95');
+                        catMouth.setAttribute('ry', '5'); 
+                        
+                        catScore++;
+                        document.getElementById('cat-score').innerText = catScore;
+
+                        setTimeout(() => {
+                            cat.classList.remove('scale-95');
+                            catMouth.setAttribute('ry', '20'); // 恢復正常嘴形
+
+                            if (catScore >= 5) {
+                                level1Finished = true; // 鎖定第一關已結束
+                                // 移除第一關的 mousemove 監聽，避免 setTimeout 期間又有奇怪的觸發
+                                document.getElementById('level1-container').onmousemove = null;
+                                setTimeout(completeLevel, 300);
+                            } else {
+                                spawnFood(); // 800ms 後才生下一顆食物
+                            }
+                        }, 800);
+                    }
+                }
+            };
+        }
+
+
+        // ==============================================
+        // 第二關邏輯：手電筒探險 (移動與單擊)
+        // ==============================================
+        let foundAnimalCount = 0;
+        const animalTemplates = [
+            { emoji: '🐰', name: '小兔子', size: 'text-5xl' },
+            { emoji: '🦊', name: '小狐狸', size: 'text-5xl' },
+            { emoji: '🦉', name: '貓頭鷹', size: 'text-5xl' },
+            { emoji: '🦫', name: '河狸', size: 'text-5xl' },
+            { emoji: '🐿️', name: '松鼠', size: 'text-4xl' }
+        ];
+
+        let spawnedAnimals = [];
+        let level2Finished = false; // 第二關過關狀態鎖
+
+        function initLevel2() {
+            foundAnimalCount = 0;
+            spawnedAnimals = [];
+            level2Finished = false;
+            document.getElementById('animal-score').innerText = foundAnimalCount;
+            
+            const forest = document.getElementById('forest-animals');
+            forest.innerHTML = ''; // 清空
+
+            const canvas = document.getElementById('flashlight-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const container = document.getElementById('level2-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+
+            // 畫滿黑幕
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.98)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const containerWidth = canvas.width;
+            const containerHeight = canvas.height;
+
+            animalTemplates.forEach((item, index) => {
+                const animalDiv = document.createElement('div');
+                animalDiv.className = `absolute ${item.size} select-none transition-all duration-500 filter brightness-[0.05] pointer-events-none flex flex-col items-center`;
+                
+                const posX = Math.random() * (containerWidth - 140) + 70;
+                const posY = Math.random() * (containerHeight - 180) + 90;
+                
+                animalDiv.style.left = `${posX}px`;
+                animalDiv.style.top = `${posY}px`;
+                
+                animalDiv.innerHTML = `
+                    <div class="emoji-pic filter drop-shadow-md">${item.emoji}</div>
+                    <span class="animal-label text-xs bg-yellow-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full mt-1 opacity-0 transition-opacity duration-300 pointer-events-none">${item.name}</span>
+                `;
+                
+                forest.appendChild(animalDiv);
+
+                spawnedAnimals.push({
+                    element: animalDiv,
+                    name: item.name,
+                    x: posX + 24, 
+                    y: posY + 24,
+                    radius: 35, 
+                    found: false
+                });
+            });
+
+            let mouseX = -1000;
+            let mouseY = -1000;
+
+            canvas.onmousemove = (e) => {
+                if (level2Finished) return;
+                const rect = canvas.getBoundingClientRect();
+                mouseX = e.clientX - rect.left;
+                mouseY = e.clientY - rect.top;
+
+                drawFlashlight(ctx, canvas, mouseX, mouseY);
+                checkAnimalsInLight(mouseX, mouseY);
+            };
+
+            // 手電筒點擊判定
+            canvas.onclick = (e) => {
+                if (level2Finished) return;
+                const rect = canvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+
+                spawnedAnimals.forEach(animal => {
+                    if (animal.found) return;
+
+                    const distToClick = Math.hypot(clickX - animal.x, clickY - animal.y);
+                    const distToFlashlight = Math.hypot(mouseX - animal.x, mouseY - animal.y);
+
+                    if (distToClick < animal.radius && distToFlashlight < 110) {
+                        animal.found = true;
+                        animal.element.classList.remove('brightness-[0.05]');
+                        animal.element.classList.add('brightness-110', 'scale-125', 'animate-bounce');
+                        animal.element.querySelector('.animal-label').classList.remove('opacity-0');
+                        
+                        foundAnimalCount++;
+                        document.getElementById('animal-score').innerText = foundAnimalCount;
+                        playCorrectSound();
+                        speak(`找到了，是${animal.name}！`);
+
+                        if (foundAnimalCount >= 5) {
+                            level2Finished = true; // 鎖定關卡
+                            canvas.onclick = null;  // 清除點擊事件
+                            setTimeout(completeLevel, 1200);
+                        }
+                    }
+                });
+            };
+
+            canvas.onmouseleave = () => {
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.98)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            };
+
+            // 觸控相容
+            canvas.ontouchmove = (e) => {
+                if (level2Finished) return;
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                mouseX = touch.clientX - rect.left;
+                mouseY = touch.clientY - rect.top;
+                drawFlashlight(ctx, canvas, mouseX, mouseY);
+                checkAnimalsInLight(mouseX, mouseY);
+            };
+
+            canvas.ontouchend = (e) => {
+                if (level2Finished || e.touches.length > 0) return;
+                const clickX = mouseX;
+                const clickY = mouseY;
+
+                spawnedAnimals.forEach(animal => {
+                    if (animal.found) return;
+                    const distToClick = Math.hypot(clickX - animal.x, clickY - animal.y);
+                    if (distToClick < animal.radius) {
+                        animal.found = true;
+                        animal.element.classList.remove('brightness-[0.05]');
+                        animal.element.classList.add('brightness-110', 'scale-125', 'animate-bounce');
+                        animal.element.querySelector('.animal-label').classList.remove('opacity-0');
+                        
+                        foundAnimalCount++;
+                        document.getElementById('animal-score').innerText = foundAnimalCount;
+                        playCorrectSound();
+                        speak(`找到了，是${animal.name}！`);
+
+                        if (foundAnimalCount >= 5) {
+                            level2Finished = true;
+                            setTimeout(completeLevel, 1200);
+                        }
+                    }
+                });
+            };
+
+            drawFlashlight(ctx, canvas, -1000, -1000);
+        }
+
+        function drawFlashlight(ctx, canvas, x, y) {
+            ctx.save();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(11, 19, 43, 0.96)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (x > -500) {
+                ctx.globalCompositeOperation = 'destination-out';
+                const radius = 95; 
+                const gradient = ctx.createRadialGradient(x, y, radius * 0.4, x, y, radius);
+                gradient.addColorStop(0, 'rgba(0, 0, 0, 1.0)');
+                gradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.6)');
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function checkAnimalsInLight(hx, hy) {
+            spawnedAnimals.forEach(animal => {
+                if (animal.found) return;
+                const dist = Math.hypot(hx - animal.x, hy - animal.y);
+                if (dist < 100) {
+                    const brightness = Math.max(0.05, (1 - dist / 100));
+                    animal.element.style.filter = `brightness(${brightness * 1.0})`;
+                } else {
+                    animal.element.style.filter = 'brightness(0.05)';
+                }
+            });
+        }
+
+
+        // ==============================================
+        // 第三關邏輯：吸塵器大掃除 (拖曳與大範圍移動)
+        // ==============================================
+        let dustTotal = 24;
+        let dustCleaned = 0;
+        let isMouseDown = false;
+        let level3Finished = false; // 第三關過關狀態鎖
+
+        function initLevel3() {
+            dustCleaned = 0;
+            isMouseDown = false;
+            level3Finished = false;
+            document.getElementById('cleanup-progress').style.width = '0%';
+            document.getElementById('cleanup-percentage').innerText = '0%';
+
+            const canvas = document.getElementById('cleanup-canvas');
+            const ctx = canvas.getContext('2d');
+            const container = document.getElementById('level3-container');
+            
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const area = document.getElementById('cleanup-area');
+            area.innerHTML = '';
+
+            // 1. 生成 3 顆大石頭
+            for (let i = 0; i < 3; i++) {
+                const stone = document.createElement('div');
+                stone.className = "absolute text-6xl select-none stone pointer-events-none drop-shadow-md z-10";
+                const sectorWidth = canvas.width / 3;
+                stone.style.left = `${sectorWidth * i + Math.random() * (sectorWidth - 100) + 30}px`;
+                stone.style.top = `${Math.random() * (canvas.height - 200) + 100}px`;
+                stone.innerText = '🪨';
+                area.appendChild(stone);
+            }
+
+            // 2. 生成落葉與灰塵
+            const items = ['🍂', '💨', '🕸️', '🍂', '💨'];
+            for (let i = 0; i < dustTotal; i++) {
+                const dust = document.createElement('div');
+                dust.className = "absolute text-4xl select-none dust pointer-events-none transition-all duration-300 z-0";
+                dust.style.left = `${Math.random() * (canvas.width - 80) + 40}px`;
+                dust.style.top = `${Math.random() * (canvas.height - 120) + 40}px`;
+                dust.innerText = items[i % items.length];
+                dust.style.transform = `rotate(${Math.random() * 360}deg)`;
+                area.appendChild(dust);
+            }
+
+            setupLevel3Listeners(canvas, ctx);
+        }
+
+        function setupLevel3Listeners(canvas, ctx) {
+            const container = document.getElementById('level3-container');
+            const vacuum = document.getElementById('vacuum-cursor');
+            
+            container.onmousedown = (e) => {
+                if (level3Finished) return;
+                isMouseDown = true;
+                vacuum.innerText = '💨🧹'; 
+                vacuum.classList.add('scale-110');
+            };
+
+            window.onmouseup = () => {
+                isMouseDown = false;
+                vacuum.innerText = '🧹'; 
+                vacuum.classList.remove('scale-110');
+            };
+
+            container.onmousemove = (e) => {
+                if (level3Finished) return;
+                
+                const rect = container.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                vacuum.style.left = `${x}px`;
+                vacuum.style.top = `${y}px`;
+
+                let hittingStone = false;
+                const stones = document.querySelectorAll('.stone');
+                stones.forEach(stone => {
+                    const sx = stone.offsetLeft + 32;
+                    const sy = stone.offsetTop + 32;
+                    const dist = Math.hypot(x - sx, y - sy);
+                    if (dist < 55) {
+                        hittingStone = true;
+                        vacuum.classList.add('translate-x-1');
+                        setTimeout(() => vacuum.classList.remove('translate-x-1'), 50);
+                    }
+                });
+
+                if (hittingStone) {
+                    vacuum.innerText = '⚠️🧹';
+                    return;
+                } else {
+                    vacuum.innerText = isMouseDown ? '💨🧹' : '🧹';
+                }
+
+                if (isMouseDown) {
+                    ctx.fillStyle = 'rgba(255,255,255, 0.4)';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 35, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    const dusts = document.querySelectorAll('.dust');
+                    dusts.forEach(dust => {
+                        if (dust.style.opacity === '0') return;
+
+                        const dx = dust.offsetLeft + 16;
+                        const dy = dust.offsetTop + 16;
+                        const dist = Math.hypot(x - dx, y - dy);
+
+                        if (dist < 45) {
+                            dust.style.transform = `scale(0.1) translate(${(x-dx)*2}px, ${(y-dy)*2}px)`;
+                            dust.style.opacity = '0';
+                            
+                            dustCleaned++;
+                            playTone(400 + (dustCleaned * 15), 'sine', 0.05);
+
+                            const percent = Math.min(100, Math.round((dustCleaned / dustTotal) * 100));
+                            document.getElementById('cleanup-progress').style.width = `${percent}%`;
+                            document.getElementById('cleanup-percentage').innerText = `${percent}%`;
+
+                            // 達到 90% 關卡通過
+                            if (percent >= 90) {
+                                level3Finished = true; // 立刻上鎖，不再重複判定
+                                isMouseDown = false;
+                                vacuum.innerText = '🧹';
+                                window.onmouseup = null; 
+                                container.onmousemove = null;
+                                setTimeout(completeLevel, 800);
+                            }
+                        }
+                    });
+                }
+            };
+        }
+
+
+        // ==============================================
+        // 第四關邏輯：分類連連看 (拖曳與放開)
+        // ==============================================
+        let successCount = 0;
+        const totalItemsNeeded = 5;
+        let level4Finished = false; // 第四關過關狀態鎖
+        
+        const trashItems = [
+            { emoji: '🍌', type: 'kitchen', name: '香蕉皮' },
+            { emoji: '🥤', type: 'recycle', name: '塑膠杯' },
+            { emoji: '🍏', type: 'kitchen', name: '咬一口的蘋果' },
+            { emoji: '📦', type: 'recycle', name: '紙箱' },
+            { emoji: '🥡', type: 'general', name: '髒髒的便當盒' },
+            { emoji: '🧻', type: 'general', name: '用過的衛生紙' },
+            { emoji: '🥫', type: 'recycle', name: '鐵罐' },
+            { emoji: '🦴', type: 'kitchen', name: '排骨便當的骨頭' }
+        ];
+
+        let currentActiveTrash = null;
+
+        function initLevel4() {
+            successCount = 0;
+            level4Finished = false;
+            updateStars();
+            spawnNextTrash();
+        }
+
+        function updateStars() {
+            const stars = document.getElementById('star-score').children;
+            for (let i = 0; i < 5; i++) {
+                if (i < successCount) {
+                    stars[i].className = "text-3xl text-yellow-400 animate-bounce";
+                    stars[i].innerText = "⭐";
+                } else {
+                    stars[i].className = "text-3xl text-gray-300";
+                    stars[i].innerText = "☆";
+                }
+            }
+        }
+
+        function spawnNextTrash() {
+            if (level4Finished) return;
+            const randomIndex = Math.floor(Math.random() * trashItems.length);
+            currentActiveTrash = trashItems[randomIndex];
+
+            const trashDiv = document.getElementById('active-trash');
+            trashDiv.innerText = currentActiveTrash.emoji;
+            trashDiv.style.transform = 'scale(1) rotate(0deg)';
+            
+            trashDiv.style.position = 'relative';
+            trashDiv.style.left = '0px';
+            trashDiv.style.top = '0px';
+
+            setupLevel4Drag();
+        }
+
+        function setupLevel4Drag() {
+            const trash = document.getElementById('active-trash');
+            const bins = document.querySelectorAll('.bin-target');
+            
+            let isDragging = false;
+            let startX, startY;
+            let initialLeft = 0, initialTop = 0;
+
+            trash.onmousedown = (e) => {
+                if (level4Finished) return;
+                isDragging = true;
+                trash.style.position = 'absolute';
+                trash.style.zIndex = '100';
+                
+                const rect = trash.getBoundingClientRect();
+                const containerRect = document.getElementById('level4-container').getBoundingClientRect();
+                
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                initialLeft = rect.left - containerRect.left;
+                initialTop = rect.top - containerRect.top;
+
+                trash.style.left = `${initialLeft}px`;
+                trash.style.top = `${initialTop}px`;
+            };
+
+            document.onmousemove = (e) => {
+                if (!isDragging || level4Finished) return;
+
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+
+                trash.style.left = `${initialLeft + dx}px`;
+                trash.style.top = `${initialTop + dy}px`;
+
+                const trashRect = trash.getBoundingClientRect();
+                const tx = trashRect.left + trashRect.width / 2;
+                const ty = trashRect.top + trashRect.height / 2;
+
+                bins.forEach(bin => {
+                    const binRect = bin.getBoundingClientRect();
+                    if (tx > binRect.left && tx < binRect.right && ty > binRect.top && ty < binRect.bottom) {
+                        bin.classList.add('scale-105', 'shadow-lg', 'brightness-105');
+                    } else {
+                        bin.classList.remove('scale-105', 'shadow-lg', 'brightness-105');
+                    }
+                });
+            };
+
+            document.onmouseup = (e) => {
+                if (!isDragging || level4Finished) return;
+                isDragging = false;
+
+                document.onmousemove = null;
+
+                const trashRect = trash.getBoundingClientRect();
+                const tx = trashRect.left + trashRect.width / 2;
+                const ty = trashRect.top + trashRect.height / 2;
+
+                let droppedInBin = null;
+
+                bins.forEach(bin => {
+                    const binRect = bin.getBoundingClientRect();
+                    if (tx > binRect.left && tx < binRect.right && ty > binRect.top && ty < binRect.bottom) {
+                        droppedInBin = bin.getAttribute('data-bin');
+                    }
+                    bin.classList.remove('scale-105', 'shadow-lg', 'brightness-105');
+                });
+
+                if (droppedInBin) {
+                    if (droppedInBin === currentActiveTrash.type) {
+                        successCount++;
+                        updateStars();
+                        playCorrectSound();
+                        speak(`答對了！${currentActiveTrash.name}分類正確！`);
+
+                        trash.style.transform = 'scale(0) rotate(180deg)';
+                        trash.style.transition = 'all 0.3s ease-out';
+
+                        setTimeout(() => {
+                            trash.style.transition = 'none'; 
+                            if (successCount >= totalItemsNeeded) {
+                                level4Finished = true; // 鎖定關卡
+                                setTimeout(completeLevel, 600);
+                            } else {
+                                spawnNextTrash();
+                            }
+                        }, 300);
+                    } else {
+                        playErrorSound();
+                        speak(`哎呀，${currentActiveTrash.name}好像放錯桶子囉，再試一次！`);
+                        
+                        trash.style.transition = 'all 0.4s ease-in-out';
+                        trash.style.position = 'relative';
+                        trash.style.left = '0px';
+                        trash.style.top = '0px';
+                        setTimeout(() => {
+                            trash.style.transition = 'none';
+                        }, 400);
+                    }
+                } else {
+                    trash.style.transition = 'all 0.4s ease-in-out';
+                    trash.style.position = 'relative';
+                    trash.style.left = '0px';
+                    trash.style.top = '0px';
+                    setTimeout(() => {
+                        trash.style.transition = 'none';
+                    }, 400);
+                }
+            };
+        }
+    </script>
+</body>
+</html>

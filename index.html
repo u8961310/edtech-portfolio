@@ -352,6 +352,30 @@
                 <p class="card-score" id="unit18-score-badge" style="display:none;"></p>
                 <span class="play-btn">▶ 開始玩</span>
             </a>
+            <a href="./units/unit19-farm-harvest/index.html" class="card" style="--c: #84cc16;">
+                <span class="skill-tag">手眼協調</span>
+                <div class="card-cover">🧑‍🌾🥕</div>
+                <h3 class="card-title">快樂農場：蔬菜拔拔樂</h3>
+                <p class="card-desc">到農場拔蘿蔔、收成蔬菜！邊玩邊練滑鼠操作和專注力，難度自己選。</p>
+                <p class="card-score" id="unit19-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+            <a href="./units/unit20-sock-matching/index.html" class="card" style="--c: #f43f5e;">
+                <span class="skill-tag">運算思維</span>
+                <div class="card-cover">🧦🔗</div>
+                <h3 class="card-title">瘋狂襪子配對線</h3>
+                <p class="card-desc">把一樣的襪子用線連起來！觀察規律配對，邏輯和運算思維一起練。</p>
+                <p class="card-score" id="unit20-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+            <a href="./units/unit21-mouse-challenge/index.html" class="card" style="--c: #0ea5e9;">
+                <span class="skill-tag">滑鼠練習</span>
+                <div class="card-cover">🖱️🛡️</div>
+                <h3 class="card-title">滑鼠小勇士大冒險</h3>
+                <p class="card-desc">點擊、拖曳、按住全套滑鼠技巧大集合，陪小勇士闖關練好基本功！</p>
+                <p class="card-score" id="unit21-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
         </div>
     </section>
 
@@ -418,7 +442,7 @@
     function loadLocalScore(unitId) {
         return localStorage.getItem(`edtech-unit${unitId}-score`) || null;
     }
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].forEach((id) => {
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21].forEach((id) => {
         const score = loadLocalScore(id);
         const badge = document.getElementById(`unit${id}-score-badge`);
         if (score && badge) {

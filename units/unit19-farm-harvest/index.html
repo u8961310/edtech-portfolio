@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快樂農場：蔬菜拔拔樂</title>
+    <!-- 引入 Tailwind CSS 提供精美現代的 UI 介面 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Google Fonts 圓體中文字型與英文字型 -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', 'Fredoka One', sans-serif;
+            background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 60%, #fef08a 100%);
+            overflow-x: hidden;
+            user-select: none;
+        }
+        /* 蔬菜長大時的搖擺動畫 */
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+        .wiggle {
+            animation: wiggle 2s ease-in-out infinite;
+        }
+        /* 拔出時往籃子飛的動畫 */
+        @keyframes flyToBasket {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--fly-x), var(--fly-y)) scale(0.3); opacity: 0; }
+        }
+        .flying {
+            animation: flyToBasket 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            pointer-events: none;
+            z-index: 50;
+        }
+        /* 閃爍提示目前需要打的字 */
+        @keyframes keyPulse {
+            0%, 100% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.08); filter: brightness(1.2) drop-shadow(0 0 8px rgba(250, 204, 21, 0.8)); }
+        }
+        .pulse-hint {
+            animation: keyPulse 1.2s infinite;
+            border: 4px solid #facc15 !important;
+            z-index: 10;
+        }
+        /* 小兔子跳過來的動畫 */
+        @keyframes bunnyHop {
+            0% { left: -100px; transform: scaleX(-1); }
+            45% { left: 45%; transform: scaleX(-1) translateY(0); }
+            50% { left: 50%; transform: scaleX(1) translateY(-20px); }
+            55% { left: 55%; transform: scaleX(1) translateY(0); }
+            100% { left: 110%; transform: scaleX(1); }
+        }
+        .bunny-anim {
+            animation: bunnyHop 4s ease-in-out forwards;
+        }
+        /* 星星落下的動畫 */
+        @keyframes starDrop {
+            0% { transform: translateY(-50px) scale(0) rotate(0deg); opacity: 0; }
+            50% { transform: translateY(100px) scale(1.5) rotate(180deg); opacity: 1; }
+            100% { transform: translateY(200px) scale(1) rotate(360deg); opacity: 0; }
+        }
+        .star-anim {
+            animation: starDrop 2s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+<a href="../../index.html" class="kogao-home-btn" style="position:fixed;top:10px;left:10px;z-index:99999;background:rgba(255,255,255,.92);border:2px solid #f59e0b;color:#b45309;font-family:'Noto Sans TC',sans-serif;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.15)">🏠 首頁</a>
+
+    <!-- 頂部資訊欄（分數、星星、重來、難度選擇） -->
+    <header class="p-4 w-full max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4 z-10">
+        <!-- 標題與標誌 -->
+        <div class="flex items-center gap-3">
+            <span class="text-4xl">🧑‍🌾</span>
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-green-700 tracking-wider">快樂農場</h1>
+                <p class="text-xs md:text-sm text-green-600 font-bold">小學一年級專屬 ‧ 蔬菜拔拔樂</p>
+            </div>
+        </div>
+
+        <!-- 難度選擇器 -->
+        <div class="flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-2 rounded-2xl shadow-md">
+            <span class="text-sm font-bold text-slate-600">範圍：</span>
+            <select id="rangeSelect" class="bg-green-100 text-green-800 font-bold rounded-lg px-2 py-1 outline-none text-sm cursor-pointer transition-colors hover:bg-green-200">
+                <option value="homeRow">鍵盤中間排 (A~L)</option>
+                <option value="topRow">鍵盤上排 (Q~P)</option>
+                <option value="bottomRow">鍵盤下排 (Z~M)</option>
+                <option value="full">全英文字母 (A~Z)</option>
+            </select>
+        </div>
+
+        <!-- 計分板 -->
+        <div class="flex items-center gap-4">
+            <!-- 拔起數量計數器 -->
+            <div class="bg-orange-100 border-2 border-orange-300 rounded-2xl px-4 py-2 flex items-center gap-2 shadow-sm">
+                <span class="text-2xl">🥕</span>
+                <div class="text-left">
+                    <div class="text-xs text-orange-500 font-bold">已拔起</div>
+                    <div id="scoreVal" class="text-xl font-black text-orange-700">0</div>
+                </div>
+            </div>
+
+            <!-- 星星收集盒 -->
+            <div class="bg-amber-100 border-2 border-amber-300 rounded-2xl px-4 py-2 flex items-center gap-2 shadow-sm">
+                <span class="text-2xl text-amber-500 animate-bounce">⭐</span>
+                <div class="text-left">
+                    <div class="text-xs text-amber-500 font-bold">兔子星星</div>
+                    <div id="starVal" class="text-xl font-black text-amber-700">0</div>
+                </div>
+            </div>
+
+            <!-- 重開按鈕 -->
+            <button id="resetBtn" class="bg-red-500 hover:bg-red-600 text-white font-black px-4 py-3 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-1">
+                <span>🔄</span><span class="hidden md:inline">重來</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 遊戲主舞台 -->
+    <main class="relative flex-grow w-full max-w-5xl mx-auto px-4 flex flex-col justify-end pb-4">
+        <!-- 雲朵與背景（純裝飾） -->
+        <div class="absolute top-10 left-10 text-6xl opacity-30 select-none pointer-events-none">☁️</div>
+        <div class="absolute top-24 right-20 text-7xl opacity-20 select-none pointer-events-none">☁️</div>
+        <div class="absolute top-4 left-1/2 -translate-x-1/2 text-8xl opacity-10 select-none pointer-events-none">☀️</div>
+
+        <!-- 蔬菜生長區（農田） -->
+        <div class="relative w-full h-[320px] md:h-[380px] bg-gradient-to-t from-amber-950 to-amber-900/40 border-t-8 border-green-600 rounded-t-[40px] shadow-2xl p-6 flex items-end justify-around gap-2 select-none">
+            <!-- 泥土光影覆蓋 -->
+            <div class="absolute inset-x-0 bottom-0 h-16 bg-amber-950/80 rounded-t-3xl pointer-events-none"></div>
+
+            <!-- 5個固定的生長坑洞 -->
+            <div class="grid grid-cols-5 w-full h-full items-end justify-items-center relative z-10 pb-6">
+                <!-- 坑洞 0 -->
+                <div id="plot-0" class="relative w-full flex flex-col items-center justify-end h-full">
+                    <div class="veggie-container w-full flex justify-center items-end h-4/5 pb-2"></div>
+                    <div class="w-16 h-4 bg-amber-950/90 rounded-full border border-amber-800/60 shadow-inner"></div>
+                </div>
+                <!-- 坑洞 1 -->
+                <div id="plot-1" class="relative w-full flex flex-col items-center justify-end h-full">
+                    <div class="veggie-container w-full flex justify-center items-end h-4/5 pb-2"></div>
+                    <div class="w-16 h-4 bg-amber-950/90 rounded-full border border-amber-800/60 shadow-inner"></div>
+                </div>
+                <!-- 坑洞 2 -->
+                <div id="plot-2" class="relative w-full flex flex-col items-center justify-end h-full">
+                    <div class="veggie-container w-full flex justify-center items-end h-4/5 pb-2"></div>
+                    <div class="w-16 h-4 bg-amber-950/90 rounded-full border border-amber-800/60 shadow-inner"></div>
+                </div>
+                <!-- 坑洞 3 -->
+                <div id="plot-3" class="relative w-full flex flex-col items-center justify-end h-full">
+                    <div class="veggie-container w-full flex justify-center items-end h-4/5 pb-2"></div>
+                    <div class="w-16 h-4 bg-amber-950/90 rounded-full border border-amber-800/60 shadow-inner"></div>
+                </div>
+                <!-- 坑洞 4 -->
+                <div id="plot-4" class="relative w-full flex flex-col items-center justify-end h-full">
+                    <div class="veggie-container w-full flex justify-center items-end h-4/5 pb-2"></div>
+                    <div class="w-16 h-4 bg-amber-950/90 rounded-full border border-amber-800/60 shadow-inner"></div>
+                </div>
+            </div>
+
+            <!-- 收集籃子（放置於右下角） -->
+            <div id="basket" class="absolute bottom-4 right-6 w-24 h-20 md:w-32 md:h-24 bg-orange-800 border-4 border-orange-900 rounded-b-3xl rounded-t-lg shadow-xl flex flex-col items-center justify-center text-white font-extrabold z-20">
+                <!-- 籃子提把 -->
+                <div class="absolute -top-10 w-16 h-10 border-4 border-orange-900 rounded-t-full pointer-events-none"></div>
+                <div class="text-2xl md:text-3xl">🧺</div>
+                <div class="text-[10px] md:text-xs tracking-wider bg-orange-950/60 px-2 py-0.5 rounded-full mt-1">蔬菜籃</div>
+            </div>
+
+            <!-- 動態兔子跑道（小兔子會從後面跳過） -->
+            <div id="bunnyLayer" class="absolute inset-x-0 bottom-12 h-20 overflow-hidden pointer-events-none z-0">
+                <div id="bunny" class="absolute bottom-0 text-5xl hidden select-none">🐇</div>
+            </div>
+
+            <!-- 星星噴發特效層 -->
+            <div id="effectLayer" class="absolute inset-0 pointer-events-none z-30 overflow-hidden"></div>
+        </div>
+    </main>
+
+    <!-- 底部：彩虹虛擬輔助鍵盤（手手對應顏色、提示發光） -->
+    <footer class="w-full bg-slate-900/90 backdrop-blur-md border-t-4 border-slate-700 p-3 md:p-5 pb-6">
+        <div class="max-w-4xl mx-auto">
+            <!-- 鍵盤指引說明 -->
+            <div class="flex justify-between items-center text-xs text-slate-400 font-bold mb-2 px-1">
+                <span class="flex items-center gap-1">👉 請看畫面上亮起的黃色字母，在實體鍵盤按下對應按鍵喔！</span>
+                <span class="hidden md:inline">🎨 顏色說明：左手區域（暖色系） | 右手區域（冷色系）</span>
+            </div>
+
+            <!-- 鍵盤主體 -->
+            <div class="flex flex-col gap-1.5 md:gap-2 select-none" id="virtualKeyboard">
+                <!-- 第一排 (Q-P) -->
+                <div class="flex justify-center gap-1 md:gap-1.5">
+                    <div data-key="Q" class="kb-key kb-left-1 w-8 h-10 md:w-12 md:h-12 bg-rose-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-rose-700 transition-all">Q</div>
+                    <div data-key="W" class="kb-key kb-left-2 w-8 h-10 md:w-12 md:h-12 bg-orange-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-orange-700 transition-all">W</div>
+                    <div data-key="E" class="kb-key kb-left-3 w-8 h-10 md:w-12 md:h-12 bg-amber-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-amber-700 transition-all">E</div>
+                    <div data-key="R" class="kb-key kb-left-4 w-8 h-10 md:w-12 md:h-12 bg-yellow-500 text-slate-800 rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-yellow-700 transition-all">R</div>
+                    <div data-key="T" class="kb-key kb-left-4 w-8 h-10 md:w-12 md:h-12 bg-yellow-500 text-slate-800 rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-yellow-700 transition-all">T</div>
+                    <div data-key="Y" class="kb-key kb-right-4 w-8 h-10 md:w-12 md:h-12 bg-emerald-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-emerald-700 transition-all">Y</div>
+                    <div data-key="U" class="kb-key kb-right-4 w-8 h-10 md:w-12 md:h-12 bg-emerald-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-emerald-700 transition-all">U</div>
+                    <div data-key="I" class="kb-key kb-right-3 w-8 h-10 md:w-12 md:h-12 bg-cyan-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-cyan-700 transition-all">I</div>
+                    <div data-key="O" class="kb-key kb-right-2 w-8 h-10 md:w-12 md:h-12 bg-blue-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-blue-700 transition-all">O</div>
+                    <div data-key="P" class="kb-key kb-right-1 w-8 h-10 md:w-12 md:h-12 bg-indigo-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-indigo-700 transition-all">P</div>
+                </div>
+                <!-- 第二排 (A-L) -->
+                <div class="flex justify-center gap-1 md:gap-1.5 ml-2 md:ml-4">
+                    <div data-key="A" class="kb-key kb-left-1 w-8 h-10 md:w-12 md:h-12 bg-rose-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-rose-700 transition-all">A</div>
+                    <div data-key="S" class="kb-key kb-left-2 w-8 h-10 md:w-12 md:h-12 bg-orange-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-orange-700 transition-all">S</div>
+                    <div data-key="D" class="kb-key kb-left-3 w-8 h-10 md:w-12 md:h-12 bg-amber-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-amber-700 transition-all">D</div>
+                    <div data-key="F" class="kb-key kb-left-4 w-8 h-10 md:w-12 md:h-12 bg-yellow-500 text-slate-800 rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-yellow-700 transition-all">F</div>
+                    <div data-key="G" class="kb-key kb-left-4 w-8 h-10 md:w-12 md:h-12 bg-yellow-500 text-slate-800 rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-yellow-700 transition-all">G</div>
+                    <div data-key="H" class="kb-key kb-right-4 w-8 h-10 md:w-12 md:h-12 bg-emerald-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-emerald-700 transition-all">H</div>
+                    <div data-key="J" class="kb-key kb-right-4 w-8 h-10 md:w-12 md:h-12 bg-emerald-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-emerald-700 transition-all">J</div>
+                    <div data-key="K" class="kb-key kb-right-3 w-8 h-10 md:w-12 md:h-12 bg-cyan-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-cyan-700 transition-all">K</div>
+                    <div data-key="L" class="kb-key kb-right-2 w-8 h-10 md:w-12 md:h-12 bg-blue-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-blue-700 transition-all">L</div>
+                </div>
+                <!-- 第三排 (Z-M) -->
+                <div class="flex justify-center gap-1 md:gap-1.5 ml-4 md:ml-8">
+                    <div data-key="Z" class="kb-key kb-left-1 w-8 h-10 md:w-12 md:h-12 bg-rose-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-rose-700 transition-all">Z</div>
+                    <div data-key="X" class="kb-key kb-left-2 w-8 h-10 md:w-12 md:h-12 bg-orange-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-orange-700 transition-all">X</div>
+                    <div data-key="C" class="kb-key kb-left-3 w-8 h-10 md:w-12 md:h-12 bg-amber-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-amber-700 transition-all">C</div>
+                    <div data-key="V" class="kb-key kb-left-4 w-8 h-10 md:w-12 md:h-12 bg-yellow-500 text-slate-800 rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-yellow-700 transition-all">V</div>
+                    <div data-key="B" class="kb-key kb-left-4 w-8 h-10 md:w-12 md:h-12 bg-yellow-500 text-slate-800 rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-yellow-700 transition-all">B</div>
+                    <div data-key="N" class="kb-key kb-right-4 w-8 h-10 md:w-12 md:h-12 bg-emerald-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-emerald-700 transition-all">N</div>
+                    <div data-key="M" class="kb-key kb-right-4 w-8 h-10 md:w-12 md:h-12 bg-emerald-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-emerald-700 transition-all">M</div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 開頭/暫停 引導覆蓋畫面 -->
+    <div id="startOverlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-[32px] border-8 border-green-400 p-8 max-w-md w-full text-center shadow-2xl transform scale-100 transition-transform">
+            <span class="text-7xl block mb-4 animate-bounce">🥕🐰🌟</span>
+            <h2 class="text-3xl font-black text-green-700 mb-2">蔬菜拔拔樂</h2>
+            <p class="text-slate-600 font-bold mb-6 text-sm leading-relaxed">
+                哇！農場裡的蔬菜長大囉！<br>
+                看著葉子上的字母，按下鍵盤對應鍵，<br>
+                把蔬菜「啵」地拔出來吧！
+            </p>
+            
+            <div class="bg-green-50 p-4 rounded-2xl mb-6 text-left border border-green-100">
+                <h3 class="font-black text-green-800 mb-1 flex items-center gap-1">⭐ 小朋友，你會得到：</h3>
+                <ul class="text-xs text-slate-600 space-y-1 font-bold">
+                    <li>🔸 拔起 5 顆菜：小白兔會跑出來送你星星喔！</li>
+                    <li>🔸 溫和無壓力：蔬菜長大不會消失，可以慢慢找。</li>
+                    <li>🔸 彩虹鍵盤：看著畫面下亮晶晶的鍵盤指引打字。</li>
+                </ul>
+            </div>
+
+            <button id="startBtn" class="w-full bg-green-500 hover:bg-green-600 text-white font-black text-xl py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl transform active:scale-95 transition-all">
+                開始拔蔬菜 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- 腳本邏輯 -->
+    <script>
+        // --- 音效生成器 (Web Audio API 避免依賴外部音檔) ---
+        class SoundEffects {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            // 啵！ (拔菜成功音效)
+            playPop() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.type = 'sine';
+                // 快速升高的頻率產生「啵」聲
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.15);
+
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.2);
+            }
+            // 叮咚！ (獲得星星音效)
+            playStar() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                // 兩個音符和弦
+                [523.25, 659.25, 783.99].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+
+                    gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.4);
+
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.5);
+                });
+            }
+            // 溫和的打錯提示音
+            playWrong() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(80, this.ctx.currentTime + 0.25);
+
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+        }
+        const sfx = new SoundEffects();
+
+        // --- 遊戲資料與設定 ---
+        const rangeLetters = {
+            homeRow: ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+            topRow: ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+            bottomRow: ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
+            full: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+        };
+
+        const veggieTypes = [
+            { name: '紅蘿蔔', emoji: '🥕', stemColor: 'text-orange-500', leafColor: 'bg-green-500' },
+            { name: '大頭菜', emoji: '🧅', stemColor: 'text-indigo-200', leafColor: 'bg-green-600' },
+            { name: '馬鈴薯', emoji: '🥔', stemColor: 'text-amber-700', leafColor: 'bg-emerald-500' },
+            { name: '南瓜', emoji: '🎃', stemColor: 'text-yellow-600', leafColor: 'bg-green-700' }
+        ];
+
+        let score = 0;
+        let starCount = 0;
+        let gameActive = false;
+        let currentRange = 'homeRow';
+
+        // 追蹤每個坑洞的蔬菜狀態 (總共5個坑洞，對應 plot-0 ~ plot-4)
+        // 坑洞蔬菜資料結構：{ active: boolean, typeIndex: number, letter: string, growth: number, element: HTMLElement, isHarvesting: boolean }
+        const plots = Array(5).fill(null).map(() => ({
+            active: false,
+            typeIndex: 0,
+            letter: '',
+            growth: 0,
+            element: null,
+            isHarvesting: false
+        }));
+
+        // --- DOM 節點 ---
+        const startOverlay = document.getElementById('startOverlay');
+        const startBtn = document.getElementById('startBtn');
+        const rangeSelect = document.getElementById('rangeSelect');
+        const scoreVal = document.getElementById('scoreVal');
+        const starVal = document.getElementById('starVal');
+        const resetBtn = document.getElementById('resetBtn');
+        const bunny = document.getElementById('bunny');
+        const effectLayer = document.getElementById('effectLayer');
+        const basket = document.getElementById('basket');
+
+        // --- 初始化遊戲 ---
+        startBtn.addEventListener('click', () => {
+            sfx.init(); // 啟動 AudioContext
+            startOverlay.classList.add('hidden');
+            gameActive = true;
+            startGameLoop();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            resetGame();
+        });
+
+        rangeSelect.addEventListener('change', (e) => {
+            currentRange = e.target.value;
+            // 清除現有蔬菜，換新字母範圍
+            clearAllPlots();
+            updateKeyboardHints();
+        });
+
+        function resetGame() {
+            score = 0;
+            starCount = 0;
+            scoreVal.textContent = score;
+            starVal.textContent = starCount;
+            clearAllPlots();
+            gameActive = true;
+            updateKeyboardHints();
+        }
+
+        function clearAllPlots() {
+            for (let i = 0; i < 5; i++) {
+                removeVeggie(i);
+            }
+        }
+
+        // --- 核心遊戲循環 ---
+        let lastSpawnTime = 0;
+        function startGameLoop() {
+            function loop(timestamp) {
+                if (!gameActive) return;
+
+                // 1. 蔬菜生長邏輯
+                plots.forEach((plot, index) => {
+                    if (plot.active && !plot.isHarvesting) {
+                        if (plot.growth < 100) {
+                            plot.growth += 0.5; // 生長速度極緩慢，適合小一兒童
+                            if (plot.growth > 100) plot.growth = 100;
+                            updateVeggieDOM(index);
+                        }
+                    }
+                });
+
+                // 2. 自動補充蔬菜 (如果坑洞有空缺，每隔一小段時間隨機生長)
+                if (timestamp - lastSpawnTime > 2000) {
+                    trySpawnVeggie();
+                    lastSpawnTime = timestamp;
+                }
+
+                requestAnimationFrame(loop);
+            }
+            requestAnimationFrame(loop);
+        }
+
+        // 嘗試在隨機空坑洞中長出新蔬菜
+        function trySpawnVeggie() {
+            // 找出目前空的坑洞
+            const emptyPlotIndices = [];
+            plots.forEach((plot, index) => {
+                if (!plot.active) emptyPlotIndices.push(index);
+            });
+
+            if (emptyPlotIndices.length === 0) return;
+
+            // 隨機選一個空坑洞
+            const targetIndex = emptyPlotIndices[Math.floor(Math.random() * emptyPlotIndices.length)];
+            spawnVeggie(targetIndex);
+        }
+
+        // 產生一個新蔬菜
+        function spawnVeggie(index) {
+            const letterPool = rangeLetters[currentRange];
+            
+            // 確保畫面上重複的字母不要太多，盡量挑選目前畫面上沒有的字母
+            const activeLetters = plots.filter(p => p.active).map(p => p.letter);
+            let availableLetters = letterPool.filter(l => !activeLetters.includes(l));
+            if (availableLetters.length === 0) availableLetters = letterPool; // 如果都用光了就用整池
+
+            const randomLetter = availableLetters[Math.floor(Math.random() * availableLetters.length)];
+            const randomTypeIdx = Math.floor(Math.random() * veggieTypes.length);
+
+            plots[index] = {
+                active: true,
+                typeIndex: randomTypeIdx,
+                letter: randomLetter,
+                growth: 10, // 從10%大小開始長
+                isHarvesting: false,
+                element: createVeggieElement(randomTypeIdx, randomLetter)
+            };
+
+            // 放進 DOM 中
+            const container = document.querySelector(`#plot-${index} .veggie-container`);
+            container.innerHTML = '';
+            container.appendChild(plots[index].element);
+
+            updateVeggieDOM(index);
+            updateKeyboardHints();
+        }
+
+        // 創造蔬菜的 DOM 元素 (使用豐富的 SVG 與 Tailwind 樣式)
+        function createVeggieElement(typeIdx, letter) {
+            const type = veggieTypes[typeIdx];
+            const wrapper = document.createElement('div');
+            wrapper.className = 'relative flex flex-col items-center transition-all duration-300 transform origin-bottom wiggle';
+            
+            // 1. 頂部葉子與字母泡泡
+            const leafWrapper = document.createElement('div');
+            leafWrapper.className = 'relative flex flex-col items-center z-10';
+
+            // 字母氣泡（亮眼且字體特大，方便一年級觀看）
+            const letterBubble = document.createElement('div');
+            letterBubble.className = 'letter-bubble bg-white text-slate-800 font-black text-2xl md:text-3xl px-3 py-1 rounded-full shadow-lg border-4 border-amber-400 min-w-[50px] text-center mb-1 transition-all';
+            letterBubble.textContent = letter;
+            // 預設成熟度低時，字母為半透明，長成後為深色
+            letterBubble.style.opacity = "0.4"; 
+
+            // 葉子裝飾
+            const leaves = document.createElement('div');
+            leaves.className = 'flex gap-1 justify-center -mb-2';
+            leaves.innerHTML = `
+                <div class="w-3 h-8 ${type.leafColor} rounded-full transform -rotate-12 origin-bottom"></div>
+                <div class="w-3.5 h-10 ${type.leafColor} rounded-full origin-bottom"></div>
+                <div class="w-3 h-8 ${type.leafColor} rounded-full transform rotate-12 origin-bottom"></div>
+            `;
+
+            leafWrapper.appendChild(letterBubble);
+            leafWrapper.appendChild(leaves);
+
+            // 2. 蔬菜身體
+            const body = document.createElement('div');
+            body.className = 'text-6xl md:text-7xl filter drop-shadow-md select-none mt-1';
+            body.textContent = type.emoji;
+
+            wrapper.appendChild(leafWrapper);
+            wrapper.appendChild(body);
+
+            return wrapper;
+        }
+
+        // 根據生長百分比更新蔬菜外觀
+        function updateVeggieDOM(index) {
+            const plot = plots[index];
+            if (!plot.active || !plot.element) return;
+
+            // 縮放比例與泥土深度：沒成熟時縮得很小，並且埋在比較深的地方
+            const scale = 0.3 + (plot.growth / 100) * 0.7;
+            const translateY = 45 - (plot.growth / 100) * 45; // 0%時埋在地下45px，100%時完全冒出
+
+            plot.element.style.transform = `scale(${scale}) translateY(${translateY}px)`;
+            
+            // 字母顏色深淺隨成熟度調整 (10% -> opacity 0.4, 100% -> opacity 1)
+            const bubble = plot.element.querySelector('.letter-bubble');
+            if (bubble) {
+                bubble.style.opacity = (0.4 + (plot.growth / 100) * 0.6).toFixed(2);
+                if (plot.growth >= 100) {
+                    bubble.classList.remove('border-amber-400');
+                    bubble.classList.add('border-green-400', 'bg-yellow-50');
+                }
+            }
+        }
+
+        // 移除單一坑洞蔬菜
+        function removeVeggie(index) {
+            plots[index].active = false;
+            plots[index].isHarvesting = false;
+            plots[index].growth = 0;
+            const container = document.querySelector(`#plot-${index} .veggie-container`);
+            if (container) container.innerHTML = '';
+        }
+
+        // --- 動態更新虛擬鍵盤提示亮燈 ---
+        function updateKeyboardHints() {
+            // 先清除所有鍵盤的亮燈狀態
+            document.querySelectorAll('.kb-key').forEach(keyEl => {
+                keyEl.classList.remove('pulse-hint');
+                // 回復原先高度與陰影
+                keyEl.style.transform = 'translateY(0)';
+            });
+
+            if (!gameActive) return;
+
+            // 收集當前畫面上所有蔬菜代表的字母
+            const activeLetters = plots
+                .filter(p => p.active && !p.isHarvesting)
+                .map(p => p.letter);
+
+            // 在鍵盤上把這些字母標記上「脈衝亮燈」效果，提示小朋友去按
+            activeLetters.forEach(letter => {
+                const keyEl = document.querySelector(`.kb-key[data-key="${letter}"]`);
+                if (keyEl) {
+                    keyEl.classList.add('pulse-hint');
+                }
+            });
+        }
+
+        // --- 鍵盤監聽與打字判定 ---
+        window.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
+
+            const pressedKey = e.key.toUpperCase();
+            
+            // 1. 檢查是否打中畫面上存在的蔬菜
+            // 為了鼓勵孩子，如果有多個相同字母，先拔起成熟度最高的那一個
+            let targetPlotIndex = -1;
+            let maxGrowth = -1;
+
+            plots.forEach((plot, index) => {
+                if (plot.active && !plot.isHarvesting && plot.letter === pressedKey) {
+                    if (plot.growth > maxGrowth) {
+                        maxGrowth = plot.growth;
+                        targetPlotIndex = index;
+                    }
+                }
+            });
+
+            // 模擬虛擬鍵盤按下去的反饋
+            const keyEl = document.querySelector(`.kb-key[data-key="${pressedKey}"]`);
+            if (keyEl) {
+                keyEl.style.transform = 'translateY(4px)';
+                keyEl.style.borderBottomWidth = '1px';
+                setTimeout(() => {
+                    keyEl.style.transform = '';
+                    keyEl.style.borderBottomWidth = '';
+                }, 150);
+            }
+
+            if (targetPlotIndex !== -1) {
+                // 打對了！拔出蔬菜！
+                harvestVeggie(targetPlotIndex);
+            } else {
+                // 打錯了，給予溫和的提示音，且不扣分、不有任何懲罰
+                // 檢查按下的鍵是否在當前範圍內，若在才播放錯誤音，避免玩家按 shift 等功能鍵也被判定錯誤
+                if (rangeLetters[currentRange].includes(pressedKey)) {
+                    sfx.playWrong();
+                }
+            }
+        });
+
+        // 拔菜動畫與加分
+        function harvestVeggie(index) {
+            const plot = plots[index];
+            plot.isHarvesting = true;
+            
+            // 播放啵啵音效
+            sfx.playPop();
+
+            // 計算動畫起點與終點（籃子位置）
+            const veggieEl = plot.element;
+            const veggieRect = veggieEl.getBoundingClientRect();
+            const basketRect = basket.getBoundingClientRect();
+
+            // 計算位移向量
+            const dx = (basketRect.left + basketRect.width / 2) - (veggieRect.left + veggieRect.width / 2);
+            const dy = (basketRect.top + basketRect.height / 2) - (veggieRect.top + veggieRect.height / 2);
+
+            // 停止原先的搖擺動畫，並注入飛向籃子的動畫參數
+            veggieEl.classList.remove('wiggle');
+            veggieEl.style.setProperty('--fly-x', `${dx}px`);
+            veggieEl.style.setProperty('--fly-y', `${dy}px`);
+            veggieEl.classList.add('flying');
+
+            // 飛完之後正式刪除與加分
+            setTimeout(() => {
+                removeVeggie(index);
+                score++;
+                scoreVal.textContent = score;
+
+                // 每 5 分觸發一次兔子送星星事件！
+                if (score > 0 && score % 5 === 0) {
+                    triggerBunnyCelebration();
+                }
+
+                updateKeyboardHints();
+            }, 800);
+        }
+
+        // --- 兔子慶祝事件 (獎勵機制) ---
+        function triggerBunnyCelebration() {
+            // 播放獲得星星的前奏叮咚聲
+            sfx.playStar();
+
+            // 讓兔子跑出來
+            bunny.classList.remove('hidden');
+            bunny.classList.add('bunny-anim');
+
+            // 在兔子跑到中間時 (大約動畫 2 秒處)，空中噴發出星星
+            setTimeout(() => {
+                spawnStarsEffect();
+                starCount++;
+                starVal.textContent = starCount;
+            }, 2000);
+
+            // 動態結束後重設兔子
+            setTimeout(() => {
+                bunny.classList.remove('bunny-anim');
+                bunny.classList.add('hidden');
+            }, 4100);
+        }
+
+        // 星星落下的視覺特效
+        function spawnStarsEffect() {
+            const stageWidth = effectLayer.clientWidth;
+            
+            // 產生 3 顆落下的大星星
+            for (let i = 0; i < 3; i++) {
+                const star = document.createElement('div');
+                star.className = 'absolute text-4xl star-anim z-40 select-none';
+                star.textContent = '⭐';
+                // 散佈在螢幕中間區域
+                const randomX = (stageWidth / 2) - 100 + (Math.random() * 200);
+                star.style.left = `${randomX}px`;
+                star.style.top = `60px`;
+
+                effectLayer.appendChild(star);
+
+                // 動畫結束後移除
+                setTimeout(() => {
+                    star.remove();
+                }, 2000);
+            }
+        }
+    </script>
+</body>
+</html>
