@@ -187,7 +187,7 @@
         <!-- ================= 開始畫面 ================= -->
         <div id="start-screen" class="bg-white p-6 sm:p-8 rounded-3xl shadow-2xl border-4 border-emerald-400 max-w-lg w-full my-6 text-center no-print">
             <h2 class="text-4xl font-black text-emerald-800 mb-2 tracking-wider">🗡️ 冒險王傳奇 🛡️</h2>
-            <p class="text-emerald-600 font-extrabold text-sm mb-4">台北市私立立人國際中小學 推薦練習</p>
+            <p class="text-emerald-600 font-extrabold text-sm mb-4" id="subtitle-school"></p>
             <p class="text-gray-600 mb-6 font-bold text-xs sm:text-sm">這是一場神秘的注音魔法冒險！<br>輸入名字、選擇你的勇士與地圖，出發打倒拼音怪獸吧！</p>
             
             <!-- 0. 玩家名字輸入 -->
@@ -412,8 +412,8 @@
                 
                 <!-- 學校抬頭 -->
                 <div class="text-center mb-4">
-                    <h3 class="text-lg sm:text-xl font-bold text-amber-900 tracking-widest">台北市私立立人國際中小學</h3>
-                    <p class="text-[10px] uppercase tracking-widest text-amber-800">Liren International Primary & Middle School</p>
+                    <h3 class="text-lg sm:text-xl font-bold text-amber-900 tracking-widest" id="cert-school-name"></h3>
+                    <p class="text-[10px] uppercase tracking-widest text-amber-800" id="cert-school-name-en" style="display:none"></p>
                     <div class="w-full flex justify-center my-2">
                         <div class="h-[2px] w-2/3 bg-gradient-to-r from-transparent via-amber-700 to-transparent"></div>
                     </div>
@@ -425,7 +425,7 @@
                 <!-- 證書文字 -->
                 <div class="text-slate-800 text-sm sm:text-base leading-relaxed space-y-4 my-6 sm:my-8 px-4 font-medium">
                     <p class="text-lg">
-                        恭喜立人小勇士： <span id="cert-player-name" class="font-black text-2xl text-blue-900 border-b-2 border-blue-900 px-4 py-1">王小明</span> 同學，
+                        恭喜 <span id="cert-player-name" class="font-black text-2xl text-blue-900 border-b-2 border-blue-900 px-4 py-1">王小明</span> 同學，
                     </p>
                     <p class="indent-6 sm:indent-8">
                         於本校中文注音打字魔法挑戰中表現極為優異！在 <span id="cert-level" class="font-black text-amber-800">綠野森林</span> 戰場中成功打敗拼音巨獸，順利通過「中文盲打魔法試煉」。
@@ -460,8 +460,8 @@
                     </div>
                     <!-- 虛擬紅章 -->
                     <div class="relative flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 border-4 border-red-600 rounded-2xl text-red-600 font-black text-center text-xs sm:text-sm rotate-12 bg-white/40 drop-shadow select-none">
-                        <div class="leading-tight p-1">
-                            立人中小學<br>教務處<br>認證合格章
+                        <div class="leading-tight p-1" id="cert-stamp">
+                            教務處<br>認證合格章
                         </div>
                     </div>
                 </div>
@@ -598,7 +598,7 @@
                 { word: '氣球', bpmf: 'ㄑㄧˋ ㄑㄧㄡˊ' },
                 { word: '香蕉', bpmf: 'ㄒㄧㄤ ㄐㄧㄠ' }, // 🌟 修正注音錯誤
                 { word: '蘋果', bpmf: 'ㄆㄧㄥˊ ㄍㄨㄛˇ' },
-                { word: '立人', bpmf: 'ㄌㄧˋ ㄖㄣˊ' },
+                { word: '打字', bpmf: 'ㄉㄚˇ ㄗˋ' },
                 { word: '功課', bpmf: 'ㄍㄨㄥ ㄎㄜˋ' },
                 { word: '鉛筆', bpmf: 'ㄑㄧㄢ ㄅㄧˇ' },
                 { word: '橡皮', bpmf: 'ㄒㄧㄤˋ ㄆㄧˊ' },
@@ -619,12 +619,12 @@
                 { word: '今天天氣好', bpmf: 'ㄐㄧㄣ ㄊㄧㄢ ㄊㄧㄢ ㄑㄧˋ ㄏㄠˇ' },
                 { word: '我們愛看書', bpmf: 'ㄨㄛˇ ㄇㄣˊ ㄞˋ ㄎㄢˋ ㄕㄨ' },
                 { word: '小魚水中游', bpmf: 'ㄒㄧㄠˇ ㄩˊ ㄕㄨㄟˇ ㄓㄨㄥ ㄧㄡˊ' },
-                { word: '立人好兒童', bpmf: 'ㄌㄧˋ ㄖㄣˊ ㄏㄠˇ ㄦˊ ㄊㄨㄥˊ' },
+                { word: '認真好兒童', bpmf: 'ㄖㄣˋ ㄓㄣ ㄏㄠˇ ㄦˊ ㄊㄨㄥˊ' },
                 { word: '爸爸開新車', bpmf: 'ㄅㄚˋ ㄅㄚ˙ ㄎㄞ ㄒㄧㄣ ㄔㄜ' },
                 { word: '媽媽愛花朵', bpmf: 'ㄇㄚ ㄇㄚ˙ ㄞˋ ㄏㄨㄚ ㄉㄨㄛˇ' },
                 { word: '小鳥樹上叫', bpmf: 'ㄒㄧㄠˇ ㄋㄧㄠˇ ㄕㄨˋ ㄕㄤˋ ㄐㄧㄠˋ' },
                 { word: '天上有星星', bpmf: 'ㄊㄧㄢ ㄕㄤˋ ㄧㄡˇ ㄒㄧㄥ ㄒㄧㄥ' },
-                { word: '我們愛立人', bpmf: 'ㄨㄛˇ ㄇㄣˊ ㄞˋ ㄌㄧˋ ㄖㄣˊ' },
+                { word: '我們愛學習', bpmf: 'ㄨㄛˇ ㄇㄣˊ ㄞˋ ㄒㄩㄝˊ ㄒㄧˊ' },
                 { word: '大家做運動', bpmf: 'ㄉㄚˋ ㄐㄧㄚ ㄗㄨㄛˋ ㄩㄣˋ ㄉㄨㄥˋ' }
             ]
         };
@@ -660,8 +660,29 @@
             hard: 'url("https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&q=80&w=1000")' // 星空宇宙
         };
 
+        // ── 校名設定（留空則不顯示任何校名） ─────────────────────────────────
+        // 例：const SCHOOL_NAME = '台北市立XX國小';
+        const SCHOOL_NAME = '';
+
+        function initSchoolName() {
+            const sub = document.getElementById('subtitle-school');
+            if (sub) {
+                sub.textContent = SCHOOL_NAME ? SCHOOL_NAME + ' 推薦練習' : '';
+                sub.style.display = SCHOOL_NAME ? '' : 'none';
+            }
+            const certName = document.getElementById('cert-school-name');
+            if (certName) certName.textContent = SCHOOL_NAME;
+            const certNameEn = document.getElementById('cert-school-name-en');
+            if (certNameEn) certNameEn.style.display = SCHOOL_NAME ? '' : 'none';
+            const stamp = document.getElementById('cert-stamp');
+            if (stamp) stamp.innerHTML = SCHOOL_NAME
+                ? SCHOOL_NAME + '<br>教務處<br>認證合格章'
+                : '教務處<br>認證合格章';
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         // --- 遊戲變數 ---
-        let playerName = "立人小勇士";
+        let playerName = "小勇士";
         let currentLevel = 'easy';
         let currentHero = 'lion';
         let currentHeroEmoji = '🦁';
@@ -796,7 +817,7 @@
         // 啟動遊戲
         function startGame() {
             const nameInput = document.getElementById('player-name-input').value.trim();
-            playerName = nameInput !== "" ? nameInput : "立人小勇士";
+            playerName = nameInput !== "" ? nameInput : "小勇士";
             document.getElementById('stage-player-name').textContent = playerName;
 
             // 🌟 讀取自訂冒險時間 (從下拉選單讀取秒數)
@@ -1383,6 +1404,7 @@
         }
 
         // 初始化選擇
+        initSchoolName();
         selectHero('lion', '🦁');
         selectLevel('easy');
     </script>
