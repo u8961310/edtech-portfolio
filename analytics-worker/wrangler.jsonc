@@ -1,0 +1,14 @@
+{
+  "name": "edtech-analytics",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-08",
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "edtech-analytics",
+      // 佔位值，正式建庫後於部署階段回填
+      "database_id": "local-dev-placeholder"
+    }
+  ]
+}
