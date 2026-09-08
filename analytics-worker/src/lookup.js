@@ -1,7 +1,7 @@
 import { parseWhoisUserOrg } from './parse.js';
 
 const TIMEOUT_MS = 5000;
-const UA = 'edtech-portfolio-analytics/1.0 (u8961310@gmail.com)';
+const UA = 'edtech-portfolio-analytics/1.0 (visitor institution stats; +https://u8961310.github.io/edtech-portfolio/; u8961310@gmail.com)';
 
 async function fetchWithTimeout(url, options = {}) {
   const controller = new AbortController();
