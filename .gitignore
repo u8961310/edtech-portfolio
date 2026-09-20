@@ -8,6 +8,8 @@
 *.pem
 *.cert
 secret.json
+.dev.vars
+.dev.vars.*
 
 # 2. 相依套件目錄
 node_modules/
@@ -31,3 +33,6 @@ dist/
 build/
 .next/
 out/
+
+# 5. Cloudflare Workers 本機狀態 (miniflare 模擬資料，不進版控)
+.wrangler/
