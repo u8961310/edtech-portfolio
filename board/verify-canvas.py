@@ -169,7 +169,15 @@ check('彈出視窗關閉時移出 Tab 順序（visibility:hidden 或 inert）',
       OK if has_hide else WARN,
       '' if has_hide else '只靠 opacity/pointer-events 的話鍵盤仍可操作隱藏按鈕')
 
-# ------------------------------------------------- 11. ZONE_ID 標記（契約 v2 #14）
+# ------------------------------------------------- 11. SVG points 百分比（契約 v3 #15）
+# SVG 的 points 只吃數字，寫百分比會整個不渲染且 console 報錯，
+# 但畫面上看不出來——沒畫出來的東西是看不見的。2026-09-20 海洋區首生踩到。
+pct_points = re.findall(r'<(?:polygon|polyline)[^>]*\bpoints\s*=\s*"([^"]*%[^"]*)"', scan, re.I)
+check('SVG polygon/polyline 的 points 沒有用百分比',
+      FAIL if pct_points else OK,
+      ('%d 處，例：%s' % (len(pct_points), pct_points[0][:40])) if pct_points else '')
+
+# ------------------------------------------------- 12. ZONE_ID 標記（契約 v2 #14）
 zone = re.search(r'<!--\s*ZONE_ID:\s*([a-z]+)\s*-->', html)
 check('檔頭有 ZONE_ID 標記', OK if zone else WARN,
       ('zone = ' + zone.group(1)) if zone else '整合時要靠它辨識區域')
