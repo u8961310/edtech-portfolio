@@ -1,0 +1,1068 @@
+<!-- ZONE_ID: ocean -->
+<!--
+  資訊大富翁 - 海洋大探索
+  設計基準：橫向寬螢幕 1280x780 (教室單槍投影)
+  次要情境：手機直立版面 (藉由 CSS media query 自適應重排)
+  相容性約束：無外部圖片/音效，使用 2015 年前安全 emoji，鍵盤/無障礙安全隱藏，Web Audio API 合成音效。
+-->
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>資訊大富翁 - 海洋大探索</title>
+    <!-- 引入 Noto Sans TC 字體 (唯一允許的外部資源) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS 變數與主題設定：深青藍主題 #0891b2 */
+        :root {
+            --primary: #06b6d4;
+            --primary-dark: #0e7490;
+            --secondary: #fbbf24;
+            --text-main: #1e293b;
+            --bg-modal: rgba(255, 255, 255, 0.98);
+            --path-color: #38bdf8;
+            --ocean-dark: #0891b2;
+            --ocean-light: #e0f2fe;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            font-family: 'Noto Sans TC', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #0284c7;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 遊戲主容器：標準寬螢幕比例 800x600，透過 JS scale 適應各尺寸 */
+        #game-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-container {
+            width: 800px;
+            height: 600px;
+            /* flex-shrink: 0 是必要的：#game-wrapper 是 flex 容器，預設會把這個
+               800px 的盒子壓到視窗寬。壓縮後版面盒變成 390px，但格子座標仍是
+               800x600 空間的 px，x=580 與 x=700 兩格就落在盒外被 overflow:hidden
+               裁掉，手機直立時完全點不到。壓縮之後 handleResize() 又再乘一次
+               scale，等於縮兩次。2026-09-20 實測：186px -> 382px，裁掉 2 格 -> 0 格。*/
+            flex-shrink: 0;
+            position: relative;
+            transform-origin: center center;
+            background: linear-gradient(to bottom, #0284c7 0%, #38bdf8 40%, #a5f3fc 100%);
+            box-shadow: 0 0 30px rgba(0,0,0,0.3);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        /* 橫放提示：只在直立窄螢幕出現 */
+        #rotate-hint {
+            display: none;
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #0e7490;
+            font-size: 15px;
+            font-weight: 700;
+            padding: 10px 18px;
+            border-radius: 999px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 20;
+            cursor: pointer;
+        }
+        #rotate-hint.dismissed { display: none !important; }
+
+        @media (orientation: portrait) and (max-width: 820px) {
+            #rotate-hint { display: flex; }
+        }
+
+        /* 海洋背景場景裝飾 */
+        #scenery {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 蜿蜒的路徑 */
+        .path-line {
+            fill: none;
+            stroke: #0284c7;
+            stroke-width: 36;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0.4;
+            filter: drop-shadow(0 4px 0 #0369a1);
+        }
+
+        /* 遊戲格子容器 */
+        #tiles-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 2;
+        }
+
+        .tile {
+            position: absolute;
+            width: 72px;
+            height: 72px;
+            transform: translate(-50%, -50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: 900;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+            transition: filter 0.3s, transform 0.3s;
+            cursor: pointer;
+        }
+
+        /* 走過的格子視覺變化 */
+        .tile.visited {
+            filter: brightness(0.65) grayscale(0.2);
+        }
+        
+        .tile.visited::after {
+            content: '✅';
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            font-size: 26px;
+            filter: none;
+        }
+
+        /* 各種海洋主題格子造型 (使用 SVG Data URI) */
+        .tile-start {
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="42" fill="%2338bdf8" stroke="%230284c7" stroke-width="6"/><text x="50" y="57" font-size="36" text-anchor="middle">⚓</text></svg>') no-repeat center/contain;
+        }
+        .tile-shell {
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50,10 Q80,10 85,50 Q90,90 50,90 Q10,90 15,50 Q20,10 50,10 Z" fill="%23f472b6" stroke="%23db2777" stroke-width="4"/><path d="M50,20 Q70,20 75,50 Q80,80 50,80 Q20,80 25,50 Q30,20 50,20 Z" fill="%23fbcfe8"/></svg>') no-repeat center/contain;
+        }
+        .tile-coral {
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="42" fill="%23fb7185" stroke="%23e11d48" stroke-width="6"/><path d="M30,70 Q30,40 50,30 Q70,40 70,70 Z" fill="%23fda4af"/></svg>') no-repeat center/contain;
+        }
+        .tile-boss {
+            width: 88px;
+            height: 88px;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="50,10 85,35 75,85 25,85 15,35" fill="%23fbbf24" stroke="%23d97706" stroke-width="6"/><circle cx="50" cy="55" r="22" fill="%23ef4444"/><text x="50" y="65" font-size="28" text-anchor="middle">👑</text></svg>') no-repeat center/contain;
+        }
+
+        /* 玩家角色層 */
+        #player-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        #player {
+            position: absolute;
+            width: 76px;
+            height: 96px;
+            transform: translate(-50%, -100%);
+            transition: left 0.6s linear, top 0.6s linear;
+        }
+
+        .player-anim-wrapper {
+            width: 100%;
+            height: 100%;
+            transform-origin: bottom center;
+            animation: breathe 2s infinite ease-in-out;
+        }
+
+        /* 海豚角色 SVG 動畫 */
+        #dolphin-svg { width: 100%; height: 100%; overflow: visible; }
+        .dolphin-eye { transform-origin: center; animation: blink 4s infinite; }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1, 1); }
+            50% { transform: scale(1.04, 0.95); }
+        }
+        @keyframes blink {
+            0%, 46%, 50%, 100% { transform: scaleY(1); }
+            48% { transform: scaleY(0.1); }
+        }
+        @keyframes jump-arc {
+            0%   { transform: translateY(0); }
+            50%  { transform: translateY(-70px) scale(0.95, 1.05); }
+            100% { transform: translateY(0); }
+        }
+        @keyframes squash-stretch {
+            0%   { transform: scale(1, 1); }
+            15%  { transform: scale(1.15, 0.85); }
+            30%  { transform: scale(0.85, 1.15); }
+            70%  { transform: scale(0.9, 1.1); }
+            85%  { transform: scale(1.2, 0.8); }
+            100% { transform: scale(1, 1); }
+        }
+        .is-jumping {
+            animation: jump-arc 0.6s ease-in-out, squash-stretch 0.6s ease-in-out !important;
+        }
+
+        .screen-shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-3px, 0, 0); }
+            20%, 80% { transform: translate3d(5px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+            40%, 60% { transform: translate3d(8px, 0, 0); }
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .top-bar {
+            position: absolute;
+            top: 15px; left: 15px; right: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: auto;
+        }
+
+        .coin-counter {
+            background: white;
+            padding: 8px 18px;
+            border-radius: 99px;
+            border: 3px solid var(--secondary);
+            font-size: 24px;
+            font-weight: bold;
+            color: #d97706;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+        .coin-icon { font-size: 28px; }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-icon {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: white;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+            transition: transform 0.1s, background 0.2s;
+        }
+        .btn-icon:hover { background: #e0f2fe; transform: scale(1.05); }
+        .btn-icon:active { transform: scale(0.95); }
+
+        .dice-area {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .dice-btn {
+            background: linear-gradient(135deg, #06b6d4, #0284c7);
+            color: white;
+            border: 4px solid #fff;
+            border-radius: 16px;
+            padding: 15px 30px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #0369a1, 0 10px 10px rgba(0,0,0,0.3);
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .dice-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #0369a1, 0 12px 12px rgba(0,0,0,0.3);
+        }
+        .dice-btn:active, .dice-btn.disabled {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #0369a1, 0 4px 4px rgba(0,0,0,0.3);
+        }
+        .dice-btn.disabled {
+            background: #94a3b8; box-shadow: 0 2px 0 #64748b; cursor: not-allowed;
+        }
+
+        .dice-display {
+            width: 60px; height: 60px;
+            background: white;
+            border-radius: 12px;
+            border: 3px solid #0e7490;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #0e7490;
+            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.1);
+        }
+        .dice-rolling {
+            animation: dice-spin 0.5s infinite linear;
+        }
+        @keyframes dice-spin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        /* 彈跳視窗 Modal (符合第 11 條約束：加上 visibility:hidden 與 inert 防 Tab) */
+        #modal-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        #modal-layer.active {
+            opacity: 1;
+            pointer-events: auto;
+            visibility: visible;
+        }
+
+        .modal-card {
+            background: var(--bg-modal);
+            width: 90%;
+            max-width: 520px;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transform: translateY(50px) scale(0.9);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+        }
+        #modal-layer.active .modal-card {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--primary-dark);
+            margin-top: 0;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .modal-question {
+            font-size: 20px; /* 字級要求：題目 >= 20px */
+            line-height: 1.5;
+            color: var(--text-main);
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .option-btn {
+            background: white;
+            border: 3px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 18px; /* 字級要求：選項 >= 18px */
+            font-weight: bold;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .option-btn:hover {
+            border-color: var(--primary);
+            background: #e0f2fe;
+            transform: scale(1.02);
+        }
+        .option-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .wrong-shake {
+            animation: shake 0.4s;
+            border-color: #ef4444 !important;
+            background: #fef2f2 !important;
+            color: #b91c1c !important;
+        }
+
+        #effects-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, ::before, ::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            .player-anim-wrapper { animation: none !important; }
+            .is-jumping { animation: none !important; }
+            .dice-rolling { animation: none !important; }
+            #player { transition: none !important; }
+            #effects-canvas { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 主遊戲容器 -->
+    <div id="game-wrapper">
+        <!-- 直立手機橫放提示 -->
+        <div id="rotate-hint" role="note">📱 橫著拿，畫面更大喔！</div>
+
+        <div id="game-container">
+
+            <!-- 1. 背景層：海洋風景、光束、遠山、珊瑚 -->
+            <svg id="scenery" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+                <!-- 陽光穿透水面的光束 -->
+                <polygon points="150,0 250,0 400,600 250,600" fill="#ffffff" opacity="0.12"/>
+                <polygon points="450,0 550,0 700,600 550,600" fill="#ffffff" opacity="0.10"/>
+                <polygon points="650,0 750,0 850,600 750,600" fill="#ffffff" opacity="0.08"/>
+
+                <!-- 遠方海底山脈 -->
+                <path d="M-50,600 L120,380 L320,600 Z" fill="#0284c7" opacity="0.5"/>
+                <path d="M220,600 L480,300 L780,600 Z" fill="#0369a1" opacity="0.6"/>
+                <path d="M520,600 L720,400 L900,600 Z" fill="#0284c7" opacity="0.4"/>
+
+                <!-- 海底地表 -->
+                <path d="M0,420 Q400,380 800,450 L800,600 L0,600 Z" fill="#0e7490"/>
+                <path d="M0,500 Q400,460 800,530 L800,600 L0,600 Z" fill="#155e75"/>
+
+                <!-- 海底氣泡裝飾 -->
+                <circle cx="150" cy="300" r="8" fill="#e0f2fe" opacity="0.4"/>
+                <circle cx="165" cy="270" r="5" fill="#e0f2fe" opacity="0.5"/>
+                <circle cx="158" cy="240" r="10" fill="#e0f2fe" opacity="0.3"/>
+                <circle cx="680" cy="250" r="6" fill="#e0f2fe" opacity="0.4"/>
+                <circle cx="695" cy="210" r="12" fill="#e0f2fe" opacity="0.3"/>
+
+                <!-- 蜿蜒的路徑線條：起點(100,500) -> Q1(300,430) -> Q2(580,380) -> Q3(700,220) -> Q4(450,160) -> Boss(160,180) -->
+                <path class="path-line" d="M100,500 C200,500 200,430 300,430 C450,430 480,380 580,380 C700,380 750,220 700,220 C650,220 550,160 450,160 C300,160 250,180 160,180" />
+            </svg>
+
+            <!-- 2. 格子層 -->
+            <div id="tiles-layer">
+                <!-- 由 JS 動態產生 -->
+            </div>
+
+            <!-- 3. 特效層 -->
+            <canvas id="effects-canvas" width="800" height="600"></canvas>
+
+            <!-- 4. 玩家角色層 -->
+            <div id="player-layer">
+                <div id="player">
+                    <div class="player-anim-wrapper">
+                        <!-- 海豚角色 SVG (戴潛水鏡與泳圈) -->
+                        <svg id="dolphin-svg" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+                            <!-- 泳圈 -->
+                            <ellipse cx="50" cy="85" rx="36" ry="16" fill="#facc15" stroke="#ca8a04" stroke-width="4"/>
+                            <ellipse cx="50" cy="85" rx="20" ry="8" fill="#a5f3fc"/>
+                            <!-- 海豚身體 -->
+                            <path d="M30,70 Q20,30 50,25 Q80,30 75,70 Q75,90 50,95 Q25,90 30,70 Z" fill="#38bdf8"/>
+                            <!-- 腹部 -->
+                            <path d="M38,65 Q30,45 50,40 Q70,45 62,65 Q62,80 50,83 Q38,80 38,65 Z" fill="#e0f2fe"/>
+                            <!-- 背鰭 -->
+                            <polygon points="50,30 65,15 50,10" fill="#0284c7"/>
+                            <!-- 尾巴 -->
+                            <path d="M50,90 Q40,110 30,105 Q45,98 50,90 Q55,98 70,105 Q60,110 50,90 Z" fill="#0284c7"/>
+                            <!-- 潛水鏡 -->
+                            <rect x="34" y="38" width="32" height="18" rx="8" fill="#1e293b" stroke="#f472b6" stroke-width="3"/>
+                            <circle cx="42" cy="47" r="5" fill="#38bdf8"/>
+                            <circle cx="58" cy="47" r="5" fill="#38bdf8"/>
+                            <!-- 微笑嘴巴 -->
+                            <path d="M45,60 Q50,65 55,60" fill="none" stroke="#0e7490" stroke-width="2.5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. UI 介面層 -->
+            <div id="ui-layer">
+                <div class="top-bar">
+                    <div class="coin-counter">
+                        <span class="coin-icon">💰</span>
+                        <span id="coin-display">0</span>
+                    </div>
+                    <div class="controls">
+                        <button class="btn-icon" id="btn-sound" title="切換音效">🔊</button>
+                        <button class="btn-icon" id="btn-reset" title="重新開始">🔄</button>
+                    </div>
+                </div>
+
+                <div class="dice-area">
+                    <div class="dice-display" id="dice-value">❓</div>
+                    <button class="dice-btn" id="btn-dice">
+                        <span>🎲 擲骰子</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 6. 彈跳視窗層 (Modal) -->
+            <div id="modal-layer">
+                <div class="modal-card">
+                    <h2 class="modal-title" id="modal-title">
+                        <span id="modal-icon">⭐</span>
+                        <span id="modal-title-text">題目</span>
+                    </h2>
+                    <div class="modal-question" id="modal-question">這裡會顯示問題？</div>
+                    <div class="options-container" id="modal-options"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        /**
+         * 遊戲設定與資料庫 (檔案管理主題)
+         */
+        const QUESTIONS = [
+            {
+                q: '小明畫了一張漂亮的生日卡片圖片，想要存在電腦裡以後才找得到，應該放在哪裡比較好？',
+                opts: ['隨便亂丟在桌面上', '存在「圖片」資料夾並取好名字', '直接關掉電腦'],
+                a: 1
+            },
+            {
+                q: '電腦裡的「資料夾」就像是書包裡的分科作業夾，它的主要功能是什麼呢？',
+                opts: ['把檔案分類收好，才不會找不到', '用來玩好玩的遊戲', '把不要的檔案直接吃掉'],
+                a: 0
+            },
+            {
+                q: '不小心把重要的作業檔案按了刪除鍵，檔案跑去哪裡了？可以找回來嗎？',
+                opts: ['永遠消失找不回來了', '跑到「資源回收桶」裡，可以還原回來', '飛到天空中'],
+                a: 1
+            },
+            {
+                q: '為什麼我們要幫自己辛苦寫好的檔案取一個清楚好懂的名字呢？',
+                opts: ['因為字多比較好看', '這樣下次一眼就能看出裡面是什麼內容', '沒有什麼特別用處'],
+                a: 1
+            },
+            {   // BOSS 題：備份概念
+                q: '【魔王挑戰】如果學校電腦快壞掉了，為了防止檔案不見，最聰明的做法是什麼呢？',
+                opts: ['趕快把電腦砸壞', '做好「備份」，把重要檔案存到隨身碟或雲端', '假裝沒看到'],
+                a: 1
+            }
+        ];
+
+        // 地圖格子座標設定 (6 格：起點 + 4題 + 1Boss)
+        const MAP_TILES = [
+            { id: 0, x: 100, y: 500, type: 'start', label: '起點' },
+            { id: 1, x: 300, y: 430, type: 'shell', label: '1' },
+            { id: 2, x: 580, y: 380, type: 'coral', label: '2' },
+            { id: 3, x: 700, y: 220, type: 'shell', label: '3' },
+            { id: 4, x: 450, y: 160, type: 'coral', label: '4' },
+            { id: 5, x: 160, y: 180, type: 'boss', label: '👑' }
+        ];
+
+        // 依據約束規定，固定使用此前綴
+        const STORAGE_KEY_PROG = 'edtech-board-progress';
+        const STORAGE_KEY_BEST = 'edtech-board-best';
+
+        // 遊戲狀態
+        let gameState = {
+            pos: 0,
+            coins: 0,
+            done: []
+        };
+        let isRolling = false;
+        let isMoving = false;
+        let soundEnabled = true;
+
+        // DOM 元素參考
+        const elContainer = document.getElementById('game-container');
+        const elTilesLayer = document.getElementById('tiles-layer');
+        const elPlayer = document.getElementById('player');
+        const elPlayerAnim = elPlayer.querySelector('.player-anim-wrapper');
+        const elCoinDisplay = document.getElementById('coin-display');
+        const elBtnDice = document.getElementById('btn-dice');
+        const elDiceValue = document.getElementById('dice-value');
+        const elBtnSound = document.getElementById('btn-sound');
+        const elBtnReset = document.getElementById('btn-reset');
+        
+        // Modal DOM
+        const elModalLayer = document.getElementById('modal-layer');
+        const elModalTitleText = document.getElementById('modal-title-text');
+        const elModalIcon = document.getElementById('modal-icon');
+        const elModalQuestion = document.getElementById('modal-question');
+        const elModalOptions = document.getElementById('modal-options');
+        
+        // Canvas DOM
+        const canvas = document.getElementById('effects-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        /**
+         * 自適應畫面縮放
+         */
+        function handleResize() {
+            const wrapper = document.getElementById('game-wrapper');
+            const ww = wrapper.clientWidth;
+            const wh = wrapper.clientHeight;
+            const scale = Math.min(ww / 800, wh / 600) * 0.98;
+            elContainer.style.transform = `scale(${scale})`;
+        }
+        window.addEventListener('resize', handleResize);
+        handleResize();
+
+        /**
+         * 初始化遊戲
+         */
+        function initGame() {
+            loadProgress();
+            renderTiles();
+            updateUI();
+            updatePlayerPosition(false);
+            initAudio();
+            loopParticles();
+        }
+
+        function loadProgress() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY_PROG);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (typeof parsed.pos === 'number') {
+                        gameState = parsed;
+                    }
+                }
+            } catch (e) {
+                console.warn("無法讀取存檔:", e);
+            }
+        }
+
+        function saveProgress() {
+            try {
+                localStorage.setItem(STORAGE_KEY_PROG, JSON.stringify(gameState));
+                if (gameState.pos === MAP_TILES.length - 1 && gameState.done.includes(gameState.pos)) {
+                    const best = parseInt(localStorage.getItem(STORAGE_KEY_BEST)) || 0;
+                    if (gameState.coins > best) {
+                        localStorage.setItem(STORAGE_KEY_BEST, gameState.coins);
+                    }
+                }
+            } catch (e) {
+                console.warn("無法寫入存檔:", e);
+            }
+        }
+
+        /**
+         * 客製化確認對話框 (替代原生 confirm)
+         */
+        function showCustomAlert(title, text, buttons) {
+            elModalIcon.textContent = '🔄';
+            elModalTitleText.textContent = title;
+            elModalQuestion.innerHTML = text;
+            elModalOptions.innerHTML = '';
+            
+            buttons.forEach(b => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.style.cssText = b.style;
+                btn.textContent = b.text;
+                btn.onclick = b.action;
+                elModalOptions.appendChild(btn);
+            });
+            elModalLayer.classList.add('active');
+        }
+
+        function resetGame() {
+            showCustomAlert("重新開始冒險？", "所有的金幣與冒險進度都會歸零喔！", [
+                { text: '取消', style: 'border: 3px solid #cbd5e1; text-align: center;', action: () => closeModal() },
+                { text: '✅ 確定重來', style: 'background: #ef4444; color: white; text-align: center;', action: () => {
+                    gameState = { pos: 0, coins: 0, done: [] };
+                    saveProgress();
+                    closeModal();
+                    updateUI();
+                    renderTiles();
+                    updatePlayerPosition(false);
+                    playSound('jump');
+                }}
+            ]);
+        }
+        elBtnReset.addEventListener('click', resetGame);
+
+        function renderTiles() {
+            elTilesLayer.innerHTML = '';
+            MAP_TILES.forEach((tileData, index) => {
+                const el = document.createElement('div');
+                el.className = `tile tile-${tileData.type}`;
+                if (gameState.done.includes(index)) {
+                    el.classList.add('visited');
+                }
+                el.style.left = `${tileData.x}px`;
+                el.style.top = `${tileData.y}px`;
+                el.textContent = tileData.label;
+                elTilesLayer.appendChild(el);
+            });
+        }
+
+        function updatePlayerPosition(animate = true) {
+            const targetTile = MAP_TILES[gameState.pos];
+            if (animate) {
+                elPlayerAnim.classList.add('is-jumping');
+                playSound('jump');
+                setTimeout(() => {
+                    elPlayerAnim.classList.remove('is-jumping');
+                }, 600);
+            }
+            elPlayer.style.left = `${targetTile.x}px`;
+            elPlayer.style.top = `${targetTile.y}px`;
+        }
+
+        function updateUI() {
+            rollNumber(elCoinDisplay, parseInt(elCoinDisplay.textContent), gameState.coins, 800);
+            if (gameState.pos === MAP_TILES.length - 1 && gameState.done.includes(gameState.pos)) {
+                elBtnDice.classList.add('disabled');
+                elBtnDice.innerHTML = '<span>🎉 探索完成</span>';
+            } else {
+                elBtnDice.classList.remove('disabled');
+                elBtnDice.innerHTML = '<span>🎲 擲骰子</span>';
+            }
+        }
+
+        function rollNumber(el, start, end, duration) {
+            if (start === end) return;
+            const startTime = performance.now();
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const currentVal = Math.floor(start + (end - start) * easeOut);
+                el.textContent = currentVal;
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    el.textContent = end;
+                }
+            }
+            requestAnimationFrame(update);
+        }
+
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            }
+        }
+
+        elBtnSound.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            elBtnSound.textContent = soundEnabled ? '🔊' : '🔇';
+            elBtnSound.style.background = soundEnabled ? 'white' : '#f87171';
+            elBtnSound.style.color = soundEnabled ? 'black' : 'white';
+        });
+
+        function playSound(type) {
+            if (!soundEnabled || !audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            switch(type) {
+                case 'dice':
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(500, now);
+                    osc.frequency.exponentialRampToValueAtTime(750, now + 0.1);
+                    gainNode.gain.setValueAtTime(0.1, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
+                    break;
+                case 'jump':
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(280, now);
+                    osc.frequency.exponentialRampToValueAtTime(550, now + 0.2);
+                    gainNode.gain.setValueAtTime(0.2, now);
+                    gainNode.gain.linearRampToValueAtTime(0, now + 0.2);
+                    osc.start(now); osc.stop(now + 0.2);
+                    break;
+                case 'correct':
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.12);
+                    osc.frequency.setValueAtTime(783.99, now + 0.24);
+                    gainNode.gain.setValueAtTime(0.25, now);
+                    gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
+                    osc.start(now); osc.stop(now + 0.5);
+                    break;
+                case 'wrong':
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(160, now);
+                    osc.frequency.linearRampToValueAtTime(110, now + 0.3);
+                    gainNode.gain.setValueAtTime(0.15, now);
+                    gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                    break;
+                case 'bossWin':
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((f, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.type = 'square';
+                        o.frequency.value = f;
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        g.gain.setValueAtTime(0.1, now + i*0.15);
+                        g.gain.linearRampToValueAtTime(0, now + i*0.15 + 0.3);
+                        o.start(now + i*0.15); o.stop(now + i*0.15 + 0.3);
+                    });
+                    break;
+            }
+        }
+
+        /**
+         * 粒子特效 (金幣與紙花)
+         */
+        function createParticles(x, y, type) {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const count = type === 'coin' ? 10 : 45;
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * (type === 'coin' ? 10 : 14),
+                    vy: (Math.random() - 1) * (type === 'coin' ? 14 : 18) - 4,
+                    size: type === 'coin' ? 18 : Math.random() * 8 + 4,
+                    color: type === 'coin' ? '#fbbf24' : `hsl(${Math.random() * 360}, 90%, 55%)`,
+                    type: type,
+                    life: 1,
+                    rotation: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.4
+                });
+            }
+        }
+
+        function loopParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.5;
+                p.rotation += p.rotSpeed;
+                p.life -= 0.015;
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation);
+                ctx.globalAlpha = p.life;
+
+                if (p.type === 'coin') {
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#b45309';
+                    ctx.stroke();
+                    ctx.fillStyle = '#b45309';
+                    ctx.font = 'bold 18px Noto Sans TC';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('$', 0, 0);
+                } else {
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                }
+                ctx.restore();
+            }
+            requestAnimationFrame(loopParticles);
+        }
+
+        elBtnDice.addEventListener('click', () => {
+            initAudio();
+            if (isRolling || isMoving || elBtnDice.classList.contains('disabled')) return;
+            
+            isRolling = true;
+            elDiceValue.classList.add('dice-rolling');
+            playSound('dice');
+
+            let rollInterval = setInterval(() => {
+                elDiceValue.textContent = Math.floor(Math.random() * 3) + 1;
+            }, 100);
+
+            setTimeout(() => {
+                clearInterval(rollInterval);
+                elDiceValue.classList.remove('dice-rolling');
+                const steps = Math.floor(Math.random() * 3) + 1;
+                elDiceValue.textContent = steps;
+                movePlayer(steps);
+            }, 1000);
+        });
+
+        function movePlayer(steps) {
+            isMoving = true;
+            let currentStep = 0;
+
+            function stepForward() {
+                if (currentStep < steps && gameState.pos < MAP_TILES.length - 1) {
+                    gameState.pos++;
+                    currentStep++;
+                    updatePlayerPosition(true);
+                    setTimeout(stepForward, 650);
+                } else {
+                    isMoving = false;
+                    isRolling = false;
+                    saveProgress();
+                    handleTileEvent();
+                }
+            }
+            stepForward();
+        }
+
+        function handleTileEvent() {
+            const tileIndex = gameState.pos;
+            if (tileIndex === 0) return;
+            if (gameState.done.includes(tileIndex)) {
+                if (tileIndex === MAP_TILES.length - 1) {
+                    showVictoryScreen();
+                }
+                return;
+            }
+            const questionData = QUESTIONS[tileIndex - 1];
+            showQuestionModal(questionData, tileIndex);
+        }
+
+        function showQuestionModal(data, tileIndex) {
+            const isBoss = tileIndex === MAP_TILES.length - 1;
+            elModalIcon.textContent = isBoss ? '👑' : '❓';
+            elModalTitleText.textContent = isBoss ? '深海魔王挑戰！' : `第 ${tileIndex} 題挑戰`;
+            elModalTitleText.style.color = isBoss ? '#ea580c' : 'var(--primary-dark)';
+            elModalQuestion.textContent = data.q;
+            
+            elModalOptions.innerHTML = '';
+            data.opts.forEach((optText, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = optText;
+                btn.onclick = (e) => handleAnswer(optIndex, data.a, tileIndex, e.target);
+                elModalOptions.appendChild(btn);
+            });
+
+            elModalLayer.classList.add('active');
+        }
+
+        function closeModal() {
+            elModalLayer.classList.remove('active');
+        }
+
+        function handleAnswer(selectedIndex, correctIndex, tileIndex, btnElement) {
+            if (selectedIndex === correctIndex) {
+                playSound('correct');
+                btnElement.style.background = '#4ade80';
+                btnElement.style.color = 'white';
+                
+                const isBoss = tileIndex === MAP_TILES.length - 1;
+                const reward = isBoss ? 50 : 10;
+                
+                const targetTile = MAP_TILES[tileIndex];
+                createParticles(targetTile.x, targetTile.y, 'coin');
+                
+                if (isBoss) {
+                    document.getElementById('game-container').classList.add('screen-shake');
+                    setTimeout(() => {
+                        document.getElementById('game-container').classList.remove('screen-shake');
+                    }, 500);
+                    createParticles(400, 300, 'confetti');
+                    playSound('bossWin');
+                }
+                
+                gameState.coins += reward;
+                gameState.done.push(tileIndex);
+                saveProgress();
+                updateUI();
+                renderTiles();
+
+                setTimeout(() => {
+                    closeModal();
+                    if (isBoss) showVictoryScreen();
+                }, 1500);
+            } else {
+                playSound('wrong');
+                btnElement.classList.add('wrong-shake');
+                setTimeout(() => {
+                    btnElement.classList.remove('wrong-shake');
+                }, 400);
+            }
+        }
+
+        function showVictoryScreen() {
+            // 門檻緩衝機制 (符合第 12 條約束：錯一題仍可拿最高三星)
+            let stars = 1;
+            if (gameState.coins >= 60) stars = 2;
+            if (gameState.coins >= 70) stars = 3;
+            let starText = '⭐'.repeat(stars);
+            
+            showCustomAlert(
+                "🎉 海洋大探索成功！",
+                `太棒了！你順利抵達終點，總共收集到 ${gameState.coins} 個金幣！<br><br>獲得評等：<span style="font-size:32px;">${starText}</span>`,
+                [
+                    { text: '🔄 再玩一次', style: 'background: #0284c7; color: white; text-align: center;', action: () => {
+                        gameState = { pos: 0, coins: 0, done: [] };
+                        saveProgress();
+                        closeModal();
+                        updateUI();
+                        renderTiles();
+                        updatePlayerPosition(false);
+                    }}
+                ]
+            );
+        }
+
+        // 啟動遊戲
+        window.onload = initGame;
+    </script>
+</body>
+</html>

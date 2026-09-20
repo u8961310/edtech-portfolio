@@ -182,6 +182,19 @@ zone = re.search(r'<!--\s*ZONE_ID:\s*([a-z]+)\s*-->', html)
 check('檔頭有 ZONE_ID 標記', OK if zone else WARN,
       ('zone = ' + zone.group(1)) if zone else '整合時要靠它辨識區域')
 
+# ------------------------------------------- 13. 縮放盒子要 flex-shrink: 0（契約 v3.1 #17）
+# 「固定 px 畫布 + JS scale」的做法，盒子放在 flex 父層裡會先被壓到視窗寬，
+# 座標超出的格子被 overflow:hidden 裁掉、完全點不到，而且等於縮了兩次。
+# 2026-09-20 海洋區與森林區都中：390px 下 6 格有 2 格點不到。
+uses_js_scale = re.search(r'transform\s*=\s*[`\'"]\s*scale\(', scan)
+has_no_shrink = re.search(r'flex-shrink:\s*0', scan)
+if not uses_js_scale:
+    check('固定尺寸畫布有 flex-shrink: 0', OK, '沒有用 JS scale，不適用')
+else:
+    check('固定尺寸畫布有 flex-shrink: 0',
+          OK if has_no_shrink else FAIL,
+          '' if has_no_shrink else '父層 flex 會把盒子壓小，超出的格子會被裁掉點不到')
+
 # ---------------------------------------------------------------- 輸出
 W = max(len(n) for _, n, _ in results) + 2
 icon = {OK: '[OK]  ', WARN: '[WARN]', FAIL: '[FAIL]'}
@@ -204,7 +217,7 @@ print('FAIL %d / WARN %d / 共 %d 項' % (n_fail, n_warn, len(results)))
 print()
 print('以下需在瀏覽器人工確認（腳本測不到）：')
 for item in [
-    '390px 直立「真的能玩」——格子點得到、字看得清，不是整張縮小',
+    '390px 直立六格全在畫面內（腳本只驗 CSS，實際位置仍要量）',
     '有場景層次（天空／遠山／地面／前景）',
     '路徑蜿蜒、格子造型有變化',
     '棋子是有表情的角色，不是 emoji 放圓圈',

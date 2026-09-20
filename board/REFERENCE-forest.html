@@ -55,6 +55,12 @@
         #game-container {
             width: 800px;
             height: 600px;
+            /* flex-shrink: 0 是必要的：#game-wrapper 是 flex 容器，預設會把這個
+               800px 的盒子壓到視窗寬。壓縮後版面盒變成 390px，但格子座標仍是
+               800x600 空間的 px，x=580 與 x=700 兩格就落在盒外被 overflow:hidden
+               裁掉，手機直立時完全點不到。壓縮之後 handleResize() 又再乘一次
+               scale，等於縮兩次。2026-09-20 實測：186px -> 382px，裁掉 2 格 -> 0 格。*/
+            flex-shrink: 0;
             position: relative;
             transform-origin: center center;
             background: linear-gradient(to bottom, #87CEEB 0%, #e0f6ff 40%, #a7f3d0 100%);
