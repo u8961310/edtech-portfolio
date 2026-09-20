@@ -162,6 +162,18 @@ check('沒有過小字級（<16px）', WARN if small else OK,
 check('可點擊元素有 cursor: pointer',
       OK if 'cursor: pointer' in html or 'cursor:pointer' in html else WARN)
 
+# ------------------------------------------------- 10. 彈窗關閉要移出 Tab 順序（契約 v2 #11）
+# 只有 opacity:0 + pointer-events:none 時，按鈕仍可被 Tab 聚焦後按 Enter。
+has_hide = re.search(r'visibility:\s*hidden', scan) or re.search(r'\binert\b', scan)
+check('彈出視窗關閉時移出 Tab 順序（visibility:hidden 或 inert）',
+      OK if has_hide else WARN,
+      '' if has_hide else '只靠 opacity/pointer-events 的話鍵盤仍可操作隱藏按鈕')
+
+# ------------------------------------------------- 11. ZONE_ID 標記（契約 v2 #14）
+zone = re.search(r'<!--\s*ZONE_ID:\s*([a-z]+)\s*-->', html)
+check('檔頭有 ZONE_ID 標記', OK if zone else WARN,
+      ('zone = ' + zone.group(1)) if zone else '整合時要靠它辨識區域')
+
 # ---------------------------------------------------------------- 輸出
 W = max(len(n) for _, n, _ in results) + 2
 icon = {OK: '[OK]  ', WARN: '[WARN]', FAIL: '[FAIL]'}
@@ -184,11 +196,13 @@ print('FAIL %d / WARN %d / 共 %d 項' % (n_fail, n_warn, len(results)))
 print()
 print('以下需在瀏覽器人工確認（腳本測不到）：')
 for item in [
-    '390px 寬不會橫向捲動，且看得到整張地圖',
+    '390px 直立「真的能玩」——格子點得到、字看得清，不是整張縮小',
     '有場景層次（天空／遠山／地面／前景）',
     '路徑蜿蜒、格子造型有變化',
     '棋子是有表情的角色，不是 emoji 放圓圈',
     '走過／未走過的格子一眼可分',
+    '答錯一題仍拿得到最高評等',
+    '可變值（校名等）是介面可編輯，不是寫死的',
     '音效能關閉',
 ]:
     print('  [ ] ' + item)
