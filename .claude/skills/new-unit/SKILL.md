@@ -25,14 +25,20 @@ description: 在 edtech-portfolio 新增教材遊戲單元，或大改既有單�
 
 3. **建立資料夾**
    - `mkdir -p units/unit{N}-{kebab-theme}/`
-   - 新單元 N = 現有最大編號 +1（目前 1-6 已用，下一個 unit7）
+   - 新單元 N = 現有最大編號 +1
+   - ⚠️ 不要相信這行寫死的數字，**動手前先跑一次**：
+     `ls units/ | sed 's/unit\([0-9]*\).*/\1/' | sort -n | tail -1`
+     （2026-09-20 實測已到 unit21）
    - 主進入點固定 `index.html`，CSS/JS 內嵌
 
 4. **撰寫單檔 HTML**（依下方範本骨架）
 
 5. **同步 4 處（不能漏，少一個畫面就會壞）**
    - ① `index.html` 新增卡片（放對 grade-section，套用 `--c` 配色變數）
-   - ② `index.html` 底部 `[1,2,3,4,5,6].forEach` 加新 unitId（徽章自動顯示用）
+   - ② `index.html` 底部徽章 `forEach` 陣列加新 unitId（2026-09-20 已到 `[1..21]`）
+     ⚠️ 該迴圈一律用 `edtech-unit${id}-score` 去讀，但 unit11/12 存的是
+     `-best-score`、unit13/14/15/19/20/21 根本沒存分數 —— **它們的徽章永遠不會亮**。
+     新單元務必照 SDD 存 `edtech-unit{N}-score`，否則會多一個沉默失效的徽章。
    - ③ `README.md` 單元表加一列（含年級、資料夾、主題、教學目標）
    - ④ `README.md` 目錄樹加一行
 
@@ -41,10 +47,21 @@ description: 在 edtech-portfolio 新增教材遊戲單元，或大改既有單�
    git add .
    git commit -m "feat: add unitN-name (X年級 主題)
 
-   Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
+   Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
    git push
    ```
    push 後 GitHub Actions 自動 deploy，約 1 分鐘上線 https://u8961310.github.io/edtech-portfolio/
+
+## 例外：`board/` 不是 unit
+
+`board/`（資訊大富翁）是跨四區的外殼型作品，不走 `units/unitN-*` 慣例：
+
+- 目錄在 repo 根的 `board/`，不在 `units/` 底下
+- 存檔用 `edtech-board-*` 命名空間，不是 `edtech-unit{N}-score`
+- 首頁仍有卡片，但徽章邏輯獨立（不吃上面那個 forEach 陣列）
+- 產出的 Gemini Canvas 版本要先過 `board/verify-canvas.py` 契約檢查
+
+要改 board 就讀 `board/CANVAS_PROMPT.md`，不要套本 skill 的單元流程。
 
 ## SDD 規範速查（讀 SDD.md 太慢就看這）
 
@@ -62,16 +79,21 @@ description: 在 edtech-portfolio 新增教材遊戲單元，或大改既有單�
 
 | Unit | 主題 | 色碼 | 狀態 |
 |------|------|------|------|
-| unit2 滑鼠 | 綠 | `#16a34a` | ✓ 已用 |
-| unit4 鍵盤 | 橘 | `#f59e0b` | ✓ 已用 |
-| unit3 太空 | 紫 | `#9333ea` | ✓ 已用 |
-| unit5 像素 | 桃紅 | `#ec4899` | ✓ 已用 |
-| unit6 烏龜 | 青 | `#14b8a6` | ✓ 已用 |
-| unit1 中文 | 紅 | `#ef4444` | ✓ 已用 |
-| 候選 | 黃 | `#eab308` | 可用 |
-| 候選 | 藍 | `#3b82f6` | 可用 |
-| 候選 | 深棕 | `#92400e` | 可用 |
-| 候選 | 灰紫 | `#6366f1` | 可用 |
+⚠️ **這張表不要手動維護，會過時**（2026-09-20 修正前，四個「候選色」全部早就被用掉了）。
+動手前直接掃一次現況：
+
+```bash
+grep -o '\-\-c: #[0-9a-f]*' index.html | sort -u
+```
+
+2026-09-20 掃出已用 19 色：
+`06b6d4 0ea5e9 10b981 14b8a6 16a34a 3b82f6 6366f1 65a30d 84cc16 92400e
+9333ea a855f7 d946ef eab308 ec4899 ef4444 f43f5e f59e0b f97316`
+
+board 大富翁另外佔用：`0891b2`（海洋）`7c3aed`（太空）`b45309`（城堡），
+卡片主色 `7c3aed`。
+
+目前仍可用：`#be123c` `#4338ca` `#15803d` `#c2410c` `#0f766e`
 
 新單元優先挑未用色。如何套用：卡片 `style="--c: #xxxxxx;"`，CSS 內 `border-color: var(--c); box-shadow: 0 5px 0 var(--c); .play-btn { background: var(--c); }`。
 

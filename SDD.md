@@ -89,6 +89,31 @@ function loadLocalScore(unitId) {
 * **首頁整合：** Dashboard 載入時讀取各 unit 的 score 顯示「最佳成績」徽章。
 * **隱私說明：** 資料只存學生自己的瀏覽器，換裝置或清快取會消失，符合無後端設計。
 
+### 5.1 `board/` 的獨立命名空間
+
+`board/`（資訊大富翁）是跨區地圖遊戲，不屬於 `units/`，存的東西也不是單一分數，
+因此另開命名空間，**不要套用 `edtech-unit{N}-score`**：
+
+| Key | 內容 |
+|---|---|
+| `edtech-board-progress` | 目前進度 `{ pos, coins, done: [] }` |
+| `edtech-board-best` | 歷史最高金幣（數字） |
+| `edtech-board-certs` | 證書紀錄 `{ name, school, zones: { <zoneId>: { stars, coins, date } } }` |
+
+首頁的大富翁徽章因此**不能**塞進 `[1..21].forEach` 那個迴圈，
+它有獨立的 `loadBoardBadge()`。
+
+### 5.2 ⚠️ 已知不一致：六個單元的徽章永遠不會亮
+
+首頁徽章程式對 1–21 一律用 `edtech-unit${id}-score` 讀取，但實際上：
+
+* `unit11`、`unit12` 存的是 `edtech-unit{N}-best-score`（多了 `-best`）
+* `unit13`、`unit14`、`unit15`、`unit19`、`unit20`、`unit21` **完全沒有存分數**
+
+這 8 個單元的「最佳成績」徽章從上線至今都不會出現（2026-09-20 掃描確認）。
+六個沒存分數的都是從 Gemini Canvas 整合進來、未對齊本節規範的單元。
+新增單元時務必照 §5 存 `edtech-unit{N}-score`，否則只是多一個沉默失效的徽章。
+
 ---
 
 ## 6. 版本控制與提交規範 (Git Flow)

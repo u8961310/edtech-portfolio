@@ -1,0 +1,196 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+驗收 Gemini Canvas 產出的大富翁 HTML 是否符合 CANVAS_PROMPT.md 的契約。
+
+用法：
+    python board/verify-canvas.py <canvas產出的.html>
+
+只做靜態檢查。版面（390px 不可橫向捲動）與視覺層次要在瀏覽器裡看，
+腳本最後會列出那幾項提醒人工確認。
+"""
+import io
+import os
+import re
+import sys
+
+OK, WARN, FAIL = 'PASS', 'WARN', 'FAIL'
+results = []
+
+
+def check(name, status, detail=''):
+    results.append((status, name, detail))
+
+
+# ---------------------------------------------------------------- 讀檔
+if len(sys.argv) < 2:
+    print('用法：python board/verify-canvas.py <檔案.html>')
+    sys.exit(2)
+
+path = sys.argv[1]
+if not os.path.exists(path):
+    print('找不到檔案：' + path)
+    sys.exit(2)
+
+html = io.open(path, encoding='utf-8', errors='replace').read()
+size_kb = os.path.getsize(path) / 1024
+
+
+def strip_comments(s):
+    """去掉註解再掃描。
+
+    否則「請勿使用 🪙」這種說明文字本身就會被判成違規——
+    解釋規則的註解反而害檢查失敗，是典型的假陽性。
+    """
+    s = re.sub(r'<!--.*?-->', ' ', s, flags=re.S)       # HTML
+    s = re.sub(r'/\*.*?\*/', ' ', s, flags=re.S)        # CSS / JS 區塊註解
+    s = re.sub(r'(?<!:)//[^\n]*', ' ', s)               # JS 行註解（避開 http://）
+    return s
+
+
+scan = strip_comments(html)
+
+# ---------------------------------------------------------------- 1. 單一檔案
+ext_script = re.findall(r'<script[^>]+src=["\']([^"\']+)["\']', html, re.I)
+ext_css = re.findall(r'<link[^>]+rel=["\']stylesheet["\'][^>]*>', html, re.I)
+
+allowed_host = ('fonts.googleapis.com', 'fonts.gstatic.com')
+
+
+def is_allowed(url):
+    return any(h in url for h in allowed_host)
+
+
+bad_script = [s for s in ext_script if not is_allowed(s)]
+check('單一 HTML：沒有外部 <script src>', FAIL if bad_script else OK,
+      '、'.join(bad_script))
+
+bad_css = []
+for tag in ext_css:
+    m = re.search(r'href=["\']([^"\']+)["\']', tag, re.I)
+    if m and not is_allowed(m.group(1)):
+        bad_css.append(m.group(1))
+check('單一 HTML：沒有外部 stylesheet（Google Fonts 除外）',
+      FAIL if bad_css else OK, '、'.join(bad_css))
+
+# ---------------------------------------------------------------- 2. 外部素材
+media_src = re.findall(r'<(?:img|audio|video|source)[^>]+src=["\']([^"\']+)["\']', html, re.I)
+# (?<![\w-]) 是必要的：忽略大小寫時 `url(` 會吃到 `toDataURL(`、`createObjectURL(`，
+# 把 'image/png' 誤判成外部素材。要求前面不是字母才算真正的 CSS url()。
+css_url = re.findall(r'(?<![\w-])url\(\s*["\']?([^)"\']+)', scan, re.I)
+
+def is_inline(u):
+    return u.startswith('data:') or u.startswith('#')
+
+bad_media = [u for u in media_src if not is_inline(u)]
+bad_url = [u for u in css_url if not is_inline(u) and not is_allowed(u)]
+
+check('沒有引用外部圖片／音效檔', FAIL if (bad_media or bad_url) else OK,
+      '、'.join((bad_media + bad_url)[:4]))
+
+# ---------------------------------------------------------------- 3. emoji 年份
+# 啟發式：U+1FA00–1FAFF 是 Unicode 12+（2019 後），舊系統字型幾乎都沒有。
+# U+1F900–1F9FF 是 Unicode 8–11（2015–2018），部分舊機器也缺。
+risky_new = sorted(set(re.findall(r'[\U0001FA00-\U0001FAFF]', scan)))
+risky_mid = sorted(set(re.findall(r'[\U0001F900-\U0001F9FF]', scan)))
+
+check('沒有使用 2019 年後的新 emoji（U+1FA00+）',
+      FAIL if risky_new else OK,
+      ' '.join('%s(U+%04X)' % (e, ord(e)) for e in risky_new))
+
+check('未使用 2015–2018 的次新 emoji（U+1F900+，舊機可能缺字）',
+      WARN if risky_mid else OK,
+      ' '.join('%s(U+%04X)' % (e, ord(e)) for e in risky_mid))
+
+# ---------------------------------------------------------------- 4. localStorage key
+# 直接寫字面字串的
+keys = set(re.findall(r'localStorage\.(?:get|set|remove)Item\(\s*[\'"`]([^\'"`]+)', scan))
+
+# 透過常數傳入的（Canvas 很常這樣寫）：先抓識別字，再回頭解析它的值。
+# 沒做這步會出現最糟的 false negative——key 命名錯誤會被誤報成「完全沒有存檔」。
+idents = set(re.findall(r'localStorage\.(?:get|set|remove)Item\(\s*([A-Za-z_$][\w$]*)\s*[,)]', scan))
+unresolved = []
+for name in idents:
+    m = re.search(r'(?:const|let|var)\s+' + re.escape(name) + r'\s*=\s*[\'"`]([^\'"`]+)', scan)
+    if m:
+        keys.add(m.group(1))
+    else:
+        unresolved.append(name)
+
+keys = sorted(keys)
+off_contract = [k for k in keys if not k.startswith('edtech-board-')]
+
+if off_contract:
+    status, detail = FAIL, '未照契約：' + '、'.join(off_contract)
+elif unresolved:
+    # 用了常數但解析不到值 —— 不能當作通過，必須人工看
+    status, detail = WARN, '有無法解析的 key 變數：' + '、'.join(unresolved)
+elif keys:
+    status, detail = OK, '找到：' + '、'.join(keys)
+else:
+    status, detail = WARN, '完全沒有存檔'
+
+check('localStorage key 都是 edtech-board-* 前綴', status, detail)
+
+# ---------------------------------------------------------------- 5. reduced-motion
+check('有 prefers-reduced-motion 區塊',
+      OK if 'prefers-reduced-motion' in html else FAIL)
+
+# ---------------------------------------------------------------- 6. viewport
+vp = re.search(r'<meta[^>]+name=["\']viewport["\'][^>]*>', html, re.I)
+check('有 viewport meta', OK if vp else FAIL)
+
+# ---------------------------------------------------------------- 7. QUESTIONS 常數
+qm = re.search(r'(?:const|let|var)\s+QUESTIONS\s*=\s*\[', html)
+check('題目抽成 QUESTIONS 常數陣列', OK if qm else FAIL,
+      '' if qm else '老師要加題目就得翻程式碼')
+
+if qm:
+    n_q = len(re.findall(r'\bq\s*:\s*[\'"`]', html))
+    n_a = len(re.findall(r'\ba\s*:\s*\d', html))
+    check('QUESTIONS 格式看起來正確（有 q / opts / a）',
+          OK if (n_q and n_a and 'opts' in html) else WARN,
+          '偵測到 %d 個 q、%d 個 a' % (n_q, n_a))
+
+# ---------------------------------------------------------------- 8. 字級
+sizes = [int(x) for x in re.findall(r'font-size:\s*(\d+)px', html)]
+small = [s for s in sizes if s < 16]
+check('沒有過小字級（<16px）', WARN if small else OK,
+      ('出現 %d 處，最小 %dpx' % (len(small), min(small))) if small else '')
+
+# ---------------------------------------------------------------- 9. cursor
+check('可點擊元素有 cursor: pointer',
+      OK if 'cursor: pointer' in html or 'cursor:pointer' in html else WARN)
+
+# ---------------------------------------------------------------- 輸出
+W = max(len(n) for _, n, _ in results) + 2
+icon = {OK: '[OK]  ', WARN: '[WARN]', FAIL: '[FAIL]'}
+
+print()
+print('驗收：%s  (%.0f KB)' % (os.path.basename(path), size_kb))
+print('=' * (W + 30))
+for status, name, detail in results:
+    line = '%s %s' % (icon[status], name.ljust(W))
+    if detail:
+        line += ' -> ' + detail
+    print(line)
+
+n_fail = sum(1 for s, _, _ in results if s == FAIL)
+n_warn = sum(1 for s, _, _ in results if s == WARN)
+
+print('=' * (W + 30))
+print('FAIL %d / WARN %d / 共 %d 項' % (n_fail, n_warn, len(results)))
+
+print()
+print('以下需在瀏覽器人工確認（腳本測不到）：')
+for item in [
+    '390px 寬不會橫向捲動，且看得到整張地圖',
+    '有場景層次（天空／遠山／地面／前景）',
+    '路徑蜿蜒、格子造型有變化',
+    '棋子是有表情的角色，不是 emoji 放圓圈',
+    '走過／未走過的格子一眼可分',
+    '音效能關閉',
+]:
+    print('  [ ] ' + item)
+
+sys.exit(1 if n_fail else 0)

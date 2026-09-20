@@ -432,6 +432,22 @@
         </div>
     </section>
 
+    <!-- ===== 大富翁（board/）：不是 units/ 底下的單元，徽章邏輯也獨立 ===== -->
+    <section class="grade-section" style="background: #f5f3ff;">
+        <h2 style="color: #5b21b6;">🎲 資訊大富翁</h2>
+        <p class="grade-hint" style="color: #5b21b6;">擲骰子走地圖，答對題目拿金幣，過關領證書！</p>
+        <div class="card-grid">
+            <a href="./board/index.html" class="card" style="--c: #7c3aed;">
+                <span class="skill-tag">知識問答</span>
+                <div class="card-cover">🌲🎲</div>
+                <h3 class="card-title">森林大冒險</h3>
+                <p class="card-desc">走進森林，回答資安、護眼、密碼的問題。全部過關可以領一張證書印出來！</p>
+                <p class="card-score" id="board-forest-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+        </div>
+    </section>
+
     <footer style="margin-top: 32px; text-align: center; padding: 16px; color: #92400e; font-size: 13px; font-weight: 700;">
         想了解這些遊戲怎麼來的？ <a href="./portfolio.html" style="color: #b45309; text-decoration: underline;">看老師的作品集說明 →</a>
     </footer>
@@ -450,6 +466,22 @@
             badge.style.display = 'inline-block';
         }
     });
+
+    // 大富翁的徽章獨立處理：它存的是 edtech-board-certs（證書紀錄），
+    // 不是 edtech-unit{N}-score，所以不能塞進上面那個迴圈。
+    (function loadBoardBadge() {
+        try {
+            const raw = localStorage.getItem('edtech-board-certs');
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            const cert = data && data.zones && data.zones.forest;
+            const badge = document.getElementById('board-forest-badge');
+            if (cert && badge) {
+                badge.textContent = `🏅 已獲證書：${'⭐'.repeat(cert.stars || 1)}（${cert.coins || 0} 金幣）`;
+                badge.style.display = 'inline-block';
+            }
+        } catch (e) { /* 資料壞掉就不顯示徽章，不要讓首頁整個掛掉 */ }
+    })();
 </script>
 
 </body>
