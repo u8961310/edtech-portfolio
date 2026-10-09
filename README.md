@@ -46,6 +46,7 @@
 | 🎒 一年級 | `unit20-sock-matching` | 瘋狂襪子配對線 | 連線配對、觀察規律、運算思維邏輯 |
 | 🎒 一年級 | `unit21-mouse-challenge` | 滑鼠小勇士大冒險 | 滑鼠綜合技巧：點擊／拖曳／按住／雙擊 |
 | 🎲 跨年級 | `board/` | 資訊大富翁：森林大冒險 | 資安 / 護眼 / 密碼 / 個資 / 硬體常識；過關發證書可列印 |
+| 🎲 跨年級 | `board/ocean.html` | 資訊大富翁：海洋大探索 | 檔案管理：存放位置 / 資料夾 / 資源回收桶 / 檔名 / 備份 |
 
 ## 🚀 快速開始
 
@@ -67,7 +68,9 @@ edtech-portfolio/
 ├── SDD.md           # 軟體設計說明書（規範與設計細節）
 ├── README.md        # 本檔案
 ├── board/                      # 資訊大富翁（跨區地圖遊戲，不屬於 units/）
-│   ├── index.html              # 森林區 + 證書系統
+│   ├── index.html              # 森林區（第一區）
+│   ├── ocean.html              # 海洋區
+│   ├── certificate.js / .css   # 四區共用：證書、星等門檻、前往下一區
 │   ├── CANVAS_PROMPT.md        # 給 Gemini Canvas 的生成規格與契約
 │   └── verify-canvas.py        # Canvas 產出的自動驗收腳本
 └── units/                      # 各單元教材

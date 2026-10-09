@@ -7,6 +7,7 @@
     <title>資訊大富翁 - 森林大冒險</title>
     <!-- 引入 Noto Sans TC 字體 (唯一允許的外部資源) -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="certificate.css">
     
     <style>
         :root {
@@ -86,7 +87,7 @@
             gap: 8px;
             background: rgba(255, 255, 255, 0.92);
             color: #334155;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 700;
             padding: 10px 18px;
             border-radius: 999px;
@@ -101,141 +102,6 @@
            （2026-09-20 就是這樣才沒顯示）。 */
         @media (orientation: portrait) and (max-width: 820px) {
             #rotate-hint { display: flex; }
-        }
-
-        /* ===================== 證書 ===================== */
-        /* 每區過關給一張「區域證書」，四區全通關再給一張「總證書」。
-           畫面上用 HTML 呈現（好排版、可列印），存圖時另用 canvas 重畫一次。 */
-        #cert-layer {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.72);
-            z-index: 30;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 16px;
-            opacity: 0;
-            pointer-events: none;
-            visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
-            overflow-y: auto;
-        }
-        #cert-layer.active { opacity: 1; pointer-events: auto; visibility: visible; }
-
-        .certificate {
-            position: relative;
-            width: min(560px, 100%);
-            background: #fffdf6;
-            border: 10px double #b45309;
-            border-radius: 12px;
-            padding: 28px 26px 22px;
-            text-align: center;
-            color: #3f2d16;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-        .certificate.final { border-color: #7c3aed; background: #fdfaff; }
-
-        .cert-seal {
-            font-size: 44px;
-            line-height: 1;
-            margin-bottom: 6px;
-        }
-        .cert-kicker {
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 0.3em;
-            color: #b45309;
-            margin-bottom: 4px;
-        }
-        .certificate.final .cert-kicker { color: #7c3aed; }
-        .cert-title { font-size: 30px; font-weight: 900; margin: 0 0 14px; }
-
-        .cert-line { font-size: 17px; margin: 6px 0; }
-        .cert-name {
-            font-size: 30px;
-            font-weight: 900;
-            border-bottom: 3px solid #b45309;
-            padding: 0 18px 2px;
-            display: inline-block;
-            min-width: 140px;
-        }
-        .cert-stars { font-size: 34px; letter-spacing: 6px; margin: 12px 0 6px; }
-        .cert-rank {
-            display: inline-block;
-            background: #fef3c7;
-            border-radius: 999px;
-            padding: 5px 18px;
-            font-size: 18px;
-            font-weight: 900;
-        }
-        .certificate.final .cert-rank { background: #f3e8ff; }
-
-        .cert-badges { font-size: 30px; letter-spacing: 8px; margin: 10px 0; }
-        .cert-meta {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            margin-top: 18px;
-            padding-top: 12px;
-            border-top: 2px dashed #d6c7a8;
-            font-size: 14px;
-        }
-        /* 校名可編輯：不寫死在程式裡，老師自己填 */
-        .cert-school {
-            font-weight: 700;
-            min-width: 90px;
-            outline: none;
-            border-bottom: 1px dotted #b45309;
-        }
-        .cert-school:empty::before {
-            content: '點這裡填學校';
-            color: #b9a684;
-            font-weight: 400;
-        }
-
-        .cert-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 18px;
-        }
-        .cert-btn {
-            font-family: inherit;
-            font-size: 16px;
-            font-weight: 900;
-            border: none;
-            border-radius: 999px;
-            padding: 12px 22px;
-            cursor: pointer;
-            color: #fff;
-            background: #b45309;
-            box-shadow: 0 4px 0 #7c3a06;
-        }
-        .cert-btn.alt { background: #16a34a; box-shadow: 0 4px 0 #15803d; }
-        .cert-btn.ghost {
-            background: #fff;
-            color: #3f2d16;
-            border: 2px solid #d6c7a8;
-            box-shadow: 0 4px 0 #e7dcc4;
-        }
-        .cert-btn:active { transform: translateY(3px); box-shadow: none; }
-
-        /* 列印：只留證書本體 */
-        @media print {
-            body * { visibility: hidden !important; }
-            #cert-layer, #cert-layer * { visibility: visible !important; }
-            #cert-layer {
-                position: absolute;
-                inset: 0;
-                background: none;
-                opacity: 1;
-                display: block;
-                padding: 0;
-            }
-            .certificate { box-shadow: none; width: 100%; }
-            .cert-actions { display: none !important; }
         }
 
         /* 背景場景 (SVG 與 CSS 組合) */
@@ -620,34 +486,6 @@
 <body>
 
     <!-- 主遊戲容器，會透過 JS 依據螢幕自動縮放 -->
-    <!-- 證書層（在 game-wrapper 之外，才不會被 #game-container 的縮放影響） -->
-    <div id="cert-layer" role="dialog" aria-modal="true" aria-label="過關證書">
-        <div class="certificate" id="cert-card">
-            <div class="cert-seal" id="cert-seal">🌲</div>
-            <div class="cert-kicker" id="cert-kicker">區域通關證書</div>
-            <h2 class="cert-title" id="cert-title">森林大冒險</h2>
-
-            <p class="cert-line">茲證明</p>
-            <p><span class="cert-name" id="cert-name">小朋友</span></p>
-            <p class="cert-line" id="cert-desc">完成森林區的所有挑戰</p>
-
-            <div class="cert-stars" id="cert-stars">⭐⭐⭐</div>
-            <div><span class="cert-rank" id="cert-rank">資訊小達人</span></div>
-            <div class="cert-badges" id="cert-badges" hidden></div>
-
-            <div class="cert-meta">
-                <span>學校：<span class="cert-school" id="cert-school" contenteditable="true"
-                    role="textbox" aria-label="學校名稱，可編輯"></span></span>
-                <span id="cert-date">中華民國 --- 年 -- 月 -- 日</span>
-            </div>
-
-            <div class="cert-actions">
-                <button class="cert-btn" id="cert-print">🖨️ 列印</button>
-                <button class="cert-btn alt" id="cert-save">🖼️ 存成圖片</button>
-                <button class="cert-btn ghost" id="cert-close">關閉</button>
-            </div>
-        </div>
-    </div>
 
     <div id="game-wrapper">
         <!-- 直立手機才會出現的橫放提示（點一下關掉） -->
@@ -786,6 +624,7 @@
         </div>
     </div>
 
+    <script src="certificate.js"></script>
     <script>
         /**
          * 遊戲設定與資料
@@ -832,8 +671,8 @@
         ];
 
         // 系統常數
-        const STORAGE_KEY_PROG = 'edtech-board-progress';
-        const STORAGE_KEY_BEST = 'edtech-board-best';
+        const STORAGE_KEY_PROG = 'edtech-board-progress-forest';  // 每區分開存，避免互相覆蓋
+        const STORAGE_KEY_BEST = 'edtech-board-best-forest';
 
         // 遊戲狀態
         let gameState = {
@@ -1371,12 +1210,9 @@
          * 顯示勝利結算畫面
          */
         function showVictoryScreen() {
-            // 門檻放寬：滿分是 90（4*10 + 50）。原本 90 才三星等於「全對才三星、
-            // 錯一題直接掉兩星」，低年級沒有緩衝空間，改成錯一題仍可拿三星。
-            let stars = 1;
-            if (gameState.coins >= 60) stars = 2;
-            if (gameState.coins >= 80) stars = 3;
-            
+            // 星等門檻四區共用（錯一題仍可拿三星），定義在 certificate.js
+            const stars = BoardCert.starsFor(gameState.coins);
+
             let starText = '⭐'.repeat(stars);
             
             showCustomAlert(
@@ -1385,7 +1221,7 @@
                 [
                     { text: '🏅 領取證書', style: 'background: #b45309; color: white;', action: () => {
                         elModalLayer.classList.remove('active');
-                        showZoneCertificate(stars, gameState.coins);
+                        BoardCert.showZoneCertificate(stars, gameState.coins);
                     }},
                     { text: '再玩一次', style: 'background: var(--primary); color: white;', action: () => {
                         resetGame();
@@ -1430,209 +1266,11 @@
             elModalLayer.classList.add('active');
         }
 
-        /* ================= 證書系統 =================
-         * 四個區域各一張「區域證書」，四區都拿到再給一張「總證書」。
-         * 目前只做好森林區，其餘三區的場景要另外請 Gemini Canvas 生成
-         * （見 board/CANVAS_PROMPT.md），這裡先把資料結構與流程備好。
-         */
-        const ZONES = [
-            { id: 'forest', name: '森林大冒險', seal: '🌲', ready: true },
-            { id: 'ocean',  name: '海洋大探索', seal: '🌊', ready: false },
-            { id: 'space',  name: '太空大挑戰', seal: '🚀', ready: false },
-            { id: 'castle', name: '城堡大決戰', seal: '🏰', ready: false },
-        ];
-        // 目前這份檔案是森林區
-        const CURRENT_ZONE = ZONES[0];
-
-        const STORAGE_KEY_CERT = 'edtech-board-certs';
-
-        // 稱號：依星等給，避免用「BOSS／闖關」這類抽象詞（SDD 圖形化優先原則）
-        const RANKS = ['資訊小學徒', '資訊小高手', '資訊小達人'];
-
-        function loadCerts() {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEY_CERT);
-                const obj = raw ? JSON.parse(raw) : null;
-                if (obj && typeof obj === 'object') {
-                    return { name: obj.name || '', school: obj.school || '', zones: obj.zones || {} };
-                }
-            } catch (e) { /* 壞掉就當新的 */ }
-            return { name: '', school: '', zones: {} };
-        }
-
-        function saveCerts(data) {
-            try { localStorage.setItem(STORAGE_KEY_CERT, JSON.stringify(data)); } catch (e) {}
-        }
-
-        function rocDate(d) {
-            return `中華民國 ${d.getFullYear() - 1911} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`;
-        }
-
-        const elCertLayer = document.getElementById('cert-layer');
-
-        /** 拿到證書前先問名字；已填過就不再問 */
-        function ensureName(cb) {
-            const data = loadCerts();
-            if (data.name) { cb(data.name); return; }
-
-            showCustomAlert('✏️ 你叫什麼名字？', '填上名字，證書就是你的囉！' +
-                '<br><br><input id="cert-name-input" maxlength="10" ' +
-                'style="font-family:inherit;font-size:22px;font-weight:700;text-align:center;' +
-                'padding:10px 14px;border:3px solid var(--primary-dark);border-radius:12px;' +
-                'width:220px;" placeholder="你的名字">', [
-                { text: '好了', style: 'background: var(--primary-dark); color: white;', action: () => {
-                    const input = document.getElementById('cert-name-input');
-                    const val = (input && input.value.trim()) || '小朋友';
-                    const d = loadCerts();
-                    d.name = val;
-                    saveCerts(d);
-                    elModalLayer.classList.remove('active');
-                    cb(val);
-                }}
-            ]);
-            setTimeout(() => {
-                const input = document.getElementById('cert-name-input');
-                if (input) input.focus();
-            }, 350);
-        }
-
-        /** 目前這張證書的資料，存圖時要用 */
-        let certPayload = null;
-
-        function renderCertificate(opts) {
-            certPayload = opts;
-            const card = document.getElementById('cert-card');
-            card.classList.toggle('final', !!opts.isFinal);
-
-            document.getElementById('cert-seal').textContent = opts.seal;
-            document.getElementById('cert-kicker').textContent = opts.kicker;
-            document.getElementById('cert-title').textContent = opts.title;
-            document.getElementById('cert-name').textContent = opts.name;
-            document.getElementById('cert-desc').textContent = opts.desc;
-            document.getElementById('cert-stars').textContent = '⭐'.repeat(opts.stars);
-            document.getElementById('cert-rank').textContent = opts.rank;
-            document.getElementById('cert-date').textContent = opts.date;
-
-            const badges = document.getElementById('cert-badges');
-            if (opts.badges) {
-                badges.textContent = opts.badges;
-                badges.hidden = false;
-            } else {
-                badges.hidden = true;
-            }
-
-            const school = document.getElementById('cert-school');
-            school.textContent = loadCerts().school || '';
-
-            elCertLayer.classList.add('active');
-        }
-
-        /** 區域通關證書 */
-        function showZoneCertificate(stars, coins) {
-            ensureName((name) => {
-                const data = loadCerts();
-                const now = new Date();
-                data.zones[CURRENT_ZONE.id] = {
-                    stars, coins, date: now.toISOString().slice(0, 10),
-                };
-                saveCerts(data);
-
-                renderCertificate({
-                    seal: CURRENT_ZONE.seal,
-                    kicker: '區域通關證書',
-                    title: CURRENT_ZONE.name,
-                    name,
-                    desc: `完成${CURRENT_ZONE.name}的所有挑戰，收集 ${coins} 個金幣`,
-                    stars,
-                    rank: RANKS[stars - 1] || RANKS[0],
-                    date: rocDate(now),
-                });
-
-                // 四區都拿到就再給一張總證書
-                const allDone = ZONES.every((z) => data.zones[z.id]);
-                if (allDone) setTimeout(showFinalCertificate, 900);
-            });
-        }
-
-        /** 四區全通關的總證書 */
-        function showFinalCertificate() {
-            const data = loadCerts();
-            const now = new Date();
-            const totalCoins = ZONES.reduce((s, z) => s + ((data.zones[z.id] || {}).coins || 0), 0);
-            const totalStars = ZONES.reduce((s, z) => s + ((data.zones[z.id] || {}).stars || 0), 0);
-
-            renderCertificate({
-                isFinal: true,
-                seal: '🏆',
-                kicker: '全區通關總證書',
-                title: '資訊大富翁',
-                name: data.name || '小朋友',
-                desc: `走完四個區域，總共收集 ${totalCoins} 個金幣、${totalStars} 顆星`,
-                stars: Math.max(1, Math.round(totalStars / ZONES.length)),
-                rank: '資訊大富翁',
-                badges: ZONES.map((z) => z.seal).join(''),
-                date: rocDate(now),
-            });
-        }
-
-        /** 存成 PNG：用 canvas 重畫一次（不引入任何外部函式庫） */
-        function exportCertificatePNG() {
-            if (!certPayload) return;
-            const W = 1000, H = 720;
-            const cv = document.createElement('canvas');
-            cv.width = W; cv.height = H;
-            const g = cv.getContext('2d');
-            const accent = certPayload.isFinal ? '#7c3aed' : '#b45309';
-
-            g.fillStyle = certPayload.isFinal ? '#fdfaff' : '#fffdf6';
-            g.fillRect(0, 0, W, H);
-            g.strokeStyle = accent;
-            g.lineWidth = 10;
-            g.strokeRect(24, 24, W - 48, H - 48);
-            g.lineWidth = 2;
-            g.strokeRect(44, 44, W - 88, H - 88);
-
-            g.textAlign = 'center';
-            const f = (size, weight) => `${weight} ${size}px "Noto Sans TC", sans-serif`;
-
-            g.font = f(64, 400); g.fillText(certPayload.seal, W / 2, 140);
-            g.fillStyle = accent; g.font = f(22, 700);
-            g.fillText(certPayload.kicker, W / 2, 190);
-            g.fillStyle = '#3f2d16'; g.font = f(46, 900);
-            g.fillText(certPayload.title, W / 2, 250);
-
-            g.font = f(22, 400); g.fillText('茲證明', W / 2, 310);
-            g.font = f(46, 900); g.fillText(certPayload.name, W / 2, 372);
-            g.strokeStyle = accent; g.lineWidth = 3;
-            const nw = Math.max(200, g.measureText(certPayload.name).width + 80);
-            g.beginPath(); g.moveTo((W - nw) / 2, 386); g.lineTo((W + nw) / 2, 386); g.stroke();
-
-            g.font = f(22, 400); g.fillText(certPayload.desc, W / 2, 436);
-            g.font = f(44, 400); g.fillText('⭐'.repeat(certPayload.stars), W / 2, 500);
-            if (certPayload.badges) { g.font = f(40, 400); g.fillText(certPayload.badges, W / 2, 556); }
-            g.font = f(28, 900); g.fillText(certPayload.rank, W / 2, certPayload.badges ? 606 : 566);
-
-            const school = (document.getElementById('cert-school').textContent || '').trim();
-            g.font = f(20, 400); g.textAlign = 'left';
-            g.fillText(school ? '學校：' + school : '', 80, H - 70);
-            g.textAlign = 'right';
-            g.fillText(certPayload.date, W - 80, H - 70);
-
-            const a = document.createElement('a');
-            a.download = `資訊大富翁-${certPayload.title}-${certPayload.name}.png`;
-            a.href = cv.toDataURL('image/png');
-            a.click();
-        }
-
-        document.getElementById('cert-print').onclick = () => window.print();
-        document.getElementById('cert-save').onclick = exportCertificatePNG;
-        document.getElementById('cert-close').onclick = () => elCertLayer.classList.remove('active');
-
-        // 校名編輯後即時存起來，下次不用重打
-        document.getElementById('cert-school').addEventListener('input', (e) => {
-            const d = loadCerts();
-            d.school = e.target.textContent.trim().slice(0, 20);
-            saveCerts(d);
+        // 證書系統在 certificate.js（四區共用）
+        BoardCert.init({
+            zoneId: 'forest',
+            showAlert: showCustomAlert,
+            closeAlert: () => elModalLayer.classList.remove('active'),
         });
 
         // 橫放提示：點一下關掉

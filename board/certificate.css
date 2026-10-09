@@ -1,0 +1,151 @@
+/* 資訊大富翁：四區共用的證書樣式（搭配 certificate.js） */
+/* ===================== 證書 ===================== */
+/* 每區過關給一張「區域證書」，四區全通關再給一張「總證書」。
+   畫面上用 HTML 呈現（好排版、可列印），存圖時另用 canvas 重畫一次。 */
+#cert-layer {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.72);
+    z-index: 30;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    overflow-y: auto;
+}
+#cert-layer.active { opacity: 1; pointer-events: auto; visibility: visible; }
+
+.certificate {
+    position: relative;
+    width: min(560px, 100%);
+    background: #fffdf6;
+    border: 10px double #b45309;
+    border-radius: 12px;
+    padding: 28px 26px 22px;
+    text-align: center;
+    color: #3f2d16;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+.certificate.final { border-color: #7c3aed; background: #fdfaff; }
+
+.cert-seal {
+    font-size: 44px;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+.cert-kicker {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: #b45309;
+    margin-bottom: 4px;
+}
+.certificate.final .cert-kicker { color: #7c3aed; }
+.cert-title { font-size: 30px; font-weight: 900; margin: 0 0 14px; }
+
+.cert-line { font-size: 17px; margin: 6px 0; }
+.cert-name {
+    font-size: 30px;
+    font-weight: 900;
+    border-bottom: 3px solid #b45309;
+    padding: 0 18px 2px;
+    display: inline-block;
+    min-width: 140px;
+}
+.cert-stars { font-size: 34px; letter-spacing: 6px; margin: 12px 0 6px; }
+.cert-rank {
+    display: inline-block;
+    background: #fef3c7;
+    border-radius: 999px;
+    padding: 5px 18px;
+    font-size: 18px;
+    font-weight: 900;
+}
+.certificate.final .cert-rank { background: #f3e8ff; }
+
+.cert-badges { font-size: 30px; letter-spacing: 8px; margin: 10px 0; }
+.cert-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 2px dashed #d6c7a8;
+    font-size: 14px;
+}
+/* 校名可編輯：不寫死在程式裡，老師自己填 */
+.cert-school {
+    font-weight: 700;
+    min-width: 90px;
+    outline: none;
+    border-bottom: 1px dotted #b45309;
+}
+.cert-school:empty::before {
+    content: '點這裡填學校';
+    color: #b9a684;
+    font-weight: 400;
+}
+
+.cert-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 18px;
+}
+.cert-btn {
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 900;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 22px;
+    cursor: pointer;
+    color: #fff;
+    background: #b45309;
+    box-shadow: 0 4px 0 #7c3a06;
+}
+.cert-btn.alt { background: #16a34a; box-shadow: 0 4px 0 #15803d; }
+.cert-btn.ghost {
+    background: #fff;
+    color: #3f2d16;
+    border: 2px solid #d6c7a8;
+    box-shadow: 0 4px 0 #e7dcc4;
+}
+.cert-btn:active { transform: translateY(3px); box-shadow: none; }
+
+/* 列印：只留證書本體 */
+@media print {
+    body * { visibility: hidden !important; }
+    #cert-layer, #cert-layer * { visibility: visible !important; }
+    #cert-layer {
+        position: absolute;
+        inset: 0;
+        background: none;
+        opacity: 1;
+        display: block;
+        padding: 0;
+    }
+    .certificate { box-shadow: none; width: 100%; }
+    .cert-actions { display: none !important; }
+}
+
+/* 前往下一區：做好了是連結，還沒做好顯示敬請期待（不可點） */
+.cert-btn.next {
+    display: inline-block;
+    text-decoration: none;
+    background: #0e7490;
+    box-shadow: 0 4px 0 #155e75;
+}
+.cert-btn.next[hidden] { display: none; }
+.cert-btn.next.disabled {
+    background: #e2e8f0;
+    color: #334155;
+    box-shadow: 0 4px 0 #cbd5e1;
+    cursor: not-allowed;
+}
+.cert-btn.next.disabled:active { transform: none; box-shadow: 0 4px 0 #cbd5e1; }

@@ -55,10 +55,13 @@ ext_script = re.findall(r'<script[^>]+src=["\']([^"\']+)["\']', html, re.I)
 ext_css = re.findall(r'<link[^>]+rel=["\']stylesheet["\'][^>]*>', html, re.I)
 
 allowed_host = ('fonts.googleapis.com', 'fonts.gstatic.com')
+# 整合階段才加的四區共用證書（board/ 底下的本地檔）。Canvas 交件時不該出現，
+# 但整合後的檔案要能重跑這支腳本，所以放行。
+allowed_local = ('certificate.js', 'certificate.css')
 
 
 def is_allowed(url):
-    return any(h in url for h in allowed_host)
+    return any(h in url for h in allowed_host) or url in allowed_local
 
 
 bad_script = [s for s in ext_script if not is_allowed(s)]

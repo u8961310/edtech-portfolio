@@ -230,7 +230,8 @@
 1. 跑 `python board/verify-canvas.py <檔案>`（15 項契約檢查）
 2. 瀏覽器開一次：確認 console 無錯誤，並看人工清單 8 項
 3. 修不合格處（森林區修過的三項通常會重現：modal Tab 聚焦、星等門檻、直立版面）
-4. 接進 `board/index.html` 的 `ZONES`，把該區 `ready` 改成 `true`
+4. 存成 `board/<zoneId>.html`，接上共用證書（步驟見 SDD §5.1「分區檔案慣例」），
+   把 `board/certificate.js` 的 `ZONES` 裡該區 `ready` 改成 `true`
 5. 首頁補該區卡片、README 與 SDD 同步
 
 ---

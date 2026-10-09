@@ -96,12 +96,31 @@ function loadLocalScore(unitId) {
 
 | Key | 內容 |
 |---|---|
-| `edtech-board-progress` | 目前進度 `{ pos, coins, done: [] }` |
-| `edtech-board-best` | 歷史最高金幣（數字） |
-| `edtech-board-certs` | 證書紀錄 `{ name, school, zones: { <zoneId>: { stars, coins, date } } }` |
+| `edtech-board-progress-<zoneId>` | 該區目前進度 `{ pos, coins, done: [] }` |
+| `edtech-board-best-<zoneId>` | 該區歷史最高金幣（數字） |
+| `edtech-board-certs` | 四區共用的證書紀錄 `{ name, school, zones: { <zoneId>: { stars, coins, date } } }` |
+
+`<zoneId>` 為 `forest`／`ocean`／`space`／`castle`。進度與最高分**每區分開存**——
+2026-10-09 前四區共用 `edtech-board-progress`，玩海洋區會把森林區進度蓋掉。
+名字、校名、各區證書則刻意共用，學生只需填一次名字。
 
 首頁的大富翁徽章因此**不能**塞進 `[1..21].forEach` 那個迴圈，
-它有獨立的 `loadBoardBadge()`。
+它有獨立的 `loadBoardBadge()`，依 `zones` 逐區點亮 `board-<zoneId>-badge`。
+
+#### 分區檔案慣例
+
+| 檔案 | 用途 |
+|---|---|
+| `board/index.html` | 森林區（第一區，首頁卡片入口） |
+| `board/ocean.html`、`space.html`、`castle.html` | 其餘三區，一區一檔 |
+| `board/certificate.js`、`certificate.css` | 四區共用：證書、問名字、存圖、星等門檻 `starsFor()`、「前往下一區」 |
+
+* 新區上架：Canvas 成品存成 `board/<zoneId>.html` → 存檔 key 改成 `-<zoneId>` 後綴 →
+  引用 `certificate.*`、呼叫 `BoardCert.init({ zoneId, showAlert, closeAlert })` →
+  結算改用 `BoardCert.starsFor()` 並加「領取證書」→ `certificate.js` 的 `ZONES` 把該區 `ready` 改 `true` →
+  首頁加卡片（徽章 id `board-<zoneId>-badge`）。
+* 星等門檻四區共用（80 金幣三星、60 兩星；滿分 90，錯一題仍拿三星），不要在各區另寫。
+* `verify-canvas.py` 是 Canvas 交件契約（單一 HTML），只放行 `certificate.*` 這兩個整合後的共用檔。
 
 ### 5.2 ⚠️ 已知不一致：六個單元的徽章永遠不會亮
 

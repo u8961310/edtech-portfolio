@@ -12,6 +12,7 @@
     <title>資訊大富翁 - 海洋大探索</title>
     <!-- 引入 Noto Sans TC 字體 (唯一允許的外部資源) -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="certificate.css">
     
     <style>
         /* CSS 變數與主題設定：深青藍主題 #0891b2 */
@@ -83,7 +84,7 @@
             gap: 8px;
             background: rgba(255, 255, 255, 0.95);
             color: #0e7490;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 700;
             padding: 10px 18px;
             border-radius: 999px;
@@ -557,6 +558,7 @@
         </div>
     </div>
 
+    <script src="certificate.js"></script>
     <script>
         /**
          * 遊戲設定與資料庫 (檔案管理主題)
@@ -600,8 +602,8 @@
         ];
 
         // 依據約束規定，固定使用此前綴
-        const STORAGE_KEY_PROG = 'edtech-board-progress';
-        const STORAGE_KEY_BEST = 'edtech-board-best';
+        const STORAGE_KEY_PROG = 'edtech-board-progress-ocean';  // 每區分開存，避免互相覆蓋
+        const STORAGE_KEY_BEST = 'edtech-board-best-ocean';
 
         // 遊戲狀態
         let gameState = {
@@ -692,8 +694,8 @@
         /**
          * 客製化確認對話框 (替代原生 confirm)
          */
-        function showCustomAlert(title, text, buttons) {
-            elModalIcon.textContent = '🔄';
+        function showCustomAlert(title, text, buttons, icon = '⭐') {
+            elModalIcon.textContent = icon;
             elModalTitleText.textContent = title;
             elModalQuestion.innerHTML = text;
             elModalOptions.innerHTML = '';
@@ -721,7 +723,7 @@
                     updatePlayerPosition(false);
                     playSound('jump');
                 }}
-            ]);
+            ], '🔄');
         }
         elBtnReset.addEventListener('click', resetGame);
 
@@ -1039,16 +1041,18 @@
         }
 
         function showVictoryScreen() {
-            // 門檻緩衝機制 (符合第 12 條約束：錯一題仍可拿最高三星)
-            let stars = 1;
-            if (gameState.coins >= 60) stars = 2;
-            if (gameState.coins >= 70) stars = 3;
+            // 星等門檻四區共用（錯一題仍可拿三星），定義在 certificate.js
+            const stars = BoardCert.starsFor(gameState.coins);
             let starText = '⭐'.repeat(stars);
             
             showCustomAlert(
                 "🎉 海洋大探索成功！",
                 `太棒了！你順利抵達終點，總共收集到 ${gameState.coins} 個金幣！<br><br>獲得評等：<span style="font-size:32px;">${starText}</span>`,
                 [
+                    { text: '🏅 領取證書', style: 'background: #b45309; color: white; text-align: center;', action: () => {
+                        closeModal();
+                        BoardCert.showZoneCertificate(stars, gameState.coins);
+                    }},
                     { text: '🔄 再玩一次', style: 'background: #0284c7; color: white; text-align: center;', action: () => {
                         gameState = { pos: 0, coins: 0, done: [] };
                         saveProgress();
@@ -1060,6 +1064,13 @@
                 ]
             );
         }
+
+        // 證書系統在 certificate.js（四區共用）
+        BoardCert.init({
+            zoneId: 'ocean',
+            showAlert: showCustomAlert,
+            closeAlert: closeModal,
+        });
 
         // 啟動遊戲
         window.onload = initGame;

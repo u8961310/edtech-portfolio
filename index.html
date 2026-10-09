@@ -445,6 +445,14 @@
                 <p class="card-score" id="board-forest-badge" style="display:none;"></p>
                 <span class="play-btn">▶ 開始玩</span>
             </a>
+            <a href="./board/ocean.html" class="card" style="--c: #0891b2;">
+                <span class="skill-tag">知識問答</span>
+                <div class="card-cover">🌊🎲</div>
+                <h3 class="card-title">海洋大探索</h3>
+                <p class="card-desc">潛進海洋，學會把檔案收好、取好名字，還有電腦壞掉前要先備份！</p>
+                <p class="card-score" id="board-ocean-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
         </div>
     </section>
 
@@ -474,12 +482,14 @@
             const raw = localStorage.getItem('edtech-board-certs');
             if (!raw) return;
             const data = JSON.parse(raw);
-            const cert = data && data.zones && data.zones.forest;
-            const badge = document.getElementById('board-forest-badge');
-            if (cert && badge) {
-                badge.textContent = `🏅 已獲證書：${'⭐'.repeat(cert.stars || 1)}（${cert.coins || 0} 金幣）`;
-                badge.style.display = 'inline-block';
-            }
+            // 每區一張卡片，徽章 id 是 board-<zoneId>-badge；新區上架時加卡片即可，這裡不用改
+            Object.entries((data && data.zones) || {}).forEach(([zoneId, cert]) => {
+                const badge = document.getElementById(`board-${zoneId}-badge`);
+                if (cert && badge) {
+                    badge.textContent = `🏅 已獲證書：${'⭐'.repeat(cert.stars || 1)}（${cert.coins || 0} 金幣）`;
+                    badge.style.display = 'inline-block';
+                }
+            });
         } catch (e) { /* 資料壞掉就不顯示徽章，不要讓首頁整個掛掉 */ }
     })();
 </script>
