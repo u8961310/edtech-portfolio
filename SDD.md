@@ -14,8 +14,12 @@
 ```text
 edtech-portfolio/          # 專案根目錄
 │
-├── index.html             # 入口網頁（3D 學習樂園島；新增單元要在檔內 ISLANDS 加一列）
-├── list.html              # 卡片版入口（舊 Dashboard，3D 跑不動時的備案；新增單元也要加卡片）
+├── index.html             # 入口網頁（學習樂園島插畫版：疊 island/img 的分層圖＋SVG 熱區，不跑 3D）
+├── island-3d.html         # 即時 3D 版；同時是產圖來源（?export=land／port）
+├── island/data.js         # 關卡資料（index.html 與 island-3d.html 共用）
+├── island/map-*.json、img/ # tools/render-island.py 的產出，不要手改
+├── tools/render-island.py # 產圖工具（Python Playwright）
+├── list.html              # 卡片版入口（舊 Dashboard，備案；新增單元也要加卡片）
 ├── SDD.md                 # 本設計規範說明書
 ├── README.md              # 作品集說明（技術棧、教學理念）
 │
@@ -133,6 +137,8 @@ function loadLocalScore(unitId) {
 這 8 個單元的「最佳成績」徽章從上線至今都不會出現（2026-09-20 掃描確認）。
 六個沒存分數的都是從 Gemini Canvas 整合進來、未對齊本節規範的單元。
 新增單元時務必照 §5 存 `edtech-unit{N}-score`，否則只是多一個沉默失效的徽章。
+
+**上架到學習樂園島**：在 `island/data.js` 對應島的 `units` 加一列（一座島最多 8 關）→ 跑 `python tools/render-island.py` 重新產圖 → 把 `island/` 底下的新圖與 json 一起 commit。只改 data.js 不重跑，新關卡在地圖上不會有熱區（清單裡看得到）。
 
 ---
 

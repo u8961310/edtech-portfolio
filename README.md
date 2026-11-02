@@ -13,7 +13,8 @@
 ## 🛠️ 技術棧
 
 * **架構：** 純靜態網站（HTML + CSS + Vanilla JS），無後端、無資料庫
-* **3D 首頁：** three.js r160（jsDelivr CDN 載入，不需安裝），六角小島拼成的學習樂園島
+* **首頁：** 「學習樂園島」插畫版——用 three.js r160（CDN）把 3D 玩具模型**預先算成分層 WebP**，網頁只疊圖＋HTML 熱區，舊電腦也順
+* **產圖：** `python tools/render-island.py`（需 Python Playwright），改了關卡或場景後重跑
 * **資料儲存：** 瀏覽器 `localStorage`（學生成績本機保存）
 * **響應式：** CSS Grid + Flexbox，支援手機 / iPad / 桌機
 * **部署：** GitHub Pages（綁定 `main` 分支自動部署）
@@ -53,7 +54,7 @@
 
 ### 本機預覽
 
-在專案根目錄跑 `python -m http.server`，再開 `http://localhost:8000/`（3D 首頁用 ES module 從 CDN 載入 three.js，用本機伺服器最穩）。
+在專案根目錄跑 `python -m http.server`，再開 `http://localhost:8000/`（首頁用 ES module 讀 `island/data.js`，用本機伺服器最穩）。
 
 ### 部署到 GitHub Pages
 
@@ -65,8 +66,14 @@
 
 ```text
 edtech-portfolio/
-├── index.html       # 🏝️ 3D 學習樂園島首頁（關卡資料在檔內 ISLANDS 陣列）
-├── list.html        # 🗂️ 卡片版首頁（舊版，3D 跑不動時的備案）
+├── index.html       # 🏝️ 學習樂園島首頁（插畫版：疊 island/img 的圖＋熱區，不跑 3D）
+├── island-3d.html   # 🧊 即時 3D 版（電腦夠力才順）；也是產圖來源（?export=land／port）
+├── island/
+│   ├── data.js      # 關卡資料（兩個版本共用）——新增單元改這裡
+│   ├── map-*.json   # 產圖工具輸出的熱區座標（橫向 land／直向 port）
+│   └── img/         # 產圖工具輸出的分層 WebP
+├── tools/render-island.py  # 產圖工具
+├── list.html        # 🗂️ 卡片版首頁（舊版備案）
 ├── SDD.md           # 軟體設計說明書（規範與設計細節）
 ├── README.md        # 本檔案
 ├── board/                      # 資訊大富翁（跨區地圖遊戲，不屬於 units/）
