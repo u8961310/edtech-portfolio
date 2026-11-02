@@ -13,6 +13,7 @@
 ## 🛠️ 技術棧
 
 * **架構：** 純靜態網站（HTML + CSS + Vanilla JS），無後端、無資料庫
+* **3D 首頁：** three.js r160（jsDelivr CDN 載入，不需安裝），六角小島拼成的學習樂園島
 * **資料儲存：** 瀏覽器 `localStorage`（學生成績本機保存）
 * **響應式：** CSS Grid + Flexbox，支援手機 / iPad / 桌機
 * **部署：** GitHub Pages（綁定 `main` 分支自動部署）
@@ -52,7 +53,7 @@
 
 ### 本機預覽
 
-直接雙擊 `index.html` 用瀏覽器開啟即可，無需任何安裝。
+在專案根目錄跑 `python -m http.server`，再開 `http://localhost:8000/`（3D 首頁用 ES module 從 CDN 載入 three.js，用本機伺服器最穩）。
 
 ### 部署到 GitHub Pages
 
@@ -64,7 +65,8 @@
 
 ```text
 edtech-portfolio/
-├── index.html       # 課程地圖首頁
+├── index.html       # 🏝️ 3D 學習樂園島首頁（關卡資料在檔內 ISLANDS 陣列）
+├── list.html        # 🗂️ 卡片版首頁（舊版，3D 跑不動時的備案）
 ├── SDD.md           # 軟體設計說明書（規範與設計細節）
 ├── README.md        # 本檔案
 ├── board/                      # 資訊大富翁（跨區地圖遊戲，不屬於 units/）

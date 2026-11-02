@@ -14,7 +14,8 @@
 ```text
 edtech-portfolio/          # 專案根目錄
 │
-├── index.html             # 入口網頁（課程地圖 Dashboard）
+├── index.html             # 入口網頁（3D 學習樂園島；新增單元要在檔內 ISLANDS 加一列）
+├── list.html              # 卡片版入口（舊 Dashboard，3D 跑不動時的備案；新增單元也要加卡片）
 ├── SDD.md                 # 本設計規範說明書
 ├── README.md              # 作品集說明（技術棧、教學理念）
 │
