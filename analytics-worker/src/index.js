@@ -1,5 +1,6 @@
 import { classify, eduDomainFromPtr, ip24, taipeiDay } from './parse.js';
 import { fetchWhoisOrg, fetchPtr } from './lookup.js';
+import REPORT_HTML from './report.html';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -22,10 +23,26 @@ export default {
       return new Response(null, { status: 204, headers: CORS });
     }
     if (url.pathname === '/stats' && request.method === 'GET') {
-      if (!env.STATS_TOKEN || url.searchParams.get('token') !== env.STATS_TOKEN) {
+      // token 優先從 header 帶（不留在網址與瀏覽紀錄），舊的 ?token= 也保留
+      const auth = request.headers.get('Authorization') || '';
+      const token = auth.startsWith('Bearer ') ? auth.slice(7) : url.searchParams.get('token');
+      if (!env.STATS_TOKEN || token !== env.STATS_TOKEN) {
         return new Response('Unauthorized', { status: 401 });
       }
-      return Response.json(await stats(env));
+      const range = url.searchParams.get('range');
+      const days = range === 'all' ? null : Math.min(Math.max(parseInt(range, 10) || 30, 1), 366);
+      return Response.json(await stats(env, days), { headers: { 'Cache-Control': 'no-store' } });
+    }
+    if (url.pathname === '/report' && request.method === 'GET') {
+      // 頁面本身不含任何資料，進頁面後輸入 token 才去打 /stats
+      return new Response(REPORT_HTML, {
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store',
+          'X-Robots-Tag': 'noindex',
+          'Referrer-Policy': 'no-referrer',
+        },
+      });
     }
     return new Response('Not Found', { status: 404 });
   },
@@ -90,35 +107,60 @@ async function lookupOrgCached(env, ip) {
   return org;
 }
 
-async function stats(env) {
-  const orgs = await env.DB.prepare(
-    `SELECT COALESCE(org_name, ptr_domain) AS org_name,
-            ptr_domain,
-            COUNT(DISTINCT day) AS days,
-            MIN(day) AS first_seen
-       FROM visits
-      WHERE source_type = 'school'
-      GROUP BY COALESCE(org_name, ptr_domain)
-      ORDER BY days DESC`,
-  ).all();
+/**
+ * 報表資料。days＝最近幾天（含今天，台北時間）；null＝全部。
+ * 一列 visits ＝ 同一訪客同一天看了某一頁（已去重），所以「瀏覽頁數」是去重後的頁數，
+ * 「訪客人日」＝ 同一天同一訪客算一次。
+ */
+async function stats(env, days) {
+  const to = taipeiDay();
+  const from = days ? taipeiDay(new Date(Date.now() - (days - 1) * 86400000)) : '0000-00-00';
+  const q = (sql) => env.DB.prepare(sql).bind(from).all().then((r) => r.results);
+  const W = 'WHERE day >= ?1';
 
-  const sources = await env.DB.prepare(
-    `SELECT source_type, COUNT(*) AS n FROM visits GROUP BY source_type`,
-  ).all();
+  const [summary, orgs, daily, sources, paths] = await Promise.all([
+    q(`SELECT COUNT(*) AS pages,
+              COUNT(DISTINCT day || visitor_key) AS visitors,
+              COUNT(DISTINCT CASE WHEN source_type = 'school'
+                                  THEN COALESCE(org_name, ptr_domain) END) AS schools,
+              MIN(day) AS first_day, MAX(day) AS last_day
+         FROM visits ${W}`),
+    q(`SELECT COALESCE(org_name, ptr_domain) AS org_name,
+              MAX(ptr_domain) AS ptr_domain,
+              COUNT(DISTINCT day) AS days,
+              COUNT(DISTINCT day || visitor_key) AS visitors,
+              COUNT(*) AS pages,
+              MIN(day) AS first_seen,
+              MAX(day) AS last_seen
+         FROM visits ${W} AND source_type = 'school'
+        GROUP BY COALESCE(org_name, ptr_domain)
+        ORDER BY last_seen DESC, visitors DESC`),
+    q(`SELECT day,
+              COUNT(DISTINCT CASE WHEN source_type = 'school' THEN visitor_key END) AS school,
+              COUNT(DISTINCT CASE WHEN source_type = 'tanet_unknown' THEN visitor_key END) AS tanet_unknown,
+              COUNT(DISTINCT CASE WHEN source_type NOT IN ('school', 'tanet_unknown') THEN visitor_key END) AS other,
+              COUNT(DISTINCT visitor_key) AS visitors,
+              COUNT(*) AS pages
+         FROM visits ${W}
+        GROUP BY day ORDER BY day DESC LIMIT 60`),
+    q(`SELECT source_type, COUNT(DISTINCT day || visitor_key) AS visitors, COUNT(*) AS n
+         FROM visits ${W} GROUP BY source_type ORDER BY n DESC`),
+    q(`SELECT path, COUNT(*) AS n, COUNT(DISTINCT day || visitor_key) AS visitors
+         FROM visits ${W} GROUP BY path ORDER BY n DESC LIMIT 40`),
+  ]);
 
-  const paths = await env.DB.prepare(
-    `SELECT path, COUNT(*) AS n FROM visits GROUP BY path ORDER BY n DESC LIMIT 30`,
-  ).all();
-
-  const counts = Object.fromEntries(sources.results.map((r) => [r.source_type, r.n]));
+  const counts = Object.fromEntries(sources.map((r) => [r.source_type, r.n]));
   const school = counts.school || 0;
   const unknown = counts.tanet_unknown || 0;
   const academic = school + unknown;
 
   return {
-    orgs: orgs.results,
-    sources: sources.results,
-    paths: paths.results,
+    range: { days, from: days ? from : summary[0].first_day, to },
+    summary: summary[0],
+    orgs,
+    daily,
+    sources,
+    paths,
     // 命中率自我監測：學術網路來源中，能辨識到單位名的比例
     hit_rate: { school, tanet_unknown: unknown, rate: academic ? school / academic : null },
   };
