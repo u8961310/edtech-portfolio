@@ -21,6 +21,12 @@ export default {
       ctx.waitUntil(record(request, env, path));
       return new Response(null, { status: 204, headers: CORS });
     }
+    if (url.pathname === '/stats' && request.method === 'GET') {
+      if (!env.STATS_TOKEN || url.searchParams.get('token') !== env.STATS_TOKEN) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+      return Response.json(await stats(env));
+    }
     return new Response('Not Found', { status: 404 });
   },
 };
@@ -82,6 +88,40 @@ async function lookupOrgCached(env, ip) {
   ).run();
 
   return org;
+}
+
+async function stats(env) {
+  const orgs = await env.DB.prepare(
+    `SELECT COALESCE(org_name, ptr_domain) AS org_name,
+            ptr_domain,
+            COUNT(DISTINCT day) AS days,
+            MIN(day) AS first_seen
+       FROM visits
+      WHERE source_type = 'school'
+      GROUP BY COALESCE(org_name, ptr_domain)
+      ORDER BY days DESC`,
+  ).all();
+
+  const sources = await env.DB.prepare(
+    `SELECT source_type, COUNT(*) AS n FROM visits GROUP BY source_type`,
+  ).all();
+
+  const paths = await env.DB.prepare(
+    `SELECT path, COUNT(*) AS n FROM visits GROUP BY path ORDER BY n DESC LIMIT 30`,
+  ).all();
+
+  const counts = Object.fromEntries(sources.results.map((r) => [r.source_type, r.n]));
+  const school = counts.school || 0;
+  const unknown = counts.tanet_unknown || 0;
+  const academic = school + unknown;
+
+  return {
+    orgs: orgs.results,
+    sources: sources.results,
+    paths: paths.results,
+    // 命中率自我監測：學術網路來源中，能辨識到單位名的比例
+    hit_rate: { school, tanet_unknown: unknown, rate: academic ? school / academic : null },
+  };
 }
 
 async function sha256(text) {
