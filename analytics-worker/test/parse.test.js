@@ -1,7 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { parseWhoisUserOrg, eduDomainFromPtr, classify, ip24, taipeiDay } from '../src/parse.js';
+import { parseWhoisUserOrg, eduDomainFromPtr, classify, ip24, netKey, taipeiDay, validDeviceId } from '../src/parse.js';
+
+test('validDeviceId 只收 UUID，其他一律 null', () => {
+  assert.equal(validDeviceId('3F2504E0-4F89-41D3-9A0C-0305E82C3301'), '3f2504e0-4f89-41d3-9a0c-0305e82c3301');
+  assert.equal(validDeviceId(undefined), null);
+  assert.equal(validDeviceId(12345), null);
+  assert.equal(validDeviceId(''), null);
+  assert.equal(validDeviceId('not-a-uuid'), null);
+  assert.equal(validDeviceId('3f2504e0-4f89-41d3-9a0c-0305e82c3301; DROP TABLE visits'), null);
+  assert.equal(validDeviceId('x'.repeat(5000)), null);
+});
 
 const fixture = (name) =>
   readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
@@ -52,6 +62,25 @@ test('classify 無單位名但屬 TANet 為 tanet_unknown', () => {
 
 test('classify 其他來源為 other', () => {
   assert.equal(classify({ orgName: null, asn: 3462, asOrg: 'Chunghwa Telecom' }), 'other');
+});
+
+test('netKey：IPv4 取 /24、IPv6 取 /48，亂碼回 null', () => {
+  assert.equal(netKey('163.21.100.32'), '163.21.100');
+  assert.equal(netKey('2001:288:1001::1'), '2001:288:1001::/48');
+  assert.equal(netKey('2001:0288:1001:0042:0000:0000:0000:0001'), '2001:288:1001::/48');
+  assert.equal(netKey('2001:288::5'), '2001:288:0::/48');
+  assert.equal(netKey('::1'), '0:0:0::/48');
+  assert.equal(netKey('2001:288:1001:1:2:3:4'), null);
+  assert.equal(netKey('1::2::3'), null);
+  assert.equal(netKey('hello'), null);
+  assert.equal(netKey(null), null);
+});
+
+test('parseWhoisUserOrg 用戶單位網段接受 IPv6', () => {
+  const html = '<td>用戶單位網段：2001:288:1001::/48</td><td>Chinese Name</td><td>國立臺灣大學</td>';
+  const r = parseWhoisUserOrg(html);
+  assert.equal(r.orgName, '國立臺灣大學');
+  assert.equal(r.netBlock, '2001:288:1001::/48');
 });
 
 test('ip24 取前三段', () => {

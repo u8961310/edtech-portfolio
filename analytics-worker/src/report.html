@@ -32,7 +32,7 @@
   .btn2 { border: 1px solid var(--input); background: var(--paper); color: var(--ink); padding: 5px 12px; border-radius: 4px; font: inherit; font-size: 14px; cursor: pointer; }
   .btn { border: 0; background: var(--head); color: #fff; padding: 8px 18px; border-radius: 4px; font: inherit; font-size: 15px; cursor: pointer; }
 
-  .summary { display: grid; grid-template-columns: 1.6fr repeat(4, 1fr); background: var(--paper); border: 1px solid var(--line); border-right: 0; border-bottom: 0; margin-bottom: 20px; }
+  .summary { display: grid; grid-template-columns: 1.6fr repeat(5, 1fr); background: var(--paper); border: 1px solid var(--line); border-right: 0; border-bottom: 0; margin-bottom: 20px; }
   .summary > div { padding: 10px 14px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
   .summary .k { font-size: 13px; color: var(--muted); }
   .summary .v { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -90,7 +90,7 @@
 
   @media (max-width: 760px) {
     .summary { grid-template-columns: 1fr 1fr; }
-    .summary .period { grid-column: 1 / -1; }
+    .summary .period, .summary > div:last-child { grid-column: 1 / -1; }
     .grid2 { grid-template-columns: 1fr; gap: 20px; }
     .hide-sm { display: none; }
     /* 窄螢幕：藏欄後固定欄寬會錯位，改自動配寬 */
@@ -146,7 +146,7 @@
       <h2>每日造訪</h2>
       <div id="trend" class="chart"></div>
       <div id="daily"></div>
-      <div class="note">只列有人來的日子；各欄為當天訪客數。</div>
+      <div class="note">只列有人來的日子；各欄為當天訪客數。「裝置」依瀏覽器隨機編號計算（2026-11-19 起），電腦教室有還原卡時每次開機會算成新裝置。</div>
     </section>
 
     <div class="grid2">
@@ -367,20 +367,23 @@
       '<div class="period"><div class="k">統計期間</div><div class="v">' + esc(period) + '</div></div>' +
       '<div><div class="k">學校數</div><div class="v">' + fmt(s.schools) + '<small>所</small></div></div>' +
       '<div><div class="k" title="同一天同一位訪客算一次">訪客人日</div><div class="v">' + fmt(s.visitors) + '<small>人日</small></div></div>' +
+      '<div><div class="k" title="' + esc(s.devices_since ? '依瀏覽器隨機編號計算，' + s.devices_since + ' 起才有資料' : '依瀏覽器隨機編號計算，尚無資料') +
+        '">不重複裝置</div><div class="v">' + fmt(s.devices) + '<small>台</small></div></div>' +
       '<div><div class="k" title="同一位訪客同一天看同一頁只算一次">瀏覽頁數</div><div class="v">' + fmt(s.pages) + '<small>頁</small></div></div>' +
       '<div><div class="k" title="學術網路來源中，查得到單位名稱的比例">單位辨識率</div><div class="v">' + hr + '</div></div>';
 
     // 來過的學校
     var orgs = d.orgs || [];
     $('orgs').innerHTML = table([
-      { t: '學校／單位', w: '34%' }, { t: '網域', w: '18%', sm: true },
-      { t: '來訪天數', w: '11%', num: true, sm: true }, { t: '訪客人日', w: '11%', num: true },
-      { t: '瀏覽頁數', w: '11%', num: true, sm: true }, { t: '最近來訪', w: '15%' }
+      { t: '學校／單位', w: '30%' }, { t: '網域', w: '16%', sm: true },
+      { t: '來訪天數', w: '10%', num: true, sm: true }, { t: '訪客人日', w: '10%', num: true },
+      { t: '裝置', w: '9%', num: true }, { t: '瀏覽頁數', w: '10%', num: true, sm: true }, { t: '最近來訪', w: '15%' }
     ], orgs.map(function (o) {
       return '<tr><td class="trunc" title="' + esc(o.org_name) + '">' + esc(o.org_name || '（未知）') +
         '<span class="sub">首次 ' + esc(o.first_seen) + '</span></td>' +
         '<td class="trunc hide-sm">' + esc(o.ptr_domain || '—') + '</td>' +
         '<td class="num hide-sm">' + fmt(o.days) + '</td><td class="num">' + fmt(o.visitors) + '</td>' +
+        '<td class="num">' + fmt(o.devices) + '</td>' +
         '<td class="num hide-sm">' + fmt(o.pages) + '</td><td class="date">' + esc(o.last_seen) + '</td></tr>';
     }));
 
@@ -393,30 +396,33 @@
       var w = wk[new Date(r.day + 'T00:00:00Z').getUTCDay()];
       return '<tr class="' + (r.visitors ? '' : 'zero') + '"><td class="date">' + esc(r.day) + '（' + w + '）</td>' +
         '<td class="num">' + fmt(r.school) + '</td><td class="num hide-sm">' + fmt(r.tanet_unknown) + '</td>' +
-        '<td class="num">' + fmt(r.other) + '</td><td class="num">' + fmt(r.visitors) + '</td>' +
-        '<td class="num hide-sm">' + fmt(r.pages) + '</td></tr>';
+        '<td class="num hide-sm">' + fmt(r.other) + '</td><td class="num">' + fmt(r.visitors) + '</td>' +
+        '<td class="num">' + fmt(r.devices) + '</td><td class="num hide-sm">' + fmt(r.pages) + '</td></tr>';
     });
+    // 裝置的合計不能逐日相加（同一台會重複算），改用整段期間的不重複數
     $('daily').innerHTML = table([
-      { t: '日期', w: '22%' }, { t: '學校', w: '13%', num: true }, { t: '學術網路', w: '15%', num: true, sm: true },
-      { t: '其他網路', w: '15%', num: true }, { t: '訪客', w: '15%', num: true }, { t: '瀏覽頁數', w: '20%', num: true, sm: true }
+      { t: '日期', w: '20%' }, { t: '學校', w: '12%', num: true }, { t: '學術網路', w: '14%', num: true, sm: true },
+      { t: '其他網路', w: '14%', num: true, sm: true }, { t: '訪客', w: '12%', num: true }, { t: '裝置', w: '12%', num: true },
+      { t: '瀏覽頁數', w: '16%', num: true, sm: true }
     ], drows, drows.length ? '<tr><td>合計</td><td class="num">' + fmt(tot.school) + '</td><td class="num hide-sm">' +
-      fmt(tot.tanet_unknown) + '</td><td class="num">' + fmt(tot.other) + '</td><td class="num">' + fmt(tot.visitors) +
-      '</td><td class="num hide-sm">' + fmt(tot.pages) + '</td></tr>' : '');
+      fmt(tot.tanet_unknown) + '</td><td class="num hide-sm">' + fmt(tot.other) + '</td><td class="num">' + fmt(tot.visitors) +
+      '</td><td class="num" title="整段期間不重複">' + fmt(s.devices) + '</td><td class="num hide-sm">' + fmt(tot.pages) + '</td></tr>' : '');
 
     // 熱門頁面：同一關的不同網址（有沒有 index.html）合併
     var merged = {};
     (d.paths || []).forEach(function (p) {
       var n = pageName(p.path);
-      merged[n] = merged[n] || { name: n, n: 0, visitors: 0 };
-      merged[n].n += p.n; merged[n].visitors += p.visitors;
+      merged[n] = merged[n] || { name: n, n: 0, visitors: 0, devices: 0 };
+      merged[n].n += p.n; merged[n].visitors += p.visitors; merged[n].devices += p.devices || 0;
     });
     var plist = Object.keys(merged).map(function (k) { return merged[k]; }).sort(function (a, b) { return b.n - a.n; });
     var pmax = plist.length ? plist[0].n : 1;
-    $('paths').innerHTML = table([{ t: '頁面', w: '44%' }, { t: '', w: '24%' }, { t: '瀏覽', w: '16%', num: true }, { t: '訪客', w: '16%', num: true }],
+    $('paths').innerHTML = table([{ t: '頁面', w: '40%' }, { t: '', w: '18%' }, { t: '瀏覽', w: '14%', num: true },
+      { t: '訪客', w: '14%', num: true }, { t: '裝置', w: '14%', num: true }],
       plist.map(function (p) {
         return '<tr><td class="trunc" title="' + esc(p.name) + '">' + esc(p.name) + '</td>' +
           '<td class="bar"><span style="width:' + (p.n / pmax * 100) + '%"></span></td><td class="num">' + fmt(p.n) +
-          '</td><td class="num">' + fmt(p.visitors) + '</td></tr>';
+          '</td><td class="num">' + fmt(p.visitors) + '</td><td class="num">' + fmt(p.devices) + '</td></tr>';
       }));
 
     drawTrend(d);

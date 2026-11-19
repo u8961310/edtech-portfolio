@@ -34,7 +34,7 @@ export function parseWhoisUserOrg(html) {
   const orgName = firstField(tail, 'Chinese Name');
   if (!orgName) return null;
 
-  const blockMatch = tail.match(/用戶單位網段[：:]\s*([\d.]+\/\d+)/);
+  const blockMatch = tail.match(/用戶單位網段[：:]\s*([\da-fA-F.:]+\/\d+)/);
   return {
     orgName,
     orgNameEn: firstField(tail, 'Organization Name'),
@@ -83,6 +83,32 @@ export function ip24(ip) {
   if (!ip) return null;
   const m = ip.match(/^(\d{1,3}\.\d{1,3}\.\d{1,3})\.\d{1,3}$/);
   return m ? m[1] : null;
+}
+
+/**
+ * whois 快取用的網段鍵：IPv4 取 /24（'163.21.100'），IPv6 取 /48（'2001:288:1001::/48'，
+ * TANet 一校通常配一個 /48）。2026-11-19 前只認 IPv4，IPv6 訪客全被歸成 tanet_unknown。
+ */
+export function netKey(ip) {
+  if (!ip) return null;
+  const v4 = ip24(ip);
+  if (v4) return v4;
+  if (!/^[0-9a-f:]+$/i.test(ip) || !ip.includes(':')) return null;
+  const halves = ip.toLowerCase().split('::');
+  if (halves.length > 2) return null;
+  const head = halves[0] ? halves[0].split(':') : [];
+  const tail = halves.length === 2 && halves[1] ? halves[1].split(':') : [];
+  const fill = 8 - head.length - tail.length;
+  if (fill < 0 || (halves.length === 1 && fill !== 0)) return null;
+  const groups = [...head, ...Array(fill).fill('0'), ...tail];
+  if (groups.some((g) => g.length < 1 || g.length > 4)) return null;
+  return groups.slice(0, 3).map((g) => g.replace(/^0+(?=.)/, '')).join(':') + '::/48';
+}
+
+/** beacon 帶來的裝置編號：只收小寫或大寫的 36 字元 UUID，其他一律當沒帶（回 null）。 */
+export function validDeviceId(v) {
+  if (typeof v !== 'string') return null;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v) ? v.toLowerCase() : null;
 }
 
 /** 台北時區的日曆日（YYYY-MM-DD）。禁用 toISOString().slice(0,10)，那會落到前一天。 */

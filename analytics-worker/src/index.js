@@ -1,4 +1,4 @@
-import { classify, eduDomainFromPtr, ip24, taipeiDay } from './parse.js';
+import { classify, eduDomainFromPtr, netKey, taipeiDay, validDeviceId } from './parse.js';
 import { fetchWhoisOrg, fetchPtr } from './lookup.js';
 import REPORT_HTML from './report.html';
 
@@ -18,8 +18,9 @@ export default {
     if (url.pathname === '/c' && request.method === 'POST') {
       const body = await request.json().catch(() => ({}));
       const path = typeof body.p === 'string' ? body.p.slice(0, 200) : '/';
+      const deviceId = validDeviceId(body.d);
       // 先回應，統計在背景做，絕不讓訪客等外部查詢
-      ctx.waitUntil(record(request, env, path));
+      ctx.waitUntil(record(request, env, path, deviceId));
       return new Response(null, { status: 204, headers: CORS });
     }
     if (url.pathname === '/stats' && request.method === 'GET') {
@@ -48,7 +49,7 @@ export default {
   },
 };
 
-async function record(request, env, path) {
+async function record(request, env, path, deviceId) {
   const ip = request.headers.get('CF-Connecting-IP');
   if (!ip) return;
 
@@ -61,15 +62,17 @@ async function record(request, env, path) {
   const day = taipeiDay();
   const sourceType = classify({ orgName: org && org.orgName, asn, asOrg });
   const visitorKey = await sha256(`${ip}|${day}|${env.SALT}`);
+  // 裝置編號不跨天換（才認得出回訪），但一樣加 SALT 雜湊，原始編號不落地
+  const deviceKey = deviceId ? await sha256(`dev|${deviceId}|${env.SALT}`) : null;
 
   await env.DB.prepare(
     `INSERT OR IGNORE INTO visits
-       (day, path, source_type, org_name, ptr_domain, asn, as_org, visitor_key, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (day, path, source_type, org_name, ptr_domain, asn, as_org, visitor_key, device_key, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).bind(
     day, path, sourceType,
     org ? org.orgName : null,
-    ptrDomain, asn, asOrg, visitorKey,
+    ptrDomain, asn, asOrg, visitorKey, deviceKey,
     new Date().toISOString(),
   ).run();
 }
@@ -79,7 +82,7 @@ async function record(request, env, path) {
  * 避免對教育部的服務反覆查詢同一個網段。
  */
 async function lookupOrgCached(env, ip) {
-  const key = ip24(ip);
+  const key = netKey(ip); // IPv4 /24 或 IPv6 /48，存在 org_cache.ip24 欄（欄名沿用）
   if (!key) return null;
 
   const cached = await env.DB.prepare(
@@ -121,6 +124,8 @@ async function stats(env, days) {
   const [summary, orgs, daily, sources, paths] = await Promise.all([
     q(`SELECT COUNT(*) AS pages,
               COUNT(DISTINCT day || visitor_key) AS visitors,
+              COUNT(DISTINCT device_key) AS devices,
+              MIN(CASE WHEN device_key IS NOT NULL THEN day END) AS devices_since,
               COUNT(DISTINCT CASE WHEN source_type = 'school'
                                   THEN COALESCE(org_name, ptr_domain) END) AS schools,
               MIN(day) AS first_day, MAX(day) AS last_day
@@ -129,6 +134,7 @@ async function stats(env, days) {
               MAX(ptr_domain) AS ptr_domain,
               COUNT(DISTINCT day) AS days,
               COUNT(DISTINCT day || visitor_key) AS visitors,
+              COUNT(DISTINCT device_key) AS devices,
               COUNT(*) AS pages,
               MIN(day) AS first_seen,
               MAX(day) AS last_seen
@@ -140,12 +146,14 @@ async function stats(env, days) {
               COUNT(DISTINCT CASE WHEN source_type = 'tanet_unknown' THEN visitor_key END) AS tanet_unknown,
               COUNT(DISTINCT CASE WHEN source_type NOT IN ('school', 'tanet_unknown') THEN visitor_key END) AS other,
               COUNT(DISTINCT visitor_key) AS visitors,
+              COUNT(DISTINCT device_key) AS devices,
               COUNT(*) AS pages
          FROM visits ${W}
         GROUP BY day ORDER BY day DESC LIMIT 60`),
     q(`SELECT source_type, COUNT(DISTINCT day || visitor_key) AS visitors, COUNT(*) AS n
          FROM visits ${W} GROUP BY source_type ORDER BY n DESC`),
-    q(`SELECT path, COUNT(*) AS n, COUNT(DISTINCT day || visitor_key) AS visitors
+    q(`SELECT path, COUNT(*) AS n, COUNT(DISTINCT day || visitor_key) AS visitors,
+              COUNT(DISTINCT device_key) AS devices
          FROM visits ${W} GROUP BY path ORDER BY n DESC LIMIT 40`),
   ]);
 
