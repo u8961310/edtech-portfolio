@@ -441,6 +441,22 @@
         </div>
     </section>
 
+    <!-- ===== 雙人對戰：兩台電腦連線（unit23 起），之後的對戰遊戲放這裡 ===== -->
+    <section class="grade-section" style="background: #fff4d6;">
+        <h2 style="color: #1b1b3a;">⚔️ 雙人對戰</h2>
+        <p class="grade-hint" style="color: #1b1b3a;">兩個人各用一台電腦，輸入房號就能連線對打；沒有對手也可以先對電腦練習。</p>
+        <div class="card-grid">
+            <a href="./units/unit23-typing-duel/index.html" class="card" style="--c: #2458e6;">
+                <span class="skill-tag">連線對戰</span>
+                <div class="card-cover">⚔️⌨️</div>
+                <h3 class="card-title">打字擂台</h3>
+                <p class="card-desc">英打或注音中打，打對一個字就打對手一拳！文章來自各科學過的主題（附注音），結算看自己進步多少。</p>
+                <p class="card-score" id="unit23-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+        </div>
+    </section>
+
     <!-- ===== 大富翁（board/）：不是 units/ 底下的單元，徽章邏輯也獨立 ===== -->
     <section class="grade-section" style="background: #f5f3ff;">
         <h2 style="color: #5b21b6;">🎲 資訊大富翁</h2>
@@ -492,6 +508,17 @@
         const badge = document.getElementById('unit22-score-badge');
         if (stars && badge) {
             badge.textContent = `⭐ 主線最佳：${stars} / 12 顆星`;
+            badge.style.display = 'inline-block';
+        }
+    })();
+
+    // unit23 存的是歷史最快「每分鐘字數」，不是分數，另外顯示
+    (function loadDuelBadge() {
+        let cpm = null;
+        try { cpm = localStorage.getItem('edtech-unit23-score'); } catch (e) { /* 讀不到就不顯示 */ }
+        const badge = document.getElementById('unit23-score-badge');
+        if (cpm && Number(cpm) > 0 && badge) {
+            badge.textContent = `🏆 最快：每分鐘 ${cpm} 字`;
             badge.style.display = 'inline-block';
         }
     })();

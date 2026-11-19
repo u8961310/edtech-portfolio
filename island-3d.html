@@ -334,6 +334,13 @@ const PROPS = {
   mushroom(g) { [[0,0,1],[.14,.08,.6]].forEach(([x,z,s]) => { mesh(CY(.04*s,.05*s,.18*s,10), 0xfff6e6, g, x,.09*s,z);
     mesh(SP(.13*s,16,10,0,Math.PI*2,0,Math.PI/2), 0xff6f8f, g, x,.17*s,z); for (let i=0;i<5;i++) { const a = i*1.25; mesh(SP(.022*s,6,6), 0xffffff, g, x+Math.cos(a)*.08*s,.25*s,z+Math.sin(a)*.08*s); } }); },
   // 節慶島：小聖誕樹（三層綠錐＋金星＋彩球）
+  ring(g) {   // 迷你擂台：方形台＋四角柱（藍紅對角）＋三層紅白藍圍繩（unit23 打字擂台）
+    mesh(B(.44,.08,.44), 0xfff4d6, g, 0,.04,0); mesh(B(.46,.03,.46), 0x1b1b3a, g, 0,.015,0);
+    const post = [[-.2,-.2,0x2458e6],[.2,.2,0x2458e6],[.2,-.2,0xc92a2a],[-.2,.2,0xc92a2a]];
+    post.forEach(([x,z,c]) => mesh(CY(.018,.018,.26,8), c, g, x,.21,z));
+    [.16,.22,.28].forEach((y,i) => { const c = [0xc92a2a,0xffffff,0x2458e6][i];
+      [[0,-.2,0],[0,.2,0],[-.2,0,1],[.2,0,1]].forEach(([x,z,rot]) => mesh(B(rot ? .007 : .4, .007, rot ? .4 : .007), c, g, x,y,z)); });
+    mesh(SP(.045,12,10), 0x2458e6, g, -.08,.12,.02); mesh(SP(.045,12,10), 0xc92a2a, g, .08,.12,-.02); },
   xtree(g) { [[.2,.26,.16],[.16,.22,.3],[.11,.18,.42]].forEach(([r,h,y]) => mesh(CO(r,h,10), 0x2e9e5b, g, 0,y,0));
     mesh(CY(.04,.05,.08,8), 0x8a5a33, g, 0,.04,0);
     mesh(new THREE.OctahedronGeometry(.055,0), 0xffd45c, g, 0,.54,0, { emissive:0xffb000, emissiveIntensity:.5 });
@@ -417,7 +424,40 @@ function giftPile(p, x, z, s=1) { const t = p.userData.top;
     const h = w*.85; mesh(B(w*s,h*s,w*s), c, p, x+dx*s, t+h*s/2, z+dz*s).rotation.y = dx*3;
     mesh(B(w*s*1.02,h*s*1.02,.02*s), rb, p, x+dx*s, t+h*s/2, z+dz*s).rotation.y = dx*3; }); }
 function bigXtree(p, x, z, s=1) { const g = new THREE.Group(); g.position.set(x, p.userData.top, z); g.scale.setScalar(s); g.rotation.y = rnd()*6.28; p.add(g); PROPS.xtree(g); }
+// 對戰島（theme:'duel'）的小物
+function glove(p, x, z, s=1, c=0xc92a2a) { const t = p.userData.top, g = new THREE.Group(); g.position.set(x, t, z); g.rotation.y = rnd()*6.28; p.add(g);
+  mesh(SP(.12*s,14,10), c, g, 0, .12*s, 0).scale.set(1, .85, 1.15); mesh(SP(.055*s,10,8), c, g, .1*s, .1*s, .05*s);
+  mesh(CY(.075*s,.08*s,.09*s,12), 0xffffff, g, 0, .1*s, -.15*s).rotation.x = Math.PI/2; }
+function trophy(p, x, z, s=1) { const t = p.userData.top, gold = { metalness:.5, roughness:.3, emissive:0xb07800, emissiveIntensity:.25 };
+  mesh(B(.18*s,.06*s,.18*s), 0x5a3a2a, p, x, t+.03*s, z); mesh(CY(.025*s,.04*s,.14*s,10), 0xffc93c, p, x, t+.13*s, z, gold);
+  mesh(CY(.11*s,.05*s,.16*s,14), 0xffc93c, p, x, t+.28*s, z, gold);
+  [-1,1].forEach(k => mesh(new THREE.TorusGeometry(.05*s,.012*s,6,12), 0xffc93c, p, x+.12*s*k, t+.29*s, z, gold)); }
+function pennant(p, x, z, s=1, c=0x2458e6) { const t = p.userData.top;
+  mesh(CY(.012*s,.012*s,.55*s,6), C.woodDark, p, x, t+.27*s, z);
+  const f = mesh(CO(.09*s,.22*s,3), c, p, x+.11*s, t+.47*s, z); f.rotation.z = -Math.PI/2; f.scale.z = .25; }
+function keyBlock(p, x, z, s=1) { const t = p.userData.top; const cs = [0xffc93c,0x2458e6,0xc92a2a,0xffffff];
+  for (let i=0;i<3;i++) mesh(B(.12*s,.08*s,.12*s), cs[(i + (rnd()*4|0)) % 4], p, x + (i-1)*.14*s, t+.04*s, z + (i%2)*.05*s); }
+
 const THEMES = {
+  duel: {
+    ground: 0xfff1cf,                 // 擂台帆布色
+    tower(ct, top) {                  // 塔身三圈紅白藍圍繩＋頂端金色獎盃＋兩面旗
+      [0xc92a2a,0xffffff,0x2458e6].forEach((c,y) => mesh(new THREE.TorusGeometry(.36,.04,6,24), c, ct, 0, top+.55+y*.32, 0).rotation.x = Math.PI/2);
+      const g = new THREE.Group(); g.position.set(0, top+2.32, 0); ct.add(g);
+      mesh(CY(.14,.06,.2,14), 0xffc93c, g, 0, .1, 0, { metalness:.5, roughness:.3, emissive:0xb07800, emissiveIntensity:.35 });
+      [-1,1].forEach(k => mesh(new THREE.TorusGeometry(.06,.014,6,12), 0xffc93c, g, .15*k, .12, 0, { metalness:.5, roughness:.3 }));
+      pennant(ct, .62, .3, 1.1, 0x2458e6); pennant(ct, -.62, .3, 1.1, 0xc92a2a);
+    },
+    fill(t, k) {                      // 空地塊：輪流放手套、獎盃、旗子、鍵帽方塊
+      [ () => { glove(t, -.2, 0, 1.5, 0x2458e6); glove(t, .25, .2, 1.5, 0xc92a2a); pennant(t, .35, -.35, 1.2, 0xffc93c); },
+        () => { trophy(t, 0, -.05, 1.8); keyBlock(t, -.1, .45, 1.2); },
+        () => { pennant(t, -.35, -.2, 1.3, 0x2458e6); pennant(t, .3, -.3, 1.3, 0xc92a2a); glove(t, 0, .35, 1.3, 0xc92a2a); },
+        () => { keyBlock(t, 0, -.15, 1.6); glove(t, .35, .35, 1.1, 0x2458e6); },
+        () => { trophy(t, -.25, 0, 1.3); trophy(t, .3, .25, .9); },
+        () => { glove(t, -.3, -.2, 1.4, 0xc92a2a); keyBlock(t, .25, .3, 1.1); } ][k % 6]();
+    },
+    dress(t) { glove(t, -.5, .35, .9, 0x2458e6); pennant(t, .55, -.35, .8, 0xc92a2a); },   // 關卡地塊旁的點綴
+  },
   xmas: {
     ground: 0xf1f6fb,                 // 雪地
     tower(ct, top) {                  // 拐杖糖紅白環＋頂端金星＋一圈發光燈泡

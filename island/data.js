@@ -48,6 +48,12 @@ export const ISLANDS = [
   //   theme:'xmas'：雪地、拐杖糖塔、燈泡、聖誕樹／雪人／禮物堆（換節慶時改這裡，island-3d.html 的 THEMES 加對應裝飾）
   { id:'fest', name:'節慶島', icon:'🎄', color:0xe0524a, at:[-5,10], from:'type', small:true, theme:'xmas', units:[
     ['聖誕工坊','🎄','xtree','units/unit22-xmas-workshop/','聖誕工坊大救援',GM,22] ] },
+  // 第 8 座（2026-11-19）：雙人連線對戰。打字島已滿 8 關，另開一座放對戰類（之後班級競賽也放這裡）
+  //   at [5,5]：打字島與滑鼠島之間的右前方，離兩島各 5 格、離中心 15（跟節慶島對稱）；吊橋從打字島接過來
+  //   theme:'duel'：帆布地面、紅藍圍繩塔、獎盃、拳擊手套、旗子（island-3d.html 的 THEMES.duel）
+  //   unit23 的分數是歷史最快「每分鐘字數」，地圖上顯示成 🏆 數字
+  { id:'duel', name:'對戰島', icon:'⚔️', color:0x5b7cff, at:[5,5], from:'type', small:true, theme:'duel', units:[
+    ['打字擂台','🏆','ring','units/unit23-typing-duel/','打字擂台：雙人連線對戰',GA,23] ] },
 ];
 
 // ---------- 成績（只讀 localStorage，讀不到就當沒玩過） ----------

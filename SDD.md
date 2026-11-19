@@ -4,7 +4,7 @@
 
 * **專案名稱：** 資訊教育互動教材地圖 (EdTech Interactive Learning Dashboard)
 * **設計目標：** 整合國小不同教學單元、多元互動機制的遊戲化教材，透過統一的 RWD 介面與系統化架構，提供學生「一站式闖關體驗」，並作為教師的專業 EdTech 作品集。
-* **技術定位：** **純靜態網站**，無後端、無資料庫。每個單元為自包含的單一 HTML（CSS/JS 內嵌或同目錄），主要由 **Gemini Canvas** 迭代產出，搭配 GitHub Pages 一鍵部署。
+* **技術定位：** **純靜態網站**，無資料庫（兩支輔助用的 Cloudflare Worker 見 §8.1）。每個單元為自包含的單一 HTML（CSS/JS 內嵌或同目錄），主要由 **Gemini Canvas** 迭代產出，搭配 GitHub Pages 一鍵部署。
 * **AI 協作模式：** Gemini Canvas 負責互動原型與視覺，Claude Code 負責跨檔案結構維護、SDD 更新與部署設定。
 
 ---
@@ -202,3 +202,22 @@ CSS、JS、圖片、`<iframe>` 連結同此規則。
 * **使用者帳號 / 跨裝置同步** → 同上，需另起架構。
 
 保持本專案「Gemini Canvas 單檔互動 + GitHub Pages 一鍵部署」的輕量定位。
+
+### 8.1 例外：放在本 repo 的兩支 Cloudflare Worker
+
+以下兩支跟網站緊密綁在一起、不存個資，所以留在本 repo（各自 `npx wrangler deploy`，不走 GitHub Pages）：
+
+| 資料夾 | 用途 | 存什麼 |
+|---|---|---|
+| `analytics-worker/` | 造訪統計（`/c` 收、`/stats`、`/report` 看） | D1：日期、頁面、來源單位、隨機裝置編號 |
+| `duel-worker/` | 打字擂台（unit23）連線對戰 | Durable Object：房間暫存（暱稱、設定），閒置 30 分鐘清空，不留對戰紀錄 |
+
+界線：網站在 Worker 掛掉時仍要能用（統計漏記、擂台改對電腦練習），不可以讓 Worker 變成單元的必要條件。
+帳號、成績上雲、跨裝置同步仍照上面的原則另起專案。
+
+### 8.2 unit23 打字擂台的分層（新單元要連線時照這個做）
+
+* Gemini 只產畫面 `index.html`；規則 `duel-rules.js`、核心 `duel-core.js`、連線 `duel-net.js` 由 Claude 維護，重產畫面不會動到邏輯
+* 規則同一份給瀏覽器（對電腦練習）與 Worker（連線對戰）用，分數只在伺服器算
+* 介面與訊息格式：`docs/specs/unit23-duel-protocol.md`；測試：`node tools/test-duel-core.js`、`duel-worker` 的 `node test/e2e.mjs`
+* 分數 key：`edtech-unit23-score` 存歷史最快每分鐘字數（首頁徽章另外顯示，不走 1–21 的迴圈）

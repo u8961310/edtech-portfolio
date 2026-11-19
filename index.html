@@ -223,10 +223,12 @@ let box;
 const MAX_S = 1.15;   // 最大放大到原圖 1.15 倍，再大就糊了
 function fit() {
   const xs = [], ys = [];
-  for (const s of M.spots) { for (const p of s.poly) { xs.push(p[0]); ys.push(p[1]); } if (s.label) ys.push(s.label[1] - 60); }
+  // 名牌不跟著地圖縮放（固定約 110px 寬），所以名牌中心也算進範圍，左右再多留半個名牌寬（LW）
+  // 2026-11-19 加第 8 座對戰島（右前方）時，直向手機的名牌被切掉才補上
+  for (const s of M.spots) { for (const p of s.poly) { xs.push(p[0]); ys.push(p[1]); } if (s.label) { xs.push(s.label[0]); ys.push(s.label[1] - 60); } }
   box = { x0:Math.min(...xs), x1:Math.max(...xs), y0:Math.min(...ys), y1:Math.max(...ys) };
-  const top = innerWidth > 640 ? 90 : 70, bottom = 96, side = innerWidth > 640 ? 40 : 14;
-  s0 = Math.min((innerWidth - side * 2) / (box.x1 - box.x0), (innerHeight - top - bottom) / (box.y1 - box.y0));
+  const top = innerWidth > 640 ? 90 : 70, bottom = 96, side = innerWidth > 640 ? 40 : 14, LW = 58;
+  s0 = Math.min((innerWidth - side * 2 - LW * 2) / (box.x1 - box.x0), (innerHeight - top - bottom) / (box.y1 - box.y0));
   box.cy = top + (innerHeight - top - bottom) / 2;
 }
 const homeCam = () => ({ s:s0, x:innerWidth / 2 - (box.x0 + box.x1) / 2 * s0, y:box.cy - (box.y0 + box.y1) / 2 * s0 });

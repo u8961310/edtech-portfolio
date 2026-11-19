@@ -12,7 +12,9 @@
 
 ## 🛠️ 技術棧
 
-* **架構：** 純靜態網站（HTML + CSS + Vanilla JS），無後端、無資料庫
+* **架構：** 純靜態網站（HTML + CSS + Vanilla JS），沒有資料庫。另有兩支 Cloudflare Worker 輔助，都不存學生個資：
+  * `analytics-worker/`：造訪統計（來源學校、不重複裝置）
+  * `duel-worker/`：打字擂台（unit23）兩台電腦連線對戰；一個房號一個 Durable Object，不留對戰紀錄。連不上時遊戲仍可對電腦練習
 * **首頁：** 「學習樂園島」插畫版——用 three.js r160（CDN）把 3D 玩具模型**預先算成分層 WebP**，網頁只疊圖＋HTML 熱區，舊電腦也順
 * **產圖：** `python tools/render-island.py`（需 Python Playwright），改了關卡或場景後重跑
 * **資料儲存：** 瀏覽器 `localStorage`（學生成績本機保存）
@@ -48,6 +50,7 @@
 | 🎒 一年級 | `unit20-sock-matching` | 瘋狂襪子配對線 | 連線配對、觀察規律、運算思維邏輯 |
 | 🎒 一年級 | `unit21-mouse-challenge` | 滑鼠小勇士大冒險 | 滑鼠綜合技巧：點擊／拖曳／按住／雙擊 |
 | 📘 中年級 | `unit22-xmas-workshop` | 聖誕工坊大救援 | 聖誕節慶：主線四關（分類、程式序列、網路安全、打字＋快問快答）＋畫畫屋與 4 個小遊戲，全站唯一附注音字型 |
+| ⚔️ 跨年級 | `unit23-typing-duel` | 打字擂台 | 兩台電腦 1 對 1 連線打字對戰（英打／注音中打）、國小 9 領域 57 篇原創選文（注音字型＋破音字）、分層提示、結算看進步 |
 | 🎲 跨年級 | `board/` | 資訊大富翁：森林大冒險 | 資安 / 護眼 / 密碼 / 個資 / 硬體常識；過關發證書可列印 |
 | 🎲 跨年級 | `board/ocean.html` | 資訊大富翁：海洋大探索 | 檔案管理：存放位置 / 資料夾 / 資源回收桶 / 檔名 / 備份 |
 
@@ -126,10 +129,14 @@ edtech-portfolio/
     │   └── index.html
     ├── unit21-mouse-challenge/
     │   └── index.html
-    └── unit22-xmas-workshop/       # 多頁單元：index.html 是工坊地圖
-        ├── index.html / rescue.html（主線四關）
-        ├── draw.html / catch.html / memory.html / tree.html / snowman.html
-        └── fonts/bpmf-huninn-xmas.woff2（注音粉圓子集，SIL OFL 1.1）
+    ├── unit22-xmas-workshop/       # 多頁單元：index.html 是工坊地圖
+    │   ├── index.html / rescue.html（主線四關）
+    │   ├── draw.html / catch.html / memory.html / tree.html / snowman.html
+    │   └── fonts/bpmf-huninn-xmas.woff2（注音粉圓子集，SIL OFL 1.1）
+    └── unit23-typing-duel/         # 打字擂台：index.html 只做畫面（Gemini 產），邏輯在下面幾支
+        ├── duel-rules.js（規則，與 duel-worker 共用）/ duel-core.js / duel-net.js
+        ├── passages-src.json → passages.js（tools/build-passages.py 產生）
+        └── fonts/bpmf-huninn-duel.woff2
 ```
 
 完整規範請見 [`SDD.md`](./SDD.md)。
