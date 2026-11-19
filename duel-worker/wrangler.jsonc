@@ -1,0 +1,16 @@
+{
+  // 打字擂台（unit23）連線對戰：一個 4 位數房號一個 Durable Object（SQLite 版，免費方案只能用這種）
+  // 規格：docs/specs/unit23-duel-protocol.md 第 5 節
+  "name": "edtech-duel",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-08",
+  "observability": { "enabled": true },
+  "durable_objects": {
+    "bindings": [{ "name": "ROOMS", "class_name": "DuelRoom" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DuelRoom"] }],
+  "vars": {
+    // 允許連線的網頁來源（逗號分隔）；本機測試另外放行 localhost／127.0.0.1
+    "ALLOWED_ORIGINS": "https://u8961310.github.io"
+  }
+}

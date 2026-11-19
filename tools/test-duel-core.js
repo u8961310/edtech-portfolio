@@ -21,7 +21,10 @@ t('設定不合法時用預設值', () => {
 t('同 seed 文章順序相同、篩不到領域會退回同年級', () => {
   const s = { lang: 'zh', grade: 'mid', domain: '不存在' };
   assert.deepStrictEqual(R.pickSequence(PASSAGES, s, 42), R.pickSequence(PASSAGES, s, 42));
-  assert.deepStrictEqual(R.pickSequence(PASSAGES, s, 42), ['nat-m-01']);
+  const want = PASSAGES.filter(p => p.lang === 'zh' && p.grade === 'mid').map(p => p.id).sort();
+  assert.deepStrictEqual(R.pickSequence(PASSAGES, s, 42).slice().sort(), want);
+  const nat = R.pickSequence(PASSAGES, { lang: 'zh', grade: 'mid', domain: '自然科學' }, 7);
+  assert.ok(nat.length && nat.every(id => PASSAGES.find(p => p.id === id).domain === '自然科學'));
 });
 
 t('傷害、連擊加成、打錯連擊歸零', () => {
