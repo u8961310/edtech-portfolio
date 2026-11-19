@@ -6,6 +6,9 @@
 //             'board:<zoneId>'＝讀 edtech-board-certs 的證書
 //   3D 小物：island-3d.html 裡 PROPS 的 key，決定地塊上擺什麼小模型
 // ⚠️ 一座島最多 8 關（第一圈 6 格＋第二圈補位），超過要改 island-3d.html 的排位。
+//    small:true 的島（節慶島）只有第一圈，最多 6 關。
+// 島的位置：前 6 座照 island-3d.html 的 CENTERS 順序；之後新增的島要自己給 at:[q,r]（六角座標）
+// 與 from:'<島 id>'（吊橋從哪座島接過來），不然會沒有位置。
 
 const G1 = '🎒 一年級', GM = '📘 中年級', G3 = '🎓 三年級', GA = '🎲 都能玩';
 
@@ -39,6 +42,12 @@ export const ISLANDS = [
   { id:'board', name:'大富翁港', icon:'🎲', color:0xff9f5a, units:[
     ['森林大富翁','🌳','dice','board/index.html','資訊大富翁：森林大冒險',GA,'board:forest'],
     ['海洋大富翁','🐳','boat','board/ocean.html','資訊大富翁：海洋大探索',GA,'board:ocean'] ] },
+  // 第 7 座（2026-11-19）：節慶遊戲專用。外圈 6 個位置已滿，放在思考島與打字島之間的前方，
+  // 吊橋從打字島接過來（from）；small＝只用中心＋第一圈，最多 6 關（春節、兒童節等之後放這裡）
+  //   at [-5,10]：離思考島、打字島各 5 格（跟其他島同間距），island-3d.html 的底座為此放大到 21.5
+  //   theme:'xmas'：雪地、拐杖糖塔、燈泡、聖誕樹／雪人／禮物堆（換節慶時改這裡，island-3d.html 的 THEMES 加對應裝飾）
+  { id:'fest', name:'節慶島', icon:'🎄', color:0xe0524a, at:[-5,10], from:'type', small:true, theme:'xmas', units:[
+    ['聖誕工坊','🎄','xtree','units/unit22-xmas-workshop/','聖誕工坊大救援',GM,22] ] },
 ];
 
 // ---------- 成績（只讀 localStorage，讀不到就當沒玩過） ----------
