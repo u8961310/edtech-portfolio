@@ -140,7 +140,7 @@ async function stats(env, days) {
               MAX(day) AS last_seen
          FROM visits ${W} AND source_type = 'school'
         GROUP BY COALESCE(org_name, ptr_domain)
-        ORDER BY last_seen DESC, visitors DESC`),
+        ORDER BY visitors DESC, pages DESC, last_seen DESC`),
     q(`SELECT day,
               COUNT(DISTINCT CASE WHEN source_type = 'school' THEN visitor_key END) AS school,
               COUNT(DISTINCT CASE WHEN source_type = 'tanet_unknown' THEN visitor_key END) AS tanet_unknown,

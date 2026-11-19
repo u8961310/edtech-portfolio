@@ -41,6 +41,7 @@
 
   section { background: var(--paper); border: 1px solid var(--line); margin-bottom: 20px; }
   section > h2 { margin: 0; background: var(--navy); color: #fff; font-size: 15px; font-weight: 700; padding: 8px 14px; }
+  section > h2 small { font-size: 13px; font-weight: 400; margin-left: 10px; color: #dbe4f0; }
   .note { padding: 8px 14px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   .grid2 section { margin-bottom: 0; }
@@ -138,7 +139,7 @@
     <div class="summary" id="summary"></div>
 
     <section>
-      <h2>來過的學校</h2>
+      <h2>來過的學校<small>依訪客人日排名</small></h2>
       <div id="orgs"></div>
     </section>
 
@@ -381,14 +382,19 @@
       '<div><div class="k" title="同一位訪客同一天看同一頁只算一次">瀏覽頁數</div><div class="v">' + fmt(s.pages) + '<small>頁</small></div></div>' +
       '<div><div class="k" title="學術網路來源中，查得到單位名稱的比例">單位辨識率</div><div class="v">' + hr + '</div></div>';
 
-    // 來過的學校
-    var orgs = d.orgs || [];
+    // 來過的學校：依訪客人日排名（同人日同名次，同名次內瀏覽頁數多的在前）
+    var orgs = (d.orgs || []).slice().sort(function (a, b) {
+      return (b.visitors - a.visitors) || (b.pages - a.pages) || String(b.last_seen).localeCompare(String(a.last_seen));
+    });
+    var rank = 0;
     $('orgs').innerHTML = table([
-      { t: '學校／單位', w: '30%' }, { t: '網域', w: '16%', sm: true },
+      { t: '名次', w: '6%', num: true }, { t: '學校／單位', w: '26%' }, { t: '網域', w: '15%', sm: true },
       { t: '來訪天數', w: '10%', num: true, sm: true }, { t: '訪客人日', w: '10%', num: true },
-      { t: '裝置', w: '9%', num: true }, { t: '瀏覽頁數', w: '10%', num: true, sm: true }, { t: '最近來訪', w: '15%' }
-    ], orgs.map(function (o) {
-      return '<tr><td class="trunc" title="' + esc(o.org_name) + '">' + esc(o.org_name || '（未知）') +
+      { t: '裝置', w: '9%', num: true }, { t: '瀏覽頁數', w: '10%', num: true, sm: true }, { t: '最近來訪', w: '14%' }
+    ], orgs.map(function (o, i) {
+      if (i === 0 || o.visitors !== orgs[i - 1].visitors) rank = i + 1;
+      return '<tr><td class="num">' + rank + '</td>' +
+        '<td class="trunc" title="' + esc(o.org_name) + '">' + esc(o.org_name || '（未知）') +
         '<span class="sub">首次 ' + esc(o.first_seen) + '</span></td>' +
         '<td class="trunc hide-sm">' + esc(o.ptr_domain || '—') + '</td>' +
         '<td class="num hide-sm">' + fmt(o.days) + '</td><td class="num">' + fmt(o.visitors) + '</td>' +
