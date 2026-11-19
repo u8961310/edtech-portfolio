@@ -27,6 +27,16 @@ export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     if (url.pathname === '/health') return new Response('ok');
+    if (url.pathname === '/') {
+      // 有人直接打開伺服器網址時，給一句看得懂的說明，不要只回 not found
+      return new Response(
+        '<!doctype html><meta charset="utf-8"><title>打字擂台連線伺服器</title>' +
+        '<body style="font:18px/1.7 system-ui,sans-serif;max-width:640px;margin:48px auto;padding:0 16px">' +
+        '<h1 style="font-size:24px">打字擂台連線伺服器運作中 ✅</h1>' +
+        '<p>這裡是對戰用的後端，沒有畫面。要玩遊戲請到：<br>' +
+        '<a href="https://u8961310.github.io/edtech-portfolio/units/unit23-typing-duel/">打字擂台</a></p></body>',
+        { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
     if (url.pathname !== '/ws') return new Response('not found', { status: 404 });
     if (req.headers.get('Upgrade') !== 'websocket') return new Response('需要 WebSocket', { status: 426 });
     if (!originOk(req, env)) return new Response('forbidden', { status: 403 });
