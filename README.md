@@ -47,6 +47,7 @@
 | 🎒 一年級 | `unit19-farm-harvest` | 快樂農場：蔬菜拔拔樂 | 滑鼠拖曳收成、手眼協調、專注力（難度可選） |
 | 🎒 一年級 | `unit20-sock-matching` | 瘋狂襪子配對線 | 連線配對、觀察規律、運算思維邏輯 |
 | 🎒 一年級 | `unit21-mouse-challenge` | 滑鼠小勇士大冒險 | 滑鼠綜合技巧：點擊／拖曳／按住／雙擊 |
+| 📘 中年級 | `unit22-xmas-workshop` | 聖誕工坊大救援 | 聖誕節慶：主線四關（分類、程式序列、網路安全、打字＋快問快答）＋畫畫屋與 4 個小遊戲，全站唯一附注音字型 |
 | 🎲 跨年級 | `board/` | 資訊大富翁：森林大冒險 | 資安 / 護眼 / 密碼 / 個資 / 硬體常識；過關發證書可列印 |
 | 🎲 跨年級 | `board/ocean.html` | 資訊大富翁：海洋大探索 | 檔案管理：存放位置 / 資料夾 / 資源回收桶 / 檔名 / 備份 |
 
@@ -123,8 +124,12 @@ edtech-portfolio/
     │   └── index.html
     ├── unit20-sock-matching/
     │   └── index.html
-    └── unit21-mouse-challenge/
-        └── index.html
+    ├── unit21-mouse-challenge/
+    │   └── index.html
+    └── unit22-xmas-workshop/       # 多頁單元：index.html 是工坊地圖
+        ├── index.html / rescue.html（主線四關）
+        ├── draw.html / catch.html / memory.html / tree.html / snowman.html
+        └── fonts/bpmf-huninn-xmas.woff2（注音粉圓子集，SIL OFL 1.1）
 ```
 
 完整規範請見 [`SDD.md`](./SDD.md)。

@@ -4,7 +4,8 @@
 驗收 Gemini Canvas 產出的大富翁 HTML 是否符合 CANVAS_PROMPT.md 的契約。
 
 用法：
-    python board/verify-canvas.py <canvas產出的.html>
+    python board/verify-canvas.py <canvas產出的.html>                 # 大富翁（edtech-board-*）
+    python board/verify-canvas.py <檔案.html> --unit 22               # 單元：key 要是 edtech-unit22-*，且要存 -score
 
 只做靜態檢查。版面（390px 不可橫向捲動）與視覺層次要在瀏覽器裡看，
 腳本最後會列出那幾項提醒人工確認。
@@ -28,6 +29,11 @@ if len(sys.argv) < 2:
     sys.exit(2)
 
 path = sys.argv[1]
+# --unit N：驗單元而不是大富翁（2026-11-19 為 unit22 聖誕遊戲加）
+UNIT = None
+if '--unit' in sys.argv:
+    UNIT = sys.argv[sys.argv.index('--unit') + 1]
+KEY_PREFIX = 'edtech-unit%s-' % UNIT if UNIT else 'edtech-board-'
 if not os.path.exists(path):
     print('找不到檔案：' + path)
     sys.exit(2)
@@ -61,7 +67,9 @@ allowed_local = ('certificate.js', 'certificate.css')
 
 
 def is_allowed(url):
-    return any(h in url for h in allowed_host) or url in allowed_local
+    # 單元模式另外放行整合階段放進同資料夾的子集字型（unit22 注音粉圓 fonts/*.woff2）
+    local_font = bool(UNIT) and url.startswith('fonts/') and url.endswith('.woff2')
+    return any(h in url for h in allowed_host) or url in allowed_local or local_font
 
 
 bad_script = [s for s in ext_script if not is_allowed(s)]
@@ -121,7 +129,7 @@ for name in idents:
         unresolved.append(name)
 
 keys = sorted(keys)
-off_contract = [k for k in keys if not k.startswith('edtech-board-')]
+off_contract = [k for k in keys if not k.startswith(KEY_PREFIX)]
 
 if off_contract:
     status, detail = FAIL, '未照契約：' + '、'.join(off_contract)
@@ -133,7 +141,14 @@ elif keys:
 else:
     status, detail = WARN, '完全沒有存檔'
 
-check('localStorage key 都是 edtech-board-* 前綴', status, detail)
+check('localStorage key 都是 %s* 前綴' % KEY_PREFIX, status, detail)
+
+if UNIT:
+    # 首頁徽章只讀 edtech-unit{N}-score；unit13～21 有 6 個單元就是漏了這條，徽章永遠不亮
+    score_key = 'edtech-unit%s-score' % UNIT
+    check('有存首頁徽章用的 %s' % score_key,
+          OK if score_key in keys else FAIL,
+          '' if score_key in keys else '首頁「最佳成績」徽章會永遠不亮')
 
 # ---------------------------------------------------------------- 5. reduced-motion
 check('有 prefers-reduced-motion 區塊',
@@ -181,9 +196,10 @@ check('SVG polygon/polyline 的 points 沒有用百分比',
       ('%d 處，例：%s' % (len(pct_points), pct_points[0][:40])) if pct_points else '')
 
 # ------------------------------------------------- 12. ZONE_ID 標記（契約 v2 #14）
-zone = re.search(r'<!--\s*ZONE_ID:\s*([a-z]+)\s*-->', html)
-check('檔頭有 ZONE_ID 標記', OK if zone else WARN,
-      ('zone = ' + zone.group(1)) if zone else '整合時要靠它辨識區域')
+if not UNIT:
+    zone = re.search(r'<!--\s*ZONE_ID:\s*([a-z]+)\s*-->', html)
+    check('檔頭有 ZONE_ID 標記', OK if zone else WARN,
+          ('zone = ' + zone.group(1)) if zone else '整合時要靠它辨識區域')
 
 # ------------------------------------------- 13. 縮放盒子要 flex-shrink: 0（契約 v3.1 #17）
 # 「固定 px 畫布 + JS scale」的做法，盒子放在 flex 父層裡會先被壓到視窗寬，

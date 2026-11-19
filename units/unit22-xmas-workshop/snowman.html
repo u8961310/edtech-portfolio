@@ -1,0 +1,3198 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>聖誕工坊大救援 — 堆雪人</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* =========================================================
+       字型設定（注音字型與標題字型）
+       ========================================================= */
+    @font-face {
+      font-family: 'Bpmf Huninn';
+      src: url('fonts/bpmf-huninn-xmas.woff2') format('woff2');
+      font-display: swap;
+    }
+
+    :root {
+      --xmas-red: #c0392b;
+      --xmas-dark-red: #8e1c14;
+      --xmas-green: #1e7a4c;
+      --xmas-dark-green: #124f31;
+      --xmas-gold: #e6a817;
+      --xmas-gold-light: #ffd54f;
+      --xmas-navy: #142850;
+      --xmas-cream: #fff8e6;
+      --xmas-ink: #2a1b12;
+      --font-bpmf: 'Bpmf Huninn', 'Noto Sans TC', sans-serif;
+      --font-ui: 'Noto Sans TC', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+      font-family: var(--font-ui);
+      font-synthesis: none;
+      color: var(--xmas-ink);
+      background: linear-gradient(180deg, #142850 0%, #24487a 14%, #8ec7ee 22%, #d8f1ff 60%, #f5fbff 100%);
+      user-select: none;
+    }
+
+    /* 學生閱讀用的注音文字通用類別 */
+    .bpmf {
+      font-family: var(--font-bpmf);
+      font-weight: 400;
+      line-height: 1.55;
+    }
+
+    /* =========================================================
+       飄雪背景層（可由 prefers-reduced-motion 停用）
+       ========================================================= */
+    .snow-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 40;
+    }
+
+    .snowflake {
+      position: absolute;
+      top: -24px;
+      color: #ffffff;
+      text-shadow: 0 1px 3px rgba(20, 40, 80, 0.25);
+      opacity: 0.85;
+      animation: snowfall linear infinite;
+      will-change: transform;
+    }
+
+    @keyframes snowfall {
+      0% { transform: translate3d(0, -10px, 0) rotate(0deg); }
+      50% { transform: translate3d(18px, 50vh, 0) rotate(180deg); }
+      100% { transform: translate3d(-12px, 106vh, 0) rotate(360deg); }
+    }
+
+    /* =========================================================
+       頁面主容器（橫向 1280x800 滿版不捲動）
+       ========================================================= */
+    .app-shell {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100vh;
+      min-height: 680px;
+      overflow: hidden;
+    }
+
+    /* =========================================================
+       上方狀態列＋聖誕燈串
+       ========================================================= */
+    .top-bar {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      height: 70px;
+      padding: 8px 16px 10px;
+      background:
+        repeating-linear-gradient(
+          -45deg,
+          rgba(192, 57, 43, 0.22) 0 14px,
+          rgba(30, 122, 76, 0.22) 14px 28px
+        ),
+        linear-gradient(180deg, #142850 0%, #1c366b 100%);
+      border-bottom: 4px solid var(--xmas-gold);
+      box-shadow: 0 4px 12px rgba(20, 40, 80, 0.35);
+      flex-shrink: 0;
+    }
+
+    /* 左上角固定預留 120×44px 空白給整合後「回首頁」按鈕 */
+    .home-slot {
+      width: 120px;
+      height: 44px;
+      flex-shrink: 0;
+    }
+
+    .top-left-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .page-title {
+      margin: 0;
+      font-family: var(--font-ui);
+      font-weight: 900;
+      font-size: 30px;
+      letter-spacing: 2px;
+      color: #fff8e6;
+      text-shadow:
+        0 2px 0 #c0392b,
+        0 4px 0 #a02a1f,
+        0 6px 0 #7a1c13,
+        0 8px 12px rgba(0, 0, 0, 0.35);
+      white-space: nowrap;
+    }
+
+    /* 模式切換膠囊（任務模式 / 自由模式） */
+    .mode-switch {
+      display: inline-flex;
+      padding: 4px;
+      border-radius: 14px;
+      background: rgba(10, 22, 48, 0.65);
+      border: 2px solid var(--xmas-gold);
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .mode-btn {
+      border: none;
+      border-radius: 10px;
+      padding: 4px 14px;
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      line-height: 1.25;
+      color: #fff8e6;
+      background: transparent;
+      cursor: pointer;
+      transition: transform 0.12s ease, background-color 0.15s ease;
+    }
+
+    .mode-btn:hover {
+      background: rgba(255, 248, 230, 0.16);
+    }
+
+    .mode-btn:active {
+      transform: scale(0.96);
+    }
+
+    .mode-btn.active {
+      background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);
+      color: #fff8e6;
+      box-shadow: 0 3px 0 #7a1c13, inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    .top-right-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .progress-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 12px;
+      background: rgba(255, 248, 230, 0.95);
+      border: 2px solid var(--xmas-gold);
+      color: var(--xmas-navy);
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 17px;
+      white-space: nowrap;
+    }
+
+    .progress-badge.unlocked {
+      background: linear-gradient(180deg, #fff4c2 0%, #ffe074 100%);
+      border-color: #c0392b;
+      color: #7a1c13;
+    }
+
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 44px;
+      padding: 0 14px;
+      border-radius: 12px;
+      border: 2.5px solid #ffd54f;
+      background: linear-gradient(180deg, #279b61 0%, #1e7a4c 100%);
+      color: #fff8e6;
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 17px;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #0e4227;
+      transition: transform 0.12s ease, filter 0.12s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .nav-btn:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+
+    .nav-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #0e4227;
+    }
+
+    .sound-btn {
+      width: 46px;
+      padding: 0;
+      font-size: 20px;
+      background: linear-gradient(180deg, #f3bd31 0%, #e6a817 100%);
+      border-color: #fff8e6;
+      color: #2a1b12;
+      box-shadow: 0 3px 0 #996405;
+    }
+
+    .sound-btn:active {
+      box-shadow: 0 1px 0 #996405;
+    }
+
+    /* 懸掛在頂部列下緣的彩色聖誕燈串 */
+    .lights-garland {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 66px;
+      height: 26px;
+      z-index: 18;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .bulb-a { animation: bulbTwinkle 1.8s ease-in-out infinite; }
+    .bulb-b { animation: bulbTwinkle 1.8s ease-in-out 0.6s infinite; }
+    .bulb-c { animation: bulbTwinkle 1.8s ease-in-out 1.2s infinite; }
+
+    @keyframes bulbTwinkle {
+      0%, 100% { opacity: 0.68; }
+      50% { opacity: 1; }
+    }
+
+    /* =========================================================
+       主遊戲三欄區
+       ========================================================= */
+    .workspace {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      display: grid;
+      grid-template-columns: 336px 1fr 384px;
+      gap: 14px;
+      padding: 20px 14px 14px;
+      min-height: 0;
+    }
+
+    /* 聖誕卡片共用樣式：雙層邊框＋紅綠格紋底紋＋角落冬青葉 */
+    .xmas-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      border-radius: 20px;
+      padding: 8px;
+      background:
+        repeating-linear-gradient(
+          45deg,
+          #c0392b 0 12px,
+          #a3291d 12px 24px,
+          #1e7a4c 24px 36px,
+          #17633d 36px 48px
+        );
+      box-shadow: 0 8px 20px rgba(20, 40, 80, 0.25);
+      min-height: 0;
+    }
+
+    .xmas-card-inner {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--xmas-cream);
+      border: 3px solid var(--xmas-gold);
+      border-radius: 14px;
+      padding: 12px 14px;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .holly-corner {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .holly-corner svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .holly-tl { top: -8px; left: -8px; }
+    .holly-tr { top: -8px; right: -8px; transform: scaleX(-1); }
+
+    /* =========================================================
+       左欄：任務卡 / 自由說明 ＋ 叮叮提示區
+       ========================================================= */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+      border-bottom: 2px dashed rgba(192, 57, 43, 0.35);
+      flex-shrink: 0;
+    }
+
+    .card-header-title {
+      margin: 0;
+      font-family: var(--font-ui);
+      font-weight: 900;
+      font-size: 21px;
+      color: var(--xmas-dark-red);
+      letter-spacing: 1px;
+    }
+
+    /* 6 張任務卡選擇鈕 */
+    .mission-tabs {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+      flex-shrink: 0;
+    }
+
+    .mission-num-btn {
+      position: relative;
+      height: 40px;
+      border-radius: 10px;
+      border: 2px solid #d4b07c;
+      background: #fffdf6;
+      color: var(--xmas-navy);
+      font-family: var(--font-ui);
+      font-weight: 900;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.12s ease, background-color 0.15s ease;
+    }
+
+    .mission-num-btn:hover {
+      background: #fff2cc;
+      transform: translateY(-1px);
+    }
+
+    .mission-num-btn:active {
+      transform: scale(0.95);
+    }
+
+    .mission-num-btn.active {
+      background: var(--xmas-red);
+      border-color: var(--xmas-dark-red);
+      color: #fff8e6;
+      box-shadow: 0 3px 0 #7a1c13;
+    }
+
+    .mission-num-btn.cleared {
+      background: #e9f7ef;
+      border-color: var(--xmas-green);
+      color: var(--xmas-dark-green);
+    }
+
+    .mission-num-btn.cleared.active {
+      background: var(--xmas-green);
+      border-color: var(--xmas-dark-green);
+      color: #fff8e6;
+      box-shadow: 0 3px 0 #0d3d25;
+    }
+
+    .mission-star-mark {
+      position: absolute;
+      top: -6px;
+      right: -4px;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    /* 任務卡內容盒（注音 24px 大字） */
+    .mission-box {
+      flex: 1;
+      overflow-y: auto;
+      background: #ffffff;
+      border: 2.5px solid #e6c58b;
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      min-height: 0;
+    }
+
+    .mission-subtitle {
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 17px;
+      color: var(--xmas-green);
+      margin: 0 0 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mission-checklist {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mission-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: #fffaf0;
+      border-left: 4px solid var(--xmas-red);
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      line-height: 1.45;
+      color: var(--xmas-ink);
+    }
+
+    .mission-item.item-wrong {
+      background: #ffe8e6;
+      border-left-color: #c0392b;
+      animation: gentleShake 0.4s ease;
+    }
+
+    .mission-item.item-ok {
+      background: #e8f8ef;
+      border-left-color: #1e7a4c;
+    }
+
+    .mission-bullet {
+      font-family: var(--font-ui);
+      font-size: 18px;
+      color: var(--xmas-gold);
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+
+    /* 自由模式說明盒 */
+    .free-info-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+      background: #ffffff;
+      border: 2.5px solid #e6c58b;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      overflow-y: auto;
+    }
+
+    .free-info-text {
+      margin: 0;
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      line-height: 1.55;
+      color: var(--xmas-ink);
+    }
+
+    .free-deco-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding-top: 4px;
+    }
+
+    /* 叮叮對話區 */
+    .dingding-area {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding-top: 6px;
+      border-top: 2px dashed rgba(30, 122, 76, 0.3);
+      flex-shrink: 0;
+    }
+
+    .dingding-avatar {
+      width: 92px;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .dingding-avatar:hover {
+      transform: scale(1.06) rotate(-2deg);
+    }
+
+    .dingding-avatar:active {
+      transform: scale(0.95);
+    }
+
+    .dingding-avatar svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .speech-bubble {
+      position: relative;
+      flex: 1;
+      background: #ffffff;
+      border: 2.5px solid var(--xmas-green);
+      border-radius: 14px;
+      padding: 8px 10px;
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      line-height: 1.4;
+      color: var(--xmas-ink);
+      min-height: 82px;
+      display: flex;
+      align-items: center;
+    }
+
+    .speech-bubble::before {
+      content: '';
+      position: absolute;
+      left: -10px;
+      bottom: 20px;
+      width: 0;
+      height: 0;
+      border-top: 7px solid transparent;
+      border-bottom: 7px solid transparent;
+      border-right: 10px solid var(--xmas-green);
+    }
+
+    .speech-bubble.mood-hint {
+      background: #fff4e0;
+      border-color: var(--xmas-red);
+    }
+
+    .speech-bubble.mood-hint::before {
+      border-right-color: var(--xmas-red);
+    }
+
+    .speech-bubble.mood-cheer {
+      background: #e9f9ef;
+      border-color: var(--xmas-gold);
+    }
+
+    .speech-bubble.mood-cheer::before {
+      border-right-color: var(--xmas-gold);
+    }
+
+    /* =========================================================
+       中欄：白天雪地公園舞台＋底部操作按鈕
+       ========================================================= */
+    .stage-column {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .park-stage {
+      position: relative;
+      flex: 1;
+      border-radius: 22px;
+      border: 4px solid #fff8e6;
+      box-shadow:
+        0 0 0 4px var(--xmas-gold),
+        0 10px 24px rgba(20, 40, 80, 0.28);
+      overflow: hidden;
+      background: linear-gradient(180deg, #6bb7ec 0%, #b5e2fa 52%, #edf8ff 72%, #ffffff 100%);
+      min-height: 0;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .park-stage.drop-active {
+      box-shadow:
+        0 0 0 5px #ffd54f,
+        0 0 26px rgba(230, 168, 23, 0.75);
+    }
+
+    .park-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* 舞台角落迷你裝飾（薑餅人＋聖誕襪標章） */
+    .stage-corner-badge {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(20, 40, 80, 0.78);
+      border: 2px solid var(--xmas-gold);
+      color: #fff8e6;
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 16px;
+      pointer-events: none;
+    }
+
+    /* 拖曳提示條 */
+    .drop-hint-pill {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(255, 248, 230, 0.92);
+      border: 2px solid var(--xmas-green);
+      color: var(--xmas-dark-green);
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 16px;
+      pointer-events: none;
+    }
+
+    /* 舞台上的雪球角色容器 */
+    .snowball-stage-wrap {
+      position: absolute;
+      right: 10px;
+      bottom: 8px;
+      width: 108px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      z-index: 6;
+    }
+
+    .snowball-stage-wrap:hover {
+      transform: scale(1.07);
+    }
+
+    .snowball-stage-wrap:active {
+      transform: scale(0.95);
+    }
+
+    .snowball-stage-wrap svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .snowball-stage-wrap.cheer-hop {
+      animation: happyHop 0.6s ease-in-out infinite;
+    }
+
+    /* 拍照快門白光特效 */
+    .camera-flash {
+      position: absolute;
+      inset: 0;
+      background: #ffffff;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .camera-flash.flashing {
+      animation: flashEffect 0.45s ease-out;
+    }
+
+    @keyframes flashEffect {
+      0% { opacity: 0.95; }
+      100% { opacity: 0; }
+    }
+
+    /* 舞台彩帶層 */
+    .confetti-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 15;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: -16px;
+      width: 12px;
+      height: 18px;
+      border-radius: 3px;
+      animation: confettiFall 2.4s ease-out forwards;
+    }
+
+    @keyframes confettiFall {
+      0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate3d(var(--dx, 30px), 520px, 0) rotate(680deg); opacity: 0; }
+    }
+
+    /* 雪人本體與配件動畫 */
+    #snowman-group {
+      transform-box: fill-box;
+      transform-origin: center bottom;
+      cursor: pointer;
+    }
+
+    #snowman-group.dancing {
+      animation: snowmanDance 0.65s ease-in-out infinite;
+    }
+
+    #snowman-group.wiggle {
+      animation: snowmanWiggle 0.42s ease;
+    }
+
+    .part-pop {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: partPop 0.34s cubic-bezier(0.22, 1.45, 0.48, 1);
+    }
+
+    @keyframes partPop {
+      0% { transform: scale(0.45); opacity: 0.3; }
+      70% { transform: scale(1.12); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes snowmanDance {
+      0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+      25% { transform: translateY(-14px) rotate(-5deg) scale(1.03, 0.98); }
+      50% { transform: translateY(0) rotate(0deg) scale(1.04, 0.95); }
+      75% { transform: translateY(-14px) rotate(5deg) scale(1.03, 0.98); }
+    }
+
+    @keyframes snowmanWiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-6deg); }
+      75% { transform: rotate(6deg); }
+    }
+
+    @keyframes happyHop {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    @keyframes gentleShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* 角色眨眼動畫（對應叮叮與雪球內建類別） */
+    .eye-blink, .eye-blink-delay {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: charBlink 4.2s infinite;
+    }
+
+    .eye-blink-delay {
+      animation-delay: 1.5s;
+    }
+
+    @keyframes charBlink {
+      0%, 92%, 100% { transform: scaleY(1); }
+      95% { transform: scaleY(0.12); }
+    }
+
+    /* 舞台下方行動按鈕列（禮物盒與拐杖糖風格） */
+    .action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .candy-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 6px;
+      border: none;
+      border-radius: 18px;
+      background: repeating-linear-gradient(
+        -45deg,
+        #c0392b 0 10px,
+        #fff8e6 10px 20px
+      );
+      box-shadow: 0 5px 0 #7a1c13, 0 8px 16px rgba(20, 40, 80, 0.25);
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .candy-btn-inner {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 26px;
+      border-radius: 13px;
+      background: linear-gradient(180deg, #e04636 0%, #c0392b 100%);
+      border: 2px solid #ffd54f;
+      color: #fff8e6;
+      font-family: var(--font-bpmf);
+      font-size: 26px;
+      line-height: 1.25;
+      white-space: nowrap;
+    }
+
+    .candy-btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.05);
+    }
+
+    .candy-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #7a1c13;
+    }
+
+    .gift-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 11px 18px;
+      border-radius: 16px;
+      border: 3px solid var(--xmas-gold-light);
+      background: linear-gradient(180deg, #279b61 0%, #1e7a4c 100%);
+      color: #fff8e6;
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      line-height: 1.25;
+      cursor: pointer;
+      box-shadow: 0 5px 0 #0e4227;
+      transition: transform 0.12s ease, filter 0.12s ease;
+      white-space: nowrap;
+    }
+
+    .gift-btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.07);
+    }
+
+    .gift-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #0e4227;
+    }
+
+    .gift-btn.secondary {
+      background: linear-gradient(180deg, #f5c342 0%, #e6a817 100%);
+      border-color: #fff8e6;
+      color: #2a1b12;
+      box-shadow: 0 5px 0 #996405;
+    }
+
+    .gift-btn.secondary:active {
+      box-shadow: 0 2px 0 #996405;
+    }
+
+    /* =========================================================
+       右欄：配件百寶箱（分類頁籤＋大卡片選項）
+       ========================================================= */
+    .category-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      margin-bottom: 10px;
+      flex-shrink: 0;
+    }
+
+    .cat-tab {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 6px 4px;
+      border-radius: 12px;
+      border: 2.5px solid #d7b786;
+      background: #ffffff;
+      color: var(--xmas-navy);
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      line-height: 1.2;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #c9a672;
+      transition: transform 0.12s ease, background-color 0.15s ease;
+    }
+
+    .cat-tab:hover {
+      background: #fff4d6;
+      transform: translateY(-1px);
+    }
+
+    .cat-tab:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #c9a672;
+    }
+
+    .cat-tab.active {
+      background: linear-gradient(180deg, #279b61 0%, #1e7a4c 100%);
+      border-color: var(--xmas-gold);
+      color: #fff8e6;
+      box-shadow: 0 3px 0 #0e4227;
+    }
+
+    /* 檢查提示某部位有誤時的高亮提醒 */
+    .cat-tab.hint-highlight {
+      border-color: #c0392b;
+      background: #ffe8e6;
+      color: #8e1c14;
+      animation: tabPulse 0.9s ease-in-out infinite;
+    }
+
+    .cat-tab.active.hint-highlight {
+      background: linear-gradient(180deg, #e04636 0%, #c0392b 100%);
+      color: #fff8e6;
+      border-color: #ffd54f;
+    }
+
+    @keyframes tabPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.6); }
+      50% { box-shadow: 0 0 0 6px rgba(192, 57, 43, 0); }
+    }
+
+    .cat-dot {
+      position: absolute;
+      top: 4px;
+      right: 5px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--xmas-gold);
+      border: 1.5px solid #8e1c14;
+    }
+
+    /* 配件選項網格 */
+    .parts-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      align-content: start;
+      overflow-y: auto;
+      padding: 2px 4px 6px;
+      min-height: 0;
+    }
+
+    .part-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 10px 6px 8px;
+      border-radius: 14px;
+      border: 3px solid #e2c89c;
+      background: #ffffff;
+      cursor: grab;
+      touch-action: none;
+      box-shadow: 0 4px 0 #d4b07c;
+      transition: transform 0.14s ease, border-color 0.14s ease, background-color 0.14s ease;
+    }
+
+    .part-card:hover {
+      border-color: var(--xmas-gold);
+      background: #fffdf2;
+      transform: translateY(-2px);
+    }
+
+    .part-card:active {
+      cursor: grabbing;
+      transform: scale(0.97);
+    }
+
+    .part-card.selected {
+      border-color: var(--xmas-red);
+      background: linear-gradient(180deg, #fffdf0 0%, #fff0cc 100%);
+      box-shadow: 0 0 0 2px var(--xmas-gold), 0 4px 0 #a3291d;
+    }
+
+    .part-thumb {
+      width: 86px;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+
+    .part-thumb svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .part-label {
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      line-height: 1.25;
+      color: var(--xmas-ink);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .selected-badge {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--xmas-red);
+      color: #fff8e6;
+      font-family: var(--font-ui);
+      font-weight: 900;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    /* 拖曳中的跟隨幽靈配件 */
+    .drag-ghost {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 112px;
+      height: 92px;
+      pointer-events: none;
+      z-index: 200;
+      transform: translate(-50%, -50%) scale(1.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 248, 230, 0.92);
+      border: 3px solid var(--xmas-gold);
+      border-radius: 16px;
+      box-shadow: 0 12px 24px rgba(20, 40, 80, 0.35);
+    }
+
+    .drag-ghost svg {
+      width: 96px;
+      height: 78px;
+    }
+
+    /* =========================================================
+       彈出視窗（過關慶祝 / 拍照預覽）
+       關閉時必須 visibility: hidden + inert
+       ========================================================= */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(20, 40, 80, 0.68);
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+
+    .modal-backdrop.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .modal-card {
+      position: relative;
+      width: min(620px, 94vw);
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 24px;
+      padding: 10px;
+      background: repeating-linear-gradient(
+        45deg,
+        #c0392b 0 14px,
+        #1e7a4c 14px 28px
+      );
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .modal-inner {
+      background: var(--xmas-cream);
+      border: 4px solid var(--xmas-gold);
+      border-radius: 18px;
+      padding: 22px 24px;
+      text-align: center;
+    }
+
+    .modal-title {
+      margin: 0 0 10px;
+      font-family: var(--font-ui);
+      font-weight: 900;
+      font-size: 32px;
+      color: var(--xmas-red);
+    }
+
+    .modal-chars {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 16px;
+      margin: 6px 0 12px;
+    }
+
+    .modal-msg {
+      margin: 0 0 16px;
+      font-family: var(--font-bpmf);
+      font-size: 26px;
+      line-height: 1.5;
+      color: var(--xmas-ink);
+    }
+
+    .modal-unlock-banner {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 8px 18px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #fff3b8 0%, #ffe074 100%);
+      border: 2.5px solid #c0392b;
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      color: #7a1c13;
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .photo-preview-frame {
+      background: #ffffff;
+      border: 6px solid #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(20, 40, 80, 0.25);
+      margin: 0 auto 14px;
+      max-width: 520px;
+      overflow: hidden;
+    }
+
+    .photo-preview-frame img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .hidden-el {
+      display: none !important;
+    }
+
+    /* =========================================================
+       直立螢幕響應式重排（手機直拿不水平捲動）
+       ========================================================= */
+    @media (orientation: portrait) {
+      .app-shell {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+      }
+
+      .top-bar {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 10px 12px 14px;
+        gap: 8px;
+      }
+
+      .top-left-group {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .page-title {
+        font-size: 24px;
+      }
+
+      .lights-garland {
+        display: none;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        padding: 12px;
+        gap: 12px;
+      }
+
+      /* 直立時把雪地舞台放在最上面，接著任務卡與配件櫃 */
+      .stage-column {
+        order: 1;
+      }
+
+      .park-stage {
+        height: 410px;
+      }
+
+      .left-panel {
+        order: 2;
+      }
+
+      .right-panel {
+        order: 3;
+      }
+
+      .parts-grid {
+        grid-template-columns: repeat(3, 1fr);
+        max-height: none;
+      }
+
+      .snowball-stage-wrap {
+        width: 82px;
+      }
+    }
+
+    @media (max-width: 1120px) and (orientation: landscape) {
+      .workspace {
+        grid-template-columns: 295px 1fr 330px;
+        gap: 10px;
+      }
+
+      .page-title {
+        font-size: 24px;
+      }
+    }
+
+    /* =========================================================
+       無障礙動態減弱設定（關掉所有動畫與飄雪，遊戲仍可玩）
+       ========================================================= */
+    @media (prefers-reduced-motion: reduce) {
+      .snow-layer,
+      .confetti-layer {
+        display: none !important;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+<a href="../../index.html" class="kogao-home-btn" style="position:fixed;top:10px;left:10px;z-index:99999;background:rgba(255,255,255,.92);border:2px solid #f59e0b;color:#b45309;font-family:'Noto Sans TC',sans-serif;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.15)">🏠 首頁</a>
+  <!-- 飄雪特效層 -->
+  <div class="snow-layer" id="snow-layer" aria-hidden="true"></div>
+
+  <div class="app-shell">
+    <!-- ==================== 上方狀態列 ==================== -->
+    <header class="top-bar">
+      <div class="top-left-group">
+        <!-- 左上角固定預留 120×44px 空白給「回首頁」按鈕 -->
+        <div class="home-slot" aria-hidden="true"></div>
+
+        <h1 class="page-title" id="ui-page-title">⛄ 堆雪人</h1>
+
+        <div class="mode-switch" role="tablist" aria-label="遊戲模式切換">
+          <button type="button" class="mode-btn active" id="btn-mode-mission" role="tab" aria-selected="true"></button>
+          <button type="button" class="mode-btn" id="btn-mode-free" role="tab" aria-selected="false"></button>
+        </div>
+      </div>
+
+      <div class="top-right-group">
+        <div class="progress-badge" id="progress-badge" aria-live="polite">⭐ 0 / 6</div>
+        <a class="nav-btn" href="index.html" id="btn-map-link">🗺 回工坊地圖</a>
+        <button type="button" class="nav-btn sound-btn" id="btn-sound-toggle" aria-label="切換音效">🔊</button>
+      </div>
+    </header>
+
+    <!-- 懸掛聖誕彩燈串（Inline SVG） -->
+    <div class="lights-garland" aria-hidden="true">
+      <svg viewBox="0 0 1280 28" width="100%" height="28" preserveAspectRatio="none">
+        <path d="M0,4 Q80,18 160,4 Q240,18 320,4 Q400,18 480,4 Q560,18 640,4 Q720,18 800,4 Q880,18 960,4 Q1040,18 1120,4 Q1200,18 1280,4" fill="none" stroke="#142850" stroke-width="2.5"/>
+        <circle class="bulb-a" cx="80" cy="14" r="6" fill="#ff5252" stroke="#8e1c14" stroke-width="1.5"/>
+        <circle class="bulb-b" cx="160" cy="10" r="6" fill="#ffd54f" stroke="#996405" stroke-width="1.5"/>
+        <circle class="bulb-c" cx="240" cy="14" r="6" fill="#2ecc71" stroke="#124f31" stroke-width="1.5"/>
+        <circle class="bulb-a" cx="320" cy="10" r="6" fill="#5dade2" stroke="#142850" stroke-width="1.5"/>
+        <circle class="bulb-b" cx="400" cy="14" r="6" fill="#ff5252" stroke="#8e1c14" stroke-width="1.5"/>
+        <circle class="bulb-c" cx="480" cy="10" r="6" fill="#ffd54f" stroke="#996405" stroke-width="1.5"/>
+        <circle class="bulb-a" cx="560" cy="14" r="6" fill="#2ecc71" stroke="#124f31" stroke-width="1.5"/>
+        <circle class="bulb-b" cx="640" cy="10" r="6" fill="#ff5252" stroke="#8e1c14" stroke-width="1.5"/>
+        <circle class="bulb-c" cx="720" cy="14" r="6" fill="#ffd54f" stroke="#996405" stroke-width="1.5"/>
+        <circle class="bulb-a" cx="800" cy="10" r="6" fill="#5dade2" stroke="#142850" stroke-width="1.5"/>
+        <circle class="bulb-b" cx="880" cy="14" r="6" fill="#2ecc71" stroke="#124f31" stroke-width="1.5"/>
+        <circle class="bulb-c" cx="960" cy="10" r="6" fill="#ff5252" stroke="#8e1c14" stroke-width="1.5"/>
+        <circle class="bulb-a" cx="1040" cy="14" r="6" fill="#ffd54f" stroke="#996405" stroke-width="1.5"/>
+        <circle class="bulb-b" cx="1120" cy="10" r="6" fill="#2ecc71" stroke="#124f31" stroke-width="1.5"/>
+        <circle class="bulb-c" cx="1200" cy="14" r="6" fill="#ff5252" stroke="#8e1c14" stroke-width="1.5"/>
+      </svg>
+    </div>
+
+    <!-- ==================== 主遊戲工作區 ==================== -->
+    <main class="workspace">
+      <!-- ========== 左欄：任務卡與叮叮提示 ========== -->
+      <section class="xmas-card left-panel" aria-label="任務卡與提示">
+        <div class="holly-corner holly-tl" data-holly="1"></div>
+        <div class="holly-corner holly-tr" data-holly="1"></div>
+        <div class="xmas-card-inner">
+          <div class="card-header">
+            <h2 class="card-header-title" id="left-card-title">✉ 任務卡</h2>
+          </div>
+
+          <!-- 任務模式內容 -->
+          <div id="mission-panel-content" style="display:flex; flex-direction:column; flex:1; min-height:0;">
+            <div class="mission-tabs" id="mission-tabs" role="tablist" aria-label="選擇任務卡"></div>
+            <div class="mission-box" id="mission-box">
+              <div class="mission-subtitle">
+                <span id="mission-name"></span>
+                <span id="mission-status-tag"></span>
+              </div>
+              <ul class="mission-checklist" id="mission-checklist"></ul>
+            </div>
+          </div>
+
+          <!-- 自由模式內容 -->
+          <div id="free-panel-content" class="free-info-box hidden-el">
+            <p class="free-info-text" id="free-guide-text"></p>
+            <div class="free-deco-row" id="free-deco-row"></div>
+          </div>
+
+          <!-- 叮叮小精靈對話區 -->
+          <div class="dingding-area">
+            <div class="dingding-avatar" id="dingding-avatar" role="button" tabindex="0" aria-label="點一下叮叮"></div>
+            <div class="speech-bubble" id="dingding-speech" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== 中欄：白天雪地公園舞台 ========== -->
+      <section class="stage-column" aria-label="雪人舞台">
+        <div class="park-stage" id="park-stage">
+          <div class="stage-corner-badge" id="stage-badge">🎄 雪地公園 🍪 ⛄</div>
+          <div class="drop-hint-pill" id="drop-hint-pill">點選或拖曳配件到雪人身上</div>
+
+          <!-- 白天雪地公園＋雪人主畫布 SVG -->
+          <svg class="park-svg" id="park-svg" viewBox="0 0 640 520" preserveAspectRatio="xMidYMax slice" role="img" aria-label="雪地公園與雪人">
+            <defs>
+              <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#5aaae6"/>
+                <stop offset="58%" stop-color="#b8e3fb"/>
+                <stop offset="100%" stop-color="#eef8ff"/>
+              </linearGradient>
+              <linearGradient id="snowHillFar" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#e3f3fc"/>
+                <stop offset="100%" stop-color="#cde5f5"/>
+              </linearGradient>
+              <linearGradient id="snowGround" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="100%" stop-color="#dfeffa"/>
+              </linearGradient>
+              <radialGradient id="snowballBody" cx="38%" cy="32%" r="65%">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="72%" stop-color="#eef6fc"/>
+                <stop offset="100%" stop-color="#cfe2f2"/>
+              </radialGradient>
+              <pattern id="plaidPattern" width="16" height="16" patternUnits="userSpaceOnUse">
+                <rect width="16" height="16" fill="#c0392b"/>
+                <rect x="0" y="6" width="16" height="4" fill="#1e7a4c"/>
+                <rect x="6" y="0" width="4" height="16" fill="#1e7a4c"/>
+                <rect x="0" y="13" width="16" height="2" fill="#ffd54f"/>
+                <rect x="13" y="0" width="2" height="16" fill="#ffd54f"/>
+              </pattern>
+            </defs>
+
+            <!-- 晴朗冬日藍天 -->
+            <rect x="0" y="0" width="640" height="520" fill="url(#skyGrad)"/>
+
+            <!-- 溫暖冬日太陽與白雲 -->
+            <circle cx="548" cy="72" r="34" fill="#fff3b0" opacity="0.55"/>
+            <circle cx="548" cy="72" r="24" fill="#ffe074"/>
+            <g fill="#ffffff" opacity="0.9">
+              <ellipse cx="118" cy="78" rx="44" ry="18"/>
+              <ellipse cx="145" cy="70" rx="30" ry="15"/>
+              <ellipse cx="94" cy="74" rx="26" ry="13"/>
+              <ellipse cx="420" cy="96" rx="38" ry="14"/>
+              <ellipse cx="445" cy="90" rx="24" ry="12"/>
+            </g>
+
+            <!-- 遠山雪坡 -->
+            <path d="M0,310 Q130,230 270,295 Q420,225 560,280 L640,265 L640,390 L0,390 Z" fill="url(#snowHillFar)"/>
+
+            <!-- 遠方的聖誕工坊（尖屋頂木屋＋冒煙煙囪＋暖光窗戶） -->
+            <g id="far-workshop" transform="translate(465, 196)">
+              <!-- 煙囪與白煙 -->
+              <rect x="70" y="6" width="14" height="28" fill="#8e1c14" stroke="#57100a" stroke-width="2"/>
+              <circle cx="78" cy="-4" r="7" fill="#ffffff" opacity="0.82"/>
+              <circle cx="88" cy="-16" r="9" fill="#ffffff" opacity="0.68"/>
+              <circle cx="101" cy="-26" r="10" fill="#ffffff" opacity="0.5"/>
+              <!-- 木屋主體 -->
+              <rect x="14" y="34" width="76" height="46" rx="3" fill="#a86438" stroke="#5e3318" stroke-width="2.5"/>
+              <!-- 紅屋頂與屋頂積雪 -->
+              <polygon points="4,38 52,4 100,38" fill="#c0392b" stroke="#7a1c13" stroke-width="2.5"/>
+              <path d="M8,38 Q26,26 42,35 Q56,24 70,35 Q84,28 96,38 L52,7 Z" fill="#ffffff" opacity="0.95"/>
+              <!-- 門與小花圈 -->
+              <rect x="44" y="54" width="16" height="26" rx="2" fill="#6b3b1e" stroke="#42220f" stroke-width="2"/>
+              <circle cx="52" cy="64" r="4.5" fill="none" stroke="#1e7a4c" stroke-width="2.5"/>
+              <circle cx="52" cy="68" r="1.5" fill="#e55039"/>
+              <!-- 暖黃發光窗戶 -->
+              <rect x="22" y="48" width="14" height="14" rx="2" fill="#ffe074" stroke="#5e3318" stroke-width="2"/>
+              <line x1="29" y1="48" x2="29" y2="62" stroke="#5e3318" stroke-width="1.5"/>
+              <line x1="22" y1="55" x2="36" y2="55" stroke="#5e3318" stroke-width="1.5"/>
+              <rect x="68" y="48" width="14" height="14" rx="2" fill="#ffe074" stroke="#5e3318" stroke-width="2"/>
+              <line x1="75" y1="48" x2="75" y2="62" stroke="#5e3318" stroke-width="1.5"/>
+              <line x1="68" y1="55" x2="82" y2="55" stroke="#5e3318" stroke-width="1.5"/>
+              <!-- 工坊門口小聖誕襪與拐杖糖 -->
+              <path d="M3,80 L3,64 Q3,58 9,58 Q13,58 13,63" fill="none" stroke="#c0392b" stroke-width="4" stroke-linecap="round"/>
+              <path d="M3,76 L3,65 Q3,60 8,59" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="3 3"/>
+            </g>
+
+            <!-- 遠景小松樹 -->
+            <g transform="translate(392, 232)">
+              <rect x="17" y="44" width="8" height="16" fill="#6d4324"/>
+              <polygon points="21,4 4,34 38,34" fill="#1d6e46"/>
+              <polygon points="21,18 1,48 41,48" fill="#175938"/>
+              <polygon points="21,4 13,18 29,18" fill="#ffffff" opacity="0.9"/>
+            </g>
+
+            <!-- 左側掛滿彩球的大聖誕松樹 -->
+            <g id="park-xmas-tree" transform="translate(22, 134)">
+              <rect x="54" y="186" width="24" height="44" rx="3" fill="#704223" stroke="#472611" stroke-width="2.5"/>
+              <polygon points="66,22 18,96 114,96" fill="#1e7a4c" stroke="#104a2d" stroke-width="2.5"/>
+              <polygon points="66,68 10,148 122,148" fill="#1b6e44" stroke="#104a2d" stroke-width="2.5"/>
+              <polygon points="66,114 2,196 130,196" fill="#175f3b" stroke="#104a2d" stroke-width="2.5"/>
+              <!-- 樹枝積雪 -->
+              <path d="M66,24 L42,60 Q54,54 66,62 Q78,54 90,60 Z" fill="#ffffff" opacity="0.92"/>
+              <!-- 金色樹頂星 -->
+              <polygon points="66,4 71,16 84,16 74,24 78,36 66,28 54,36 58,24 48,16 61,16" fill="#ffd54f" stroke="#a66e05" stroke-width="2"/>
+              <!-- 裝飾彩球與花環 -->
+              <path d="M36,84 Q66,102 96,84" fill="none" stroke="#ffd54f" stroke-width="3" stroke-dasharray="5 4"/>
+              <path d="M24,138 Q66,158 108,138" fill="none" stroke="#ffd54f" stroke-width="3" stroke-dasharray="5 4"/>
+              <circle cx="48" cy="86" r="6" fill="#e55039" stroke="#8e1c14" stroke-width="1.5"/>
+              <circle cx="84" cy="90" r="6" fill="#ffd54f" stroke="#996405" stroke-width="1.5"/>
+              <circle cx="40" cy="138" r="6.5" fill="#ffd54f" stroke="#996405" stroke-width="1.5"/>
+              <circle cx="72" cy="144" r="6.5" fill="#e55039" stroke="#8e1c14" stroke-width="1.5"/>
+              <circle cx="96" cy="176" r="7" fill="#e55039" stroke="#8e1c14" stroke-width="1.5"/>
+              <circle cx="34" cy="178" r="7" fill="#5dade2" stroke="#142850" stroke-width="1.5"/>
+            </g>
+
+            <!-- 右側覆雪松樹 -->
+            <g transform="translate(524, 240)">
+              <rect x="34" y="102" width="14" height="28" fill="#6b3e20"/>
+              <polygon points="41,10 10,66 72,66" fill="#1e7a4c" stroke="#104a2d" stroke-width="2"/>
+              <polygon points="41,42 4,106 78,106" fill="#17613c" stroke="#104a2d" stroke-width="2"/>
+              <polygon points="41,10 26,38 56,38" fill="#ffffff" opacity="0.9"/>
+            </g>
+
+            <!-- 中景雪地丘陵 -->
+            <path d="M0,355 Q175,320 330,348 Q490,322 640,352 L640,520 L0,520 Z" fill="url(#snowGround)"/>
+
+            <!-- 公園木頭長椅（覆著白雪＋聖誕花圈與拐杖糖） -->
+            <g id="park-bench" transform="translate(48, 336)">
+              <!-- 鐵腳 -->
+              <rect x="14" y="42" width="8" height="40" rx="2" fill="#2c3e50"/>
+              <rect x="112" y="42" width="8" height="40" rx="2" fill="#2c3e50"/>
+              <!-- 椅背木條 -->
+              <rect x="6" y="10" width="124" height="12" rx="3" fill="#9c5e31" stroke="#573116" stroke-width="2"/>
+              <rect x="6" y="26" width="124" height="12" rx="3" fill="#8a5027" stroke="#573116" stroke-width="2"/>
+              <!-- 椅面木條 -->
+              <rect x="2" y="44" width="132" height="13" rx="3" fill="#b06c3a" stroke="#573116" stroke-width="2"/>
+              <!-- 椅背積雪 -->
+              <path d="M8,10 Q28,3 48,10 Q74,4 98,10 Q116,5 128,10 L128,15 L8,15 Z" fill="#ffffff"/>
+              <!-- 長椅上的小聖誕花圈 -->
+              <circle cx="68" cy="24" r="10" fill="none" stroke="#1e7a4c" stroke-width="5"/>
+              <circle cx="68" cy="14" r="3" fill="#c0392b"/>
+              <circle cx="64" cy="15" r="2.2" fill="#e55039"/>
+              <circle cx="72" cy="15" r="2.2" fill="#e55039"/>
+              <!-- 長椅旁插著的拐杖糖 -->
+              <path d="M148,76 L148,38 Q148,26 158,26 Q167,26 167,36" fill="none" stroke="#c0392b" stroke-width="7" stroke-linecap="round"/>
+              <path d="M148,76 L148,38 Q148,26 158,26 Q167,26 167,36" fill="none" stroke="#ffffff" stroke-width="7" stroke-dasharray="6 7" stroke-linecap="butt"/>
+            </g>
+
+            <!-- 雪人底座陰影 -->
+            <ellipse cx="326" cy="466" rx="108" ry="22" fill="#b7d5eb" opacity="0.8"/>
+
+            <!-- ==================== 主角：可自由換裝的雪人 ==================== -->
+            <g id="snowman-group" aria-label="雪人">
+              <!-- 手臂圖層（放身體後面讓銜接自然） -->
+              <g id="layer-arms"></g>
+
+              <!-- 下半球身體 -->
+              <circle cx="326" cy="378" r="88" fill="url(#snowballBody)" stroke="#8fb4d1" stroke-width="3.5"/>
+              <!-- 中間胸口球 -->
+              <circle cx="326" cy="264" r="64" fill="url(#snowballBody)" stroke="#8fb4d1" stroke-width="3.5"/>
+              <!-- 圓圓雪人頭 -->
+              <circle cx="326" cy="164" r="49" fill="url(#snowballBody)" stroke="#8fb4d1" stroke-width="3.5"/>
+
+              <!-- 可愛紅潤腮紅與微笑嘴巴 -->
+              <ellipse cx="297" cy="175" rx="9" ry="5.5" fill="#ff9e94" opacity="0.65"/>
+              <ellipse cx="355" cy="175" rx="9" ry="5.5" fill="#ff9e94" opacity="0.65"/>
+              <g id="snowman-mouth">
+                <circle cx="310" cy="186" r="3.4" fill="#3a281d"/>
+                <circle cx="318" cy="191" r="3.4" fill="#3a281d"/>
+                <circle cx="326" cy="193" r="3.4" fill="#3a281d"/>
+                <circle cx="334" cy="191" r="3.4" fill="#3a281d"/>
+                <circle cx="342" cy="186" r="3.4" fill="#3a281d"/>
+              </g>
+
+              <!-- 鈕扣圖層 -->
+              <g id="layer-buttons"></g>
+              <!-- 圍巾圖層 -->
+              <g id="layer-scarf"></g>
+              <!-- 眼睛圖層 -->
+              <g id="layer-eyes"></g>
+              <!-- 鼻子圖層 -->
+              <g id="layer-nose"></g>
+              <!-- 帽子圖層 -->
+              <g id="layer-hat"></g>
+            </g>
+
+            <!-- 雪地前景小雪堆與薑餅人小餅乾裝飾 -->
+            <g transform="translate(18, 434)">
+              <circle cx="24" cy="18" r="11" fill="#b86b35" stroke="#693817" stroke-width="2"/>
+              <rect x="13" y="29" width="22" height="24" rx="8" fill="#b86b35" stroke="#693817" stroke-width="2"/>
+              <line x1="7" y1="36" x2="41" y2="36" stroke="#b86b35" stroke-width="8" stroke-linecap="round"/>
+              <circle cx="20" cy="16" r="1.8" fill="#ffffff"/>
+              <circle cx="28" cy="16" r="1.8" fill="#ffffff"/>
+              <path d="M20,22 Q24,26 28,22" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="24" cy="38" r="2.5" fill="#c0392b"/>
+              <circle cx="24" cy="46" r="2.5" fill="#1e7a4c"/>
+            </g>
+          </svg>
+
+          <!-- 舞台右下方陪伴的原創麋鹿「雪球」 -->
+          <div class="snowball-stage-wrap" id="snowball-stage" role="button" tabindex="0" aria-label="點一下雪球"></div>
+
+          <!-- 過關彩帶層與拍照閃光層 -->
+          <div class="confetti-layer" id="confetti-layer" aria-hidden="true"></div>
+          <div class="camera-flash" id="camera-flash" aria-hidden="true"></div>
+        </div>
+
+        <!-- 舞台下方動作按鈕 -->
+        <div class="action-bar" id="action-bar-mission">
+          <button type="button" class="candy-btn" id="btn-check">
+            <span class="candy-btn-inner" id="btn-check-label">⭐ 完成檢查</span>
+          </button>
+          <button type="button" class="gift-btn secondary" id="btn-reset-mission">✏ 重新搭配</button>
+        </div>
+
+        <div class="action-bar hidden-el" id="action-bar-free">
+          <button type="button" class="candy-btn" id="btn-photo">
+            <span class="candy-btn-inner" id="btn-photo-label">🎁 拍照下載</span>
+          </button>
+          <button type="button" class="gift-btn" id="btn-random">⭐ 隨機變裝</button>
+          <button type="button" class="gift-btn secondary" id="btn-reset-free">✏ 全部清空</button>
+        </div>
+      </section>
+
+      <!-- ========== 右欄：雪人配件百寶箱 ========== -->
+      <section class="xmas-card right-panel" aria-label="雪人配件選擇區">
+        <div class="holly-corner holly-tl" data-holly="1"></div>
+        <div class="holly-corner holly-tr" data-holly="1"></div>
+        <div class="xmas-card-inner">
+          <div class="card-header">
+            <h2 class="card-header-title" id="right-card-title">🎁 雪人配件箱</h2>
+          </div>
+
+          <div class="category-tabs" id="category-tabs" role="tablist" aria-label="配件分類"></div>
+          <div class="parts-grid" id="parts-grid" role="region" aria-label="配件選項"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ==================== 過關慶祝彈窗 ==================== -->
+  <div class="modal-backdrop is-hidden" id="win-modal" role="dialog" aria-modal="true" aria-labelledby="win-modal-title" aria-hidden="true" inert>
+    <div class="modal-card">
+      <div class="modal-inner">
+        <h2 class="modal-title" id="win-modal-title">⭐ 任務完成！</h2>
+        <div class="modal-chars" id="win-modal-chars"></div>
+        <div class="modal-unlock-banner hidden-el" id="win-unlock-banner"></div>
+        <p class="modal-msg" id="win-modal-msg"></p>
+        <div class="modal-actions">
+          <button type="button" class="candy-btn" id="btn-next-mission">
+            <span class="candy-btn-inner" id="btn-next-mission-label">⭐ 下一張任務卡</span>
+          </button>
+          <button type="button" class="gift-btn secondary" id="btn-close-win">⛄ 看看我的雪人</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 自由模式拍照預覽彈窗 ==================== -->
+  <div class="modal-backdrop is-hidden" id="photo-modal" role="dialog" aria-modal="true" aria-labelledby="photo-modal-title" aria-hidden="true" inert>
+    <div class="modal-card">
+      <div class="modal-inner">
+        <h2 class="modal-title" id="photo-modal-title">⭐ 雪人照片拍好了！</h2>
+        <div class="photo-preview-frame">
+          <img id="photo-preview-img" alt="你的聖誕雪人照片">
+        </div>
+        <p class="modal-msg" id="photo-modal-msg"></p>
+        <div class="modal-actions">
+          <button type="button" class="candy-btn" id="btn-download-photo">
+            <span class="candy-btn-inner" id="btn-download-photo-label">🎁 下載照片</span>
+          </button>
+          <button type="button" class="gift-btn secondary" id="btn-close-photo">🎨 繼續打扮</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =====================================================================
+       一、角色與禮物 SVG 函式（第一版定稿，原封不動保留）
+       ===================================================================== */
+    function svgHollyCorner() {
+      return `
+        <svg viewBox="0 0 64 64" width="58" height="58" aria-hidden="true">
+          <path d="M12,38 C16,20 30,10 46,12 C40,22 44,30 34,36 C26,40 18,44 12,38 Z" fill="#1e7a4c" stroke="#0d4227" stroke-width="2.5"/>
+          <path d="M22,22 C28,24 34,20 40,16" fill="none" stroke="#62d295" stroke-width="2" stroke-linecap="round"/>
+          <path d="M34,14 C48,22 54,36 48,52 C38,44 30,46 26,34 C24,26 26,18 34,14 Z" fill="#279b61" stroke="#0d4227" stroke-width="2.5"/>
+          <path d="M36,24 C38,32 42,38 45,45" fill="none" stroke="#85e8b2" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="24" cy="24" r="6.5" fill="#e55039" stroke="#7d1710" stroke-width="2"/>
+          <circle cx="34" cy="20" r="6" fill="#c0392b" stroke="#7d1710" stroke-width="2"/>
+          <circle cx="29" cy="31" r="6" fill="#d93829" stroke="#7d1710" stroke-width="2"/>
+          <circle cx="22" cy="22" r="2" fill="#ffd7d2"/>
+          <circle cx="32" cy="18" r="1.8" fill="#ffd7d2"/>
+          <circle cx="27" cy="29" r="1.8" fill="#ffd7d2"/>
+        </svg>`;
+    }
+
+    /** 原創角色：小精靈「叮叮」（有眨眼、表情、小鈴鐺紅綠帽） */
+    function svgDingDing(size = 120, mood = 'happy') {
+      const mouth =
+        mood === 'cheer'
+          ? '<path d="M51,76 Q60,87 69,76 Z" fill="#b33939" stroke="#4a1d14" stroke-width="2"/>'
+          : mood === 'think'
+            ? '<circle cx="60" cy="78" r="3.5" fill="#4a1d14"/>'
+            : '<path d="M52,76 Q60,83 68,76" fill="none" stroke="#4a1d14" stroke-width="3" stroke-linecap="round"/>';
+      return `
+        <svg class="char-svg" viewBox="0 0 120 132" width="${size}" height="${Math.round(size * 1.1)}" aria-hidden="true">
+          <!-- 身體（松樹綠小精靈服＋金色腰帶） -->
+          <path d="M34,92 Q60,84 86,92 L92,124 Q60,130 28,124 Z" fill="#1e7a4c" stroke="#0d4026" stroke-width="3"/>
+          <rect x="33" y="106" width="54" height="8" rx="3" fill="#5e361b"/>
+          <rect x="52" y="104" width="16" height="12" rx="3" fill="#ffe074" stroke="#996405" stroke-width="2"/>
+          <!-- 紅白鋸齒領子 -->
+          <polygon points="36,92 48,104 60,94 72,104 84,92" fill="#c0392b" stroke="#781810" stroke-width="2"/>
+          <!-- 小手 -->
+          <circle cx="29" cy="105" r="8" fill="#ffd9be" stroke="#8a5a3c" stroke-width="2.5"/>
+          <circle cx="91" cy="105" r="8" fill="#ffd9be" stroke="#8a5a3c" stroke-width="2.5"/>
+          <!-- 精靈尖耳朵 -->
+          <path d="M28,66 L14,58 L27,76 Z" fill="#ffd9be" stroke="#8a5a3c" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M92,66 L106,58 L93,76 Z" fill="#ffd9be" stroke="#8a5a3c" stroke-width="2.5" stroke-linejoin="round"/>
+          <!-- 臉龐 -->
+          <ellipse cx="60" cy="68" rx="31" ry="27" fill="#ffe0c8" stroke="#8a5a3c" stroke-width="3"/>
+          <!-- 棕色瀏海 -->
+          <path d="M32,56 Q44,44 58,53 Q72,44 88,56 Q82,42 60,40 Q38,42 32,56 Z" fill="#7c4724"/>
+          <!-- 眨眼雙眼 -->
+          <g class="eye-blink">
+            <circle cx="48" cy="66" r="5" fill="#2b1b12"/>
+            <circle cx="46.5" cy="64" r="1.8" fill="#fff"/>
+          </g>
+          <g class="eye-blink">
+            <circle cx="72" cy="66" r="5" fill="#2b1b12"/>
+            <circle cx="70.5" cy="64" r="1.8" fill="#fff"/>
+          </g>
+          <!-- 紅潤腮紅 -->
+          <ellipse cx="40" cy="74" rx="5.5" ry="3.2" fill="#ff968a" opacity="0.75"/>
+          <ellipse cx="80" cy="74" rx="5.5" ry="3.2" fill="#ff968a" opacity="0.75"/>
+          ${mouth}
+          <!-- 紅綠條紋彎曲精靈帽＋尾端金鈴鐺 -->
+          <path d="M26,52 Q36,14 78,10 Q96,8 102,24 Q84,22 72,34 Q82,42 94,52 Z" fill="#c0392b" stroke="#751810" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M40,42 Q50,24 68,18 L73,26 Q56,34 48,46 Z" fill="#1e7a4c"/>
+          <rect x="24" y="45" width="72" height="12" rx="6" fill="#fffdf6" stroke="#c8d9e6" stroke-width="2.5"/>
+          <circle cx="104" cy="24" r="8" fill="#ffd54f" stroke="#a66e05" stroke-width="2.5"/>
+          <circle cx="102" cy="22" r="2.2" fill="#fff7cc"/>
+        </svg>`;
+    }
+
+    /** 原創角色：麋鹿「雪球」（軟萌圓臉、紅綠圍巾、閃亮鹿角＋眨眼） */
+    function svgSnowball(size = 124, mood = 'happy') {
+      const mouth =
+        mood === 'cheer'
+          ? '<path d="M52,82 Q60,91 68,82 Z" fill="#9c2c24" stroke="#4a2614" stroke-width="2"/>'
+          : '<path d="M53,82 Q60,88 67,82" fill="none" stroke="#4a2614" stroke-width="3" stroke-linecap="round"/>';
+      return `
+        <svg class="char-svg" viewBox="0 0 124 132" width="${size}" height="${Math.round(size * 1.06)}" aria-hidden="true">
+          <!-- 鹿角 -->
+          <path d="M44,36 L34,14 M38,24 L26,20 M40,29 L46,16" fill="none" stroke="#85522d" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M80,36 L90,14 M86,24 L98,20 M84,29 L78,16" fill="none" stroke="#85522d" stroke-width="5.5" stroke-linecap="round"/>
+          <!-- 右鹿角上的小冬青葉 -->
+          <ellipse cx="90" cy="24" rx="6" ry="3.5" transform="rotate(-25 90 24)" fill="#1e7a4c"/>
+          <circle cx="88" cy="26" r="3" fill="#e55039"/>
+          <!-- 圓滾滾身體 -->
+          <ellipse cx="62" cy="108" rx="31" ry="21" fill="#a86d42" stroke="#5c351a" stroke-width="3"/>
+          <ellipse cx="62" cy="111" rx="18" ry="13" fill="#f5dfc6"/>
+          <!-- 紅綠條紋圍巾 -->
+          <path d="M35,88 Q62,99 89,88 L86,100 Q62,109 38,100 Z" fill="#c0392b" stroke="#751810" stroke-width="2.5"/>
+          <path d="M74,95 L86,115 L74,117 L66,98 Z" fill="#1e7a4c" stroke="#0f4228" stroke-width="2"/>
+          <!-- 耳朵 -->
+          <ellipse cx="29" cy="54" rx="12" ry="7" transform="rotate(-20 29 54)" fill="#a86d42" stroke="#5c351a" stroke-width="2.5"/>
+          <ellipse cx="95" cy="54" rx="12" ry="7" transform="rotate(20 95 54)" fill="#a86d42" stroke="#5c351a" stroke-width="2.5"/>
+          <!-- 頭與奶油色口鼻區 -->
+          <ellipse cx="62" cy="64" rx="33" ry="29" fill="#b87a4b" stroke="#5c351a" stroke-width="3"/>
+          <ellipse cx="62" cy="76" rx="22" ry="15" fill="#f7e4cd"/>
+          <!-- 眨眼雙眼 -->
+          <g class="eye-blink-delay">
+            <circle cx="49" cy="60" r="5.2" fill="#2b180e"/>
+            <circle cx="47.5" cy="58" r="1.9" fill="#fff"/>
+          </g>
+          <g class="eye-blink-delay">
+            <circle cx="75" cy="60" r="5.2" fill="#2b180e"/>
+            <circle cx="73.5" cy="58" r="1.9" fill="#fff"/>
+          </g>
+          <!-- 棕色鼻子（原創，避免聯想紅鼻子麋鹿） -->
+          <ellipse cx="62" cy="71" rx="8.5" ry="6.5" fill="#5a3418" stroke="#2e1a0b" stroke-width="2"/>
+          <ellipse cx="59" cy="69" rx="2.8" ry="1.8" fill="#a87a58"/>
+          ${mouth}
+        </svg>`;
+    }
+
+    /** 雪球拉著載有叮叮與禮物的雪橇 */
+    function svgGift(color, shape, size = 104) {
+      const fillMain = color === 'red' ? '#d93829' : '#1e874b';
+      const fillLight = color === 'red' ? '#f26052' : '#32b369';
+      const strokeDark = color === 'red' ? '#7d160e' : '#0e4727';
+      const ribbon = color === 'red' ? '#ffd54f' : '#ff6b5c';
+      const ribbonStroke = color === 'red' ? '#9e6c06' : '#8a1d14';
+
+      if (shape === 'square') {
+        return `
+          <svg viewBox="0 0 110 110" width="${size}" height="${size}" aria-hidden="true">
+            <!-- 方形蝴蝶結 -->
+            <ellipse cx="42" cy="24" rx="14" ry="9" transform="rotate(-18 42 24)" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+            <ellipse cx="68" cy="24" rx="14" ry="9" transform="rotate(18 68 24)" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+            <circle cx="55" cy="26" r="6" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+            <!-- 方形盒身 -->
+            <rect x="18" y="30" width="74" height="66" rx="8" fill="${fillMain}" stroke="${strokeDark}" stroke-width="3.5"/>
+            <rect x="14" y="28" width="82" height="18" rx="6" fill="${fillLight}" stroke="${strokeDark}" stroke-width="3.5"/>
+            <!-- 十字緞帶 -->
+            <rect x="47" y="28" width="16" height="68" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2"/>
+            <rect x="18" y="57" width="74" height="14" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2"/>
+          </svg>`;
+      }
+      return `
+        <svg viewBox="0 0 110 110" width="${size}" height="${size}" aria-hidden="true">
+          <!-- 圓形蝴蝶結 -->
+          <ellipse cx="43" cy="20" rx="13" ry="8" transform="rotate(-20 43 20)" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+          <ellipse cx="67" cy="20" rx="13" ry="8" transform="rotate(20 67 20)" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+          <circle cx="55" cy="22" r="5.5" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+          <!-- 圓形球盒 -->
+          <circle cx="55" cy="61" r="37" fill="${fillMain}" stroke="${strokeDark}" stroke-width="3.5"/>
+          <ellipse cx="42" cy="46" rx="12" ry="8" transform="rotate(-28 42 46)" fill="${fillLight}" opacity="0.75"/>
+          <!-- 圓盒十字緞帶 -->
+          <rect x="48" y="24" width="14" height="74" rx="4" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2"/>
+          <rect x="18" y="54" width="74" height="14" rx="4" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2"/>
+          <!-- 裝飾小點點 -->
+          <circle cx="34" cy="45" r="3.5" fill="#fff" opacity="0.75"/>
+          <circle cx="76" cy="76" r="3.5" fill="#fff" opacity="0.75"/>
+        </svg>`;
+    }
+
+    /* =====================================================================
+       二、面向使用者的文字常數（老師可直接修改）
+       ===================================================================== */
+    const STORAGE_KEYS = {
+      DONE: 'edtech-unit22-snowman-done',
+      CLEARED: 'edtech-unit22-snowman-cleared',
+      SOUND: 'edtech-unit22-sound'
+    };
+
+    const TEXT = {
+      pageTitle: '⛄ 堆雪人',
+      modeMission: '⭐ 任務模式',
+      modeFree: '🎨 自由模式',
+      mapButton: '🗺 回工坊地圖',
+      leftMissionTitle: '✉ 任務卡',
+      leftFreeTitle: '🎨 自由創作',
+      rightPartsTitle: '🎁 雪人配件箱',
+      stageBadge: '🎄 雪地公園 🍪 ⛄',
+      dropHint: '點選或拖曳配件到雪人身上',
+      btnCheck: '⭐ 完成檢查',
+      btnResetMission: '✏ 重新搭配',
+      btnPhoto: '🎁 拍照下載',
+      btnRandom: '⭐ 隨機變裝',
+      btnResetFree: '✏ 全部清空',
+      freeGuide: '這裡沒有任務卡！自由挑選喜歡的帽子、圍巾、五官和雙手，做好就按「拍照下載」留念吧！',
+      missionClearedTag: '⭐ 已完成',
+      missionTodoTag: '進行中',
+      dingdingWelcome: '看左邊的任務卡，幫雪人穿上對的配件吧！',
+      dingdingFree: '想怎麼打扮都可以喔！做好記得幫雪人拍張照！',
+      dingdingReset: '已經清空囉！我們重新幫雪人打扮吧！',
+      dingdingRandom: '哇！這個新造型好可愛喔！',
+      dingdingTap: [
+        '加油！仔細讀完任務卡就會過關喔！',
+        '也可以把配件拖到雪人身上喔！',
+        '雪球也陪著我們一起堆雪人呢！'
+      ],
+      snowballTap: [
+        '雪球搖搖鹿角幫你打氣！聖誕快樂！',
+        '雪球說：這個雪人愈來愈可愛了！'
+      ],
+      snowmanTap: '雪人開心地晃了晃圓滾滾的肚子！',
+      winTitle: '⭐ 太棒了！任務過關！',
+      winAllTitle: '🎄 全部任務都完成了！',
+      winMsgNormal: '哇！跟任務卡寫的一模一樣，雪人開心到跳起舞來了！',
+      winMsgAll: '你已經完成全部 6 張任務卡，是聖誕工坊最厲害的堆雪人高手！',
+      unlockBanner: '🎁 已經完成 3 張任務卡！工坊任務達標囉！',
+      btnNextMission: '⭐ 下一張任務卡',
+      btnGoFree: '🎨 去自由模式拍照',
+      btnStayView: '⛄ 看看我的雪人',
+      photoTitle: '⭐ 雪人照片拍好了！',
+      photoMsg: '按下面的按鈕，就可以把這張聖誕雪人照片存到電腦裡喔！',
+      btnDownloadPhoto: '🎁 下載照片',
+      btnClosePhoto: '🎨 繼續打扮',
+      photoFileName: '聖誕工坊-我的雪人.png',
+      /* 每個部位答錯時，叮叮的具體提示 */
+      wrongHints: {
+        hat: '帽子的款式或顏色再看看任務卡喔！',
+        scarf: '圍巾的顏色再看看任務卡喔！',
+        nose: '雪人的鼻子好像不一樣，再看看任務卡喔！',
+        eyes: '雪人的眼睛再看看任務卡喔！',
+        arms: '雪人的雙手再看看任務卡喔！',
+        buttons: '胸口的黑鈕扣數數看，跟任務卡一樣嗎？'
+      },
+      missingHints: {
+        hat: '雪人還沒戴帽子喔，快挑一頂吧！',
+        scarf: '雪人還沒圍圍巾喔，快幫它圍上吧！',
+        nose: '雪人還缺一個鼻子喔！',
+        eyes: '雪人還沒有眼睛喔！',
+        arms: '雪人還沒有手喔！',
+        buttons: '雪人胸口還沒扣黑鈕扣喔！'
+      }
+    };
+
+    /* =====================================================================
+       三、部位分類與選項定義（帽子、圍巾、鼻子、眼睛、手、鈕扣）
+       ===================================================================== */
+    const CATEGORIES = [
+      { id: 'hat', label: '帽子' },
+      { id: 'scarf', label: '圍巾' },
+      { id: 'nose', label: '鼻子' },
+      { id: 'eyes', label: '眼睛' },
+      { id: 'arms', label: '雙手' },
+      { id: 'buttons', label: '鈕扣' }
+    ];
+
+    const PARTS_DATA = {
+      hat: [
+        { id: 'santa-red', label: '紅色聖誕帽' },
+        { id: 'santa-green', label: '綠色聖誕帽' },
+        { id: 'beanie-red', label: '紅色毛帽' },
+        { id: 'beanie-blue', label: '藍色毛帽' },
+        { id: 'top-black', label: '黑色高帽' },
+        { id: 'top-brown', label: '咖啡色高帽' },
+        { id: 'none', label: '不戴帽子', freeOnly: true }
+      ],
+      scarf: [
+        { id: 'red', label: '紅色圍巾' },
+        { id: 'green', label: '綠色圍巾' },
+        { id: 'plaid', label: '格紋圍巾' },
+        { id: 'none', label: '不圍圍巾', freeOnly: true }
+      ],
+      nose: [
+        { id: 'carrot', label: '紅蘿蔔鼻子' },
+        { id: 'button', label: '鈕扣鼻子' },
+        { id: 'cherry', label: '櫻桃鼻子' }
+      ],
+      eyes: [
+        { id: 'coal', label: '煤炭眼睛' },
+        { id: 'button', label: '鈕扣眼睛' },
+        { id: 'star', label: '星星眼睛' }
+      ],
+      arms: [
+        { id: 'branch', label: '樹枝手' },
+        { id: 'glove-red', label: '紅色手套' },
+        { id: 'glove-green', label: '綠色手套' }
+      ],
+      buttons: [
+        { id: '1', label: '1 顆黑鈕扣' },
+        { id: '2', label: '2 顆黑鈕扣' },
+        { id: '3', label: '3 顆黑鈕扣' },
+        { id: 'none', label: '不放鈕扣', freeOnly: true }
+      ]
+    };
+
+    /* =====================================================================
+       四、6 張任務卡（循序漸進，讓學生看注音文字操作）
+       ===================================================================== */
+    const MISSIONS = [
+      {
+        id: 1,
+        name: '第 1 關・經典小雪人',
+        items: [
+          { part: 'hat', value: 'santa-red', text: '戴紅色聖誕帽' },
+          { part: 'nose', value: 'carrot', text: '紅蘿蔔鼻子' },
+          { part: 'eyes', value: 'coal', text: '煤炭眼睛' },
+          { part: 'buttons', value: '2', text: '2 顆黑鈕扣' }
+        ]
+      },
+      {
+        id: 2,
+        name: '第 2 關・公園暖暖風',
+        items: [
+          { part: 'hat', value: 'beanie-blue', text: '戴藍色毛帽' },
+          { part: 'scarf', value: 'red', text: '圍紅色圍巾' },
+          { part: 'nose', value: 'cherry', text: '櫻桃鼻子' },
+          { part: 'arms', value: 'branch', text: '樹枝手' }
+        ]
+      },
+      {
+        id: 3,
+        name: '第 3 關・紳士小雪人',
+        items: [
+          { part: 'hat', value: 'top-black', text: '戴黑色高帽' },
+          { part: 'scarf', value: 'green', text: '圍綠色圍巾' },
+          { part: 'nose', value: 'carrot', text: '紅蘿蔔鼻子' },
+          { part: 'buttons', value: '3', text: '3 顆黑鈕扣' }
+        ]
+      },
+      {
+        id: 4,
+        name: '第 4 關・閃亮星雪人',
+        items: [
+          { part: 'hat', value: 'beanie-red', text: '戴紅色毛帽' },
+          { part: 'scarf', value: 'plaid', text: '圍格紋圍巾' },
+          { part: 'eyes', value: 'star', text: '星星眼睛' },
+          { part: 'arms', value: 'glove-red', text: '戴紅色手套' },
+          { part: 'buttons', value: '1', text: '1 顆黑鈕扣' }
+        ]
+      },
+      {
+        id: 5,
+        name: '第 5 關・小精靈好朋友',
+        items: [
+          { part: 'hat', value: 'santa-green', text: '戴綠色聖誕帽' },
+          { part: 'scarf', value: 'red', text: '圍紅色圍巾' },
+          { part: 'nose', value: 'button', text: '鈕扣鼻子' },
+          { part: 'eyes', value: 'button', text: '鈕扣眼睛' },
+          { part: 'arms', value: 'glove-green', text: '戴綠色手套' },
+          { part: 'buttons', value: '3', text: '3 顆黑鈕扣' }
+        ]
+      },
+      {
+        id: 6,
+        name: '第 6 關・工坊大明星',
+        items: [
+          { part: 'hat', value: 'top-brown', text: '戴咖啡色高帽' },
+          { part: 'scarf', value: 'plaid', text: '圍格紋圍巾' },
+          { part: 'nose', value: 'cherry', text: '櫻桃鼻子' },
+          { part: 'eyes', value: 'star', text: '星星眼睛' },
+          { part: 'arms', value: 'branch', text: '樹枝手' },
+          { part: 'buttons', value: '2', text: '2 顆黑鈕扣' }
+        ]
+      }
+    ];
+
+    /* =====================================================================
+       五、安全儲存與音效合成（Web Audio API 原創音型）
+       ===================================================================== */
+    function safeStorageGet(key, fallback = null) {
+      try {
+        const val = window.localStorage.getItem(key);
+        return val === null ? fallback : val;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function safeStorageSet(key, value) {
+      try {
+        window.localStorage.setItem(key, value);
+      } catch (e) {
+        /* 隱私模式或停用儲存時安全忽略 */
+      }
+    }
+
+    const SoundEngine = {
+      ctx: null,
+      enabled: safeStorageGet(STORAGE_KEYS.SOUND, '1') !== '0',
+
+      ensureContext() {
+        if (!this.enabled) return null;
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return null;
+          if (!this.ctx) {
+            this.ctx = new AudioCtx();
+          }
+          if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+          }
+          return this.ctx;
+        } catch (e) {
+          return null;
+        }
+      },
+
+      tone(freq, duration, type = 'sine', startOffset = 0, gainPeak = 0.14) {
+        const ctx = this.ensureContext();
+        if (!ctx) return;
+        const now = ctx.currentTime + startOffset;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.exponentialRampToValueAtTime(gainPeak, now + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + duration + 0.02);
+      },
+
+      playClick() {
+        this.tone(540, 0.08, 'triangle', 0, 0.12);
+      },
+
+      playEquip(category) {
+        const pitches = {
+          hat: [440, 620],
+          scarf: [392, 520],
+          nose: [587, 740],
+          eyes: [660, 880],
+          arms: [349, 494],
+          buttons: [523, 659]
+        };
+        const pair = pitches[category] || [480, 640];
+        this.tone(pair[0], 0.09, 'triangle', 0, 0.14);
+        this.tone(pair[1], 0.12, 'sine', 0.06, 0.13);
+      },
+
+      playWrong() {
+        /* 溫和鼓勵的雙音提示，不刺耳 */
+        this.tone(360, 0.14, 'triangle', 0, 0.13);
+        this.tone(300, 0.2, 'triangle', 0.12, 0.12);
+      },
+
+      playWin() {
+        /* 原創歡樂上行和弦鈴聲 */
+        const notes = [523.25, 659.25, 783.99, 1046.5, 987.77, 1046.5];
+        const times = [0, 0.09, 0.18, 0.28, 0.42, 0.52];
+        notes.forEach((n, idx) => {
+          this.tone(n, 0.24, 'triangle', times[idx], 0.15);
+          this.tone(n * 2, 0.18, 'sine', times[idx], 0.05);
+        });
+      },
+
+      playShutter() {
+        /* 清脆快門聲 */
+        this.tone(1100, 0.05, 'square', 0, 0.07);
+        this.tone(720, 0.08, 'triangle', 0.05, 0.11);
+        this.tone(980, 0.12, 'sine', 0.11, 0.1);
+      },
+
+      playGiggle() {
+        this.tone(620, 0.07, 'sine', 0, 0.11);
+        this.tone(780, 0.09, 'sine', 0.07, 0.12);
+      }
+    };
+
+    /* =====================================================================
+       六、雪人各部位 SVG 繪製函式（舞台與縮圖共用，points 全用數字）
+       ===================================================================== */
+    function renderHatSvg(id) {
+      switch (id) {
+        case 'santa-red':
+          return `
+            <path d="M276,128 Q292,68 352,72 Q382,74 394,104 Q368,94 352,110 Q366,118 376,128 Z" fill="#c0392b" stroke="#7a1c13" stroke-width="3.5" stroke-linejoin="round"/>
+            <rect x="272" y="116" width="108" height="20" rx="10" fill="#fffdf6" stroke="#c8d9e6" stroke-width="3"/>
+            <circle cx="398" cy="108" r="12" fill="#fffdf6" stroke="#c8d9e6" stroke-width="2.5"/>`;
+        case 'santa-green':
+          return `
+            <path d="M276,128 Q292,68 352,72 Q382,74 394,104 Q368,94 352,110 Q366,118 376,128 Z" fill="#1e7a4c" stroke="#0d4227" stroke-width="3.5" stroke-linejoin="round"/>
+            <path d="M294,116 Q314,88 346,84 L350,94 Q324,100 308,118 Z" fill="#c0392b"/>
+            <rect x="272" y="116" width="108" height="20" rx="10" fill="#fffdf6" stroke="#c8d9e6" stroke-width="3"/>
+            <circle cx="398" cy="108" r="12" fill="#ffd54f" stroke="#a66e05" stroke-width="2.5"/>`;
+        case 'beanie-red':
+          return `
+            <path d="M278,128 C278,80 374,80 374,128 Z" fill="#c0392b" stroke="#7a1c13" stroke-width="3.5"/>
+            <path d="M286,108 Q326,96 366,108" fill="none" stroke="#ffd54f" stroke-width="5" stroke-dasharray="7 6"/>
+            <rect x="273" y="118" width="106" height="19" rx="9" fill="#992419" stroke="#66140d" stroke-width="3"/>
+            <line x1="292" y1="120" x2="292" y2="135" stroke="#c0392b" stroke-width="3"/>
+            <line x1="312" y1="120" x2="312" y2="135" stroke="#c0392b" stroke-width="3"/>
+            <line x1="332" y1="120" x2="332" y2="135" stroke="#c0392b" stroke-width="3"/>
+            <line x1="352" y1="120" x2="352" y2="135" stroke="#c0392b" stroke-width="3"/>
+            <circle cx="326" cy="79" r="13" fill="#fff8e6" stroke="#c8d9e6" stroke-width="2.5"/>`;
+        case 'beanie-blue':
+          return `
+            <path d="M278,128 C278,80 374,80 374,128 Z" fill="#2868a8" stroke="#142850" stroke-width="3.5"/>
+            <path d="M286,108 Q326,96 366,108" fill="none" stroke="#b8e3fb" stroke-width="5" stroke-dasharray="7 6"/>
+            <rect x="273" y="118" width="106" height="19" rx="9" fill="#1c4c80" stroke="#142850" stroke-width="3"/>
+            <line x1="292" y1="120" x2="292" y2="135" stroke="#4c8fd1" stroke-width="3"/>
+            <line x1="312" y1="120" x2="312" y2="135" stroke="#4c8fd1" stroke-width="3"/>
+            <line x1="332" y1="120" x2="332" y2="135" stroke="#4c8fd1" stroke-width="3"/>
+            <line x1="352" y1="120" x2="352" y2="135" stroke="#4c8fd1" stroke-width="3"/>
+            <circle cx="326" cy="79" r="13" fill="#ffffff" stroke="#8fb4d1" stroke-width="2.5"/>`;
+        case 'top-black':
+          return `
+            <rect x="286" y="62" width="80" height="62" rx="6" fill="#2c333d" stroke="#11161c" stroke-width="3.5"/>
+            <rect x="286" y="102" width="80" height="15" fill="#c0392b" stroke="#7a1c13" stroke-width="2"/>
+            <ellipse cx="326" cy="123" rx="64" ry="12" fill="#2c333d" stroke="#11161c" stroke-width="3.5"/>
+            <ellipse cx="352" cy="108" rx="8" ry="4" transform="rotate(-24 352 108)" fill="#1e7a4c"/>
+            <circle cx="348" cy="112" r="4" fill="#e55039"/>`;
+        case 'top-brown':
+          return `
+            <rect x="286" y="62" width="80" height="62" rx="6" fill="#8c542b" stroke="#4d2b12" stroke-width="3.5"/>
+            <rect x="286" y="102" width="80" height="15" fill="#1e7a4c" stroke="#0d4227" stroke-width="2"/>
+            <rect x="318" y="101" width="16" height="17" rx="2" fill="#ffd54f" stroke="#996405" stroke-width="2"/>
+            <ellipse cx="326" cy="123" rx="64" ry="12" fill="#784621" stroke="#4d2b12" stroke-width="3.5"/>`;
+        default:
+          return '';
+      }
+    }
+
+    function renderScarfSvg(id) {
+      if (!id || id === 'none') return '';
+      if (id === 'red') {
+        return `
+          <path d="M276,204 Q326,225 376,204 L373,228 Q326,248 279,228 Z" fill="#c0392b" stroke="#7a1c13" stroke-width="3"/>
+          <path d="M348,220 L370,278 L345,283 L330,226 Z" fill="#c0392b" stroke="#7a1c13" stroke-width="3" stroke-linejoin="round"/>
+          <line x1="348" y1="283" x2="346" y2="294" stroke="#ffd54f" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="357" y1="281" x2="356" y2="292" stroke="#ffd54f" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="366" y1="279" x2="366" y2="290" stroke="#ffd54f" stroke-width="3.5" stroke-linecap="round"/>`;
+      }
+      if (id === 'green') {
+        return `
+          <path d="M276,204 Q326,225 376,204 L373,228 Q326,248 279,228 Z" fill="#1e7a4c" stroke="#0d4227" stroke-width="3"/>
+          <path d="M286,214 Q326,232 366,214" fill="none" stroke="#fff8e6" stroke-width="3.5" stroke-dasharray="8 6"/>
+          <path d="M348,220 L370,278 L345,283 L330,226 Z" fill="#1e7a4c" stroke="#0d4227" stroke-width="3" stroke-linejoin="round"/>
+          <line x1="340" y1="256" x2="360" y2="252" stroke="#fff8e6" stroke-width="4"/>
+          <line x1="348" y1="283" x2="346" y2="294" stroke="#fff8e6" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="357" y1="281" x2="356" y2="292" stroke="#fff8e6" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="366" y1="279" x2="366" y2="290" stroke="#fff8e6" stroke-width="3.5" stroke-linecap="round"/>`;
+      }
+      if (id === 'plaid') {
+        return `
+          <path d="M276,204 Q326,225 376,204 L373,228 Q326,248 279,228 Z" fill="url(#plaidPattern)" stroke="#5c140e" stroke-width="3"/>
+          <path d="M348,220 L370,278 L345,283 L330,226 Z" fill="url(#plaidPattern)" stroke="#5c140e" stroke-width="3" stroke-linejoin="round"/>
+          <line x1="348" y1="283" x2="346" y2="294" stroke="#c0392b" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="357" y1="281" x2="356" y2="292" stroke="#1e7a4c" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="366" y1="279" x2="366" y2="290" stroke="#e6a817" stroke-width="3.5" stroke-linecap="round"/>`;
+      }
+      return '';
+    }
+
+    function renderNoseSvg(id) {
+      if (id === 'carrot') {
+        return `
+          <polygon points="324,162 372,171 324,179" fill="#f3821f" stroke="#a64b00" stroke-width="2.8" stroke-linejoin="round"/>
+          <line x1="336" y1="166" x2="336" y2="174" stroke="#c75e06" stroke-width="2" stroke-linecap="round"/>
+          <line x1="348" y1="168" x2="348" y2="173" stroke="#c75e06" stroke-width="2" stroke-linecap="round"/>`;
+      }
+      if (id === 'button') {
+        return `
+          <circle cx="326" cy="171" r="10.5" fill="#9c6236" stroke="#4f2c12" stroke-width="2.5"/>
+          <circle cx="323" cy="168" r="1.8" fill="#3a1f0b"/>
+          <circle cx="329" cy="168" r="1.8" fill="#3a1f0b"/>
+          <circle cx="323" cy="174" r="1.8" fill="#3a1f0b"/>
+          <circle cx="329" cy="174" r="1.8" fill="#3a1f0b"/>`;
+      }
+      if (id === 'cherry') {
+        return `
+          <path d="M326,162 Q330,151 339,149" fill="none" stroke="#1e7a4c" stroke-width="2.8" stroke-linecap="round"/>
+          <ellipse cx="337" cy="152" rx="6" ry="3.2" transform="rotate(-22 337 152)" fill="#279b61"/>
+          <circle cx="326" cy="171" r="10.5" fill="#d92b2b" stroke="#7a1111" stroke-width="2.5"/>
+          <circle cx="322" cy="167" r="3" fill="#ff9e9e"/>`;
+      }
+      return '';
+    }
+
+    function renderEyesSvg(id) {
+      if (id === 'coal') {
+        return `
+          <circle cx="308" cy="153" r="7" fill="#23272e"/>
+          <circle cx="305.5" cy="150.5" r="2.2" fill="#ffffff"/>
+          <circle cx="344" cy="153" r="7" fill="#23272e"/>
+          <circle cx="341.5" cy="150.5" r="2.2" fill="#ffffff"/>`;
+      }
+      if (id === 'button') {
+        return `
+          <circle cx="308" cy="153" r="8.5" fill="#1c366b" stroke="#0d1c3d" stroke-width="2"/>
+          <line x1="304.5" y1="149.5" x2="311.5" y2="156.5" stroke="#fff8e6" stroke-width="2" stroke-linecap="round"/>
+          <line x1="311.5" y1="149.5" x2="304.5" y2="156.5" stroke="#fff8e6" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="344" cy="153" r="8.5" fill="#1c366b" stroke="#0d1c3d" stroke-width="2"/>
+          <line x1="340.5" y1="149.5" x2="347.5" y2="156.5" stroke="#fff8e6" stroke-width="2" stroke-linecap="round"/>
+          <line x1="347.5" y1="149.5" x2="340.5" y2="156.5" stroke="#fff8e6" stroke-width="2" stroke-linecap="round"/>`;
+      }
+      if (id === 'star') {
+        return `
+          <polygon points="308,142 311,149 319,150 313,155 315,163 308,159 301,163 303,155 297,150 305,149" fill="#ffd54f" stroke="#a66e05" stroke-width="2" stroke-linejoin="round"/>
+          <polygon points="344,142 347,149 355,150 349,155 351,163 344,159 337,163 339,155 333,150 341,149" fill="#ffd54f" stroke="#a66e05" stroke-width="2" stroke-linejoin="round"/>`;
+      }
+      return '';
+    }
+
+    function renderArmsSvg(id) {
+      if (id === 'branch') {
+        return `
+          <g stroke="#6b3e1f" stroke-width="7" stroke-linecap="round" fill="none">
+            <path d="M270,256 L194,218"/>
+            <path d="M216,229 L204,205"/>
+            <path d="M212,227 L190,235"/>
+            <path d="M382,256 L458,218"/>
+            <path d="M436,229 L448,205"/>
+            <path d="M440,227 L462,235"/>
+          </g>`;
+      }
+      if (id === 'glove-red' || id === 'glove-green') {
+        const mainColor = id === 'glove-red' ? '#c0392b' : '#1e7a4c';
+        const darkColor = id === 'glove-red' ? '#7a1c13' : '#0d4227';
+        return `
+          <g stroke="#6b3e1f" stroke-width="7" stroke-linecap="round" fill="none">
+            <path d="M270,256 L208,224"/>
+            <path d="M382,256 L444,224"/>
+          </g>
+          <!-- 左手套 -->
+          <g transform="translate(198,218) rotate(-25)">
+            <ellipse cx="0" cy="0" rx="17" ry="13" fill="${mainColor}" stroke="${darkColor}" stroke-width="2.5"/>
+            <ellipse cx="4" cy="-12" rx="7" ry="5" fill="${mainColor}" stroke="${darkColor}" stroke-width="2.2"/>
+            <rect x="10" y="-12" width="9" height="24" rx="4" fill="#fff8e6" stroke="#c8d9e6" stroke-width="2"/>
+          </g>
+          <!-- 右手套 -->
+          <g transform="translate(454,218) rotate(25)">
+            <ellipse cx="0" cy="0" rx="17" ry="13" fill="${mainColor}" stroke="${darkColor}" stroke-width="2.5"/>
+            <ellipse cx="-4" cy="-12" rx="7" ry="5" fill="${mainColor}" stroke="${darkColor}" stroke-width="2.2"/>
+            <rect x="-19" y="-12" width="9" height="24" rx="4" fill="#fff8e6" stroke="#c8d9e6" stroke-width="2"/>
+          </g>`;
+      }
+      return '';
+    }
+
+    function renderButtonsSvg(id) {
+      const count = id === '1' ? 1 : id === '2' ? 2 : id === '3' ? 3 : 0;
+      if (count === 0) return '';
+      const positions = {
+        1: [276],
+        2: [258, 294],
+        3: [248, 278, 308]
+      }[count];
+
+      return positions.map((cy) => `
+        <circle cx="326" cy="${cy}" r="9" fill="#23272e" stroke="#0d1014" stroke-width="2"/>
+        <circle cx="323.5" cy="${cy - 2.5}" r="2.2" fill="#707b8a"/>
+        <circle cx="328.5" cy="${cy + 2.5}" r="1.4" fill="#525c69"/>
+      `).join('');
+    }
+
+    /* 為右欄配件卡片與拖曳幽靈產生小縮圖 SVG */
+    function renderPartThumbnail(category, id) {
+      if (id === 'none') {
+        return `
+          <svg viewBox="0 0 100 80" aria-hidden="true">
+            <circle cx="50" cy="40" r="24" fill="#f7efe2" stroke="#c0392b" stroke-width="4"/>
+            <line x1="33" y1="23" x2="67" y2="57" stroke="#c0392b" stroke-width="5" stroke-linecap="round"/>
+          </svg>`;
+      }
+      const viewBoxes = {
+        hat: '256 54 156 96',
+        scarf: '266 196 122 108',
+        nose: '302 140 82 54',
+        eyes: '286 130 80 48',
+        arms: '166 190 320 90',
+        buttons: '296 232 60 94'
+      };
+      const builders = {
+        hat: renderHatSvg,
+        scarf: renderScarfSvg,
+        nose: renderNoseSvg,
+        eyes: renderEyesSvg,
+        arms: renderArmsSvg,
+        buttons: renderButtonsSvg
+      };
+      const content = builders[category](id);
+      /* 縮圖也需要格紋 pattern 定義 */
+      const defs = category === 'scarf' && id === 'plaid'
+        ? `<defs><pattern id="plaidThumb" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#c0392b"/><rect x="0" y="6" width="16" height="4" fill="#1e7a4c"/><rect x="6" y="0" width="4" height="16" fill="#1e7a4c"/><rect x="0" y="13" width="16" height="2" fill="#ffd54f"/><rect x="13" y="0" width="2" height="16" fill="#ffd54f"/></pattern></defs>`
+        : '';
+      const fixedContent = defs ? content.replaceAll('url(#plaidPattern)', 'url(#plaidThumb)') : content;
+      return `<svg viewBox="${viewBoxes[category]}" aria-hidden="true">${defs}${fixedContent}</svg>`;
+    }
+
+    /* =====================================================================
+       七、遊戲狀態管理
+       ===================================================================== */
+    function loadClearedSet() {
+      const raw = safeStorageGet(STORAGE_KEYS.CLEARED, '[]');
+      try {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) {
+          return new Set(arr.filter((n) => typeof n === 'number'));
+        }
+      } catch (e) {
+        /* 忽略格式錯誤 */
+      }
+      return new Set();
+    }
+
+    const state = {
+      mode: 'mission',             // 'mission' | 'free'
+      missionIndex: 0,             // 0..5
+      activeCategory: 'hat',
+      clearedMissions: loadClearedSet(),
+      wrongCategories: new Set(),  // 檢查時答錯的部位分類（高亮提醒用）
+      lastCheckPassed: false,
+      snowman: {
+        hat: 'none',
+        scarf: 'none',
+        nose: 'none',
+        eyes: 'none',
+        arms: 'none',
+        buttons: 'none'
+      },
+      photoDataUrl: ''
+    };
+
+    /* =====================================================================
+       八、DOM 參照與初始化
+       ===================================================================== */
+    const dom = {
+      snowLayer: document.getElementById('snow-layer'),
+      pageTitle: document.getElementById('ui-page-title'),
+      btnModeMission: document.getElementById('btn-mode-mission'),
+      btnModeFree: document.getElementById('btn-mode-free'),
+      progressBadge: document.getElementById('progress-badge'),
+      btnMapLink: document.getElementById('btn-map-link'),
+      btnSoundToggle: document.getElementById('btn-sound-toggle'),
+      leftCardTitle: document.getElementById('left-card-title'),
+      rightCardTitle: document.getElementById('right-card-title'),
+      missionPanelContent: document.getElementById('mission-panel-content'),
+      freePanelContent: document.getElementById('free-panel-content'),
+      freeGuideText: document.getElementById('free-guide-text'),
+      freeDecoRow: document.getElementById('free-deco-row'),
+      missionTabs: document.getElementById('mission-tabs'),
+      missionName: document.getElementById('mission-name'),
+      missionStatusTag: document.getElementById('mission-status-tag'),
+      missionChecklist: document.getElementById('mission-checklist'),
+      dingdingAvatar: document.getElementById('dingding-avatar'),
+      dingdingSpeech: document.getElementById('dingding-speech'),
+      parkStage: document.getElementById('park-stage'),
+      stageBadge: document.getElementById('stage-badge'),
+      dropHintPill: document.getElementById('drop-hint-pill'),
+      snowmanGroup: document.getElementById('snowman-group'),
+      layerHat: document.getElementById('layer-hat'),
+      layerScarf: document.getElementById('layer-scarf'),
+      layerNose: document.getElementById('layer-nose'),
+      layerEyes: document.getElementById('layer-eyes'),
+      layerArms: document.getElementById('layer-arms'),
+      layerButtons: document.getElementById('layer-buttons'),
+      snowballStage: document.getElementById('snowball-stage'),
+      confettiLayer: document.getElementById('confetti-layer'),
+      cameraFlash: document.getElementById('camera-flash'),
+      actionBarMission: document.getElementById('action-bar-mission'),
+      actionBarFree: document.getElementById('action-bar-free'),
+      btnCheck: document.getElementById('btn-check'),
+      btnCheckLabel: document.getElementById('btn-check-label'),
+      btnResetMission: document.getElementById('btn-reset-mission'),
+      btnPhoto: document.getElementById('btn-photo'),
+      btnPhotoLabel: document.getElementById('btn-photo-label'),
+      btnRandom: document.getElementById('btn-random'),
+      btnResetFree: document.getElementById('btn-reset-free'),
+      categoryTabs: document.getElementById('category-tabs'),
+      partsGrid: document.getElementById('parts-grid'),
+      winModal: document.getElementById('win-modal'),
+      winModalTitle: document.getElementById('win-modal-title'),
+      winModalChars: document.getElementById('win-modal-chars'),
+      winUnlockBanner: document.getElementById('win-unlock-banner'),
+      winModalMsg: document.getElementById('win-modal-msg'),
+      btnNextMission: document.getElementById('btn-next-mission'),
+      btnNextMissionLabel: document.getElementById('btn-next-mission-label'),
+      btnCloseWin: document.getElementById('btn-close-win'),
+      photoModal: document.getElementById('photo-modal'),
+      photoModalTitle: document.getElementById('photo-modal-title'),
+      photoPreviewImg: document.getElementById('photo-preview-img'),
+      photoModalMsg: document.getElementById('photo-modal-msg'),
+      btnDownloadPhoto: document.getElementById('btn-download-photo'),
+      btnDownloadPhotoLabel: document.getElementById('btn-download-photo-label'),
+      btnClosePhoto: document.getElementById('btn-close-photo')
+    };
+
+    const prefersReducedMotion = () =>
+      window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* =====================================================================
+       九、畫面渲染函式
+       ===================================================================== */
+    function initStaticTextAndDeco() {
+      dom.pageTitle.textContent = TEXT.pageTitle;
+      dom.btnModeMission.textContent = TEXT.modeMission;
+      dom.btnModeFree.textContent = TEXT.modeFree;
+      dom.btnMapLink.textContent = TEXT.mapButton;
+      dom.rightCardTitle.textContent = TEXT.rightPartsTitle;
+      dom.stageBadge.textContent = TEXT.stageBadge;
+      dom.dropHintPill.textContent = TEXT.dropHint;
+      dom.btnCheckLabel.textContent = TEXT.btnCheck;
+      dom.btnResetMission.textContent = TEXT.btnResetMission;
+      dom.btnPhotoLabel.textContent = TEXT.btnPhoto;
+      dom.btnRandom.textContent = TEXT.btnRandom;
+      dom.btnResetFree.textContent = TEXT.btnResetFree;
+      dom.freeGuideText.textContent = TEXT.freeGuide;
+      dom.btnCloseWin.textContent = TEXT.btnStayView;
+      dom.photoModalTitle.textContent = TEXT.photoTitle;
+      dom.photoModalMsg.textContent = TEXT.photoMsg;
+      dom.btnDownloadPhotoLabel.textContent = TEXT.btnDownloadPhoto;
+      dom.btnClosePhoto.textContent = TEXT.btnClosePhoto;
+
+      /* 角落冬青葉（使用定稿 svgHollyCorner） */
+      document.querySelectorAll('[data-holly="1"]').forEach((el) => {
+        el.innerHTML = svgHollyCorner();
+      });
+
+      /* 自由模式裝飾禮物盒（使用定稿 svgGift） */
+      dom.freeDecoRow.innerHTML = svgGift('red', 'square', 68) + svgGift('green', 'round', 68);
+
+      /* 舞台上的雪球（使用定稿 svgSnowball） */
+      setSnowballMood('happy');
+      updateSoundButton();
+    }
+
+    function setDingDing(mood, message, bubbleStyle = '') {
+      dom.dingdingAvatar.innerHTML = svgDingDing(94, mood);
+      dom.dingdingSpeech.textContent = message;
+      dom.dingdingSpeech.className = 'speech-bubble' + (bubbleStyle ? ' ' + bubbleStyle : '');
+    }
+
+    function setSnowballMood(mood) {
+      dom.snowballStage.innerHTML = svgSnowball(112, mood);
+      dom.snowballStage.classList.toggle('cheer-hop', mood === 'cheer');
+    }
+
+    function updateSoundButton() {
+      dom.btnSoundToggle.textContent = SoundEngine.enabled ? '🔊' : '🔇';
+      dom.btnSoundToggle.setAttribute('aria-label', SoundEngine.enabled ? '關閉音效' : '開啟音效');
+    }
+
+    function updateProgressBadge() {
+      const count = state.clearedMissions.size;
+      const done = count >= 3 || safeStorageGet(STORAGE_KEYS.DONE) === '1';
+      dom.progressBadge.textContent = done ? `⭐ ${count} / 6 🎁 已過關` : `⭐ ${count} / 6`;
+      dom.progressBadge.classList.toggle('unlocked', done);
+    }
+
+    function renderMissionTabs() {
+      dom.missionTabs.innerHTML = '';
+      MISSIONS.forEach((m, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mission-num-btn';
+        if (idx === state.missionIndex) btn.classList.add('active');
+        if (state.clearedMissions.has(m.id)) btn.classList.add('cleared');
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-selected', idx === state.missionIndex ? 'true' : 'false');
+        btn.textContent = String(m.id);
+        if (state.clearedMissions.has(m.id)) {
+          const star = document.createElement('span');
+          star.className = 'mission-star-mark';
+          star.textContent = '⭐';
+          btn.appendChild(star);
+        }
+        btn.addEventListener('click', () => {
+          SoundEngine.playClick();
+          selectMission(idx);
+        });
+        dom.missionTabs.appendChild(btn);
+      });
+    }
+
+    function renderMissionCard(checkResults = null) {
+      const mission = MISSIONS[state.missionIndex];
+      const isCleared = state.clearedMissions.has(mission.id);
+      dom.missionName.textContent = mission.name;
+      dom.missionStatusTag.textContent = isCleared ? TEXT.missionClearedTag : TEXT.missionTodoTag;
+
+      dom.missionChecklist.innerHTML = '';
+      mission.items.forEach((item) => {
+        const li = document.createElement('li');
+        li.className = 'mission-item';
+        if (checkResults) {
+          const ok = checkResults[item.part];
+          li.classList.add(ok ? 'item-ok' : 'item-wrong');
+        }
+        const bullet = document.createElement('span');
+        bullet.className = 'mission-bullet';
+        bullet.textContent = checkResults ? (checkResults[item.part] ? '⭐' : '❄') : '❄';
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = item.text;
+
+        li.appendChild(bullet);
+        li.appendChild(textSpan);
+        dom.missionChecklist.appendChild(li);
+      });
+    }
+
+    function renderCategoryTabs() {
+      dom.categoryTabs.innerHTML = '';
+      CATEGORIES.forEach((cat) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'cat-tab';
+        if (cat.id === state.activeCategory) btn.classList.add('active');
+        if (state.wrongCategories.has(cat.id)) btn.classList.add('hint-highlight');
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-selected', cat.id === state.activeCategory ? 'true' : 'false');
+        btn.textContent = cat.label;
+
+        /* 已經在雪人身上裝了該部位時，顯示小金點 */
+        if (state.snowman[cat.id] && state.snowman[cat.id] !== 'none') {
+          const dot = document.createElement('span');
+          dot.className = 'cat-dot';
+          btn.appendChild(dot);
+        }
+
+        btn.addEventListener('click', () => {
+          SoundEngine.playClick();
+          state.activeCategory = cat.id;
+          renderCategoryTabs();
+          renderPartsGrid();
+        });
+        dom.categoryTabs.appendChild(btn);
+      });
+    }
+
+    function renderPartsGrid() {
+      const catId = state.activeCategory;
+      const list = PARTS_DATA[catId].filter((item) => state.mode === 'free' || !item.freeOnly);
+      dom.partsGrid.innerHTML = '';
+
+      list.forEach((part) => {
+        const card = document.createElement('div');
+        card.className = 'part-card';
+        const isSelected = state.snowman[catId] === part.id;
+        if (isSelected) card.classList.add('selected');
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+        card.dataset.category = catId;
+        card.dataset.partId = part.id;
+
+        const thumb = document.createElement('div');
+        thumb.className = 'part-thumb';
+        thumb.innerHTML = renderPartThumbnail(catId, part.id);
+
+        const label = document.createElement('div');
+        label.className = 'part-label';
+        label.textContent = part.label;
+
+        card.appendChild(thumb);
+        card.appendChild(label);
+
+        if (isSelected) {
+          const badge = document.createElement('span');
+          badge.className = 'selected-badge';
+          badge.textContent = '⭐';
+          card.appendChild(badge);
+        }
+
+        /* 鍵盤 Enter / 空白也能選取 */
+        card.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter' || ev.key === ' ') {
+            ev.preventDefault();
+            equipPart(catId, part.id);
+          }
+        });
+
+        /* Pointer Events：支援點擊與拖曳到雪人身上 */
+        bindPartPointerInteraction(card, catId, part.id);
+
+        dom.partsGrid.appendChild(card);
+      });
+    }
+
+    function renderSnowman(animatedCategory = null) {
+      const layerMap = {
+        hat: [dom.layerHat, renderHatSvg],
+        scarf: [dom.layerScarf, renderScarfSvg],
+        nose: [dom.layerNose, renderNoseSvg],
+        eyes: [dom.layerEyes, renderEyesSvg],
+        arms: [dom.layerArms, renderArmsSvg],
+        buttons: [dom.layerButtons, renderButtonsSvg]
+      };
+
+      Object.keys(layerMap).forEach((cat) => {
+        const [el, renderer] = layerMap[cat];
+        el.innerHTML = renderer(state.snowman[cat]);
+        el.classList.remove('part-pop');
+        if (animatedCategory === cat && !prefersReducedMotion()) {
+          /* 觸發重新播放彈跳動畫 */
+          void el.getBoundingClientRect();
+          el.classList.add('part-pop');
+        }
+      });
+    }
+
+    /* =====================================================================
+       十、配件點擊與 Pointer Events 拖曳互動
+       ===================================================================== */
+    function bindPartPointerInteraction(card, category, partId) {
+      let startX = 0;
+      let startY = 0;
+      let isDragging = false;
+      let ghostEl = null;
+      let activePointerId = null;
+
+      function cleanupDrag() {
+        if (ghostEl && ghostEl.parentNode) {
+          ghostEl.parentNode.removeChild(ghostEl);
+        }
+        ghostEl = null;
+        isDragging = false;
+        activePointerId = null;
+        dom.parkStage.classList.remove('drop-active');
+      }
+
+      card.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 && e.pointerType === 'mouse') return;
+        activePointerId = e.pointerId;
+        startX = e.clientX;
+        startY = e.clientY;
+        isDragging = false;
+        try {
+          card.setPointerCapture(e.pointerId);
+        } catch (err) {
+          /* 忽略不支援 capture 的情況 */
+        }
+      });
+
+      card.addEventListener('pointermove', (e) => {
+        if (activePointerId !== e.pointerId) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+
+        if (!isDragging && Math.hypot(dx, dy) > 8) {
+          isDragging = true;
+          ghostEl = document.createElement('div');
+          ghostEl.className = 'drag-ghost';
+          ghostEl.innerHTML = renderPartThumbnail(category, partId);
+          document.body.appendChild(ghostEl);
+        }
+
+        if (isDragging && ghostEl) {
+          ghostEl.style.left = e.clientX + 'px';
+          ghostEl.style.top = e.clientY + 'px';
+
+          const rect = dom.parkStage.getBoundingClientRect();
+          const overStage =
+            e.clientX >= rect.left &&
+            e.clientX <= rect.right &&
+            e.clientY >= rect.top &&
+            e.clientY <= rect.bottom;
+          dom.parkStage.classList.toggle('drop-active', overStage);
+        }
+      });
+
+      card.addEventListener('pointerup', (e) => {
+        if (activePointerId !== e.pointerId) return;
+        try {
+          card.releasePointerCapture(e.pointerId);
+        } catch (err) {
+          /* 安全忽略 */
+        }
+
+        if (!isDragging) {
+          /* 單純點選就直接套上雪人 */
+          equipPart(category, partId);
+        } else {
+          const rect = dom.parkStage.getBoundingClientRect();
+          const overStage =
+            e.clientX >= rect.left &&
+            e.clientX <= rect.right &&
+            e.clientY >= rect.top &&
+            e.clientY <= rect.bottom;
+          if (overStage) {
+            equipPart(category, partId);
+          }
+        }
+        cleanupDrag();
+      });
+
+      card.addEventListener('pointercancel', () => {
+        cleanupDrag();
+      });
+    }
+
+    /* =====================================================================
+       十一、核心遊戲動作（裝配、切換模式、檢查過關、隨機、重置）
+       ===================================================================== */
+    function equipPart(category, partId) {
+      state.snowman[category] = partId;
+      state.wrongCategories.delete(category);
+      stopCelebrationDance();
+      SoundEngine.playEquip(category);
+      renderSnowman(category);
+      renderCategoryTabs();
+      renderPartsGrid();
+
+      if (state.mode === 'mission') {
+        renderMissionCard();
+      }
+    }
+
+    function resetSnowman(silent = false) {
+      state.snowman = {
+        hat: 'none',
+        scarf: 'none',
+        nose: 'none',
+        eyes: 'none',
+        arms: 'none',
+        buttons: 'none'
+      };
+      state.wrongCategories.clear();
+      stopCelebrationDance();
+      renderSnowman();
+      renderCategoryTabs();
+      renderPartsGrid();
+      if (state.mode === 'mission') {
+        renderMissionCard();
+      }
+      if (!silent) {
+        SoundEngine.playClick();
+        setDingDing('happy', TEXT.dingdingReset);
+      }
+    }
+
+    function randomizeSnowman() {
+      CATEGORIES.forEach((cat) => {
+        const pool = PARTS_DATA[cat.id].filter((p) => p.id !== 'none');
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        state.snowman[cat.id] = pick.id;
+      });
+      SoundEngine.playWin();
+      renderSnowman('hat');
+      renderCategoryTabs();
+      renderPartsGrid();
+      setDingDing('cheer', TEXT.dingdingRandom, 'mood-cheer');
+      triggerSnowmanWiggle();
+    }
+
+    function selectMission(idx) {
+      state.missionIndex = idx;
+      state.wrongCategories.clear();
+      resetSnowman(true);
+      renderMissionTabs();
+      renderMissionCard();
+      setDingDing('happy', TEXT.dingdingWelcome);
+    }
+
+    function switchMode(newMode) {
+      if (state.mode === newMode) return;
+      SoundEngine.playClick();
+      state.mode = newMode;
+      state.wrongCategories.clear();
+      stopCelebrationDance();
+
+      const isMission = newMode === 'mission';
+      dom.btnModeMission.classList.toggle('active', isMission);
+      dom.btnModeMission.setAttribute('aria-selected', isMission ? 'true' : 'false');
+      dom.btnModeFree.classList.toggle('active', !isMission);
+      dom.btnModeFree.setAttribute('aria-selected', !isMission ? 'true' : 'false');
+
+      dom.leftCardTitle.textContent = isMission ? TEXT.leftMissionTitle : TEXT.leftFreeTitle;
+      dom.missionPanelContent.classList.toggle('hidden-el', !isMission);
+      dom.freePanelContent.classList.toggle('hidden-el', isMission);
+      dom.actionBarMission.classList.toggle('hidden-el', !isMission);
+      dom.actionBarFree.classList.toggle('hidden-el', isMission);
+
+      if (isMission) {
+        renderMissionTabs();
+        renderMissionCard();
+        setDingDing('happy', TEXT.dingdingWelcome);
+      } else {
+        /* 進自由模式若雪人還沒任何配件，先幫它配好基本可愛樣子讓畫面更有驚喜 */
+        const allEmpty = Object.values(state.snowman).every((v) => v === 'none');
+        if (allEmpty) {
+          state.snowman = {
+            hat: 'santa-red',
+            scarf: 'green',
+            nose: 'carrot',
+            eyes: 'coal',
+            arms: 'branch',
+            buttons: '2'
+          };
+          renderSnowman();
+        }
+        setDingDing('happy', TEXT.dingdingFree);
+      }
+      renderCategoryTabs();
+      renderPartsGrid();
+    }
+
+    function checkMission() {
+      const mission = MISSIONS[state.missionIndex];
+      const results = {};
+      const wrongList = [];
+
+      mission.items.forEach((item) => {
+        const current = state.snowman[item.part];
+        const ok = current === item.value;
+        results[item.part] = ok;
+        if (!ok) {
+          wrongList.push({
+            part: item.part,
+            missing: !current || current === 'none'
+          });
+        }
+      });
+
+      renderMissionCard(results);
+
+      if (wrongList.length === 0) {
+        /* 全部正確！過關慶祝 */
+        state.wrongCategories.clear();
+        renderCategoryTabs();
+
+        const beforeCount = state.clearedMissions.size;
+        state.clearedMissions.add(mission.id);
+        const afterCount = state.clearedMissions.size;
+        safeStorageSet(STORAGE_KEYS.CLEARED, JSON.stringify(Array.from(state.clearedMissions)));
+
+        let justUnlocked = false;
+        if (afterCount >= 3) {
+          if (safeStorageGet(STORAGE_KEYS.DONE) !== '1' || (beforeCount < 3 && afterCount >= 3)) {
+            justUnlocked = true;
+          }
+          safeStorageSet(STORAGE_KEYS.DONE, '1');
+        }
+
+        renderMissionTabs();
+        renderMissionCard(results);
+        updateProgressBadge();
+        startCelebrationDance();
+        spawnConfetti();
+        SoundEngine.playWin();
+        setDingDing('cheer', TEXT.winMsgNormal, 'mood-cheer');
+
+        /* 稍微延遲開啟過關彈窗，讓學生先欣賞雪人跳舞與彩帶 */
+        window.setTimeout(() => {
+          openWinModal(justUnlocked);
+        }, 700);
+      } else {
+        /* 有部位不符：由叮叮溫柔提示第一個不對的部位，並高亮該分類頁籤 */
+        SoundEngine.playWrong();
+        state.wrongCategories = new Set(wrongList.map((w) => w.part));
+        const firstWrong = wrongList[0];
+        state.activeCategory = firstWrong.part;
+        renderCategoryTabs();
+        renderPartsGrid();
+
+        const hintMsg = firstWrong.missing
+          ? TEXT.missingHints[firstWrong.part]
+          : TEXT.wrongHints[firstWrong.part];
+        setDingDing('think', hintMsg, 'mood-hint');
+        triggerSnowmanWiggle();
+      }
+    }
+
+    function startCelebrationDance() {
+      dom.snowmanGroup.classList.add('dancing');
+      setSnowballMood('cheer');
+    }
+
+    function stopCelebrationDance() {
+      dom.snowmanGroup.classList.remove('dancing');
+      setSnowballMood('happy');
+    }
+
+    function triggerSnowmanWiggle() {
+      if (prefersReducedMotion()) return;
+      dom.snowmanGroup.classList.remove('wiggle');
+      void dom.snowmanGroup.getBoundingClientRect();
+      dom.snowmanGroup.classList.add('wiggle');
+    }
+
+    /* =====================================================================
+       十二、彈出視窗控制（關閉時必設 visibility: hidden + inert）
+       ===================================================================== */
+    function showModal(el) {
+      el.classList.remove('is-hidden');
+      el.removeAttribute('inert');
+      el.setAttribute('aria-hidden', 'false');
+    }
+
+    function hideModal(el) {
+      el.classList.add('is-hidden');
+      el.setAttribute('inert', '');
+      el.setAttribute('aria-hidden', 'true');
+    }
+
+    function openWinModal(justUnlocked) {
+      const allCleared = state.clearedMissions.size >= MISSIONS.length;
+      dom.winModalTitle.textContent = allCleared ? TEXT.winAllTitle : TEXT.winTitle;
+      dom.winModalMsg.textContent = allCleared ? TEXT.winMsgAll : TEXT.winMsgNormal;
+
+      dom.winModalChars.innerHTML =
+        svgDingDing(102, 'cheer') +
+        svgGift('red', 'square', 78) +
+        svgSnowball(106, 'cheer');
+
+      if (justUnlocked) {
+        dom.winUnlockBanner.textContent = TEXT.unlockBanner;
+        dom.winUnlockBanner.classList.remove('hidden-el');
+      } else {
+        dom.winUnlockBanner.classList.add('hidden-el');
+      }
+
+      if (allCleared) {
+        dom.btnNextMissionLabel.textContent = TEXT.btnGoFree;
+      } else {
+        dom.btnNextMissionLabel.textContent = TEXT.btnNextMission;
+      }
+
+      showModal(dom.winModal);
+    }
+
+    /* =====================================================================
+       十三、自由模式拍照與下載 PNG
+       ===================================================================== */
+    function buildSnapshotSvgString() {
+      const parkInner = document.getElementById('park-svg').innerHTML;
+      const ding = svgDingDing(96, 'cheer')
+        .replace(/<svg[^>]*>/, '<g transform="translate(24, 378) scale(0.92)">')
+        .replace(/<\/svg>/, '</g>');
+      const snow = svgSnowball(104, 'cheer')
+        .replace(/<svg[^>]*>/, '<g transform="translate(502, 372) scale(0.96)">')
+        .replace(/<\/svg>/, '</g>');
+
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 560" width="960" height="840">
+  <rect x="0" y="0" width="640" height="560" fill="#fff8e6"/>
+  <g>${parkInner}</g>
+  ${ding}
+  ${snow}
+  <!-- 拍立得風格聖誕底部相框 -->
+  <rect x="0" y="514" width="640" height="46" fill="#fff8e6"/>
+  <rect x="6" y="6" width="628" height="548" fill="none" stroke="#c0392b" stroke-width="10" rx="14"/>
+  <rect x="14" y="14" width="612" height="532" fill="none" stroke="#e6a817" stroke-width="4" rx="10"/>
+  <text x="320" y="544" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="22" fill="#8e1c14">聖誕工坊大救援・我的聖誕雪人・聖誕快樂</text>
+</svg>`;
+    }
+
+    function takePhoto() {
+      SoundEngine.playShutter();
+      if (!prefersReducedMotion()) {
+        dom.cameraFlash.classList.remove('flashing');
+        void dom.cameraFlash.getBoundingClientRect();
+        dom.cameraFlash.classList.add('flashing');
+      }
+
+      const svgStr = buildSnapshotSvgString();
+      const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+      const img = new Image();
+
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 960;
+          canvas.height = 840;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#fff8e6';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          state.photoDataUrl = canvas.toDataURL('image/png');
+        } catch (err) {
+          state.photoDataUrl = svgDataUrl;
+        }
+        dom.photoPreviewImg.src = state.photoDataUrl;
+        showModal(dom.photoModal);
+      };
+
+      img.onerror = () => {
+        state.photoDataUrl = svgDataUrl;
+        dom.photoPreviewImg.src = svgDataUrl;
+        showModal(dom.photoModal);
+      };
+
+      img.src = svgDataUrl;
+    }
+
+    function downloadPhoto() {
+      if (!state.photoDataUrl) return;
+      SoundEngine.playClick();
+      const link = document.createElement('a');
+      link.href = state.photoDataUrl;
+      link.download = state.photoDataUrl.startsWith('data:image/png')
+        ? TEXT.photoFileName
+        : '聖誕工坊-我的雪人.svg';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    /* =====================================================================
+       十四、飄雪與過關彩帶粒子
+       ===================================================================== */
+    function initSnowfall() {
+      if (prefersReducedMotion()) return;
+      dom.snowLayer.innerHTML = '';
+      const count = 24;
+      for (let i = 0; i < count; i++) {
+        const flake = document.createElement('span');
+        flake.className = 'snowflake';
+        flake.textContent = '❄';
+        flake.style.left = (Math.random() * 100).toFixed(2) + '%';
+        flake.style.fontSize = (12 + Math.random() * 14).toFixed(0) + 'px';
+        flake.style.animationDuration = (7 + Math.random() * 8).toFixed(2) + 's';
+        flake.style.animationDelay = (-Math.random() * 12).toFixed(2) + 's';
+        dom.snowLayer.appendChild(flake);
+      }
+    }
+
+    function spawnConfetti() {
+      if (prefersReducedMotion()) return;
+      dom.confettiLayer.innerHTML = '';
+      const colors = ['#c0392b', '#1e7a4c', '#e6a817', '#ffd54f', '#5dade2', '#fff8e6'];
+      for (let i = 0; i < 36; i++) {
+        const p = document.createElement('span');
+        p.className = 'confetti-piece';
+        p.style.left = (8 + Math.random() * 84).toFixed(1) + '%';
+        p.style.background = colors[i % colors.length];
+        p.style.setProperty('--dx', ((Math.random() - 0.5) * 140).toFixed(0) + 'px');
+        p.style.animationDelay = (Math.random() * 0.45).toFixed(2) + 's';
+        dom.confettiLayer.appendChild(p);
+      }
+      window.setTimeout(() => {
+        dom.confettiLayer.innerHTML = '';
+      }, 3000);
+    }
+
+    /* =====================================================================
+       十五、事件綁定與啟動
+       ===================================================================== */
+    function bindEvents() {
+      dom.btnModeMission.addEventListener('click', () => switchMode('mission'));
+      dom.btnModeFree.addEventListener('click', () => switchMode('free'));
+
+      dom.btnSoundToggle.addEventListener('click', () => {
+        SoundEngine.enabled = !SoundEngine.enabled;
+        safeStorageSet(STORAGE_KEYS.SOUND, SoundEngine.enabled ? '1' : '0');
+        updateSoundButton();
+        if (SoundEngine.enabled) SoundEngine.playClick();
+      });
+
+      dom.btnCheck.addEventListener('click', checkMission);
+      dom.btnResetMission.addEventListener('click', () => resetSnowman(false));
+      dom.btnResetFree.addEventListener('click', () => resetSnowman(false));
+      dom.btnRandom.addEventListener('click', randomizeSnowman);
+      dom.btnPhoto.addEventListener('click', takePhoto);
+
+      /* 點擊叮叮、雪球、雪人的趣味互動 */
+      let dingTapIdx = 0;
+      const onDingTap = () => {
+        SoundEngine.playGiggle();
+        const line = TEXT.dingdingTap[dingTapIdx % TEXT.dingdingTap.length];
+        dingTapIdx++;
+        setDingDing('happy', line);
+      };
+      dom.dingdingAvatar.addEventListener('click', onDingTap);
+      dom.dingdingAvatar.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onDingTap();
+        }
+      });
+
+      let snowTapIdx = 0;
+      const onSnowballTap = () => {
+        SoundEngine.playGiggle();
+        const line = TEXT.snowballTap[snowTapIdx % TEXT.snowballTap.length];
+        snowTapIdx++;
+        setDingDing('happy', line);
+        setSnowballMood('cheer');
+        window.setTimeout(() => {
+          if (!dom.snowmanGroup.classList.contains('dancing')) {
+            setSnowballMood('happy');
+          }
+        }, 900);
+      };
+      dom.snowballStage.addEventListener('click', onSnowballTap);
+      dom.snowballStage.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSnowballTap();
+        }
+      });
+
+      dom.snowmanGroup.addEventListener('click', () => {
+        SoundEngine.playGiggle();
+        triggerSnowmanWiggle();
+        setDingDing('happy', TEXT.snowmanTap);
+      });
+
+      /* 過關彈窗按鈕 */
+      dom.btnNextMission.addEventListener('click', () => {
+        SoundEngine.playClick();
+        hideModal(dom.winModal);
+        if (state.clearedMissions.size >= MISSIONS.length) {
+          switchMode('free');
+          return;
+        }
+        /* 找下一張尚未完成的任務卡 */
+        let nextIdx = (state.missionIndex + 1) % MISSIONS.length;
+        for (let step = 1; step <= MISSIONS.length; step++) {
+          const candidate = (state.missionIndex + step) % MISSIONS.length;
+          if (!state.clearedMissions.has(MISSIONS[candidate].id)) {
+            nextIdx = candidate;
+            break;
+          }
+        }
+        selectMission(nextIdx);
+      });
+
+      dom.btnCloseWin.addEventListener('click', () => {
+        SoundEngine.playClick();
+        hideModal(dom.winModal);
+      });
+
+      /* 拍照預覽彈窗按鈕 */
+      dom.btnDownloadPhoto.addEventListener('click', downloadPhoto);
+      dom.btnClosePhoto.addEventListener('click', () => {
+        SoundEngine.playClick();
+        hideModal(dom.photoModal);
+      });
+
+      /* Esc 鍵關閉彈窗 */
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (!dom.winModal.classList.contains('is-hidden')) hideModal(dom.winModal);
+          if (!dom.photoModal.classList.contains('is-hidden')) hideModal(dom.photoModal);
+        }
+      });
+    }
+
+    function boot() {
+      initStaticTextAndDeco();
+      initSnowfall();
+      updateProgressBadge();
+      renderMissionTabs();
+      renderMissionCard();
+      renderCategoryTabs();
+      renderPartsGrid();
+      renderSnowman();
+      setDingDing('happy', TEXT.dingdingWelcome);
+      bindEvents();
+    }
+
+    boot();
+  </script>
+<script defer src="../../assets/js/beacon.js"></script>
+</body>
+</html>

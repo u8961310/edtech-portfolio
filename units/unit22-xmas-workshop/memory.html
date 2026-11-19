@@ -1,0 +1,2618 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>聖誕翻牌配對｜聖誕工坊大救援</title>
+  <!-- Google Fonts：Noto Sans TC（僅允許此外部資源） -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* =====================================================================
+       1. 字型與全域變數設定
+       ===================================================================== */
+    @font-face {
+      font-family: 'Bpmf Huninn';
+      src: url('fonts/bpmf-huninn-xmas.woff2') format('woff2');
+      font-display: swap;
+    }
+
+    :root {
+      /* 聖誕工坊大救援統一主色票 */
+      --xmas-red: #c0392b;
+      --xmas-red-dark: #8e1c14;
+      --xmas-red-light: #e55039;
+      --xmas-green: #1e7a4c;
+      --xmas-green-dark: #114d2f;
+      --xmas-green-light: #2ca066;
+      --xmas-gold: #e6a817;
+      --xmas-gold-bright: #ffd54f;
+      --xmas-gold-dark: #9c6a04;
+      --xmas-navy: #142850;
+      --xmas-navy-deep: #0b1936;
+      --xmas-cream: #fff8e6;
+      --xmas-cream-warm: #faecc8;
+      --ink-dark: #2c1c14;
+      --ink-muted: #5e4434;
+
+      /* 字型家族 */
+      --font-bpmf: 'Bpmf Huninn', 'Noto Sans TC', sans-serif;
+      --font-ui: 'Noto Sans TC', sans-serif;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body {
+      /* 注音字型僅單一字重，關閉合成粗體避免注音糊掉 */
+      font-synthesis: none;
+      font-family: var(--font-bpmf);
+      color: var(--ink-dark);
+      background:
+        radial-gradient(circle at 18% 15%, rgba(255, 213, 79, 0.14) 0%, transparent 32%),
+        radial-gradient(circle at 84% 20%, rgba(229, 80, 57, 0.12) 0%, transparent 30%),
+        linear-gradient(180deg, #0b1936 0%, #142850 56%, #1d3c73 100%);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* 遠景雪丘與星光點綴 */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        radial-gradient(2px 2px at 10% 18%, rgba(255, 248, 230, 0.75) 50%, transparent 100%),
+        radial-gradient(2.5px 2.5px at 26% 11%, rgba(255, 213, 79, 0.8) 50%, transparent 100%),
+        radial-gradient(2px 2px at 42% 24%, rgba(255, 248, 230, 0.65) 50%, transparent 100%),
+        radial-gradient(2.5px 2.5px at 66% 14%, rgba(255, 213, 79, 0.8) 50%, transparent 100%),
+        radial-gradient(2px 2px at 82% 26%, rgba(255, 248, 230, 0.7) 50%, transparent 100%),
+        radial-gradient(2px 2px at 93% 12%, rgba(255, 248, 230, 0.85) 50%, transparent 100%);
+    }
+
+    /* =====================================================================
+       2. 飄雪與頂部聖誕燈串裝飾
+       ===================================================================== */
+    .snow-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .snowflake {
+      position: absolute;
+      top: -24px;
+      color: rgba(255, 248, 230, 0.78);
+      font-family: var(--font-ui);
+      animation-name: snowfall;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      will-change: transform;
+    }
+
+    @keyframes snowfall {
+      0% {
+        transform: translate3d(0, -10vh, 0) rotate(0deg);
+        opacity: 0;
+      }
+      12% {
+        opacity: 0.85;
+      }
+      88% {
+        opacity: 0.85;
+      }
+      100% {
+        transform: translate3d(var(--drift, 26px), 108vh, 0) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* 頂部暖色聖誕燈串 */
+    .garland-lights {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 22px;
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      pointer-events: none;
+      z-index: 4;
+      border-top: 3px solid #0d3a23;
+    }
+
+    .bulb {
+      width: 11px;
+      height: 15px;
+      border-radius: 50% 50% 60% 60%;
+      margin-top: -2px;
+      position: relative;
+      animation: bulbTwinkle 2.4s ease-in-out infinite;
+    }
+
+    .bulb::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: 3px;
+      width: 5px;
+      height: 4px;
+      background: #174d31;
+      border-radius: 2px;
+    }
+
+    .bulb.b-red {
+      background: #ff5e4d;
+      box-shadow: 0 3px 10px rgba(255, 94, 77, 0.85);
+    }
+
+    .bulb.b-gold {
+      background: #ffd54f;
+      box-shadow: 0 3px 10px rgba(255, 213, 79, 0.85);
+      animation-delay: 0.6s;
+    }
+
+    .bulb.b-green {
+      background: #42d688;
+      box-shadow: 0 3px 10px rgba(66, 214, 136, 0.85);
+      animation-delay: 1.2s;
+    }
+
+    .bulb.b-cream {
+      background: #fff8e6;
+      box-shadow: 0 3px 10px rgba(255, 248, 230, 0.85);
+      animation-delay: 1.8s;
+    }
+
+    @keyframes bulbTwinkle {
+      0%, 100% { opacity: 0.96; transform: scale(1); }
+      50% { opacity: 0.52; transform: scale(0.92); }
+    }
+
+    /* =====================================================================
+       3. 頁首導覽列（左上角 120×44px 保留區 ＋ 標題 ＋ 右上按鈕）
+       ===================================================================== */
+    .top-bar {
+      position: relative;
+      z-index: 3;
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 16px 18px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    /* 左上角預留 120×44px 空白給整合頁的「回首頁」按鈕 */
+    .home-reserve-slot {
+      width: 120px;
+      height: 44px;
+      flex-shrink: 0;
+    }
+
+    .title-wrap {
+      flex: 1;
+      text-align: center;
+      min-width: 0;
+    }
+
+    /* 大標題：實心奶油白字＋銳利立體厚度 */
+    .game-title {
+      margin: 0;
+      font-family: var(--font-ui);
+      font-weight: 900;
+      font-size: clamp(28px, 3.1vw, 40px);
+      line-height: 1.15;
+      letter-spacing: 0.06em;
+      color: #fff8e6;
+      text-shadow:
+        0 2px 0 #c0392b,
+        0 4px 0 #a02a1f,
+        0 6px 0 #7a1c13,
+        0 8px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    /* 拐杖糖斜紋與禮物盒按鈕共用基礎 */
+    .btn-candy,
+    .btn-gift,
+    .btn-sound {
+      font-family: var(--font-bpmf);
+      font-weight: 400;
+      font-size: 24px;
+      line-height: 1.15;
+      border-radius: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.14s ease, box-shadow 0.14s ease, background-color 0.14s ease;
+    }
+
+    .btn-candy:focus-visible,
+    .btn-gift:focus-visible,
+    .btn-sound:focus-visible,
+    .diff-btn:focus-visible,
+    .memory-card:focus-visible {
+      outline: 4px solid var(--xmas-gold-bright);
+      outline-offset: 3px;
+    }
+
+    /* 右上角「回工坊地圖」按鈕：拐杖糖紅白斜紋邊框＋松樹綠本體 */
+    .btn-map {
+      padding: 6px 16px;
+      color: var(--xmas-cream);
+      background:
+        linear-gradient(180deg, #27995f 0%, #1e7a4c 100%) padding-box,
+        repeating-linear-gradient(
+          -45deg,
+          #c0392b 0 8px,
+          #fff8e6 8px 16px
+        ) border-box;
+      border: 4px solid transparent;
+      box-shadow: 0 4px 0 var(--xmas-green-dark), 0 6px 12px rgba(0, 0, 0, 0.28);
+      white-space: nowrap;
+    }
+
+    .btn-map:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 var(--xmas-green-dark), 0 8px 16px rgba(0, 0, 0, 0.32);
+    }
+
+    .btn-map:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 var(--xmas-green-dark);
+    }
+
+    /* 音效開關按鈕 */
+    .btn-sound {
+      width: 50px;
+      height: 50px;
+      padding: 0;
+      font-family: var(--font-ui);
+      font-size: 24px;
+      color: var(--ink-dark);
+      background: linear-gradient(180deg, #ffe074 0%, #e6a817 100%);
+      border: 3px solid #fff8e6;
+      box-shadow: 0 4px 0 var(--xmas-gold-dark), 0 6px 12px rgba(0, 0, 0, 0.28);
+      flex-shrink: 0;
+    }
+
+    .btn-sound:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 var(--xmas-gold-dark), 0 8px 14px rgba(0, 0, 0, 0.32);
+    }
+
+    .btn-sound:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 var(--xmas-gold-dark);
+    }
+
+    .btn-sound.is-muted {
+      background: linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%);
+      box-shadow: 0 4px 0 #475569, 0 6px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    /* =====================================================================
+       4. 主遊戲區佈局（橫向寬螢幕 1280×800 為主）
+       ===================================================================== */
+    .game-layout {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 6px 18px 18px;
+      flex: 1;
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    /* 聖誕卡片共用外框：奶油白底＋雙層邊框＋角落冬青葉 */
+    .xmas-card {
+      position: relative;
+      background: var(--xmas-cream);
+      border: 4px solid var(--xmas-red);
+      border-radius: 22px;
+      box-shadow:
+        inset 0 0 0 4px var(--xmas-cream),
+        inset 0 0 0 7px var(--xmas-gold),
+        0 12px 26px rgba(5, 14, 34, 0.42);
+      padding: 18px;
+    }
+
+    .holly-corner {
+      position: absolute;
+      pointer-events: none;
+      z-index: 3;
+      line-height: 0;
+    }
+
+    .holly-tl {
+      top: -12px;
+      left: -12px;
+      transform: rotate(-8deg);
+    }
+
+    .holly-tr {
+      top: -12px;
+      right: -12px;
+      transform: scaleX(-1) rotate(-8deg);
+    }
+
+    /* =====================================================================
+       5. 左側邊欄：叮叮與雪球互動 ＋ 難度切換 ＋ 重玩按鈕
+       ===================================================================== */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      background:
+        radial-gradient(circle at 50% 18%, rgba(230, 168, 23, 0.14) 0%, transparent 56%),
+        var(--xmas-cream);
+    }
+
+    /* 角色舞台 */
+    .stage-box {
+      background:
+        radial-gradient(ellipse at 50% 96%, #fff8e6 0%, #fff8e6 34%, transparent 35%),
+        linear-gradient(180deg, #163061 0%, #244b8c 100%);
+      border: 3px solid var(--xmas-gold);
+      border-radius: 16px;
+      padding: 10px 8px 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chars-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 6px;
+      min-height: 112px;
+    }
+
+    .char-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.2s ease;
+    }
+
+    .char-slot.is-bounce {
+      animation: charHop 0.48s ease-out 2;
+    }
+
+    @keyframes charHop {
+      0%, 100% { transform: translateY(0); }
+      45% { transform: translateY(-10px) scale(1.04); }
+    }
+
+    /* 角色眨眼動畫（搭配 SVG 內的 .eye-blink / .eye-blink-delay） */
+    .char-svg .eye-blink {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: eyeBlink 4.2s infinite;
+    }
+
+    .char-svg .eye-blink-delay {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: eyeBlink 4.6s 1.6s infinite;
+    }
+
+    @keyframes eyeBlink {
+      0%, 92%, 100% { transform: scaleY(1); }
+      96% { transform: scaleY(0.12); }
+    }
+
+    /* 角色說話泡泡（注音字型 ≥ 24px） */
+    .speech-bubble {
+      margin-top: 8px;
+      background: #ffffff;
+      border: 3px solid var(--xmas-green);
+      border-radius: 14px;
+      padding: 10px 12px;
+      min-height: 82px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      line-height: 1.32;
+      color: var(--ink-dark);
+      position: relative;
+      box-shadow: 0 3px 0 rgba(30, 122, 76, 0.22);
+    }
+
+    .speech-bubble::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 10px solid var(--xmas-green);
+    }
+
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 8px solid #ffffff;
+    }
+
+    /* 難度區塊 */
+    .section-tag {
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--xmas-red-dark);
+      letter-spacing: 0.04em;
+      margin: 0 0 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .diff-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .diff-btn {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 14px;
+      border: 3px solid #d4b886;
+      background: #ffffff;
+      color: var(--ink-dark);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      box-shadow: 0 4px 0 #c7a66d;
+      transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease, background-color 0.14s ease;
+    }
+
+    .diff-btn:hover {
+      transform: translateY(-2px);
+      border-color: var(--xmas-gold);
+      background: #fffdf5;
+    }
+
+    .diff-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #c7a66d;
+    }
+
+    /* 選中難度：松樹綠禮物盒高亮 */
+    .diff-btn.is-active {
+      background: linear-gradient(180deg, #25945d 0%, #1e7a4c 100%);
+      border-color: var(--xmas-gold-bright);
+      color: var(--xmas-cream);
+      box-shadow: 0 4px 0 var(--xmas-green-dark), 0 0 0 2px var(--xmas-gold);
+    }
+
+    .diff-main {
+      font-family: var(--font-bpmf);
+      font-weight: 400;
+      font-size: 24px;
+      line-height: 1.15;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .diff-meta {
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 16px;
+      text-align: right;
+      line-height: 1.2;
+      color: var(--ink-muted);
+    }
+
+    .diff-btn.is-active .diff-meta {
+      color: #ffe89a;
+    }
+
+    .diff-best-line {
+      display: block;
+      font-size: 16px;
+      color: var(--xmas-red);
+    }
+
+    .diff-btn.is-active .diff-best-line {
+      color: #ffffff;
+    }
+
+    /* 禮物盒風格「重新發牌」大按鈕 */
+    .btn-restart {
+      width: 100%;
+      padding: 11px 16px;
+      color: var(--xmas-cream);
+      background:
+        linear-gradient(
+          90deg,
+          transparent 0%,
+          transparent 45%,
+          rgba(255, 213, 79, 0.28) 45%,
+          rgba(255, 213, 79, 0.28) 55%,
+          transparent 55%,
+          transparent 100%
+        ),
+        linear-gradient(180deg, #dc4334 0%, #c0392b 100%);
+      border: 3px solid var(--xmas-gold-bright);
+      box-shadow: 0 5px 0 var(--xmas-red-dark), 0 8px 14px rgba(142, 28, 20, 0.28);
+    }
+
+    .btn-restart:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 0 var(--xmas-red-dark), 0 10px 18px rgba(142, 28, 20, 0.34);
+    }
+
+    .btn-restart:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 var(--xmas-red-dark);
+    }
+
+    /* 鍵盤小提示（Noto Sans TC 短標籤 ≥ 16px） */
+    .kb-hint {
+      font-family: var(--font-ui);
+      font-weight: 500;
+      font-size: 16px;
+      color: var(--ink-muted);
+      text-align: center;
+      margin: 0;
+      padding: 4px 6px;
+      background: rgba(230, 168, 23, 0.14);
+      border-radius: 10px;
+    }
+
+    /* =====================================================================
+       6. 右側遊戲區：狀態列（HUD）＋ 翻牌牌陣
+       ===================================================================== */
+    .board-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    /* 狀態列（短字使用 Noto Sans TC，≥ 16px） */
+    .hud-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: linear-gradient(180deg, #1b3668 0%, #142850 100%);
+      border: 3px solid var(--xmas-gold);
+      border-radius: 14px;
+      padding: 8px 14px;
+      color: var(--xmas-cream);
+      font-family: var(--font-ui);
+    }
+
+    .hud-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hud-pill {
+      background: rgba(255, 248, 230, 0.12);
+      border: 2px solid rgba(255, 213, 79, 0.45);
+      border-radius: 10px;
+      padding: 4px 12px;
+      font-size: 18px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .hud-val {
+      color: var(--xmas-gold-bright);
+      font-variant-numeric: tabular-nums;
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .hud-combo {
+      background: linear-gradient(180deg, #ffe074 0%, #e6a817 100%);
+      color: #4a1c08;
+      border-color: #fff8e6;
+      opacity: 0;
+      transform: scale(0.85);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .hud-combo.is-show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* 進度條 */
+    .progress-track {
+      width: 110px;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1.5px solid rgba(255, 213, 79, 0.6);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ffd54f 0%, #42d688 100%);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    /* 牌陣容器：深暖綠絨布桌墊感 */
+    .board-stage {
+      flex: 1;
+      background:
+        radial-gradient(circle at 50% 50%, #1c5c3b 0%, #123e27 100%);
+      border: 3px solid var(--xmas-gold);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 4px 16px rgba(0, 0, 0, 0.35);
+      min-height: 550px;
+    }
+
+    .card-grid {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      gap: 11px;
+      align-content: center;
+      justify-items: stretch;
+    }
+
+    /* 橫向寬螢幕三種難度格線 */
+    .card-grid[data-diff="easy"] {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      max-width: 820px;
+    }
+
+    .card-grid[data-diff="normal"] {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      max-width: 790px;
+    }
+
+    .card-grid[data-diff="hard"] {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      max-width: 880px;
+    }
+
+    /* =====================================================================
+       7. 單張記憶牌與 3D 翻轉動畫
+       ===================================================================== */
+    .memory-card {
+      position: relative;
+      width: 100%;
+      height: 146px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      perspective: 900px;
+      appearance: none;
+      -webkit-appearance: none;
+      animation: dealIn 0.36s ease-out both;
+    }
+
+    .card-grid[data-diff="easy"] .memory-card {
+      height: 184px;
+    }
+
+    .card-grid[data-diff="normal"] .memory-card {
+      height: 144px;
+    }
+
+    .card-grid[data-diff="hard"] .memory-card {
+      height: 142px;
+    }
+
+    @keyframes dealIn {
+      from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.92);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .memory-card:hover:not(.is-flipped):not(.is-matched) .card-inner {
+      transform: translateY(-4px) scale(1.02);
+    }
+
+    .memory-card:active:not(.is-flipped):not(.is-matched) .card-inner {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    .memory-card.is-matched {
+      cursor: default;
+    }
+
+    .card-inner {
+      display: block; /* 整合修：span 預設 inline，width/height 100% 不生效，整張牌縮成 0×0 */
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.44s cubic-bezier(0.24, 0.85, 0.32, 1.08);
+      border-radius: 16px;
+    }
+
+    .memory-card.is-flipped .card-inner,
+    .memory-card.is-matched .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    /* 配對成功發光並跳一下 */
+    .memory-card.is-just-matched {
+      animation: matchJump 0.56s ease-out;
+    }
+
+    @keyframes matchJump {
+      0% { transform: translateY(0) scale(1); }
+      35% { transform: translateY(-14px) scale(1.07); }
+      65% { transform: translateY(2px) scale(0.98); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    /* 配對失敗輕微晃動 */
+    .memory-card.is-mismatch {
+      animation: mismatchShake 0.4s ease-in-out;
+    }
+
+    @keyframes mismatchShake {
+      0%, 100% { transform: translateX(0); }
+      22% { transform: translateX(-7px); }
+      50% { transform: translateX(7px); }
+      78% { transform: translateX(-4px); }
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* 牌背：聖誕紅綠格紋 ＋ 金色內框 ＋ 金色雪花 */
+    .card-back {
+      background-color: #9e2218;
+      background-image:
+        repeating-linear-gradient(
+          90deg,
+          rgba(30, 122, 76, 0.48) 0 14px,
+          transparent 14px 28px
+        ),
+        repeating-linear-gradient(
+          0deg,
+          rgba(30, 122, 76, 0.48) 0 14px,
+          transparent 14px 28px
+        ),
+        repeating-linear-gradient(
+          90deg,
+          transparent 0 26px,
+          rgba(255, 213, 79, 0.34) 26px 28px
+        ),
+        repeating-linear-gradient(
+          0deg,
+          transparent 0 26px,
+          rgba(255, 213, 79, 0.34) 26px 28px
+        );
+      border: 4px solid var(--xmas-cream);
+      box-shadow:
+        inset 0 0 0 3px var(--xmas-gold),
+        0 5px 0 rgba(12, 24, 16, 0.55),
+        0 8px 14px rgba(0, 0, 0, 0.28);
+    }
+
+    .card-back-medallion {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(20, 40, 80, 0.88) 0%, rgba(142, 28, 20, 0.92) 100%);
+      border: 2.5px solid var(--xmas-gold-bright);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    }
+
+    /* 牌背四角小金點 */
+    .card-back::before,
+    .card-back::after {
+      content: '⭐';
+      position: absolute;
+      font-size: 13px;
+      color: var(--xmas-gold-bright);
+      opacity: 0.9;
+    }
+
+    .card-back::before {
+      top: 6px;
+      left: 8px;
+    }
+
+    .card-back::after {
+      bottom: 6px;
+      right: 8px;
+    }
+
+    /* 牌面：奶油白卡片 ＋ 插畫 SVG ＋ 注音名稱 */
+    .card-front {
+      transform: rotateY(180deg);
+      background:
+        radial-gradient(circle at 50% 36%, #ffffff 0%, #fff8e6 74%, #f7e6c0 100%);
+      border: 4px solid var(--xmas-gold);
+      box-shadow:
+        inset 0 0 0 2px rgba(192, 57, 43, 0.22),
+        0 5px 0 rgba(12, 24, 16, 0.45);
+      padding: 6px 6px 4px;
+      gap: 2px;
+    }
+
+    .memory-card.is-matched .card-front {
+      border-color: var(--xmas-gold-bright);
+      background:
+        radial-gradient(circle at 50% 34%, #ffffff 0%, #fffbe0 68%, #ffebb0 100%);
+      box-shadow:
+        0 0 0 3px #ffd54f,
+        0 0 20px rgba(255, 213, 79, 0.9),
+        0 5px 0 rgba(12, 24, 16, 0.38);
+    }
+
+    .card-art {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+    }
+
+    .card-art svg {
+      max-width: 100%;
+      max-height: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* 牌面注音名稱：至少 24px */
+    .card-label {
+      font-family: var(--font-bpmf);
+      font-weight: 400;
+      font-size: 24px;
+      line-height: 1.15;
+      color: var(--ink-dark);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .card-grid[data-diff="easy"] .card-label {
+      font-size: 26px;
+    }
+
+    /* 配對成功小星星徽章 */
+    .match-badge {
+      position: absolute;
+      top: 5px;
+      right: 6px;
+      font-size: 18px;
+      line-height: 1;
+      opacity: 0;
+      transform: scale(0.3);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .memory-card.is-matched .match-badge {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* 配對成功飛散金星粒子 */
+    .sparkle-burst {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      pointer-events: none;
+      font-size: 18px;
+      z-index: 5;
+      animation: sparkleFly 0.72s ease-out forwards;
+    }
+
+    @keyframes sparkleFly {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0.6);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--sx, 0px)), calc(-50% + var(--sy, -40px))) scale(1.25);
+      }
+    }
+
+    /* =====================================================================
+       8. 過關慶祝彈出視窗（關閉時必須 visibility: hidden ＋ inert）
+       ===================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      background: rgba(8, 19, 44, 0.76);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+
+    .modal-backdrop.is-open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 560px;
+      text-align: center;
+      transform: scale(0.9) translateY(14px);
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      padding: 24px 26px 22px;
+    }
+
+    .modal-backdrop.is-open .modal-card {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-chars {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 6px;
+    }
+
+    .win-title {
+      margin: 4px 0 8px;
+      font-family: var(--font-ui);
+      font-weight: 900;
+      font-size: clamp(28px, 3.6vw, 36px);
+      color: var(--xmas-red-dark);
+      letter-spacing: 0.04em;
+    }
+
+    .stars-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 8px 0 12px;
+    }
+
+    .star-icon {
+      width: 54px;
+      height: 54px;
+      transition: transform 0.3s ease;
+    }
+
+    .star-icon.is-earned {
+      animation: starPop 0.5s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+    }
+
+    @keyframes starPop {
+      0% { transform: scale(0.2) rotate(-28deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .win-steps {
+      margin: 4px 0;
+      font-family: var(--font-bpmf);
+      font-size: 32px;
+      line-height: 1.25;
+      color: var(--xmas-red);
+    }
+
+    .win-comment {
+      margin: 6px 0 12px;
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      line-height: 1.35;
+      color: var(--ink-dark);
+    }
+
+    .win-stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 17px;
+    }
+
+    .win-chip {
+      background: #fff1cc;
+      border: 2px solid var(--xmas-gold);
+      color: var(--ink-dark);
+      border-radius: 10px;
+      padding: 5px 12px;
+    }
+
+    .win-chip.is-record {
+      background: linear-gradient(180deg, #ffe074 0%, #e6a817 100%);
+      border-color: var(--xmas-red);
+      color: var(--xmas-red-dark);
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .btn-primary-win {
+      padding: 10px 24px;
+      color: var(--xmas-cream);
+      background: linear-gradient(180deg, #dc4334 0%, #c0392b 100%);
+      border: 3px solid var(--xmas-gold-bright);
+      box-shadow: 0 4px 0 var(--xmas-red-dark);
+    }
+
+    .btn-primary-win:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 var(--xmas-red-dark);
+    }
+
+    .btn-primary-win:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 var(--xmas-red-dark);
+    }
+
+    .btn-next-win {
+      padding: 10px 22px;
+      color: var(--xmas-cream);
+      background: linear-gradient(180deg, #27995f 0%, #1e7a4c 100%);
+      border: 3px solid var(--xmas-gold-bright);
+      box-shadow: 0 4px 0 var(--xmas-green-dark);
+    }
+
+    .btn-next-win:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 var(--xmas-green-dark);
+    }
+
+    .btn-next-win:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 var(--xmas-green-dark);
+    }
+
+    /* =====================================================================
+       9. 較窄橫屏微調（例如 1024px 寬度）
+       ===================================================================== */
+    @media (max-width: 1120px) and (orientation: landscape) {
+      .game-layout {
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 12px;
+        padding: 6px 12px 14px;
+      }
+
+      .xmas-card {
+        padding: 14px;
+      }
+
+      .card-grid {
+        gap: 8px;
+      }
+    }
+
+    /* =====================================================================
+       10. 手機直立版面重排（次要情境，不可橫向捲動）
+       ===================================================================== */
+    @media (orientation: portrait) {
+      .top-bar {
+        flex-wrap: wrap;
+        padding: 14px 12px 6px;
+        row-gap: 8px;
+      }
+
+      .home-reserve-slot {
+        order: 1;
+      }
+
+      .top-actions {
+        order: 2;
+      }
+
+      .title-wrap {
+        order: 3;
+        flex-basis: 100%;
+      }
+
+      .btn-map {
+        padding: 5px 12px;
+        font-size: 24px;
+      }
+
+      .game-layout {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        padding: 6px 12px 20px;
+      }
+
+      /* 直立模式把牌陣放上方更好操作，角色與難度緊湊排列 */
+      .board-panel {
+        order: 1;
+      }
+
+      .side-panel {
+        order: 2;
+      }
+
+      .board-stage {
+        min-height: 0;
+        padding: 10px;
+      }
+
+      .card-grid[data-diff="easy"] {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .card-grid[data-diff="normal"],
+      .card-grid[data-diff="hard"] {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .card-grid[data-diff="easy"] .memory-card {
+        height: 138px;
+      }
+
+      .card-grid[data-diff="normal"] .memory-card,
+      .card-grid[data-diff="hard"] .memory-card {
+        height: 116px;
+      }
+
+      .card-back-medallion {
+        width: 50px;
+        height: 50px;
+      }
+
+      .diff-list {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .diff-btn {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 8px 6px;
+      }
+
+      .diff-meta {
+        text-align: center;
+      }
+
+      .hud-bar {
+        justify-content: center;
+        padding: 8px 10px;
+      }
+
+      .hud-pill {
+        font-size: 16px;
+        padding: 4px 9px;
+      }
+    }
+
+    /* 超窄手機直立防牌面文字撐寬 */
+    @media (orientation: portrait) and (max-width: 540px) {
+      .card-grid {
+        gap: 7px;
+      }
+
+      .card-grid[data-diff="normal"] .card-label,
+      .card-grid[data-diff="hard"] .card-label {
+        font-size: clamp(16px, 4.3vw, 24px);
+      }
+
+      .holly-corner svg {
+        width: 42px;
+        height: 42px;
+      }
+    }
+
+    /* =====================================================================
+       11. 減少動態偏好設定（關掉動畫與飄雪，遊戲仍完全可玩）
+       ===================================================================== */
+    @media (prefers-reduced-motion: reduce) {
+      .snow-layer {
+        display: none;
+      }
+
+      .bulb,
+      .char-svg .eye-blink,
+      .char-svg .eye-blink-delay,
+      .char-slot.is-bounce,
+      .memory-card,
+      .memory-card.is-just-matched,
+      .memory-card.is-mismatch,
+      .star-icon.is-earned,
+      .sparkle-burst {
+        animation: none !important;
+      }
+
+      .sparkle-burst {
+        display: none;
+      }
+
+      .card-inner,
+      .btn-candy,
+      .btn-gift,
+      .btn-sound,
+      .diff-btn,
+      .modal-backdrop,
+      .modal-card,
+      .progress-fill,
+      .match-badge,
+      .hud-combo {
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* =====================================================================
+       整合修（2026-11-19）：橫式螢幕牌桌要塞進一個畫面，不用上下捲動。
+       原本牌高寫死（184／144／142px）＋牌桌 min-height 550px，
+       1366×768 筆電要捲 164～199px。改成牌高跟著視窗高度縮放。
+       245px ≈ 頁首＋狀態列＋面板內距；11px＝格線間距。
+       ===================================================================== */
+    @media (orientation: landscape) {
+      .board-stage { min-height: 0; }
+      .card-grid[data-diff="easy"] .memory-card {
+        height: clamp(90px, calc((100vh - 245px) / 3 - 11px), 184px);
+      }
+      .card-grid[data-diff="normal"] .memory-card,
+      .card-grid[data-diff="hard"] .memory-card {
+        height: clamp(74px, calc((100vh - 245px) / 4 - 11px), 144px);
+      }
+    }
+    /* 矮螢幕（1366×768 筆電等）：左側面板 634px 塞不下，收起角色插圖與鍵盤提示，
+       對話框、難度、發牌鈕保留；高螢幕照常顯示角色 */
+    @media (orientation: landscape) and (max-height: 820px) {
+      .side-panel .stage-box,
+      .side-panel .kb-hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+<a href="../../index.html" class="kogao-home-btn" style="position:fixed;top:10px;left:10px;z-index:99999;background:rgba(255,255,255,.92);border:2px solid #f59e0b;color:#b45309;font-family:'Noto Sans TC',sans-serif;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.15)">🏠 首頁</a>
+  <!-- 飄雪背景層 -->
+  <div class="snow-layer" id="snow-layer" aria-hidden="true"></div>
+
+  <!-- 頂部聖誕燈串 -->
+  <div class="garland-lights" id="garland-lights" aria-hidden="true"></div>
+
+  <!-- 頁首導覽列 -->
+  <header class="top-bar">
+    <!-- 左上角固定留白 120×44px（整合時放置回首頁按鈕） -->
+    <div class="home-reserve-slot" aria-hidden="true"></div>
+
+    <div class="title-wrap">
+      <h1 class="game-title" id="page-title">🎄 聖誕翻牌配對</h1>
+    </div>
+
+    <div class="top-actions">
+      <a href="index.html" class="btn-candy btn-map" id="btn-map">🗺 回工坊地圖</a>
+      <button type="button" class="btn-sound" id="btn-sound" aria-label="切換音效開關" aria-pressed="true">🔊</button>
+    </div>
+  </header>
+
+  <!-- 主遊戲區 -->
+  <main class="game-layout">
+    <!-- 左側聖誕卡片：角色互動 ＋ 難度選擇 ＋ 重玩 -->
+    <aside class="side-panel xmas-card" aria-label="遊戲控制與角色加油區">
+      <div class="holly-corner holly-tl" data-holly="1" aria-hidden="true"></div>
+      <div class="holly-corner holly-tr" data-holly="1" aria-hidden="true"></div>
+
+      <div>
+        <div class="stage-box">
+          <div class="chars-row">
+            <div class="char-slot" id="char-dingding"></div>
+            <div class="char-slot" id="char-snowball"></div>
+          </div>
+        </div>
+        <div class="speech-bubble" id="speech-bubble" role="status" aria-live="polite"></div>
+      </div>
+
+      <div>
+        <p class="section-tag" id="diff-heading">🎁 選擇難度</p>
+        <div class="diff-list" id="diff-list" role="group" aria-label="選擇難度"></div>
+      </div>
+
+      <div>
+        <button type="button" class="btn-gift btn-restart" id="btn-restart">🎁 重新發牌</button>
+      </div>
+
+      <p class="kb-hint" id="kb-hint">鍵盤操作：Tab 選牌、Enter 或空白鍵翻牌</p>
+    </aside>
+
+    <!-- 右側聖誕卡片：狀態列 ＋ 記憶翻牌盤面 -->
+    <section class="board-panel xmas-card" aria-label="聖誕翻牌遊戲區">
+      <div class="holly-corner holly-tl" data-holly="1" aria-hidden="true"></div>
+      <div class="holly-corner holly-tr" data-holly="1" aria-hidden="true"></div>
+
+      <!-- 狀態列 -->
+      <div class="hud-bar" aria-label="遊戲狀態">
+        <div class="hud-group">
+          <div class="hud-pill">
+            <span id="hud-pair-label">配對</span>
+            <span class="hud-val" id="hud-pairs">0 / 6</span>
+            <div class="progress-track" aria-hidden="true">
+              <div class="progress-fill" id="progress-fill"></div>
+            </div>
+          </div>
+          <div class="hud-pill">
+            <span id="hud-move-label">步數</span>
+            <span class="hud-val" id="hud-moves">0</span>
+          </div>
+          <div class="hud-pill">
+            <span id="hud-time-label">時間</span>
+            <span class="hud-val" id="hud-time">00:00</span>
+          </div>
+        </div>
+
+        <div class="hud-group">
+          <div class="hud-pill hud-combo" id="hud-combo" aria-live="polite">⭐ 連對 ×2</div>
+          <div class="hud-pill">
+            <span id="hud-best-label">最佳</span>
+            <span class="hud-val" id="hud-best">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 牌陣舞台 -->
+      <div class="board-stage">
+        <div class="card-grid" id="card-grid" data-diff="easy" role="region" aria-label="翻牌卡片區"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 過關慶祝彈出視窗（關閉時帶 inert 與 visibility: hidden） -->
+  <div class="modal-backdrop" id="win-modal" role="dialog" aria-modal="true" aria-labelledby="win-title" aria-hidden="true" inert>
+    <div class="modal-card xmas-card">
+      <div class="holly-corner holly-tl" data-holly="1" aria-hidden="true"></div>
+      <div class="holly-corner holly-tr" data-holly="1" aria-hidden="true"></div>
+
+      <div class="modal-chars" id="modal-chars" aria-hidden="true"></div>
+      <h2 class="win-title" id="win-title">🎄 聖誕快樂！過關了！</h2>
+      <div class="stars-row" id="win-stars" aria-label="獲得星等"></div>
+      <p class="win-steps" id="win-steps"></p>
+      <p class="win-comment" id="win-comment"></p>
+      <div class="win-stats" id="win-stats"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-gift btn-primary-win" id="btn-play-again">🎁 再玩一次</button>
+        <button type="button" class="btn-gift btn-next-win" id="btn-next-diff">⭐ 挑戰下一關</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+
+    /* =====================================================================
+       1. 面向使用者的文字與遊戲參數常數（方便老師集中修改）
+       ===================================================================== */
+    const STORAGE_KEY_BEST = 'edtech-unit22-memory-best';
+    const STORAGE_KEY_SOUND = 'edtech-unit22-sound';
+
+    const TEXTS = {
+      pageTitle: '🎄 聖誕翻牌配對',
+      mapBtn: '🗺 回工坊地圖',
+      diffHeading: '🎁 選擇難度',
+      restartBtn: '🎁 重新發牌',
+      playAgainBtn: '🎁 再玩一次',
+      nextDiffBtn: '⭐ 挑戰下一關',
+      allClearNextBtn: '🎄 換簡單暖身',
+      kbHint: '鍵盤操作：Tab 選牌、Enter 或空白鍵翻牌',
+      hudPairLabel: '配對',
+      hudMoveLabel: '步數',
+      hudTimeLabel: '時間',
+      hudBestLabel: '最佳',
+      noRecord: '--',
+      bestPrefix: '最佳 ',
+      stepUnit: ' 步',
+      comboText: (n) => `⭐ 連對 ×${n}`,
+      cardBackAria: (idx) => `第 ${idx + 1} 張牌，牌背朝上`,
+      cardFrontAria: (idx, name, matched) =>
+        `第 ${idx + 1} 張牌，${name}${matched ? '，已配對成功' : '，已翻開'}`,
+      soundOnLabel: '音效已開啟，點擊靜音',
+      soundOffLabel: '音效已靜音，點擊開啟',
+      winTitle: '🎄 聖誕快樂！全部找到囉！',
+      winSteps: (n) => `你用了 ${n} 步`,
+      winTimeChip: (timeStr) => `時間 ${timeStr}`,
+      winBestChip: (best) => `本關紀錄 ${best} 步`,
+      winNewRecord: '⭐ 打破新紀錄！',
+      starComments: {
+        3: '太厲害了！你是工坊的超級記憶小達人！',
+        2: '表現很棒喔！叮叮和雪球都為你拍拍手！',
+        1: '順利完成了！多玩一次一定會更順手喔！'
+      },
+      dialogStart: [
+        '翻開兩張一樣的牌，幫工坊找回聖誕寶物吧！',
+        '雪球已經準備好了，一起挑戰記憶力吧！'
+      ],
+      dialogFirstFlip: [
+        '記住這張圖案，再找找另一張在哪裡喔！',
+        '這張好可愛！它的好朋友藏在哪裡呢？'
+      ],
+      dialogMatch: [
+        '配對成功！你好眼明手快喔！',
+        '答對了！聖誕老公公一定很開心！',
+        '太棒了！又找回一對聖誕寶物！',
+        '雪球開心地跳起來了！繼續加油！'
+      ],
+      dialogCombo: (n) => `哇！連續答對 ${n} 次！記憶力超強！`,
+      dialogMismatch: [
+        '差一點點！把圖案記在腦袋裡喔！',
+        '沒關係！剛才翻過的牌等一下很有用喔！',
+        '別急別急，再試一次就會找到囉！'
+      ],
+      dialogWin: '聖誕快樂！工坊的寶物全部找回來了！'
+    };
+
+    /* 3 個難度設定（星等門檻留有友善緩衝） */
+    const DIFFICULTIES = {
+      easy: {
+        key: 'easy',
+        label: '簡單',
+        gridText: '3×4',
+        pairs: 6,
+        colsDesktop: 4,
+        star3Max: 10,
+        star2Max: 14,
+        next: 'normal'
+      },
+      normal: {
+        key: 'normal',
+        label: '普通',
+        gridText: '4×4',
+        pairs: 8,
+        colsDesktop: 4,
+        star3Max: 14,
+        star2Max: 19,
+        next: 'hard'
+      },
+      hard: {
+        key: 'hard',
+        label: '挑戰',
+        gridText: '4×5',
+        pairs: 10,
+        colsDesktop: 5,
+        star3Max: 18,
+        star2Max: 25,
+        next: null
+      }
+    };
+
+    /* =====================================================================
+       2. 定稿角色與禮物 SVG 函式（原封不動沿用，確保各頁外觀一致）
+       ===================================================================== */
+    function svgHollyCorner() {
+      return `
+        <svg viewBox="0 0 64 64" width="58" height="58" aria-hidden="true">
+          <path d="M12,38 C16,20 30,10 46,12 C40,22 44,30 34,36 C26,40 18,44 12,38 Z" fill="#1e7a4c" stroke="#0d4227" stroke-width="2.5"/>
+          <path d="M22,22 C28,24 34,20 40,16" fill="none" stroke="#62d295" stroke-width="2" stroke-linecap="round"/>
+          <path d="M34,14 C48,22 54,36 48,52 C38,44 30,46 26,34 C24,26 26,18 34,14 Z" fill="#279b61" stroke="#0d4227" stroke-width="2.5"/>
+          <path d="M36,24 C38,32 42,38 45,45" fill="none" stroke="#85e8b2" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="24" cy="24" r="6.5" fill="#e55039" stroke="#7d1710" stroke-width="2"/>
+          <circle cx="34" cy="20" r="6" fill="#c0392b" stroke="#7d1710" stroke-width="2"/>
+          <circle cx="29" cy="31" r="6" fill="#d93829" stroke="#7d1710" stroke-width="2"/>
+          <circle cx="22" cy="22" r="2" fill="#ffd7d2"/>
+          <circle cx="32" cy="18" r="1.8" fill="#ffd7d2"/>
+          <circle cx="27" cy="29" r="1.8" fill="#ffd7d2"/>
+        </svg>`;
+    }
+
+    /** 原創角色：小精靈「叮叮」（有眨眼、表情、小鈴鐺紅綠帽） */
+    function svgDingDing(size = 120, mood = 'happy') {
+      const mouth =
+        mood === 'cheer'
+          ? '<path d="M51,76 Q60,87 69,76 Z" fill="#b33939" stroke="#4a1d14" stroke-width="2"/>'
+          : mood === 'think'
+            ? '<circle cx="60" cy="78" r="3.5" fill="#4a1d14"/>'
+            : '<path d="M52,76 Q60,83 68,76" fill="none" stroke="#4a1d14" stroke-width="3" stroke-linecap="round"/>';
+      return `
+        <svg class="char-svg" viewBox="0 0 120 132" width="${size}" height="${Math.round(size * 1.1)}" aria-hidden="true">
+          <!-- 身體（松樹綠小精靈服＋金色腰帶） -->
+          <path d="M34,92 Q60,84 86,92 L92,124 Q60,130 28,124 Z" fill="#1e7a4c" stroke="#0d4026" stroke-width="3"/>
+          <rect x="33" y="106" width="54" height="8" rx="3" fill="#5e361b"/>
+          <rect x="52" y="104" width="16" height="12" rx="3" fill="#ffe074" stroke="#996405" stroke-width="2"/>
+          <!-- 紅白鋸齒領子 -->
+          <polygon points="36,92 48,104 60,94 72,104 84,92" fill="#c0392b" stroke="#781810" stroke-width="2"/>
+          <!-- 小手 -->
+          <circle cx="29" cy="105" r="8" fill="#ffd9be" stroke="#8a5a3c" stroke-width="2.5"/>
+          <circle cx="91" cy="105" r="8" fill="#ffd9be" stroke="#8a5a3c" stroke-width="2.5"/>
+          <!-- 精靈尖耳朵 -->
+          <path d="M28,66 L14,58 L27,76 Z" fill="#ffd9be" stroke="#8a5a3c" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M92,66 L106,58 L93,76 Z" fill="#ffd9be" stroke="#8a5a3c" stroke-width="2.5" stroke-linejoin="round"/>
+          <!-- 臉龐 -->
+          <ellipse cx="60" cy="68" rx="31" ry="27" fill="#ffe0c8" stroke="#8a5a3c" stroke-width="3"/>
+          <!-- 棕色瀏海 -->
+          <path d="M32,56 Q44,44 58,53 Q72,44 88,56 Q82,42 60,40 Q38,42 32,56 Z" fill="#7c4724"/>
+          <!-- 眨眼雙眼 -->
+          <g class="eye-blink">
+            <circle cx="48" cy="66" r="5" fill="#2b1b12"/>
+            <circle cx="46.5" cy="64" r="1.8" fill="#fff"/>
+          </g>
+          <g class="eye-blink">
+            <circle cx="72" cy="66" r="5" fill="#2b1b12"/>
+            <circle cx="70.5" cy="64" r="1.8" fill="#fff"/>
+          </g>
+          <!-- 紅潤腮紅 -->
+          <ellipse cx="40" cy="74" rx="5.5" ry="3.2" fill="#ff968a" opacity="0.75"/>
+          <ellipse cx="80" cy="74" rx="5.5" ry="3.2" fill="#ff968a" opacity="0.75"/>
+          ${mouth}
+          <!-- 紅綠條紋彎曲精靈帽＋尾端金鈴鐺 -->
+          <path d="M26,52 Q36,14 78,10 Q96,8 102,24 Q84,22 72,34 Q82,42 94,52 Z" fill="#c0392b" stroke="#751810" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M40,42 Q50,24 68,18 L73,26 Q56,34 48,46 Z" fill="#1e7a4c"/>
+          <rect x="24" y="45" width="72" height="12" rx="6" fill="#fffdf6" stroke="#c8d9e6" stroke-width="2.5"/>
+          <circle cx="104" cy="24" r="8" fill="#ffd54f" stroke="#a66e05" stroke-width="2.5"/>
+          <circle cx="102" cy="22" r="2.2" fill="#fff7cc"/>
+        </svg>`;
+    }
+
+    /** 原創角色：麋鹿「雪球」（軟萌圓臉、紅綠圍巾、閃亮鹿角＋眨眼） */
+    function svgSnowball(size = 124, mood = 'happy') {
+      const mouth =
+        mood === 'cheer'
+          ? '<path d="M52,82 Q60,91 68,82 Z" fill="#9c2c24" stroke="#4a2614" stroke-width="2"/>'
+          : '<path d="M53,82 Q60,88 67,82" fill="none" stroke="#4a2614" stroke-width="3" stroke-linecap="round"/>';
+      return `
+        <svg class="char-svg" viewBox="0 0 124 132" width="${size}" height="${Math.round(size * 1.06)}" aria-hidden="true">
+          <!-- 鹿角 -->
+          <path d="M44,36 L34,14 M38,24 L26,20 M40,29 L46,16" fill="none" stroke="#85522d" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M80,36 L90,14 M86,24 L98,20 M84,29 L78,16" fill="none" stroke="#85522d" stroke-width="5.5" stroke-linecap="round"/>
+          <!-- 右鹿角上的小冬青葉 -->
+          <ellipse cx="90" cy="24" rx="6" ry="3.5" transform="rotate(-25 90 24)" fill="#1e7a4c"/>
+          <circle cx="88" cy="26" r="3" fill="#e55039"/>
+          <!-- 圓滾滾身體 -->
+          <ellipse cx="62" cy="108" rx="31" ry="21" fill="#a86d42" stroke="#5c351a" stroke-width="3"/>
+          <ellipse cx="62" cy="111" rx="18" ry="13" fill="#f5dfc6"/>
+          <!-- 紅綠條紋圍巾 -->
+          <path d="M35,88 Q62,99 89,88 L86,100 Q62,109 38,100 Z" fill="#c0392b" stroke="#751810" stroke-width="2.5"/>
+          <path d="M74,95 L86,115 L74,117 L66,98 Z" fill="#1e7a4c" stroke="#0f4228" stroke-width="2"/>
+          <!-- 耳朵 -->
+          <ellipse cx="29" cy="54" rx="12" ry="7" transform="rotate(-20 29 54)" fill="#a86d42" stroke="#5c351a" stroke-width="2.5"/>
+          <ellipse cx="95" cy="54" rx="12" ry="7" transform="rotate(20 95 54)" fill="#a86d42" stroke="#5c351a" stroke-width="2.5"/>
+          <!-- 頭與奶油色口鼻區 -->
+          <ellipse cx="62" cy="64" rx="33" ry="29" fill="#b87a4b" stroke="#5c351a" stroke-width="3"/>
+          <ellipse cx="62" cy="76" rx="22" ry="15" fill="#f7e4cd"/>
+          <!-- 眨眼雙眼 -->
+          <g class="eye-blink-delay">
+            <circle cx="49" cy="60" r="5.2" fill="#2b180e"/>
+            <circle cx="47.5" cy="58" r="1.9" fill="#fff"/>
+          </g>
+          <g class="eye-blink-delay">
+            <circle cx="75" cy="60" r="5.2" fill="#2b180e"/>
+            <circle cx="73.5" cy="58" r="1.9" fill="#fff"/>
+          </g>
+          <!-- 棕色鼻子（原創，避免聯想紅鼻子麋鹿） -->
+          <ellipse cx="62" cy="71" rx="8.5" ry="6.5" fill="#5a3418" stroke="#2e1a0b" stroke-width="2"/>
+          <ellipse cx="59" cy="69" rx="2.8" ry="1.8" fill="#a87a58"/>
+          ${mouth}
+        </svg>`;
+    }
+
+    /** 雪球拉著載有叮叮與禮物的雪橇 */
+    function svgGift(color, shape, size = 104) {
+      const fillMain = color === 'red' ? '#d93829' : '#1e874b';
+      const fillLight = color === 'red' ? '#f26052' : '#32b369';
+      const strokeDark = color === 'red' ? '#7d160e' : '#0e4727';
+      const ribbon = color === 'red' ? '#ffd54f' : '#ff6b5c';
+      const ribbonStroke = color === 'red' ? '#9e6c06' : '#8a1d14';
+
+      if (shape === 'square') {
+        return `
+          <svg viewBox="0 0 110 110" width="${size}" height="${size}" aria-hidden="true">
+            <!-- 方形蝴蝶結 -->
+            <ellipse cx="42" cy="24" rx="14" ry="9" transform="rotate(-18 42 24)" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+            <ellipse cx="68" cy="24" rx="14" ry="9" transform="rotate(18 68 24)" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+            <circle cx="55" cy="26" r="6" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+            <!-- 方形盒身 -->
+            <rect x="18" y="30" width="74" height="66" rx="8" fill="${fillMain}" stroke="${strokeDark}" stroke-width="3.5"/>
+            <rect x="14" y="28" width="82" height="18" rx="6" fill="${fillLight}" stroke="${strokeDark}" stroke-width="3.5"/>
+            <!-- 十字緞帶 -->
+            <rect x="47" y="28" width="16" height="68" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2"/>
+            <rect x="18" y="57" width="74" height="14" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2"/>
+          </svg>`;
+      }
+      return `
+        <svg viewBox="0 0 110 110" width="${size}" height="${size}" aria-hidden="true">
+          <!-- 圓形蝴蝶結 -->
+          <ellipse cx="43" cy="20" rx="13" ry="8" transform="rotate(-20 43 20)" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+          <ellipse cx="67" cy="20" rx="13" ry="8" transform="rotate(20 67 20)" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+          <circle cx="55" cy="22" r="5.5" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+          <!-- 圓形球盒 -->
+          <circle cx="55" cy="61" r="37" fill="${fillMain}" stroke="${strokeDark}" stroke-width="3.5"/>
+          <ellipse cx="42" cy="46" rx="12" ry="8" transform="rotate(-28 42 46)" fill="${fillLight}" opacity="0.75"/>
+          <!-- 圓盒十字緞帶 -->
+          <rect x="48" y="24" width="14" height="74" rx="4" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2"/>
+          <rect x="18" y="54" width="74" height="14" rx="4" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2"/>
+          <!-- 裝飾小點點 -->
+          <circle cx="34" cy="45" r="3.5" fill="#fff" opacity="0.75"/>
+          <circle cx="76" cy="76" r="3.5" fill="#fff" opacity="0.75"/>
+        </svg>`;
+    }
+
+    /* =====================================================================
+       3. 本頁其餘牌面與牌背原創 SVG（無重複 id、points 全用純數字）
+       ===================================================================== */
+    /** 牌背中央：金色雪花 */
+    function svgBackSnowflake(size = 48) {
+      return `
+        <svg viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true">
+          <g stroke="#ffd54f" stroke-width="3.2" stroke-linecap="round" fill="none">
+            <line x1="32" y1="6" x2="32" y2="58"/>
+            <line x1="10" y1="19" x2="54" y2="45"/>
+            <line x1="54" y1="19" x2="10" y2="45"/>
+            <polyline points="26,13 32,19 38,13"/>
+            <polyline points="26,51 32,45 38,51"/>
+            <polyline points="14,27 21,25 19,18"/>
+            <polyline points="45,46 43,39 50,37"/>
+            <polyline points="45,18 43,25 50,27"/>
+            <polyline points="14,37 21,39 19,46"/>
+          </g>
+          <polygon points="32,24 39,28 39,36 32,40 25,36 25,28" fill="#fff8e6" stroke="#e6a817" stroke-width="2.2"/>
+          <circle cx="32" cy="32" r="3" fill="#c0392b"/>
+        </svg>`;
+    }
+
+    /** 聖誕樹 */
+    function svgTree(size = 86) {
+      return `
+        <svg viewBox="0 0 110 110" width="${size}" height="${size}" aria-hidden="true">
+          <rect x="46" y="84" width="18" height="18" rx="4" fill="#7c4724" stroke="#452510" stroke-width="3"/>
+          <polygon points="55,44 18,88 92,88" fill="#17633d" stroke="#0b3620" stroke-width="3.2" stroke-linejoin="round"/>
+          <polygon points="55,31 24,68 86,68" fill="#1e7a4c" stroke="#0b3620" stroke-width="3.2" stroke-linejoin="round"/>
+          <polygon points="55,18 32,48 78,48" fill="#289960" stroke="#0b3620" stroke-width="3.2" stroke-linejoin="round"/>
+          <polygon points="55,6 59,15 69,16 61,22 63,31 55,26 47,31 49,22 41,16 51,15" fill="#ffd54f" stroke="#9e6c06" stroke-width="2.2" stroke-linejoin="round"/>
+          <circle cx="44" cy="44" r="5" fill="#e55039" stroke="#7d1710" stroke-width="1.8"/>
+          <circle cx="65" cy="54" r="5" fill="#ffd54f" stroke="#9e6c06" stroke-width="1.8"/>
+          <circle cx="38" cy="72" r="5.5" fill="#ffd54f" stroke="#9e6c06" stroke-width="1.8"/>
+          <circle cx="57" cy="76" r="5.5" fill="#e55039" stroke="#7d1710" stroke-width="1.8"/>
+          <circle cx="74" cy="74" r="5" fill="#fff8e6" stroke="#b8a88a" stroke-width="1.8"/>
+        </svg>`;
+    }
+
+    /** 雪人 */
+    function svgSnowman(size = 86) {
+      return `
+        <svg viewBox="0 0 110 110" width="${size}" height="${size}" aria-hidden="true">
+          <path d="M26,64 L10,50 M18,57 L14,47" stroke="#6b3e1f" stroke-width="4" stroke-linecap="round"/>
+          <path d="M84,64 L100,50 M92,57 L96,47" stroke="#6b3e1f" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="55" cy="76" r="26" fill="#ffffff" stroke="#8aa8c2" stroke-width="3"/>
+          <circle cx="55" cy="43" r="19" fill="#ffffff" stroke="#8aa8c2" stroke-width="3"/>
+          <rect x="38" y="24" width="34" height="6" rx="3" fill="#2c3e50" stroke="#141e28" stroke-width="2"/>
+          <rect x="43" y="8" width="24" height="18" rx="3" fill="#2c3e50" stroke="#141e28" stroke-width="2"/>
+          <rect x="43" y="20" width="24" height="5" fill="#c0392b"/>
+          <circle cx="48" cy="39" r="3" fill="#222"/>
+          <circle cx="62" cy="39" r="3" fill="#222"/>
+          <polygon points="55,42 73,46 55,50" fill="#f39c12" stroke="#9a5b04" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M47,51 Q55,56 63,51" fill="none" stroke="#333" stroke-width="2.4" stroke-linecap="round"/>
+          <rect x="37" y="55" width="36" height="9" rx="4.5" fill="#c0392b" stroke="#7d1710" stroke-width="2"/>
+          <polygon points="62,62 72,79 61,80 55,63" fill="#1e7a4c" stroke="#0d4026" stroke-width="2"/>
+          <circle cx="55" cy="74" r="3.5" fill="#2c3e50"/>
+          <circle cx="55" cy="86" r="3.5" fill="#2c3e50"/>
+        </svg>`;
+    }
+
+    /** 鈴鐺 */
+    function svgBell(size = 86) {
+      return `
+        <svg viewBox="0 0 110 110" width="${size}" height="${size}" aria-hidden="true">
+          <g transform="rotate(-14 55 58)">
+            <path d="M36,34 C36,22 68,22 68,34 L76,74 C78,80 26,80 28,74 Z" fill="#f5b82e" stroke="#8a5a04" stroke-width="3.2" stroke-linejoin="round"/>
+            <path d="M43,36 L39,66" stroke="#fff3b0" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="52" cy="82" r="7" fill="#c98508" stroke="#784d03" stroke-width="2.5"/>
+          </g>
+          <g transform="rotate(16 62 60)">
+            <path d="M44,36 C44,24 76,24 76,36 L84,76 C86,82 34,82 36,76 Z" fill="#ffd54f" stroke="#8a5a04" stroke-width="3.2" stroke-linejoin="round"/>
+            <path d="M52,38 L49,68" stroke="#fff8d6" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="60" cy="84" r="7" fill="#d99409" stroke="#784d03" stroke-width="2.5"/>
+          </g>
+          <ellipse cx="42" cy="28" rx="14" ry="8" transform="rotate(-18 42 28)" fill="#1e7a4c" stroke="#0d4026" stroke-width="2.2"/>
+          <ellipse cx="70" cy="28" rx="14" ry="8" transform="rotate(18 70 28)" fill="#27995f" stroke="#0d4026" stroke-width="2.2"/>
+          <ellipse cx="44" cy="25" rx="12" ry="8" transform="rotate(-22 44 25)" fill="#d93829" stroke="#7d1710" stroke-width="2.4"/>
+          <ellipse cx="66" cy="25" rx="12" ry="8" transform="rotate(22 66 25)" fill="#d93829" stroke="#7d1710" stroke-width="2.4"/>
+          <circle cx="55" cy="26" r="6" fill="#ff5e4d" stroke="#7d1710" stroke-width="2.4"/>
+        </svg>`;
+    }
+
+    /** 星星 */
+    function svgStar(size = 86) {
+      return `
+        <svg viewBox="0 0 110 110" width="${size}" height="${size}" aria-hidden="true">
+          <polygon points="55,10 68,38 99,42 76,63 82,94 55,79 28,94 34,63 11,42 42,38" fill="#ffd54f" stroke="#9e6c06" stroke-width="3.5" stroke-linejoin="round"/>
+          <polygon points="55,21 63,40 84,43 69,57 73,78 55,68 37,78 41,57 26,43 47,40" fill="#ffe680"/>
+          <circle cx="46" cy="53" r="4" fill="#3a2308"/>
+          <circle cx="64" cy="53" r="4" fill="#3a2308"/>
+          <circle cx="44.8" cy="51.5" r="1.4" fill="#fff"/>
+          <circle cx="62.8" cy="51.5" r="1.4" fill="#fff"/>
+          <ellipse cx="39" cy="60" rx="4.5" ry="2.6" fill="#ff8f7a" opacity="0.75"/>
+          <ellipse cx="71" cy="60" rx="4.5" ry="2.6" fill="#ff8f7a" opacity="0.75"/>
+          <path d="M48,62 Q55,68 62,62" fill="none" stroke="#5a3408" stroke-width="3" stroke-linecap="round"/>
+        </svg>`;
+    }
+
+    /** 聖誕襪 */
+    function svgStocking(size = 86) {
+      return `
+        <svg viewBox="0 0 110 110" width="${size}" height="${size}" aria-hidden="true">
+          <path d="M38,24 L74,24 L74,64 C74,78 66,94 44,96 C26,98 18,86 24,74 C28,66 38,65 38,58 Z" fill="#c0392b" stroke="#751810" stroke-width="3.5" stroke-linejoin="round"/>
+          <path d="M24,74 C18,86 26,98 44,96 L43,78 C36,76 30,72 24,74 Z" fill="#1e7a4c" stroke="#0d4026" stroke-width="2.6"/>
+          <path d="M74,64 C74,74 70,83 62,89 L58,76 C65,73 69,68 74,64 Z" fill="#1e7a4c" stroke="#0d4026" stroke-width="2.4"/>
+          <rect x="32" y="14" width="48" height="17" rx="8" fill="#fffdf6" stroke="#b9c9d6" stroke-width="3"/>
+          <polygon points="56,42 59,49 66,50 61,55 62,62 56,58 50,62 51,55 46,50 53,49" fill="#ffd54f" stroke="#9e6c06" stroke-width="1.8"/>
+          <path d="M74,14 C82,8 88,15 80,22" fill="none" stroke="#ffd54f" stroke-width="4" stroke-linecap="round"/>
+        </svg>`;
+    }
+
+    /** 拐杖糖（純幾何路徑繪製，無 clipPath id 衝突） */
+    function svgCandyCane(size = 86) {
+      return `
+        <svg viewBox="0 0 110 110" width="${size}" height="${size}" aria-hidden="true">
+          <g transform="rotate(14 55 55)">
+            <!-- 深色外框 -->
+            <path d="M35,44 C35,20 71,20 71,44 L71,94" fill="none" stroke="#751810" stroke-width="23" stroke-linecap="round"/>
+            <!-- 奶油白底糖身 -->
+            <path d="M35,44 C35,20 71,20 71,44 L71,94" fill="none" stroke="#fffdf6" stroke-width="17" stroke-linecap="round"/>
+            <!-- 聖誕紅斜紋條紋 -->
+            <path d="M35,44 C35,20 71,20 71,44 L71,94" fill="none" stroke="#d93829" stroke-width="17" stroke-linecap="butt" stroke-dasharray="11 11"/>
+            <!-- 綠色裝飾蝴蝶結 -->
+            <ellipse cx="60" cy="54" rx="11" ry="6.5" transform="rotate(-18 60 54)" fill="#1e7a4c" stroke="#0d4026" stroke-width="2.2"/>
+            <ellipse cx="82" cy="54" rx="11" ry="6.5" transform="rotate(18 82 54)" fill="#27995f" stroke="#0d4026" stroke-width="2.2"/>
+            <circle cx="71" cy="54" r="5" fill="#ffd54f" stroke="#9e6c06" stroke-width="2"/>
+          </g>
+        </svg>`;
+    }
+
+    /** 薑餅人 */
+    function svgGingerbread(size = 86) {
+      return `
+        <svg viewBox="0 0 110 110" width="${size}" height="${size}" aria-hidden="true">
+          <!-- 身體與四肢 -->
+          <path d="M37,48 L17,52 C11,53 12,64 19,64 L36,64 L34,88 C33,97 45,99 48,90 L53,76 L57,76 L62,90 C65,99 77,97 76,88 L74,64 L91,64 C98,64 99,53 93,52 L73,48 Z" fill="#c47a3b" stroke="#6b3b14" stroke-width="3.2" stroke-linejoin="round"/>
+          <!-- 頭部 -->
+          <circle cx="55" cy="32" r="20" fill="#c47a3b" stroke="#6b3b14" stroke-width="3.2"/>
+          <!-- 手腳奶油糖霜波浪 -->
+          <path d="M22,52 L22,63 M88,52 L88,63 M36,84 L48,86 M62,86 L74,84" stroke="#fffdf6" stroke-width="3.6" stroke-linecap="round"/>
+          <!-- 五官與腮紅 -->
+          <circle cx="48" cy="29" r="3.4" fill="#fffdf6" stroke="#3a1e0b" stroke-width="1.8"/>
+          <circle cx="62" cy="29" r="3.4" fill="#fffdf6" stroke="#3a1e0b" stroke-width="1.8"/>
+          <ellipse cx="42" cy="35" rx="3.8" ry="2.2" fill="#ff8f82" opacity="0.8"/>
+          <ellipse cx="68" cy="35" rx="3.8" ry="2.2" fill="#ff8f82" opacity="0.8"/>
+          <path d="M47,38 Q55,45 63,38" fill="none" stroke="#fffdf6" stroke-width="3.2" stroke-linecap="round"/>
+          <!-- 蝴蝶結與彩色鈕扣 -->
+          <polygon points="44,49 55,54 44,59" fill="#c0392b" stroke="#751810" stroke-width="1.8" stroke-linejoin="round"/>
+          <polygon points="66,49 55,54 66,59" fill="#c0392b" stroke="#751810" stroke-width="1.8" stroke-linejoin="round"/>
+          <circle cx="55" cy="54" r="3.5" fill="#ffd54f" stroke="#9e6c06" stroke-width="1.5"/>
+          <circle cx="55" cy="64" r="4.2" fill="#1e7a4c" stroke="#0d4026" stroke-width="1.8"/>
+          <circle cx="55" cy="74" r="4.2" fill="#e55039" stroke="#751810" stroke-width="1.8"/>
+        </svg>`;
+    }
+
+    /** 聖誕花圈 */
+    function svgWreath(size = 86) {
+      return `
+        <svg viewBox="0 0 110 110" width="${size}" height="${size}" aria-hidden="true">
+          <circle cx="55" cy="54" r="34" fill="none" stroke="#0d4227" stroke-width="24"/>
+          <circle cx="55" cy="54" r="34" fill="none" stroke="#1e7a4c" stroke-width="19"/>
+          <circle cx="55" cy="54" r="34" fill="none" stroke="#2fa86b" stroke-width="9" stroke-dasharray="10 12" stroke-linecap="round"/>
+          <!-- 紅果與金色點綴 -->
+          <circle cx="55" cy="20" r="5" fill="#e55039" stroke="#7d1710" stroke-width="1.8"/>
+          <circle cx="84" cy="36" r="5" fill="#ffd54f" stroke="#9e6c06" stroke-width="1.8"/>
+          <circle cx="88" cy="64" r="5" fill="#e55039" stroke="#7d1710" stroke-width="1.8"/>
+          <circle cx="26" cy="36" r="5" fill="#ffd54f" stroke="#9e6c06" stroke-width="1.8"/>
+          <circle cx="22" cy="64" r="5" fill="#e55039" stroke="#7d1710" stroke-width="1.8"/>
+          <circle cx="40" cy="24" r="4" fill="#ffd54f"/>
+          <circle cx="70" cy="24" r="4" fill="#ffd54f"/>
+          <!-- 底部聖誕紅蝴蝶結 -->
+          <polygon points="48,84 36,102 47,98 52,86" fill="#c0392b" stroke="#751810" stroke-width="2" stroke-linejoin="round"/>
+          <polygon points="62,84 74,102 63,98 58,86" fill="#c0392b" stroke="#751810" stroke-width="2" stroke-linejoin="round"/>
+          <ellipse cx="42" cy="84" rx="13" ry="8" transform="rotate(-18 42 84)" fill="#e55039" stroke="#751810" stroke-width="2.4"/>
+          <ellipse cx="68" cy="84" rx="13" ry="8" transform="rotate(18 68 84)" fill="#e55039" stroke="#751810" stroke-width="2.4"/>
+          <circle cx="55" cy="84" r="6" fill="#ffd54f" stroke="#9e6c06" stroke-width="2.2"/>
+        </svg>`;
+    }
+
+    /** 過關星星 SVG */
+    function svgWinStar(earned) {
+      const fill = earned ? '#ffd54f' : '#e2d7be';
+      const stroke = earned ? '#9e6c06' : '#a89c82';
+      return `
+        <svg class="star-icon ${earned ? 'is-earned' : ''}" viewBox="0 0 64 64" width="54" height="54" aria-hidden="true">
+          <polygon points="32,5 40,22 59,24 45,37 49,56 32,47 15,56 19,37 5,24 24,22" fill="${fill}" stroke="${stroke}" stroke-width="3" stroke-linejoin="round"/>
+        </svg>`;
+    }
+
+    /* 11 種牌面圖案定義（全部皆有注音名稱與 SVG 渲染函式） */
+    const CARD_CATALOG = [
+      { id: 'tree', name: '聖誕樹', render: (s) => svgTree(s) },
+      { id: 'snowman', name: '雪人', render: (s) => svgSnowman(s) },
+      { id: 'gift', name: '禮物', render: (s) => svgGift('red', 'square', s) },
+      { id: 'bell', name: '鈴鐺', render: (s) => svgBell(s) },
+      { id: 'star', name: '星星', render: (s) => svgStar(s) },
+      { id: 'stocking', name: '聖誕襪', render: (s) => svgStocking(s) },
+      { id: 'candy', name: '拐杖糖', render: (s) => svgCandyCane(s) },
+      { id: 'gingerbread', name: '薑餅人', render: (s) => svgGingerbread(s) },
+      { id: 'wreath', name: '花圈', render: (s) => svgWreath(s) },
+      { id: 'dingding', name: '叮叮', render: (s) => svgDingDing(s, 'happy') },
+      { id: 'snowball', name: '雪球', render: (s) => svgSnowball(s, 'happy') }
+    ];
+
+    /* =====================================================================
+       4. Web Audio API 原創音效合成器（無外部音檔、無現成聖誕歌旋律）
+       ===================================================================== */
+    const SoundFX = (() => {
+      let ctx = null;
+      let enabled = true;
+
+      function initFromStorage() {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY_SOUND);
+          if (saved === 'off') enabled = false;
+        } catch (err) {
+          enabled = true;
+        }
+      }
+
+      function ensureContext() {
+        if (!enabled) return null;
+        try {
+          if (!ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return null;
+            ctx = new AudioCtx();
+          }
+          if (ctx.state === 'suspended') {
+            ctx.resume().catch(() => {});
+          }
+          return ctx;
+        } catch (err) {
+          return null;
+        }
+      }
+
+      function playTone(freq, startOffset, duration, type = 'triangle', peakGain = 0.16) {
+        const audio = ensureContext();
+        if (!audio) return;
+        const now = audio.currentTime + startOffset;
+        const osc = audio.createOscillator();
+        const gain = audio.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(peakGain, now + 0.018);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        osc.connect(gain);
+        gain.connect(audio.destination);
+        osc.start(now);
+        osc.stop(now + duration + 0.02);
+      }
+
+      return {
+        initFromStorage,
+        isEnabled: () => enabled,
+        toggle() {
+          enabled = !enabled;
+          try {
+            localStorage.setItem(STORAGE_KEY_SOUND, enabled ? 'on' : 'off');
+          } catch (err) {
+            /* 忽略無痕模式或停用儲存空間 */
+          }
+          if (enabled) this.click();
+          return enabled;
+        },
+        /* 按鈕輕點音 */
+        click() {
+          playTone(540, 0, 0.08, 'sine', 0.12);
+          playTone(720, 0.03, 0.07, 'sine', 0.09);
+        },
+        /* 翻牌木琴聲 */
+        flip() {
+          playTone(460, 0, 0.07, 'triangle', 0.14);
+          playTone(620, 0.035, 0.08, 'sine', 0.11);
+        },
+        /* 配對成功：依連擊數升高音高的原創鈴音三和弦 */
+        match(combo = 1) {
+          const lift = Math.pow(1.06, Math.min(combo - 1, 6));
+          playTone(523.25 * lift, 0, 0.14, 'triangle', 0.16);
+          playTone(659.25 * lift, 0.075, 0.16, 'triangle', 0.16);
+          playTone(783.99 * lift, 0.15, 0.28, 'sine', 0.18);
+        },
+        /* 配對失敗：柔和雙降音 */
+        mismatch() {
+          playTone(340, 0, 0.14, 'sine', 0.11);
+          playTone(265, 0.11, 0.2, 'sine', 0.11);
+        },
+        /* 過關原創慶祝短句 */
+        win() {
+          const notes = [
+            { f: 523.25, t: 0.0, d: 0.14 },
+            { f: 659.25, t: 0.11, d: 0.14 },
+            { f: 783.99, t: 0.22, d: 0.14 },
+            { f: 1046.5, t: 0.34, d: 0.22 },
+            { f: 880.0, t: 0.50, d: 0.14 },
+            { f: 1046.5, t: 0.64, d: 0.44 }
+          ];
+          notes.forEach((n) => playTone(n.f, n.t, n.d, 'triangle', 0.16));
+        }
+      };
+    })();
+
+    /* =====================================================================
+       5. 最佳紀錄存取（edtech-unit22-memory-best）
+       ===================================================================== */
+    function loadBestRecords() {
+      const fallback = { easy: null, normal: null, hard: null };
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_BEST);
+        if (!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') return fallback;
+        return {
+          easy: Number.isInteger(parsed.easy) && parsed.easy > 0 ? parsed.easy : null,
+          normal: Number.isInteger(parsed.normal) && parsed.normal > 0 ? parsed.normal : null,
+          hard: Number.isInteger(parsed.hard) && parsed.hard > 0 ? parsed.hard : null
+        };
+      } catch (err) {
+        return fallback;
+      }
+    }
+
+    function saveBestRecordIfBroken(diffKey, moves) {
+      const records = loadBestRecords();
+      const prev = records[diffKey];
+      const isNewRecord = prev === null || moves < prev;
+      if (isNewRecord) {
+        records[diffKey] = moves;
+        try {
+          localStorage.setItem(STORAGE_KEY_BEST, JSON.stringify(records));
+        } catch (err) {
+          /* 忽略儲存受限環境 */
+        }
+      }
+      return { isNewRecord, best: records[diffKey], records };
+    }
+
+    /* =====================================================================
+       6. 遊戲狀態與 DOM 參照
+       ===================================================================== */
+    const state = {
+      difficulty: 'easy',
+      deck: [],
+      flippedIndices: [],
+      matchedCount: 0,
+      moves: 0,
+      combo: 0,
+      locked: false,
+      started: false,
+      finished: false,
+      elapsedSec: 0,
+      timerId: null,
+      mismatchTimerId: null,
+      winTimerId: null,
+      records: loadBestRecords()
+    };
+
+    const dom = {
+      snowLayer: document.getElementById('snow-layer'),
+      garlandLights: document.getElementById('garland-lights'),
+      pageTitle: document.getElementById('page-title'),
+      btnMap: document.getElementById('btn-map'),
+      btnSound: document.getElementById('btn-sound'),
+      charDingDing: document.getElementById('char-dingding'),
+      charSnowball: document.getElementById('char-snowball'),
+      speechBubble: document.getElementById('speech-bubble'),
+      diffHeading: document.getElementById('diff-heading'),
+      diffList: document.getElementById('diff-list'),
+      btnRestart: document.getElementById('btn-restart'),
+      kbHint: document.getElementById('kb-hint'),
+      hudPairLabel: document.getElementById('hud-pair-label'),
+      hudMoveLabel: document.getElementById('hud-move-label'),
+      hudTimeLabel: document.getElementById('hud-time-label'),
+      hudBestLabel: document.getElementById('hud-best-label'),
+      hudPairs: document.getElementById('hud-pairs'),
+      progressFill: document.getElementById('progress-fill'),
+      hudMoves: document.getElementById('hud-moves'),
+      hudTime: document.getElementById('hud-time'),
+      hudCombo: document.getElementById('hud-combo'),
+      hudBest: document.getElementById('hud-best'),
+      cardGrid: document.getElementById('card-grid'),
+      winModal: document.getElementById('win-modal'),
+      modalChars: document.getElementById('modal-chars'),
+      winTitle: document.getElementById('win-title'),
+      winStars: document.getElementById('win-stars'),
+      winSteps: document.getElementById('win-steps'),
+      winComment: document.getElementById('win-comment'),
+      winStats: document.getElementById('win-stats'),
+      btnPlayAgain: document.getElementById('btn-play-again'),
+      btnNextDiff: document.getElementById('btn-next-diff')
+    };
+
+    /* =====================================================================
+       7. 工具函式（洗牌、格式化時間、隨機台詞）
+       ===================================================================== */
+    function shuffleArray(list) {
+      const arr = list.slice();
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+      }
+      return arr;
+    }
+
+    function pickRandom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function formatTime(totalSeconds) {
+      const mins = Math.floor(totalSeconds / 60);
+      const secs = totalSeconds % 60;
+      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function clearAllTimers() {
+      if (state.timerId !== null) {
+        clearInterval(state.timerId);
+        state.timerId = null;
+      }
+      if (state.mismatchTimerId !== null) {
+        clearTimeout(state.mismatchTimerId);
+        state.mismatchTimerId = null;
+      }
+      if (state.winTimerId !== null) {
+        clearTimeout(state.winTimerId);
+        state.winTimerId = null;
+      }
+    }
+
+    /* =====================================================================
+       8. 場景裝飾與介面初始化
+       ===================================================================== */
+    function renderStaticDecor() {
+      /* 面板角落冬青葉 */
+      document.querySelectorAll('[data-holly="1"]').forEach((el) => {
+        el.innerHTML = svgHollyCorner();
+      });
+
+      /* 頂部彩燈串 */
+      const bulbClasses = ['b-red', 'b-gold', 'b-green', 'b-cream'];
+      let bulbsHtml = '';
+      for (let i = 0; i < 24; i++) {
+        bulbsHtml += `<span class="bulb ${bulbClasses[i % bulbClasses.length]}"></span>`;
+      }
+      dom.garlandLights.innerHTML = bulbsHtml;
+
+      /* 背景飄雪（使用 2015 年以前符號 ❄） */
+      let snowHtml = '';
+      for (let i = 0; i < 26; i++) {
+        const left = ((i * 37) % 98) + 1;
+        const size = 12 + (i % 4) * 5;
+        const duration = 7 + (i % 6) * 2.1;
+        const delay = -((i * 1.3) % 12);
+        const drift = (i % 2 === 0 ? 1 : -1) * (16 + (i % 4) * 10);
+        snowHtml += `<span class="snowflake" style="left:${left}%;font-size:${size}px;animation-duration:${duration}s;animation-delay:${delay}s;--drift:${drift}px;">❄</span>`;
+      }
+      dom.snowLayer.innerHTML = snowHtml;
+
+      /* 套用集中管理的文字常數 */
+      dom.pageTitle.textContent = TEXTS.pageTitle;
+      dom.btnMap.textContent = TEXTS.mapBtn;
+      dom.diffHeading.textContent = TEXTS.diffHeading;
+      dom.btnRestart.textContent = TEXTS.restartBtn;
+      dom.kbHint.textContent = TEXTS.kbHint;
+      dom.hudPairLabel.textContent = TEXTS.hudPairLabel;
+      dom.hudMoveLabel.textContent = TEXTS.hudMoveLabel;
+      dom.hudTimeLabel.textContent = TEXTS.hudTimeLabel;
+      dom.hudBestLabel.textContent = TEXTS.hudBestLabel;
+      dom.winTitle.textContent = TEXTS.winTitle;
+      dom.btnPlayAgain.textContent = TEXTS.playAgainBtn;
+
+      /* 過關彈窗雙角色 */
+      dom.modalChars.innerHTML = `${svgDingDing(94, 'cheer')}${svgSnowball(98, 'cheer')}`;
+    }
+
+    function updateSoundButton() {
+      const on = SoundFX.isEnabled();
+      dom.btnSound.textContent = on ? '🔊' : '🔇';
+      dom.btnSound.classList.toggle('is-muted', !on);
+      dom.btnSound.setAttribute('aria-pressed', on ? 'true' : 'false');
+      dom.btnSound.setAttribute('aria-label', on ? TEXTS.soundOnLabel : TEXTS.soundOffLabel);
+    }
+
+    function renderCharacters(mood = 'happy', bounce = false) {
+      dom.charDingDing.innerHTML = svgDingDing(94, mood);
+      dom.charSnowball.innerHTML = svgSnowball(98, mood);
+
+      dom.charDingDing.classList.remove('is-bounce');
+      dom.charSnowball.classList.remove('is-bounce');
+      if (bounce) {
+        /* 重新觸發跳躍動畫 */
+        void dom.charDingDing.offsetWidth;
+        dom.charDingDing.classList.add('is-bounce');
+        dom.charSnowball.classList.add('is-bounce');
+      }
+    }
+
+    function setSpeech(msg) {
+      dom.speechBubble.textContent = msg;
+    }
+
+    /* 渲染左側三個難度按鈕與各自最佳步數 */
+    function renderDifficultyButtons() {
+      const keys = ['easy', 'normal', 'hard'];
+      dom.diffList.innerHTML = '';
+
+      keys.forEach((key) => {
+        const cfg = DIFFICULTIES[key];
+        const bestVal = state.records[key];
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `diff-btn${state.difficulty === key ? ' is-active' : ''}`;
+        btn.dataset.diff = key;
+        btn.setAttribute('aria-pressed', state.difficulty === key ? 'true' : 'false');
+
+        const bestText = bestVal !== null
+          ? `${TEXTS.bestPrefix}${bestVal}${TEXTS.stepUnit}`
+          : `${TEXTS.bestPrefix}${TEXTS.noRecord}`;
+
+        btn.innerHTML = `
+          <span class="diff-main">${cfg.label}</span>
+          <span class="diff-meta">
+            <span>${cfg.gridText}（${cfg.pairs} 對）</span>
+            <span class="diff-best-line">${bestText}</span>
+          </span>`;
+
+        btn.addEventListener('click', () => {
+          SoundFX.click();
+          startGame(key);
+        });
+
+        dom.diffList.appendChild(btn);
+      });
+    }
+
+    function updateHUD() {
+      const cfg = DIFFICULTIES[state.difficulty];
+      dom.hudPairs.textContent = `${state.matchedCount} / ${cfg.pairs}`;
+      const pct = cfg.pairs > 0 ? Math.round((state.matchedCount / cfg.pairs) * 100) : 0;
+      dom.progressFill.style.width = `${pct}%`;
+      dom.hudMoves.textContent = String(state.moves);
+      dom.hudTime.textContent = formatTime(state.elapsedSec);
+
+      const bestVal = state.records[state.difficulty];
+      dom.hudBest.textContent = bestVal !== null ? `${bestVal}${TEXTS.stepUnit}` : TEXTS.noRecord;
+
+      if (state.combo >= 2) {
+        dom.hudCombo.textContent = TEXTS.comboText(state.combo);
+        dom.hudCombo.classList.add('is-show');
+      } else {
+        dom.hudCombo.classList.remove('is-show');
+      }
+    }
+
+    /* =====================================================================
+       9. 發牌與核心翻牌配對邏輯
+       ===================================================================== */
+    function buildDeck(pairCount) {
+      /* 每次從 11 種聖誕圖案中隨機挑選 N 種，讓每局都有新鮮感 */
+      const chosen = shuffleArray(CARD_CATALOG).slice(0, pairCount);
+      const paired = [];
+      chosen.forEach((item) => {
+        paired.push({ typeId: item.id, name: item.name, render: item.render, matched: false });
+        paired.push({ typeId: item.id, name: item.name, render: item.render, matched: false });
+      });
+      return shuffleArray(paired);
+    }
+
+    function startTimerIfNeeded() {
+      if (state.started) return;
+      state.started = true;
+      state.timerId = setInterval(() => {
+        state.elapsedSec += 1;
+        dom.hudTime.textContent = formatTime(state.elapsedSec);
+      }, 1000);
+    }
+
+    function getCardArtSize(diffKey) {
+      if (diffKey === 'easy') return 98;
+      if (diffKey === 'normal') return 82;
+      return 78;
+    }
+
+    function renderBoard() {
+      const diffKey = state.difficulty;
+      const artSize = getCardArtSize(diffKey);
+      dom.cardGrid.dataset.diff = diffKey;
+      dom.cardGrid.innerHTML = '';
+
+      state.deck.forEach((cardData, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'memory-card';
+        btn.dataset.index = String(idx);
+        btn.style.animationDelay = `${Math.min(idx * 24, 360)}ms`;
+        btn.setAttribute('aria-pressed', 'false');
+        btn.setAttribute('aria-label', TEXTS.cardBackAria(idx));
+
+        btn.innerHTML = `
+          <span class="card-inner">
+            <span class="card-face card-back" aria-hidden="true">
+              <span class="card-back-medallion">${svgBackSnowflake(46)}</span>
+            </span>
+            <span class="card-face card-front">
+              <span class="match-badge" aria-hidden="true">⭐</span>
+              <span class="card-art">${cardData.render(artSize)}</span>
+              <span class="card-label">${cardData.name}</span>
+            </span>
+          </span>`;
+
+        btn.addEventListener('click', () => handleCardFlip(idx));
+        btn.addEventListener('keydown', (ev) => handleCardArrowNav(ev, idx));
+        dom.cardGrid.appendChild(btn);
+      });
+    }
+
+    /* 額外支援方向鍵移動焦點（原本 Tab / Enter / 空白鍵皆由原生 button 支援） */
+    function handleCardArrowNav(ev, idx) {
+      const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+      if (!keys.includes(ev.key)) return;
+      ev.preventDefault();
+
+      const total = state.deck.length;
+      const computedCols = getComputedStyle(dom.cardGrid).gridTemplateColumns.split(' ').length || 4;
+      let nextIdx = idx;
+
+      if (ev.key === 'ArrowRight') nextIdx = (idx + 1) % total;
+      else if (ev.key === 'ArrowLeft') nextIdx = (idx - 1 + total) % total;
+      else if (ev.key === 'ArrowDown') nextIdx = idx + computedCols < total ? idx + computedCols : idx;
+      else if (ev.key === 'ArrowUp') nextIdx = idx - computedCols >= 0 ? idx - computedCols : idx;
+
+      const target = dom.cardGrid.querySelector(`.memory-card[data-index="${nextIdx}"]`);
+      if (target) target.focus();
+    }
+
+    function getCardEl(idx) {
+      return dom.cardGrid.querySelector(`.memory-card[data-index="${idx}"]`);
+    }
+
+    /* 配對成功在牌面噴出小金星粒子 */
+    function spawnMatchSparkles(cardEl) {
+      if (!cardEl) return;
+      const offsets = [
+        { x: -46, y: -48 },
+        { x: 46, y: -44 },
+        { x: -52, y: 12 },
+        { x: 52, y: 14 },
+        { x: 0, y: -58 }
+      ];
+      offsets.forEach((pt) => {
+        const sp = document.createElement('span');
+        sp.className = 'sparkle-burst';
+        sp.setAttribute('aria-hidden', 'true');
+        sp.textContent = '⭐';
+        sp.style.setProperty('--sx', `${pt.x}px`);
+        sp.style.setProperty('--sy', `${pt.y}px`);
+        cardEl.appendChild(sp);
+        setTimeout(() => sp.remove(), 760);
+      });
+    }
+
+    function handleCardFlip(idx) {
+      if (state.locked || state.finished) return;
+
+      const card = state.deck[idx];
+      if (!card || card.matched) return;
+      if (state.flippedIndices.includes(idx)) return;
+
+      startTimerIfNeeded();
+
+      const cardEl = getCardEl(idx);
+      if (!cardEl) return;
+
+      cardEl.classList.add('is-flipped');
+      cardEl.setAttribute('aria-pressed', 'true');
+      cardEl.setAttribute('aria-label', TEXTS.cardFrontAria(idx, card.name, false));
+      state.flippedIndices.push(idx);
+      SoundFX.flip();
+
+      /* 只翻開第 1 張牌 */
+      if (state.flippedIndices.length === 1) {
+        if (state.moves === 0) {
+          setSpeech(pickRandom(TEXTS.dialogFirstFlip));
+        }
+        return;
+      }
+
+      /* 翻開第 2 張牌：計算步數並判定配對 */
+      state.moves += 1;
+      state.locked = true;
+
+      const [firstIdx, secondIdx] = state.flippedIndices;
+      const firstCard = state.deck[firstIdx];
+      const secondCard = state.deck[secondIdx];
+      const firstEl = getCardEl(firstIdx);
+      const secondEl = getCardEl(secondIdx);
+
+      if (firstCard.typeId === secondCard.typeId) {
+        /* 配對成功 */
+        firstCard.matched = true;
+        secondCard.matched = true;
+        state.matchedCount += 1;
+        state.combo += 1;
+        state.flippedIndices = [];
+
+        [
+          { el: firstEl, idx: firstIdx, data: firstCard },
+          { el: secondEl, idx: secondIdx, data: secondCard }
+        ].forEach((item) => {
+          if (!item.el) return;
+          item.el.classList.add('is-matched', 'is-just-matched');
+          item.el.setAttribute('aria-disabled', 'true');
+          item.el.setAttribute('aria-label', TEXTS.cardFrontAria(item.idx, item.data.name, true));
+          spawnMatchSparkles(item.el);
+          setTimeout(() => item.el.classList.remove('is-just-matched'), 600);
+        });
+
+        SoundFX.match(state.combo);
+        renderCharacters('cheer', true);
+        setSpeech(state.combo >= 2 ? TEXTS.dialogCombo(state.combo) : pickRandom(TEXTS.dialogMatch));
+        updateHUD();
+
+        const totalPairs = DIFFICULTIES[state.difficulty].pairs;
+        if (state.matchedCount >= totalPairs) {
+          finishGame();
+        } else {
+          state.locked = false;
+        }
+      } else {
+        /* 配對失敗：1 秒後蓋回 */
+        state.combo = 0;
+        updateHUD();
+        SoundFX.mismatch();
+        renderCharacters('think', false);
+        setSpeech(pickRandom(TEXTS.dialogMismatch));
+
+        if (firstEl) firstEl.classList.add('is-mismatch');
+        if (secondEl) secondEl.classList.add('is-mismatch');
+
+        state.mismatchTimerId = setTimeout(() => {
+          [
+            { el: firstEl, idx: firstIdx },
+            { el: secondEl, idx: secondIdx }
+          ].forEach((item) => {
+            if (!item.el) return;
+            item.el.classList.remove('is-flipped', 'is-mismatch');
+            item.el.setAttribute('aria-pressed', 'false');
+            item.el.setAttribute('aria-label', TEXTS.cardBackAria(item.idx));
+          });
+          state.flippedIndices = [];
+          state.locked = false;
+          state.mismatchTimerId = null;
+        }, 1000);
+      }
+    }
+
+    /* =====================================================================
+       10. 過關判定、星等計算與慶祝彈窗控制
+       ===================================================================== */
+    function computeStars(diffKey, moves) {
+      const cfg = DIFFICULTIES[diffKey];
+      if (moves <= cfg.star3Max) return 3;
+      if (moves <= cfg.star2Max) return 2;
+      return 1;
+    }
+
+    function finishGame() {
+      state.finished = true;
+      state.locked = true;
+      clearAllTimers();
+
+      const { isNewRecord, best, records } = saveBestRecordIfBroken(state.difficulty, state.moves);
+      state.records = records;
+      renderDifficultyButtons();
+      updateHUD();
+      setSpeech(TEXTS.dialogWin);
+
+      state.winTimerId = setTimeout(() => {
+        SoundFX.win();
+        openWinModal(isNewRecord, best);
+      }, 650);
+    }
+
+    function openWinModal(isNewRecord, best) {
+      const cfg = DIFFICULTIES[state.difficulty];
+      const stars = computeStars(state.difficulty, state.moves);
+
+      /* 渲染 1～3 顆星 */
+      let starsHtml = '';
+      for (let i = 1; i <= 3; i++) {
+        starsHtml += svgWinStar(i <= stars);
+      }
+      dom.winStars.innerHTML = starsHtml;
+      dom.winStars.setAttribute('aria-label', `獲得 ${stars} 顆星`);
+
+      /* 星星依序延遲彈出 */
+      dom.winStars.querySelectorAll('.star-icon.is-earned').forEach((el, idx) => {
+        el.style.animationDelay = `${idx * 130}ms`;
+      });
+
+      dom.winSteps.textContent = TEXTS.winSteps(state.moves);
+      dom.winComment.textContent = TEXTS.starComments[stars];
+
+      const chips = [
+        `<span class="win-chip">${cfg.label} ${cfg.gridText}</span>`,
+        `<span class="win-chip">${TEXTS.winTimeChip(formatTime(state.elapsedSec))}</span>`,
+        `<span class="win-chip">${TEXTS.winBestChip(best)}</span>`
+      ];
+      if (isNewRecord) {
+        chips.push(`<span class="win-chip is-record">${TEXTS.winNewRecord}</span>`);
+      }
+      dom.winStats.innerHTML = chips.join('');
+
+      dom.btnNextDiff.textContent = cfg.next ? TEXTS.nextDiffBtn : TEXTS.allClearNextBtn;
+
+      dom.winModal.inert = false;
+      dom.winModal.setAttribute('aria-hidden', 'false');
+      dom.winModal.classList.add('is-open');
+
+      setTimeout(() => {
+        dom.btnPlayAgain.focus();
+      }, 60);
+    }
+
+    function closeWinModal() {
+      dom.winModal.classList.remove('is-open');
+      dom.winModal.setAttribute('aria-hidden', 'true');
+      dom.winModal.inert = true;
+    }
+
+    /* =====================================================================
+       11. 開始新局與事件綁定
+       ===================================================================== */
+    function startGame(diffKey = state.difficulty) {
+      clearAllTimers();
+      closeWinModal();
+
+      state.difficulty = DIFFICULTIES[diffKey] ? diffKey : 'easy';
+      state.deck = buildDeck(DIFFICULTIES[state.difficulty].pairs);
+      state.flippedIndices = [];
+      state.matchedCount = 0;
+      state.moves = 0;
+      state.combo = 0;
+      state.locked = false;
+      state.started = false;
+      state.finished = false;
+      state.elapsedSec = 0;
+
+      renderDifficultyButtons();
+      renderCharacters('happy', false);
+      setSpeech(pickRandom(TEXTS.dialogStart));
+      updateHUD();
+      renderBoard();
+    }
+
+    function bindEvents() {
+      dom.btnSound.addEventListener('click', () => {
+        SoundFX.toggle();
+        updateSoundButton();
+      });
+
+      dom.btnRestart.addEventListener('click', () => {
+        SoundFX.click();
+        startGame(state.difficulty);
+      });
+
+      dom.btnPlayAgain.addEventListener('click', () => {
+        SoundFX.click();
+        startGame(state.difficulty);
+      });
+
+      dom.btnNextDiff.addEventListener('click', () => {
+        SoundFX.click();
+        const nextKey = DIFFICULTIES[state.difficulty].next || 'easy';
+        startGame(nextKey);
+      });
+
+      /* 支援按 Esc 關閉過關彈窗 */
+      document.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Escape' && dom.winModal.classList.contains('is-open')) {
+          closeWinModal();
+          dom.btnRestart.focus();
+        }
+      });
+    }
+
+    /* 啟動頁面 */
+    function init() {
+      SoundFX.initFromStorage();
+      renderStaticDecor();
+      updateSoundButton();
+      bindEvents();
+      startGame('easy');
+    }
+
+    init();
+  </script>
+<script defer src="../../assets/js/beacon.js"></script>
+</body>
+</html>

@@ -377,6 +377,14 @@
                 <p class="card-score" id="unit21-score-badge" style="display:none;"></p>
                 <span class="play-btn">▶ 開始玩</span>
             </a>
+            <a href="./units/unit22-xmas-workshop/index.html" class="card" style="--c: #c0392b;">
+                <span class="skill-tag">聖誕節慶</span>
+                <div class="card-cover">🎄🎁</div>
+                <h3 class="card-title">聖誕工坊大救援</h3>
+                <p class="card-desc">四關闖關修好聖誕工坊的電腦，還有畫卡片、接禮物、翻牌、裝飾聖誕樹、堆雪人！（附注音）</p>
+                <p class="card-score" id="unit22-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
         </div>
     </section>
 
@@ -476,6 +484,17 @@
             badge.style.display = 'inline-block';
         }
     });
+
+    // unit22 存的是主線星星數（0～12），不是分數，另外顯示
+    (function loadXmasBadge() {
+        let stars = null;
+        try { stars = localStorage.getItem('edtech-unit22-score'); } catch (e) { /* 讀不到就不顯示 */ }
+        const badge = document.getElementById('unit22-score-badge');
+        if (stars && badge) {
+            badge.textContent = `⭐ 主線最佳：${stars} / 12 顆星`;
+            badge.style.display = 'inline-block';
+        }
+    })();
 
     // 大富翁的徽章獨立處理：它存的是 edtech-board-certs（證書紀錄），
     // 不是 edtech-unit{N}-score，所以不能塞進上面那個迴圈。

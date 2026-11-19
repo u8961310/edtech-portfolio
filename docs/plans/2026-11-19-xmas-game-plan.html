@@ -1,0 +1,226 @@
+<title>聖誕工坊大救援</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+/* 版面：淺藍灰底，一節一條彩色標題帶，內文白底；表格走對帳單風（深藍表頭、數字靠右）。刻意單一淺色主題。 */
+:root {
+  --bg: #e6edf3;
+  --paper: #fbfcfd;
+  --ink: #1b2836;
+  --muted: #475668;
+  --line: #c9d4df;
+  --navy: #1f3b5c;
+  --red: #a3242c;
+  --green: #1d6542;
+  --gold: #7d5600;
+  --plum: #5b3a7a;
+  --soft-red: #f6e3e4;
+  --soft-green: #e2f0e8;
+  --soft-gold: #f5ecd6;
+  --font: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font);
+  font-size: 15px; line-height: 1.7;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 22px; }
+header.top { display: grid; gap: 6px; }
+.eyebrow { font-size: 13px; letter-spacing: .08em; color: var(--muted); font-weight: 500; }
+h1 { margin: 0; font-size: 30px; font-weight: 900; text-wrap: balance; color: var(--navy); }
+h1 span { color: var(--red); }
+.lede { margin: 0; max-width: 62ch; color: var(--ink); font-size: 16px; }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); background: var(--paper); margin-top: 10px; }
+.facts > div { padding: 10px 14px; border-right: 1px solid var(--line); min-width: 0; }
+.facts > div:last-child { border-right: 0; }
+.facts .k { font-size: 12.5px; color: var(--muted); }
+.facts .v { font-weight: 700; font-size: 16px; }
+
+section { background: var(--paper); border: 1px solid var(--line); }
+section > h2 {
+  margin: 0; padding: 9px 16px; font-size: 16px; font-weight: 700; color: #fff;
+  background: var(--navy); letter-spacing: .02em;
+}
+section.red > h2 { background: var(--red); }
+section.green > h2 { background: var(--green); }
+section.gold > h2 { background: var(--gold); }
+section.plum > h2 { background: var(--plum); }
+.body { padding: 14px 16px 16px; display: grid; gap: 12px; min-width: 0; }
+.body p { margin: 0; max-width: 70ch; }
+.note { font-size: 13.5px; color: var(--muted); }
+
+.tbl { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+th { background: var(--navy); color: #fff; text-align: left; font-weight: 500; padding: 7px 10px; white-space: nowrap; }
+td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.stage { font-weight: 700; white-space: nowrap; }
+td.stage small { display: block; font-weight: 400; color: var(--muted); font-size: 12.5px; }
+tfoot td { font-weight: 700; background: #eef2f6; }
+
+.q { border-left: 4px solid var(--green); background: var(--soft-green); padding: 8px 12px; }
+.q.red { border-color: var(--red); background: var(--soft-red); }
+.q.gold { border-color: var(--gold); background: var(--soft-gold); }
+.q b { display: block; }
+.q ol { margin: 4px 0 0; padding-left: 22px; }
+.q .ans { font-weight: 700; color: var(--green); }
+.qgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+ol.flow { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 8px; }
+ol.flow li { counter-increment: s; display: grid; grid-template-columns: 34px 64px 1fr; gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+ol.flow li:last-child { border-bottom: 0; }
+ol.flow li::before { content: counter(s); font-weight: 900; color: var(--navy); font-size: 18px; font-variant-numeric: tabular-nums; }
+.who { font-size: 12.5px; font-weight: 700; padding: 1px 0; color: var(--muted); }
+.who.me { color: var(--plum); }
+.who.you { color: var(--red); }
+
+ul.checks { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+code { font-family: Consolas, "Courier New", monospace; font-size: 13px; background: #eef2f6; padding: 1px 5px; border: 1px solid var(--line); word-break: break-all; }
+
+.decide { display: grid; gap: 10px; }
+.decide > div { display: grid; grid-template-columns: 26px 1fr; gap: 8px; }
+.decide .n { font-weight: 900; color: var(--red); font-variant-numeric: tabular-nums; }
+.decide b { display: block; }
+.rec { color: var(--green); font-weight: 700; }
+
+@media (max-width: 640px) {
+  h1 { font-size: 24px; }
+  .facts { grid-template-columns: 1fr 1fr; }
+  .facts > div:nth-child(2) { border-right: 0; }
+  .facts > div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .qgrid { grid-template-columns: 1fr; }
+  ol.flow li { grid-template-columns: 26px 1fr; }
+  ol.flow li .who { grid-column: 2; }
+  ol.flow li .what { grid-column: 2; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">edtech-portfolio ／ 新單元規劃 ／ 2026-11-19 草案</div>
+    <h1>聖誕工坊<span>大救援</span></h1>
+    <p class="lede">聖誕夜前一晚，工坊的送禮電腦當機了。學生扮演小精靈「叮叮」，帶著麋鹿「雪球」闖過四關，把電腦修好、在天亮前把禮物送完。每關先玩一段小遊戲，再答兩題闖關題。</p>
+    <div class="facts">
+      <div><div class="k">對象</div><div class="v">三、四年級</div></div>
+      <div><div class="k">一輪時間</div><div class="v">15～20 分鐘</div></div>
+      <div><div class="k">情境</div><div class="v">教室投影＋個人機</div></div>
+      <div><div class="k">單元編號</div><div class="v">unit22</div></div>
+    </div>
+  </header>
+
+  <section class="red">
+    <h2>四個關卡</h2>
+    <div class="body">
+      <p>以好玩為主：每關的小遊戲占大部分時間，闖關題穿插在過關前，答錯可以重答，不扣分。每關各練一種資訊能力，剛好對上中年級的資訊課。</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>關卡</th><th>小遊戲玩法</th><th>練到的能力</th><th class="num">闖關題</th></tr></thead>
+          <tbody>
+            <tr><td class="stage">① 包裝產線<small>工坊一樓</small></td><td>輸送帶送來禮物，看標籤上的特徵（形狀、顏色、會不會發光），拖進對的箱子。速度慢慢加快。</td><td>資料分類、依特徵歸組；滑鼠拖曳</td><td class="num">2 題</td></tr>
+            <tr><td class="stage">② 雪橇導航<small>屋頂起飛</small></td><td>用箭頭積木排出雪橇路線，經過煙囪、避開暴風雪雲。後面幾題要用「重複 3 次」積木才排得下。</td><td>程式序列、重複、除錯</td><td class="num">2 題</td></tr>
+            <tr><td class="stage">③ 願望信箱<small>收信室</small></td><td>小朋友的願望信裡混了怪信：「點這裡送免費點數」「告訴我你家地址」。把怪信丟進碎紙機，真的願望信放進禮物袋。</td><td>網路安全、個資保護、辨識詐騙</td><td class="num">2 題</td></tr>
+            <tr><td class="stage">④ 夜空送禮<small>BOSS 關</small></td><td>雪橇飛過屋頂，每根煙囪上浮著一個字，打出來就把禮物丟進去。可以切換英打／注音。最後要過「暴風雪大魔王」的快問快答。</td><td>打字（英打或注音）、綜合複習</td><td class="num">5 題</td></tr>
+          </tbody>
+          <tfoot><tr><td>合計</td><td colspan="2">四關，一輪約 15～20 分鐘</td><td class="num">11 題</td></tr></tfoot>
+        </table>
+      </div>
+      <p class="note">星星門檻留緩衝：錯一兩題（重答後才對）仍拿得到三顆星，照大富翁的規範，不做「全對才三星」。</p>
+    </div>
+  </section>
+
+  <section class="green">
+    <h2>闖關題範例</h2>
+    <div class="body">
+      <p>題目集中放在一個 <code>QUESTIONS</code> 陣列，每題標好關卡，老師之後可以自己換題。用字控制在中年級識字量，句子短，能配圖就配圖。</p>
+      <div class="qgrid">
+        <div class="q"><b>① 包裝產線</b>電腦裡的「照片」通常放在哪一個資料夾比較好找？<ol><li>圖片</li><li>音樂</li><li>垃圾桶</li></ol><span class="ans">答案：1</span></div>
+        <div class="q"><b>② 雪橇導航</b>雪球要往前走 4 格，哪一種寫法最短？<ol><li>前進、前進、前進、前進</li><li>重複 4 次：前進</li><li>前進 1 次就好</li></ol><span class="ans">答案：2</span></div>
+        <div class="q red"><b>③ 願望信箱</b>網路上有陌生人說：「告訴我你的密碼，我送你聖誕禮物。」你應該？<ol><li>馬上告訴他</li><li>不理他，告訴爸媽或老師</li><li>先問他禮物是什麼</li></ol><span class="ans">答案：2</span></div>
+        <div class="q gold"><b>④ 大魔王快問快答</b>下面哪一個密碼最安全？<ol><li>123456</li><li>自己的生日</li><li>Snow9Bell!</li></ol><span class="ans">答案：3</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>製作流程：Gemini Canvas 做遊戲，我負責接進網站</h2>
+    <div class="body">
+      <p>沿用大富翁那套已經驗證過的做法：我先寫好給 Canvas 的提示詞和交件規格，你在 Gemini Canvas 裡生成、調畫面，滿意後請它給「完整的單一 HTML」，存成檔案交給我整合。遊戲本身不連 AI，放在 GitHub Pages 就能跑。</p>
+      <ol class="flow">
+        <li><span class="who me">我</span><span class="what">寫 <code>units/CANVAS_PROMPT-xmas.md</code>：故事、四關玩法、題庫格式，加上大富翁 v3 規格裡適用的條款</span></li>
+        <li><span class="who me">我</span><span class="what">把 <code>board/verify-canvas.py</code> 改成單元也能用，加檢查：有沒有存 <code>edtech-unit22-score</code></span></li>
+        <li><span class="who you">你</span><span class="what">把提示詞貼進 Gemini Canvas 生成第一版，看畫面、玩一輪，直接在 Canvas 裡請它改</span></li>
+        <li><span class="who you">你</span><span class="what">滿意後請 Canvas 給完整單一 HTML，存成 <code>xmas.html</code> 給我（分享連結不行：沒辦法放進網站，而且拿到連結的人都能改）</span></li>
+        <li><span class="who me">我</span><span class="what">跑驗收腳本＋開瀏覽器實玩（投影寬螢幕、375 手機、console 零錯誤），有問題列清單讓你回 Canvas 修</span></li>
+        <li><span class="who me">我</span><span class="what">整合上架（見下一節清單），部署、正式網址端對端驗證</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="plum">
+    <h2>交件規格重點（寫進提示詞）</h2>
+    <div class="body">
+      <ul class="checks">
+        <li><b>橫向投影為主版面</b>（約 1280×800），手機直立另外用 media query 調整，不要整個改成直式</li>
+        <li><b>單一 HTML、不引用外部圖片和音效</b>：雪花、禮物、麋鹿都用 SVG／CSS 畫，音效用 Web Audio 合成，字型只用 Noto Sans TC</li>
+        <li><b>只用舊版 Windows 顯示得出來的 emoji</b>：🎄 🎁 ⭐ 🔔 ⛄ ❄ 可以用；2020 年後的新 emoji 不行</li>
+        <li><b>分數存 <code>edtech-unit22-score</code></b>，首頁徽章才會亮（unit13～21 有 6 個就是漏了這條）</li>
+        <li><b>題目字級至少 20px、選項至少 18px</b>；答錯可重答、不扣分</li>
+        <li><b>不做姓名、學校、班級欄位</b>，也不做證書</li>
+        <li><b>支援減少動態</b>（<code>prefers-reduced-motion</code>）；彈窗關閉要加 <code>visibility:hidden</code>；交件前 console 零錯誤</li>
+        <li><b>角色是原創</b>：小精靈叮叮、麋鹿雪球，不用任何卡通或電影裡的現成角色和歌曲</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>上架時要一起改的地方</h2>
+    <div class="body">
+      <div class="tbl">
+        <table>
+          <thead><tr><th>檔案</th><th>改什麼</th></tr></thead>
+          <tbody>
+            <tr><td><code>units/unit22-xmas-workshop/index.html</code></td><td>Canvas 成品＋左上角「🏠 首頁」按鈕＋造訪統計 beacon</td></tr>
+            <tr><td><code>island/data.js</code></td><td>加一列關卡，再跑 <code>tools/render-island.py</code> 重新產島嶼圖，不然地圖上點不到</td></tr>
+            <tr><td><code>list.html</code></td><td>卡片版首頁加一張卡片和成績徽章</td></tr>
+            <tr><td><code>analytics-worker/src/report.html</code></td><td>NAMES 加中文關卡名，報表才不會顯示成網址</td></tr>
+            <tr><td><code>README.md</code></td><td>單元一覽表加一列（📘 中年級）</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="gold">
+    <h2>時程（倒推到聖誕節前一週）</h2>
+    <div class="body">
+      <div class="tbl">
+        <table>
+          <thead><tr><th>日期</th><th>里程碑</th><th>誰</th></tr></thead>
+          <tbody>
+            <tr><td class="num">11/26（三）</td><td>規劃定稿、Canvas 提示詞與驗收腳本完成</td><td>我</td></tr>
+            <tr><td class="num">12/03（三）</td><td>Canvas 第一版生成、自己先玩一輪</td><td>你</td></tr>
+            <tr><td class="num">12/08（一）</td><td>驗收＋修正一到兩輪</td><td>我＋你</td></tr>
+            <tr><td class="num">12/12（五）</td><td>整合上線、正式網址驗證</td><td>我</td></tr>
+            <tr><td class="num">12/15～12/24</td><td>課堂使用，造訪報表看各校有沒有人玩</td><td>你</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">12/12 上線，老師們才有完整一週可以排進課堂；聖誕節過後關卡保留，明年可以直接再用。</p>
+    </div>
+  </section>
+
+  <section class="red">
+    <h2>需要你決定的事</h2>
+    <div class="body decide">
+      <div><span class="n">1</span><div><b>名字和角色可以嗎？</b>「聖誕工坊大救援」、小精靈叮叮、麋鹿雪球，都可以換。</div></div>
+      <div><span class="n">2</span><div><b>BOSS 關的打字要用哪種？</b>英打、注音，或兩種都做讓老師切換。<span class="rec">建議：雙模式</span>，三年級多半還在練注音，四年級可以挑戰英打。</div></div>
+      <div><span class="n">3</span><div><b>放在學習樂園島的哪裡？</b>新開一座「節慶島」，之後春節、兒童節的遊戲也有地方放；或塞進現有的小常識島（目前只有 2 關）。<span class="rec">建議：新開節慶島</span>，要多重產一次島嶼圖。</div></div>
+      <div><span class="n">4</span><div><b>四關會不會太多？</b>一節課 40 分鐘，扣掉說明約可玩兩輪。想更短的話可以砍成三關（拿掉包裝產線）。</div></div>
+    </div>
+  </section>
+</div>

@@ -188,7 +188,16 @@
     'unit18-magic-paint': '魔法簡約畫畫屋',
     'unit19-farm-harvest': '快樂農場：蔬菜拔拔樂',
     'unit20-sock-matching': '瘋狂襪子配對線',
-    'unit21-mouse-challenge': '滑鼠小勇士大冒險'
+    'unit21-mouse-challenge': '滑鼠小勇士大冒險',
+    // 多頁單元：「資料夾/檔名」優先，查不到才用資料夾名
+    'unit22-xmas-workshop': '聖誕工坊：地圖',
+    'unit22-xmas-workshop/index.html': '聖誕工坊：地圖',
+    'unit22-xmas-workshop/rescue.html': '聖誕工坊：主線四關',
+    'unit22-xmas-workshop/draw.html': '聖誕工坊：畫畫屋',
+    'unit22-xmas-workshop/catch.html': '聖誕工坊：接禮物',
+    'unit22-xmas-workshop/memory.html': '聖誕工坊：翻牌配對',
+    'unit22-xmas-workshop/tree.html': '聖誕工坊：裝飾聖誕樹',
+    'unit22-xmas-workshop/snowman.html': '聖誕工坊：堆雪人'
   };
   var PAGES = {
     '': '首頁（學習樂園島）', 'index.html': '首頁（學習樂園島）',
@@ -222,8 +231,8 @@
 
   function pageName(path) {
     var p = String(path || '').replace(/^\/edtech-portfolio\//, '').replace(/^\//, '');
-    var m = p.match(/^units\/([^/]+)/);
-    if (m) return NAMES[m[1]] || m[1];
+    var m = p.match(/^units\/([^/]+)\/?([^/?#]*)/);
+    if (m) return NAMES[m[1] + '/' + m[2]] || NAMES[m[1]] || m[1];
     return PAGES[p] || p || '首頁（學習樂園島）';
   }
 

@@ -1,0 +1,2435 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>聖誕工坊大救援｜聖誕工坊地圖</title>
+  <!-- 外部字型：僅引入規定之 Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* =========================================================
+       字型定義與色票變數
+       ========================================================= */
+    @font-face {
+      font-family: 'Bpmf Huninn';
+      src: url('fonts/bpmf-huninn-xmas.woff2') format('woff2');
+      font-display: swap;
+    }
+
+    :root {
+      --xmas-red: #c0392b;
+      --xmas-deep-red: #8e1c14;
+      --xmas-green: #1e7a4c;
+      --xmas-dark-green: #124d2f;
+      --xmas-gold: #e6a817;
+      --xmas-bright-gold: #ffd54f;
+      --xmas-night: #142850;
+      --xmas-night-deep: #0c1a38;
+      --xmas-cream: #fff8e6;
+      --xmas-ink: #3a1f16;
+      --font-bpmf: 'Bpmf Huninn', 'Noto Sans TC', sans-serif;
+      --font-ui: 'Noto Sans TC', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: var(--font-bpmf);
+      font-weight: 400;
+      font-synthesis: none; /* 避免瀏覽器強制加粗導致注音糊掉 */
+      color: var(--xmas-ink);
+      background:
+        radial-gradient(circle at 18% 12%, rgba(230, 168, 23, 0.16) 0%, transparent 36%),
+        radial-gradient(circle at 82% 14%, rgba(255, 248, 230, 0.12) 0%, transparent 34%),
+        linear-gradient(180deg, var(--xmas-night-deep) 0%, var(--xmas-night) 52%, #1a3566 100%);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* =========================================================
+       背景飄雪畫布與上方聖誕燈串
+       ========================================================= */
+    #snowCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .light-strand {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 36px;
+      z-index: 15;
+      pointer-events: none;
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding: 0 8px;
+      overflow: hidden;
+    }
+
+    .light-strand::before {
+      content: '';
+      position: absolute;
+      top: 5px;
+      left: -2%;
+      width: 104%;
+      height: 10px;
+      border-bottom: 3px solid #163d28;
+      border-radius: 50%;
+    }
+
+    .bulb-btn {
+      position: relative;
+      top: 7px;
+      width: 16px;
+      height: 22px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      pointer-events: auto;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.15s ease;
+    }
+
+    .bulb-btn:hover {
+      transform: scale(1.25);
+    }
+
+    .bulb-cap {
+      width: 8px;
+      height: 5px;
+      background: #1a4d30;
+      border-radius: 2px 2px 0 0;
+    }
+
+    .bulb-glass {
+      width: 13px;
+      height: 15px;
+      border-radius: 50% 50% 45% 45%;
+      animation: bulbTwinkle 2.4s ease-in-out infinite;
+    }
+
+    .bulb-red .bulb-glass {
+      background: #ff5e52;
+      box-shadow: 0 0 10px 2px rgba(255, 94, 82, 0.85);
+    }
+
+    .bulb-gold .bulb-glass {
+      background: #ffe066;
+      box-shadow: 0 0 10px 2px rgba(255, 224, 102, 0.9);
+      animation-delay: 0.6s;
+    }
+
+    .bulb-green .bulb-glass {
+      background: #42d684;
+      box-shadow: 0 0 10px 2px rgba(66, 214, 132, 0.85);
+      animation-delay: 1.2s;
+    }
+
+    .bulb-cream .bulb-glass {
+      background: #fff8e6;
+      box-shadow: 0 0 10px 2px rgba(255, 248, 230, 0.9);
+      animation-delay: 1.8s;
+    }
+
+    .bulb-btn.flash .bulb-glass {
+      transform: scale(1.35);
+      box-shadow: 0 0 18px 6px rgba(255, 248, 230, 0.98);
+    }
+
+    @keyframes bulbTwinkle {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.58; }
+    }
+
+    /* =========================================================
+       頁面主容器（橫向寬螢幕 1280×800 為主版面）
+       ========================================================= */
+    .page-shell {
+      position: relative;
+      z-index: 5;
+      width: 100%;
+      max-width: 1340px;
+      padding: 22px 18px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      min-height: 100vh;
+    }
+
+    /* =========================================================
+       頂部列：左上 120×44px 留白 + 主標題 + 右上控制按鈕
+       ========================================================= */
+    .top-bar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 54px;
+    }
+
+    /* 依規範：左上角保留 120×44px 空白給整合時放「回首頁」按鈕 */
+    .home-btn-spacer {
+      width: 120px;
+      height: 44px;
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+
+    .title-wrap {
+      flex: 1;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .main-title {
+      font-family: var(--font-ui);
+      font-weight: 900;
+      font-size: clamp(32px, 3.2vw, 44px);
+      line-height: 1.15;
+      letter-spacing: 0.06em;
+      color: #fff8e6;
+      /* 規範指定的實心立體厚度陰影（不使用漸層透明字或 drop-shadow） */
+      text-shadow:
+        0 2px 0 #c0392b,
+        0 4px 0 #a02a1f,
+        0 6px 0 #7a1c13,
+        0 8px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    .title-icon {
+      font-size: clamp(26px, 2.5vw, 34px);
+      line-height: 1;
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    /* 禮物盒／拐杖糖風格節慶按鈕 */
+    .xmas-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 48px;
+      padding: 0 18px;
+      border-radius: 14px;
+      border: 3px solid var(--xmas-cream);
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      font-weight: 400;
+      line-height: 1;
+      color: var(--xmas-cream);
+      cursor: pointer;
+      transition: transform 0.14s ease, box-shadow 0.14s ease, background-color 0.14s ease;
+      text-decoration: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* 拐杖糖紅白斜紋邊框按鈕 */
+    .btn-candy {
+      background:
+        linear-gradient(180deg, #d64536 0%, var(--xmas-red) 62%, var(--xmas-deep-red) 100%);
+      box-shadow:
+        0 0 0 3px var(--xmas-deep-red),
+        0 4px 0 var(--xmas-deep-red),
+        0 6px 12px rgba(0, 0, 0, 0.35);
+      border: 3px solid transparent;
+      background-clip: padding-box;
+    }
+
+    .btn-candy::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 16px;
+      background: repeating-linear-gradient(
+        -45deg,
+        #fff8e6 0px,
+        #fff8e6 7px,
+        #c0392b 7px,
+        #c0392b 14px
+      );
+      z-index: -1;
+    }
+
+    /* 禮物盒綠金按鈕 */
+    .btn-gift {
+      background: linear-gradient(180deg, #27995f 0%, var(--xmas-green) 65%, var(--xmas-dark-green) 100%);
+      border-color: var(--xmas-bright-gold);
+      box-shadow:
+        0 4px 0 #0d3a22,
+        0 6px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    .xmas-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .xmas-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 var(--xmas-deep-red), 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .xmas-btn:focus-visible {
+      outline: 4px solid var(--xmas-bright-gold);
+      outline-offset: 3px;
+    }
+
+    /* =========================================================
+       角色迎賓列：叮叮 ＋ 聖誕卡片對話框 ＋ 雪球
+       ========================================================= */
+    .welcome-strip {
+      width: 100%;
+      max-width: 1180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 0 6px;
+    }
+
+    .char-btn {
+      position: relative;
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.16s ease;
+    }
+
+    .char-btn:hover {
+      transform: translateY(-4px) scale(1.04);
+    }
+
+    .char-btn:active {
+      transform: scale(0.95);
+    }
+
+    .char-btn:focus-visible {
+      outline: 3px solid var(--xmas-bright-gold);
+      border-radius: 18px;
+    }
+
+    .char-tag {
+      margin-top: -10px;
+      padding: 2px 12px;
+      border-radius: 999px;
+      background: var(--xmas-deep-red);
+      border: 2px solid var(--xmas-bright-gold);
+      color: var(--xmas-cream);
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 1.25;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .char-tag-green {
+      background: var(--xmas-green);
+    }
+
+    .char-figure {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: charWave 2.8s ease-in-out infinite;
+      transform-origin: bottom center;
+    }
+
+    .char-figure-delay {
+      animation-delay: 0.7s;
+    }
+
+    .char-btn.cheer-hop .char-figure {
+      animation: cheerJump 0.55s ease-out;
+    }
+
+    @keyframes charWave {
+      0%, 100% { transform: rotate(-2.5deg) translateY(0); }
+      50% { transform: rotate(2.8deg) translateY(-3px); }
+    }
+
+    @keyframes cheerJump {
+      0% { transform: translateY(0) scale(1); }
+      35% { transform: translateY(-14px) scale(1.08); }
+      70% { transform: translateY(2px) scale(0.97); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    /* 角色眨眼動畫（對應 svgDingDing / svgSnowball 內的 class） */
+    .char-svg .eye-blink,
+    .char-svg .eye-blink-delay {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: eyeBlink 4.6s infinite;
+    }
+
+    .char-svg .eye-blink-delay {
+      animation-delay: 1.9s;
+    }
+
+    @keyframes eyeBlink {
+      0%, 92%, 100% { transform: scaleY(1); }
+      95% { transform: scaleY(0.12); }
+    }
+
+    /* 聖誕卡片風格對話框（雙層邊框＋角落冬青葉＋紅綠格紋底紋） */
+    .xmas-card {
+      position: relative;
+      background: var(--xmas-cream);
+      border-radius: 20px;
+      border: 4px solid var(--xmas-red);
+      box-shadow:
+        inset 0 0 0 4px var(--xmas-cream),
+        inset 0 0 0 7px var(--xmas-gold),
+        0 8px 20px rgba(0, 0, 0, 0.32);
+    }
+
+    .welcome-card {
+      flex: 1;
+      min-height: 88px;
+      padding: 14px 44px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+      /* 局部淡雅紅綠格紋底紋 */
+      background-image:
+        linear-gradient(90deg, rgba(192, 57, 43, 0.05) 50%, transparent 50%),
+        linear-gradient(rgba(30, 122, 76, 0.05) 50%, transparent 50%);
+      background-size: 28px 28px;
+      background-color: var(--xmas-cream);
+    }
+
+    .card-holly {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .card-holly svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .card-holly.tl {
+      top: -6px;
+      left: -6px;
+    }
+
+    .card-holly.br {
+      bottom: -6px;
+      right: -6px;
+      transform: rotate(180deg);
+    }
+
+    .welcome-text {
+      position: relative;
+      z-index: 3;
+      font-family: var(--font-bpmf);
+      font-size: 25px;
+      line-height: 1.45;
+      color: var(--xmas-ink);
+    }
+
+    .welcome-sub {
+      position: relative;
+      z-index: 3;
+      margin-top: 2px;
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--xmas-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .progress-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: rgba(230, 168, 23, 0.22);
+      border: 1.5px solid var(--xmas-gold);
+      color: #6b3f04;
+      font-family: var(--font-ui);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    /* =========================================================
+       俯視聖誕工坊小鎮地圖（橫向主畫面）
+       ========================================================= */
+    .map-section {
+      width: 100%;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 0 8px;
+    }
+
+    .map-frame {
+      position: relative;
+      /* 在 1280×800 及 1366×768 皆可一屏完整顯示，並維持精準地圖比例 */
+      width: min(1220px, 96vw, calc((100vh - 220px) * 1220 / 540));
+      min-width: 820px;
+      aspect-ratio: 1220 / 540;
+      flex-shrink: 0;
+      border-radius: 26px;
+      padding: 8px;
+      /* 拐杖糖斜紋外框 */
+      background: repeating-linear-gradient(
+        -45deg,
+        #c0392b 0px,
+        #c0392b 14px,
+        #fff8e6 14px,
+        #fff8e6 26px,
+        #1e7a4c 26px,
+        #1e7a4c 40px,
+        #fff8e6 40px,
+        #fff8e6 52px
+      );
+      box-shadow:
+        0 0 0 3px var(--xmas-gold),
+        0 14px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .map-stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 20px;
+      border: 3px solid var(--xmas-gold);
+      background: #142850;
+      overflow: visible;
+    }
+
+    .map-bg-wrap {
+      position: absolute;
+      inset: 0;
+      border-radius: 17px;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .map-bg-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* 地圖內可點小彩蛋物件（薑餅人、聖誕襪、禮物盒堆） */
+    .deco-spot {
+      position: absolute;
+      z-index: 4;
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transform: translate(-50%, -50%);
+      transition: transform 0.16s ease;
+    }
+
+    .deco-spot:hover {
+      transform: translate(-50%, -56%) scale(1.12);
+    }
+
+    .deco-spot:active {
+      transform: translate(-50%, -48%) scale(0.94);
+    }
+
+    .deco-spot.pop {
+      animation: decoPop 0.48s ease-out;
+    }
+
+    @keyframes decoPop {
+      0% { transform: translate(-50%, -50%) scale(1); }
+      40% { transform: translate(-50%, -68%) scale(1.22) rotate(-6deg); }
+      70% { transform: translate(-50%, -52%) scale(1.06) rotate(5deg); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    /* =========================================================
+       地圖上 6 棟可點擊建築節點
+       ========================================================= */
+    .building-node {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      z-index: 8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      cursor: pointer;
+      outline: none;
+      transition: transform 0.2s cubic-bezier(0.22, 1.35, 0.36, 1), z-index 0s;
+    }
+
+    .building-node:hover,
+    .building-node:focus-visible {
+      z-index: 25;
+      transform: translate(-50%, -56%) scale(1.06);
+    }
+
+    .building-node:active {
+      transform: translate(-50%, -50%) scale(0.97);
+    }
+
+    .building-node:focus-visible .building-plate {
+      outline: 4px solid var(--xmas-bright-gold);
+      outline-offset: 2px;
+    }
+
+    /* 建築發光底環（移上時亮起） */
+    .building-glow {
+      position: absolute;
+      bottom: 34px;
+      left: 50%;
+      width: 146px;
+      height: 46px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(255, 224, 102, 0.72) 0%, rgba(255, 224, 102, 0) 72%);
+      opacity: 0.28;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 0;
+    }
+
+    .building-node.is-main .building-glow {
+      width: 210px;
+      height: 60px;
+      opacity: 0.65;
+      background: radial-gradient(ellipse at center, rgba(255, 213, 79, 0.92) 0%, rgba(230, 168, 23, 0.28) 48%, rgba(255, 213, 79, 0) 76%);
+      animation: mainGlowPulse 2.4s ease-in-out infinite;
+    }
+
+    @keyframes mainGlowPulse {
+      0%, 100% { opacity: 0.58; transform: translateX(-50%) scale(1); }
+      50% { opacity: 0.95; transform: translateX(-50%) scale(1.08); }
+    }
+
+    .building-node:hover .building-glow,
+    .building-node:focus-visible .building-glow {
+      opacity: 1;
+      transform: translateX(-50%) scale(1.16);
+    }
+
+    .building-art {
+      position: relative;
+      z-index: 2;
+      width: clamp(118px, 11vw, 148px);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      transition: transform 0.22s cubic-bezier(0.22, 1.4, 0.36, 1);
+    }
+
+    .building-node.is-main .building-art {
+      width: clamp(166px, 15.5vw, 206px);
+    }
+
+    .building-node:hover .building-art,
+    .building-node:focus-visible .building-art {
+      animation: buildingBounce 0.45s ease;
+    }
+
+    @keyframes buildingBounce {
+      0% { transform: translateY(0) scale(1); }
+      40% { transform: translateY(-8px) scale(1.05); }
+      75% { transform: translateY(2px) scale(0.99); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    .building-art svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* 主線冒險金牌標示 */
+    .main-quest-ribbon {
+      position: relative;
+      z-index: 4;
+      margin-bottom: -8px;
+      padding: 3px 14px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ffdd6b 0%, var(--xmas-gold) 100%);
+      border: 2.5px solid var(--xmas-deep-red);
+      color: #5c1908;
+      font-family: var(--font-ui);
+      font-weight: 900;
+      font-size: 16px;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
+      white-space: nowrap;
+    }
+
+    /* 建築名牌（注音字型，至少 24px） */
+    .building-plate {
+      position: relative;
+      z-index: 3;
+      margin-top: -6px;
+      padding: 4px 14px;
+      border-radius: 12px;
+      background: var(--xmas-cream);
+      border: 3px solid var(--xmas-red);
+      box-shadow:
+        inset 0 0 0 2px var(--xmas-gold),
+        0 4px 0 var(--xmas-deep-red),
+        0 6px 12px rgba(0, 0, 0, 0.38);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: background-color 0.16s ease, border-color 0.16s ease;
+    }
+
+    .building-node.is-main .building-plate {
+      background: linear-gradient(180deg, #fff8e6 0%, #ffefc2 100%);
+      border-color: var(--xmas-deep-red);
+      border-width: 3.5px;
+      padding: 5px 18px;
+    }
+
+    .building-node:hover .building-plate,
+    .building-node:focus-visible .building-plate {
+      background: #fffdf5;
+      border-color: var(--xmas-gold);
+    }
+
+    .plate-name {
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      font-weight: 400;
+      line-height: 1.2;
+      color: var(--xmas-ink);
+    }
+
+    /* 完成小星星（畫畫屋、聖誕樹、雪人） */
+    .done-star {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      line-height: 1;
+      animation: starPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes starPulse {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.18) rotate(8deg); }
+    }
+
+    /* 分數／步數徽章（Noto Sans TC >= 16px，讀不到就不產生） */
+    .score-badge {
+      position: relative;
+      z-index: 4;
+      margin-top: 5px;
+      padding: 2px 11px;
+      border-radius: 999px;
+      background: var(--xmas-night);
+      border: 2px solid var(--xmas-bright-gold);
+      color: var(--xmas-cream);
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 1.3;
+      white-space: nowrap;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .building-node.is-main .score-badge {
+      background: var(--xmas-deep-red);
+      border-color: var(--xmas-bright-gold);
+      color: #fff8e6;
+    }
+
+    /* 滑鼠移上建築時顯示的一句介紹氣泡（平時 visibility:hidden） */
+    .building-tooltip {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      min-width: 220px;
+      max-width: 300px;
+      padding: 8px 16px;
+      border-radius: 14px;
+      background: var(--xmas-cream);
+      border: 3px solid var(--xmas-green);
+      box-shadow:
+        inset 0 0 0 2px var(--xmas-gold),
+        0 8px 18px rgba(0, 0, 0, 0.4);
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      line-height: 1.35;
+      color: var(--xmas-ink);
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+      z-index: 30;
+    }
+
+    .building-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 9px 9px 0 9px;
+      border-style: solid;
+      border-color: var(--xmas-green) transparent transparent transparent;
+    }
+
+    /* 上排靠上方的建築可讓氣泡往上自然超出地圖邊框，不被裁切 */
+    .building-node:hover .building-tooltip,
+    .building-node:focus-visible .building-tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* 點擊彩蛋冒出的金色浮動小星星 */
+    .sparkle-fx {
+      position: fixed;
+      pointer-events: none;
+      z-index: 60;
+      font-size: 22px;
+      animation: sparkleFloat 0.85s ease-out forwards;
+    }
+
+    @keyframes sparkleFloat {
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(0.7); }
+      100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.25); }
+    }
+
+    /* =========================================================
+       手機直立專用：上下排列的 6 張大聖誕卡片（橫向時隱藏）
+       ========================================================= */
+    .portrait-list {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      gap: 14px;
+      padding: 4px 0 24px;
+    }
+
+    .portrait-card {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 20px;
+      background: var(--xmas-cream);
+      border: 4px solid var(--xmas-red);
+      box-shadow:
+        inset 0 0 0 3px var(--xmas-cream),
+        inset 0 0 0 6px var(--xmas-gold),
+        0 6px 14px rgba(0, 0, 0, 0.35);
+      text-decoration: none;
+      color: var(--xmas-ink);
+      cursor: pointer;
+      transition: transform 0.14s ease;
+    }
+
+    .portrait-card.is-main {
+      background: linear-gradient(135deg, #fff8e6 0%, #ffefc2 100%);
+      border-color: var(--xmas-deep-red);
+    }
+
+    .portrait-card:active {
+      transform: scale(0.98);
+    }
+
+    .portrait-thumb {
+      width: 92px;
+      height: 86px;
+      flex-shrink: 0;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #1b3668 0%, #2a528a 60%, #e7f2fa 60%, #fff8e6 100%);
+      border: 2.5px solid var(--xmas-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+
+    .portrait-thumb svg {
+      width: 82px;
+      height: auto;
+      max-height: 76px;
+    }
+
+    .portrait-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .portrait-head {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .portrait-name {
+      font-family: var(--font-bpmf);
+      font-size: 26px;
+      line-height: 1.25;
+      color: var(--xmas-ink);
+    }
+
+    .portrait-desc {
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      line-height: 1.35;
+      color: #573324;
+    }
+
+    .portrait-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .portrait-go {
+      flex-shrink: 0;
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: var(--xmas-green);
+      border: 2px solid var(--xmas-bright-gold);
+      color: var(--xmas-cream);
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .portrait-card.is-main .portrait-go {
+      background: var(--xmas-red);
+    }
+
+    /* =========================================================
+       說明彈出視窗（關閉時使用 visibility:hidden 與 inert）
+       ========================================================= */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(10, 20, 44, 0.72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+
+    .modal-backdrop.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .modal-card {
+      width: min(640px, 94vw);
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 28px 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-align: center;
+    }
+
+    .modal-title {
+      font-family: var(--font-ui);
+      font-weight: 900;
+      font-size: 28px;
+      color: var(--xmas-deep-red);
+    }
+
+    .modal-body {
+      font-family: var(--font-bpmf);
+      font-size: 24px;
+      line-height: 1.55;
+      color: var(--xmas-ink);
+      text-align: left;
+      width: 100%;
+    }
+
+    .modal-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .modal-gifts {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    /* =========================================================
+       較窄橫向視窗微調（如 1024×768 教室投影）
+       ========================================================= */
+    @media (max-width: 1120px) and (orientation: landscape) {
+      .map-frame {
+        min-width: 0;
+        width: 96vw;
+      }
+
+      .welcome-card {
+        padding: 10px 30px;
+      }
+
+      .building-art {
+        width: clamp(98px, 11vw, 132px);
+      }
+
+      .building-node.is-main .building-art {
+        width: clamp(136px, 15vw, 178px);
+      }
+    }
+
+    /* =========================================================
+       手機直立版面重排（次要情境，不可橫向捲動）
+       ========================================================= */
+    @media (orientation: portrait) {
+      .page-shell {
+        padding: 24px 12px 20px;
+        gap: 12px;
+      }
+
+      .top-bar {
+        flex-wrap: wrap;
+        justify-content: space-between;
+        row-gap: 10px;
+      }
+
+      .home-btn-spacer {
+        width: 120px;
+        height: 44px;
+        order: 1;
+      }
+
+      .top-controls {
+        order: 2;
+      }
+
+      .title-wrap {
+        order: 3;
+        flex-basis: 100%;
+      }
+
+      .main-title {
+        font-size: clamp(28px, 7.5vw, 38px);
+      }
+
+      .xmas-btn {
+        height: 44px;
+        padding: 0 12px;
+        font-size: 24px;
+      }
+
+      .welcome-strip {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .welcome-card {
+        order: 3;
+        flex-basis: 100%;
+        padding: 14px 20px;
+      }
+
+      .char-btn {
+        transform: scale(0.9);
+      }
+
+      /* 隱藏俯視地圖，改呈現 6 張大卡片 */
+      .map-section {
+        display: none;
+      }
+
+      .portrait-list {
+        display: flex;
+      }
+
+      .portrait-card {
+        flex-wrap: wrap;
+      }
+
+      .portrait-go {
+        margin-left: auto;
+      }
+    }
+
+    /* =========================================================
+       尊重系統減少動態偏好（關閉動畫與飄雪，功能仍正常）
+       ========================================================= */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+
+      #snowCanvas {
+        display: none;
+      }
+    }
+
+    /* 整合修（2026-11-19）：地圖寬度用「視窗高 − 220px」反推，但上方實際佔 ~240px，
+       1366×768 筆電要捲 18px；橫式矮螢幕改扣 240px */
+    @media (orientation: landscape) and (max-height: 820px) {
+      .map-frame { width: min(1220px, 96vw, calc((100vh - 240px) * 1220 / 540)); }
+    }
+  </style>
+</head>
+<body>
+<a href="../../index.html" class="kogao-home-btn" style="position:fixed;top:10px;left:10px;z-index:99999;background:rgba(255,255,255,.92);border:2px solid #f59e0b;color:#b45309;font-family:'Noto Sans TC',sans-serif;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.15)">🏠 首頁</a>
+  <!-- 背景飄雪畫布 -->
+  <canvas id="snowCanvas" aria-hidden="true"></canvas>
+
+  <!-- 頂部彩色聖誕燈串（點擊燈泡會閃爍發聲） -->
+  <div class="light-strand" id="lightStrand" aria-hidden="true"></div>
+
+  <!-- 主頁面外框 -->
+  <div class="page-shell">
+    <!-- 頂部狀態列：左上保留 120×44px 空白、中央主標題、右上說明與音效開關 -->
+    <header class="top-bar">
+      <div class="home-btn-spacer" aria-hidden="true"></div>
+
+      <div class="title-wrap">
+        <span class="title-icon" aria-hidden="true">🎄</span>
+        <h1 class="main-title" id="siteTitle">聖誕工坊大救援</h1>
+        <span class="title-icon" aria-hidden="true">🎄</span>
+      </div>
+
+      <div class="top-controls">
+        <button type="button" class="xmas-btn btn-gift" id="helpBtn" aria-label="開啟工坊說明">
+          <span aria-hidden="true">🔔</span><span id="helpBtnText">說明</span>
+        </button>
+        <button type="button" class="xmas-btn btn-candy" id="soundBtn" aria-pressed="true" aria-label="切換音效開關">
+          <span id="soundIcon" aria-hidden="true">🔊</span><span id="soundText">音效</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 開場角色迎賓區：叮叮 ＋ 聖誕卡片對話框 ＋ 雪球 -->
+    <section class="welcome-strip" aria-label="角色迎賓區">
+      <button type="button" class="char-btn" id="dingDingBtn" aria-label="點一下和叮叮打招呼">
+        <div class="char-figure" id="dingDingHolder"></div>
+        <span class="char-tag">叮叮</span>
+      </button>
+
+      <div class="xmas-card welcome-card" role="status" aria-live="polite">
+        <div class="card-holly tl" data-holly="1"></div>
+        <div class="card-holly br" data-holly="1"></div>
+        <p class="welcome-text" id="welcomeText">今天想去工坊的哪裡呢？</p>
+        <div class="welcome-sub" id="welcomeSub"></div>
+      </div>
+
+      <button type="button" class="char-btn" id="snowballBtn" aria-label="點一下和雪球打招呼">
+        <div class="char-figure char-figure-delay" id="snowballHolder"></div>
+        <span class="char-tag char-tag-green">雪球</span>
+      </button>
+    </section>
+
+    <!-- 橫向主畫面：俯視聖誕工坊小鎮地圖 -->
+    <main class="map-section" aria-label="聖誕工坊小鎮地圖">
+      <div class="map-frame">
+        <div class="map-stage" id="mapStage">
+          <!-- 俯視雪地小鎮背景（雪山、松樹、蜿蜒小路、路燈、燈串） -->
+          <div class="map-bg-wrap" aria-hidden="true">
+            <svg class="map-bg-svg" viewBox="0 0 1220 540" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#102247"/>
+                  <stop offset="55%" stop-color="#1c3b72"/>
+                  <stop offset="100%" stop-color="#2b5594"/>
+                </linearGradient>
+                <linearGradient id="snowFieldGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#e3f1fc"/>
+                  <stop offset="45%" stop-color="#f5faff"/>
+                  <stop offset="100%" stop-color="#dcebfb"/>
+                </linearGradient>
+                <radialGradient id="lampGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#ffe57f" stop-opacity="0.88"/>
+                  <stop offset="55%" stop-color="#ffd54f" stop-opacity="0.32"/>
+                  <stop offset="100%" stop-color="#ffd54f" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+
+              <!-- 夜空與月光 -->
+              <rect x="0" y="0" width="1220" height="540" fill="url(#skyGrad)"/>
+              <circle cx="96" cy="54" r="24" fill="#fff3c4"/>
+              <circle cx="105" cy="48" r="20" fill="#122750"/>
+              <!-- 遠方夜空小星星 -->
+              <circle cx="265" cy="36" r="2.8" fill="#fff8e6"/>
+              <circle cx="348" cy="24" r="2.2" fill="#ffe082"/>
+              <circle cx="430" cy="46" r="2.5" fill="#fff8e6"/>
+              <circle cx="775" cy="32" r="2.8" fill="#ffe082"/>
+              <circle cx="885" cy="44" r="2.2" fill="#fff8e6"/>
+              <circle cx="1125" cy="38" r="3" fill="#ffe082"/>
+              <circle cx="1042" cy="24" r="2" fill="#fff8e6"/>
+
+              <!-- 遠山雪嶺 -->
+              <path d="M0,136 Q150,72 310,124 Q480,68 640,118 Q840,60 1030,118 Q1140,86 1220,126 L1220,210 L0,210 Z" fill="#2d4d82"/>
+              <path d="M0,154 Q180,104 370,148 Q580,96 790,144 Q1000,98 1220,148 L1220,220 L0,220 Z" fill="#bfd8ee"/>
+
+              <!-- 俯視雪地小鎮主雪丘 -->
+              <path d="M0,142 Q305,112 610,130 Q915,112 1220,142 L1220,540 L0,540 Z" fill="url(#snowFieldGrad)"/>
+              <!-- 雪丘柔和高低陰影 -->
+              <ellipse cx="220" cy="215" rx="185" ry="44" fill="#cfe4f7" opacity="0.6"/>
+              <ellipse cx="995" cy="215" rx="185" ry="44" fill="#cfe4f7" opacity="0.6"/>
+              <ellipse cx="610" cy="495" rx="330" ry="48" fill="#c9e0f5" opacity="0.55"/>
+
+              <!-- 小鎮蜿蜒石板雪路（連接中央廣場與 6 棟建築） -->
+              <path d="M210,205 C320,248 450,262 610,262 C770,262 900,248 1010,205" fill="none" stroke="#c89e74" stroke-width="34" stroke-linecap="round"/>
+              <path d="M210,205 C320,248 450,262 610,262 C770,262 900,248 1010,205" fill="none" stroke="#ecd6b7" stroke-width="24" stroke-linecap="round"/>
+
+              <path d="M235,412 C345,356 465,332 610,332 C755,332 875,356 985,412" fill="none" stroke="#c89e74" stroke-width="32" stroke-linecap="round"/>
+              <path d="M235,412 C345,356 465,332 610,332 C755,332 875,356 985,412" fill="none" stroke="#ecd6b7" stroke-width="22" stroke-linecap="round"/>
+
+              <path d="M610,185 L610,430" fill="none" stroke="#c89e74" stroke-width="40" stroke-linecap="round"/>
+              <path d="M610,185 L610,430" fill="none" stroke="#ecd6b7" stroke-width="28" stroke-linecap="round"/>
+
+              <!-- 中央紅綠金小鎮廣場圓環 -->
+              <ellipse cx="610" cy="296" rx="74" ry="32" fill="#c89e74"/>
+              <ellipse cx="610" cy="296" rx="64" ry="26" fill="#f3dfc4"/>
+              <ellipse cx="610" cy="296" rx="34" ry="14" fill="none" stroke="#c0392b" stroke-width="3" stroke-dasharray="8 6"/>
+
+              <!-- 石板小點綴 -->
+              <ellipse cx="425" cy="256" rx="10" ry="5" fill="#d9ba91"/>
+              <ellipse cx="795" cy="256" rx="10" ry="5" fill="#d9ba91"/>
+              <ellipse cx="445" cy="346" rx="10" ry="5" fill="#d9ba91"/>
+              <ellipse cx="775" cy="346" rx="10" ry="5" fill="#d9ba91"/>
+
+              <!-- 橫跨中央廣場的小鎮慶典燈串 -->
+              <path d="M342,248 Q610,295 878,248" fill="none" stroke="#2c3e50" stroke-width="2.5"/>
+              <circle cx="408" cy="262" r="4.5" fill="#ff5e52"/>
+              <circle cx="472" cy="272" r="4.5" fill="#ffe066"/>
+              <circle cx="540" cy="278" r="4.5" fill="#42d684"/>
+              <circle cx="610" cy="280" r="5" fill="#ffe066"/>
+              <circle cx="680" cy="278" r="4.5" fill="#ff5e52"/>
+              <circle cx="748" cy="272" r="4.5" fill="#42d684"/>
+              <circle cx="812" cy="262" r="4.5" fill="#ffe066"/>
+
+              <!-- 背景點綴小松樹（不擋建築） -->
+              <g id="pineTrees">
+                <!-- 左邊緣松樹 -->
+                <polygon points="56,228 32,276 80,276" fill="#1e7a4c"/>
+                <polygon points="56,204 38,244 74,244" fill="#25925b"/>
+                <polygon points="56,204 46,224 66,224" fill="#ffffff"/>
+                <rect x="51" y="276" width="10" height="14" fill="#6d4325"/>
+
+                <polygon points="74,442 46,496 102,496" fill="#16603b"/>
+                <polygon points="74,418 53,460 95,460" fill="#1e7a4c"/>
+                <polygon points="74,418 63,438 85,438" fill="#ffffff"/>
+                <rect x="69" y="496" width="10" height="14" fill="#6d4325"/>
+
+                <!-- 右邊緣松樹 -->
+                <polygon points="1164,232 1140,280 1188,280" fill="#1e7a4c"/>
+                <polygon points="1164,208 1146,248 1182,248" fill="#25925b"/>
+                <polygon points="1164,208 1154,228 1174,228" fill="#ffffff"/>
+                <rect x="1159" y="280" width="10" height="14" fill="#6d4325"/>
+
+                <polygon points="1148,442 1120,496 1176,496" fill="#16603b"/>
+                <polygon points="1148,418 1127,460 1169,460" fill="#1e7a4c"/>
+                <polygon points="1148,418 1137,438 1159,438" fill="#ffffff"/>
+                <rect x="1143" y="496" width="10" height="14" fill="#6d4325"/>
+
+                <!-- 上中遠景小松樹 -->
+                <polygon points="396,120 378,158 414,158" fill="#1b6b43"/>
+                <polygon points="396,120 388,136 404,136" fill="#eef6fc"/>
+                <polygon points="824,120 806,158 842,158" fill="#1b6b43"/>
+                <polygon points="824,120 816,136 832,136" fill="#eef6fc"/>
+              </g>
+
+              <!-- 4 盞暖光復古聖誕路燈 -->
+              <g id="streetLamps">
+                <!-- 左中路燈 -->
+                <circle cx="342" cy="242" r="34" fill="url(#lampGlow)"/>
+                <rect x="339" y="248" width="6" height="44" rx="2" fill="#2c3e50"/>
+                <rect x="334" y="288" width="16" height="6" rx="3" fill="#1e2d3b"/>
+                <polygon points="332,248 352,248 349,234 335,234" fill="#ffe57f" stroke="#2c3e50" stroke-width="2"/>
+                <polygon points="330,234 354,234 342,225" fill="#c0392b"/>
+
+                <!-- 右中路燈 -->
+                <circle cx="878" cy="242" r="34" fill="url(#lampGlow)"/>
+                <rect x="875" y="248" width="6" height="44" rx="2" fill="#2c3e50"/>
+                <rect x="870" y="288" width="16" height="6" rx="3" fill="#1e2d3b"/>
+                <polygon points="868,248 888,248 885,234 871,234" fill="#ffe57f" stroke="#2c3e50" stroke-width="2"/>
+                <polygon points="866,234 890,234 878,225" fill="#c0392b"/>
+
+                <!-- 左下路燈 -->
+                <circle cx="420" cy="368" r="30" fill="url(#lampGlow)"/>
+                <rect x="417" y="374" width="6" height="38" rx="2" fill="#2c3e50"/>
+                <polygon points="411,374 429,374 426,362 414,362" fill="#ffe57f" stroke="#2c3e50" stroke-width="2"/>
+                <polygon points="409,362 431,362 420,354" fill="#1e7a4c"/>
+
+                <!-- 右下路燈 -->
+                <circle cx="800" cy="368" r="30" fill="url(#lampGlow)"/>
+                <rect x="797" y="374" width="6" height="38" rx="2" fill="#2c3e50"/>
+                <polygon points="791,374 809,374 806,362 794,362" fill="#ffe57f" stroke="#2c3e50" stroke-width="2"/>
+                <polygon points="789,362 811,362 800,354" fill="#1e7a4c"/>
+              </g>
+
+              <!-- 拐杖糖路標 -->
+              <g id="candyCaneSigns">
+                <path d="M518,318 L518,284 C518,274 532,274 532,284" fill="none" stroke="#fff8e6" stroke-width="8" stroke-linecap="round"/>
+                <path d="M518,318 L518,284 C518,274 532,274 532,284" fill="none" stroke="#c0392b" stroke-width="8" stroke-dasharray="6 6" stroke-linecap="round"/>
+                <path d="M702,318 L702,284 C702,274 688,274 688,284" fill="none" stroke="#fff8e6" stroke-width="8" stroke-linecap="round"/>
+                <path d="M702,318 L702,284 C702,274 688,274 688,284" fill="none" stroke="#c0392b" stroke-width="8" stroke-dasharray="6 6" stroke-linecap="round"/>
+              </g>
+            </svg>
+          </div>
+
+          <!-- 地圖小彩蛋與 6 棟建築由 JS 依資料常數動態渲染 -->
+          <div id="mapObjectsLayer"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 手機直立專用：上下排列 6 張大卡片 -->
+    <section class="portrait-list" id="portraitList" aria-label="聖誕工坊景點清單"></section>
+  </div>
+
+  <!-- 說明彈出卡片（關閉時加 is-hidden => visibility:hidden 且設 inert） -->
+  <div class="modal-backdrop is-hidden" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true" inert>
+    <div class="xmas-card modal-card">
+      <div class="card-holly tl" data-holly="1"></div>
+      <div class="card-holly br" data-holly="1"></div>
+      <h2 class="modal-title" id="modalTitle">🎄 歡迎來到聖誕工坊 🎄</h2>
+      <div class="modal-body">
+        <ul class="modal-list" id="modalGuideList"></ul>
+      </div>
+      <div class="modal-gifts" id="modalGifts"></div>
+      <button type="button" class="xmas-btn btn-candy" id="closeModalBtn">我知道了</button>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================================
+       1. 老師可修改之文字與建築設定常數（集中管理，方便教學調整）
+       ========================================================================= */
+    const GAME_TEXTS = {
+      siteTitle: '聖誕工坊大救援',
+      helpBtn: '說明',
+      soundOnLabel: '音效',
+      soundOffLabel: '靜音',
+      defaultGreeting: '今天想去工坊的哪裡呢？點建築出發吧！',
+      defaultSubHint: '點叮叮、雪球或地圖上的小裝飾也有驚喜喔！',
+      mainQuestLabel: '⭐ 主線冒險',
+      goBtnText: '出發',
+      modalTitle: '🎄 歡迎來到聖誕工坊 🎄',
+      modalCloseBtn: '我知道了',
+      modalGuides: [
+        '⭐ 先去中央最大的「送禮電腦室」，完成四關主線冒險！',
+        '🎨 也可以到畫畫屋、雪橇跑道、記憶小木屋、聖誕樹廣場和雪人公園自由探索。',
+        '🔔 玩完每個地方回來地圖，名牌旁會亮起小星星或紀錄徽章喔！',
+        '🍪 偷偷告訴你：點叮叮、雪球、燈串和小鎮裝飾，都會有聲音驚喜！'
+      ],
+      dingDingLines: [
+        '叮叮說：聖誕快樂！快去送禮電腦室幫聖誕老公公吧！',
+        '叮叮揮揮手：每個小屋都藏著超好玩的任務喔！',
+        '叮叮笑著說：收集越多星星，工坊就越閃亮！'
+      ],
+      snowballLines: [
+        '雪球搖搖鹿角：我們準備好拉雪橇出發囉！',
+        '雪球開心地說：把滑鼠移到建築上，可以先看介紹喔！',
+        '雪球眨眨眼：玩完小遊戲回來，別忘了看看你的星星徽章！'
+      ],
+      decoLines: {
+        gingerbread: '🍪 薑餅人開心地跳起來：聖誕快樂！祝你闖關順利！',
+        stocking: '🎁 聖誕襪晃了晃：裡面好像藏著滿滿的祝福糖果喔！',
+        gifts: '🎁 禮物堆沙沙作響：這些都是要送給全世界小朋友的禮物！',
+        bulb: '🔔 叮噹！你點亮了工坊的彩色聖誕燈串！'
+      },
+      badgeFormat: {
+        score: (val) => `⭐ ${val}/12`,
+        catchBest: (val) => `🎁 最高 ${val} 分`,
+        memoryBest: (val) => `🔔 最少 ${val} 步`,
+        doneStarTitle: '已體驗過這個工坊！'
+      }
+    };
+
+    /* 6 棟建築資料設定（位置為地圖百分比座標） */
+    const BUILDINGS = [
+      {
+        id: 'rescue',
+        name: '送禮電腦室',
+        href: 'rescue.html',
+        desc: '四關闖關救援，幫聖誕老公公找回送禮資料！',
+        shortDesc: '四關闖關救援',
+        isMain: true,
+        posX: 50,
+        posY: 26,
+        badgeType: 'score',
+        storageKey: 'edtech-unit22-score',
+        noteIndex: 0
+      },
+      {
+        id: 'draw',
+        name: '畫畫屋',
+        href: 'draw.html',
+        desc: '在聖誕卡片畫畫屋，畫一張獨一無二的祝福卡！',
+        shortDesc: '聖誕卡片畫畫屋',
+        isMain: false,
+        posX: 17,
+        posY: 29,
+        badgeType: 'done',
+        storageKey: 'edtech-unit22-draw-done',
+        noteIndex: 1
+      },
+      {
+        id: 'catch',
+        name: '雪橇跑道',
+        href: 'catch.html',
+        desc: '坐上雪橇左右移動，接住從天而降的禮物！',
+        shortDesc: '雪橇接禮物',
+        isMain: false,
+        posX: 83,
+        posY: 29,
+        badgeType: 'catchBest',
+        storageKey: 'edtech-unit22-catch-best',
+        noteIndex: 2
+      },
+      {
+        id: 'memory',
+        name: '記憶小木屋',
+        href: 'memory.html',
+        desc: '挑戰聖誕翻牌配對，考考你的超強記憶力！',
+        shortDesc: '聖誕翻牌配對',
+        isMain: false,
+        posX: 19,
+        posY: 74,
+        badgeType: 'memoryBest',
+        storageKey: 'edtech-unit22-memory-best',
+        noteIndex: 3
+      },
+      {
+        id: 'tree',
+        name: '聖誕樹廣場',
+        href: 'tree.html',
+        desc: '掛上彩球與星星，親手裝飾最閃亮的聖誕樹！',
+        shortDesc: '裝飾聖誕樹',
+        isMain: false,
+        posX: 50,
+        posY: 76,
+        badgeType: 'done',
+        storageKey: 'edtech-unit22-tree-done',
+        noteIndex: 4
+      },
+      {
+        id: 'snowman',
+        name: '雪人公園',
+        href: 'snowman.html',
+        desc: '滾雪球、戴帽子和圍巾，堆出最可愛的雪人！',
+        shortDesc: '堆雪人',
+        isMain: false,
+        posX: 81,
+        posY: 74,
+        badgeType: 'done',
+        storageKey: 'edtech-unit22-snowman-done',
+        noteIndex: 5
+      }
+    ];
+
+    /* =========================================================================
+       2. 官方定稿角色與禮物 SVG（原封不動嵌入，維持全站一致）
+       ========================================================================= */
+    function svgHollyCorner() {
+      return `
+        <svg viewBox="0 0 64 64" width="58" height="58" aria-hidden="true">
+          <path d="M12,38 C16,20 30,10 46,12 C40,22 44,30 34,36 C26,40 18,44 12,38 Z" fill="#1e7a4c" stroke="#0d4227" stroke-width="2.5"/>
+          <path d="M22,22 C28,24 34,20 40,16" fill="none" stroke="#62d295" stroke-width="2" stroke-linecap="round"/>
+          <path d="M34,14 C48,22 54,36 48,52 C38,44 30,46 26,34 C24,26 26,18 34,14 Z" fill="#279b61" stroke="#0d4227" stroke-width="2.5"/>
+          <path d="M36,24 C38,32 42,38 45,45" fill="none" stroke="#85e8b2" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="24" cy="24" r="6.5" fill="#e55039" stroke="#7d1710" stroke-width="2"/>
+          <circle cx="34" cy="20" r="6" fill="#c0392b" stroke="#7d1710" stroke-width="2"/>
+          <circle cx="29" cy="31" r="6" fill="#d93829" stroke="#7d1710" stroke-width="2"/>
+          <circle cx="22" cy="22" r="2" fill="#ffd7d2"/>
+          <circle cx="32" cy="18" r="1.8" fill="#ffd7d2"/>
+          <circle cx="27" cy="29" r="1.8" fill="#ffd7d2"/>
+        </svg>`;
+    }
+
+    /** 原創角色：小精靈「叮叮」（有眨眼、表情、小鈴鐺紅綠帽） */
+    function svgDingDing(size = 120, mood = 'happy') {
+      const mouth =
+        mood === 'cheer'
+          ? '<path d="M51,76 Q60,87 69,76 Z" fill="#b33939" stroke="#4a1d14" stroke-width="2"/>'
+          : mood === 'think'
+            ? '<circle cx="60" cy="78" r="3.5" fill="#4a1d14"/>'
+            : '<path d="M52,76 Q60,83 68,76" fill="none" stroke="#4a1d14" stroke-width="3" stroke-linecap="round"/>';
+      return `
+        <svg class="char-svg" viewBox="0 0 120 132" width="${size}" height="${Math.round(size * 1.1)}" aria-hidden="true">
+          <!-- 身體（松樹綠小精靈服＋金色腰帶） -->
+          <path d="M34,92 Q60,84 86,92 L92,124 Q60,130 28,124 Z" fill="#1e7a4c" stroke="#0d4026" stroke-width="3"/>
+          <rect x="33" y="106" width="54" height="8" rx="3" fill="#5e361b"/>
+          <rect x="52" y="104" width="16" height="12" rx="3" fill="#ffe074" stroke="#996405" stroke-width="2"/>
+          <!-- 紅白鋸齒領子 -->
+          <polygon points="36,92 48,104 60,94 72,104 84,92" fill="#c0392b" stroke="#781810" stroke-width="2"/>
+          <!-- 小手 -->
+          <circle cx="29" cy="105" r="8" fill="#ffd9be" stroke="#8a5a3c" stroke-width="2.5"/>
+          <circle cx="91" cy="105" r="8" fill="#ffd9be" stroke="#8a5a3c" stroke-width="2.5"/>
+          <!-- 精靈尖耳朵 -->
+          <path d="M28,66 L14,58 L27,76 Z" fill="#ffd9be" stroke="#8a5a3c" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M92,66 L106,58 L93,76 Z" fill="#ffd9be" stroke="#8a5a3c" stroke-width="2.5" stroke-linejoin="round"/>
+          <!-- 臉龐 -->
+          <ellipse cx="60" cy="68" rx="31" ry="27" fill="#ffe0c8" stroke="#8a5a3c" stroke-width="3"/>
+          <!-- 棕色瀏海 -->
+          <path d="M32,56 Q44,44 58,53 Q72,44 88,56 Q82,42 60,40 Q38,42 32,56 Z" fill="#7c4724"/>
+          <!-- 眨眼雙眼 -->
+          <g class="eye-blink">
+            <circle cx="48" cy="66" r="5" fill="#2b1b12"/>
+            <circle cx="46.5" cy="64" r="1.8" fill="#fff"/>
+          </g>
+          <g class="eye-blink">
+            <circle cx="72" cy="66" r="5" fill="#2b1b12"/>
+            <circle cx="70.5" cy="64" r="1.8" fill="#fff"/>
+          </g>
+          <!-- 紅潤腮紅 -->
+          <ellipse cx="40" cy="74" rx="5.5" ry="3.2" fill="#ff968a" opacity="0.75"/>
+          <ellipse cx="80" cy="74" rx="5.5" ry="3.2" fill="#ff968a" opacity="0.75"/>
+          ${mouth}
+          <!-- 紅綠條紋彎曲精靈帽＋尾端金鈴鐺 -->
+          <path d="M26,52 Q36,14 78,10 Q96,8 102,24 Q84,22 72,34 Q82,42 94,52 Z" fill="#c0392b" stroke="#751810" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M40,42 Q50,24 68,18 L73,26 Q56,34 48,46 Z" fill="#1e7a4c"/>
+          <rect x="24" y="45" width="72" height="12" rx="6" fill="#fffdf6" stroke="#c8d9e6" stroke-width="2.5"/>
+          <circle cx="104" cy="24" r="8" fill="#ffd54f" stroke="#a66e05" stroke-width="2.5"/>
+          <circle cx="102" cy="22" r="2.2" fill="#fff7cc"/>
+        </svg>`;
+    }
+
+    /** 原創角色：麋鹿「雪球」（軟萌圓臉、紅綠圍巾、閃亮鹿角＋眨眼） */
+    function svgSnowball(size = 124, mood = 'happy') {
+      const mouth =
+        mood === 'cheer'
+          ? '<path d="M52,82 Q60,91 68,82 Z" fill="#9c2c24" stroke="#4a2614" stroke-width="2"/>'
+          : '<path d="M53,82 Q60,88 67,82" fill="none" stroke="#4a2614" stroke-width="3" stroke-linecap="round"/>';
+      return `
+        <svg class="char-svg" viewBox="0 0 124 132" width="${size}" height="${Math.round(size * 1.06)}" aria-hidden="true">
+          <!-- 鹿角 -->
+          <path d="M44,36 L34,14 M38,24 L26,20 M40,29 L46,16" fill="none" stroke="#85522d" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M80,36 L90,14 M86,24 L98,20 M84,29 L78,16" fill="none" stroke="#85522d" stroke-width="5.5" stroke-linecap="round"/>
+          <!-- 右鹿角上的小冬青葉 -->
+          <ellipse cx="90" cy="24" rx="6" ry="3.5" transform="rotate(-25 90 24)" fill="#1e7a4c"/>
+          <circle cx="88" cy="26" r="3" fill="#e55039"/>
+          <!-- 圓滾滾身體 -->
+          <ellipse cx="62" cy="108" rx="31" ry="21" fill="#a86d42" stroke="#5c351a" stroke-width="3"/>
+          <ellipse cx="62" cy="111" rx="18" ry="13" fill="#f5dfc6"/>
+          <!-- 紅綠條紋圍巾 -->
+          <path d="M35,88 Q62,99 89,88 L86,100 Q62,109 38,100 Z" fill="#c0392b" stroke="#751810" stroke-width="2.5"/>
+          <path d="M74,95 L86,115 L74,117 L66,98 Z" fill="#1e7a4c" stroke="#0f4228" stroke-width="2"/>
+          <!-- 耳朵 -->
+          <ellipse cx="29" cy="54" rx="12" ry="7" transform="rotate(-20 29 54)" fill="#a86d42" stroke="#5c351a" stroke-width="2.5"/>
+          <ellipse cx="95" cy="54" rx="12" ry="7" transform="rotate(20 95 54)" fill="#a86d42" stroke="#5c351a" stroke-width="2.5"/>
+          <!-- 頭與奶油色口鼻區 -->
+          <ellipse cx="62" cy="64" rx="33" ry="29" fill="#b87a4b" stroke="#5c351a" stroke-width="3"/>
+          <ellipse cx="62" cy="76" rx="22" ry="15" fill="#f7e4cd"/>
+          <!-- 眨眼雙眼 -->
+          <g class="eye-blink-delay">
+            <circle cx="49" cy="60" r="5.2" fill="#2b180e"/>
+            <circle cx="47.5" cy="58" r="1.9" fill="#fff"/>
+          </g>
+          <g class="eye-blink-delay">
+            <circle cx="75" cy="60" r="5.2" fill="#2b180e"/>
+            <circle cx="73.5" cy="58" r="1.9" fill="#fff"/>
+          </g>
+          <!-- 棕色鼻子（原創，避免聯想紅鼻子麋鹿） -->
+          <ellipse cx="62" cy="71" rx="8.5" ry="6.5" fill="#5a3418" stroke="#2e1a0b" stroke-width="2"/>
+          <ellipse cx="59" cy="69" rx="2.8" ry="1.8" fill="#a87a58"/>
+          ${mouth}
+        </svg>`;
+    }
+
+    /** 禮物盒 SVG（方形與圓形） */
+    function svgGift(color, shape, size = 104) {
+      const fillMain = color === 'red' ? '#d93829' : '#1e874b';
+      const fillLight = color === 'red' ? '#f26052' : '#32b369';
+      const strokeDark = color === 'red' ? '#7d160e' : '#0e4727';
+      const ribbon = color === 'red' ? '#ffd54f' : '#ff6b5c';
+      const ribbonStroke = color === 'red' ? '#9e6c06' : '#8a1d14';
+
+      if (shape === 'square') {
+        return `
+          <svg viewBox="0 0 110 110" width="${size}" height="${size}" aria-hidden="true">
+            <!-- 方形蝴蝶結 -->
+            <ellipse cx="42" cy="24" rx="14" ry="9" transform="rotate(-18 42 24)" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+            <ellipse cx="68" cy="24" rx="14" ry="9" transform="rotate(18 68 24)" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+            <circle cx="55" cy="26" r="6" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+            <!-- 方形盒身 -->
+            <rect x="18" y="30" width="74" height="66" rx="8" fill="${fillMain}" stroke="${strokeDark}" stroke-width="3.5"/>
+            <rect x="14" y="28" width="82" height="18" rx="6" fill="${fillLight}" stroke="${strokeDark}" stroke-width="3.5"/>
+            <!-- 十字緞帶 -->
+            <rect x="47" y="28" width="16" height="68" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2"/>
+            <rect x="18" y="57" width="74" height="14" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2"/>
+          </svg>`;
+      }
+      return `
+        <svg viewBox="0 0 110 110" width="${size}" height="${size}" aria-hidden="true">
+          <!-- 圓形蝴蝶結 -->
+          <ellipse cx="43" cy="20" rx="13" ry="8" transform="rotate(-20 43 20)" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+          <ellipse cx="67" cy="20" rx="13" ry="8" transform="rotate(20 67 20)" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+          <circle cx="55" cy="22" r="5.5" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2.5"/>
+          <!-- 圓形球盒 -->
+          <circle cx="55" cy="61" r="37" fill="${fillMain}" stroke="${strokeDark}" stroke-width="3.5"/>
+          <ellipse cx="42" cy="46" rx="12" ry="8" transform="rotate(-28 42 46)" fill="${fillLight}" opacity="0.75"/>
+          <!-- 圓盒十字緞帶 -->
+          <rect x="48" y="24" width="14" height="74" rx="4" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2"/>
+          <rect x="18" y="54" width="74" height="14" rx="4" fill="${ribbon}" stroke="${ribbonStroke}" stroke-width="2"/>
+          <!-- 裝飾小點點 -->
+          <circle cx="34" cy="45" r="3.5" fill="#fff" opacity="0.75"/>
+          <circle cx="76" cy="76" r="3.5" fill="#fff" opacity="0.75"/>
+        </svg>`;
+    }
+
+    /* =========================================================================
+       3. 六棟聖誕工坊建築與小鎮彩蛋 Inline SVG（全數僅用純數字 points）
+       ========================================================================= */
+    function svgBuildingArt(id) {
+      switch (id) {
+        case 'rescue':
+          /* 1. 送禮電腦室（最氣派主建築：雙層木屋、發光電腦窗、星光天線、聖誕花圈） */
+          return `
+            <svg viewBox="0 0 220 156" aria-hidden="true">
+              <!-- 雪地陰影 -->
+              <ellipse cx="110" cy="146" rx="94" ry="10" fill="#89a8c9" opacity="0.55"/>
+              <!-- 屋頂天線與閃亮金星 -->
+              <line x1="110" y1="36" x2="110" y2="18" stroke="#e6a817" stroke-width="4" stroke-linecap="round"/>
+              <polygon points="110,4 114,13 124,14 116,20 119,30 110,24 101,30 104,20 96,14 106,13" fill="#ffd54f" stroke="#996405" stroke-width="2"/>
+              <!-- 紅磚煙囪 -->
+              <rect x="158" y="28" width="22" height="32" rx="3" fill="#8e1c14" stroke="#4f0f0a" stroke-width="2.5"/>
+              <rect x="154" y="24" width="30" height="8" rx="4" fill="#fff8e6" stroke="#b9d1e6" stroke-width="2"/>
+              <!-- 主建築牆體 -->
+              <rect x="30" y="64" width="160" height="80" rx="8" fill="#c0392b" stroke="#6e160f" stroke-width="3.5"/>
+              <rect x="38" y="70" width="144" height="72" rx="4" fill="#fff8e6" stroke="#8e1c14" stroke-width="2"/>
+              <!-- 二樓發光大電腦螢幕窗 -->
+              <rect x="74" y="76" width="72" height="34" rx="5" fill="#142850" stroke="#e6a817" stroke-width="3"/>
+              <rect x="82" y="83" width="32" height="5" rx="2" fill="#42d684"/>
+              <rect x="82" y="92" width="46" height="4" rx="2" fill="#ffe066"/>
+              <rect x="82" y="99" width="24" height="4" rx="2" fill="#ff766a"/>
+              <circle cx="136" cy="90" r="6" fill="#ffd54f"/>
+              <!-- 左右暖光圓窗 -->
+              <circle cx="56" cy="96" r="11" fill="#ffe57f" stroke="#8e1c14" stroke-width="2.5"/>
+              <line x1="56" y1="85" x2="56" y2="107" stroke="#8e1c14" stroke-width="2"/>
+              <line x1="45" y1="96" x2="67" y2="96" stroke="#8e1c14" stroke-width="2"/>
+              <circle cx="164" cy="96" r="11" fill="#ffe57f" stroke="#8e1c14" stroke-width="2.5"/>
+              <line x1="164" y1="85" x2="164" y2="107" stroke="#8e1c14" stroke-width="2"/>
+              <line x1="153" y1="96" x2="175" y2="96" stroke="#8e1c14" stroke-width="2"/>
+              <!-- 大門與聖誕花圈 -->
+              <path d="M92,142 L92,118 Q110,108 128,118 L128,142 Z" fill="#1e7a4c" stroke="#0e4529" stroke-width="3"/>
+              <circle cx="110" cy="126" r="7" fill="none" stroke="#2ecc71" stroke-width="4"/>
+              <circle cx="110" cy="120" r="2.8" fill="#e55039"/>
+              <circle cx="122" cy="132" r="2.4" fill="#ffd54f"/>
+              <!-- 氣派積雪雙斜屋頂＋金色飾邊 -->
+              <polygon points="14,72 110,24 206,72" fill="#8e1c14" stroke="#57100b" stroke-width="3.5" stroke-linejoin="round"/>
+              <path d="M12,70 Q34,82 54,70 Q76,82 96,70 Q110,78 124,70 Q144,82 166,70 Q186,82 208,70 L110,22 Z" fill="#fffdf8" stroke="#bdd5ea" stroke-width="2.5" stroke-linejoin="round"/>
+              <!-- 屋簷彩燈 -->
+              <circle cx="44" cy="75" r="4" fill="#ffd54f"/>
+              <circle cx="76" cy="75" r="4" fill="#42d684"/>
+              <circle cx="110" cy="75" r="4.5" fill="#ff5e52"/>
+              <circle cx="144" cy="75" r="4" fill="#42d684"/>
+              <circle cx="176" cy="75" r="4" fill="#ffd54f"/>
+              <!-- 門口小禮物盒 -->
+              <rect x="52" y="126" width="18" height="16" rx="3" fill="#c0392b" stroke="#6e160f" stroke-width="2"/>
+              <rect x="59" y="126" width="4" height="16" fill="#ffd54f"/>
+              <rect x="150" y="126" width="18" height="16" rx="3" fill="#1e7a4c" stroke="#0d4227" stroke-width="2"/>
+              <rect x="157" y="126" width="4" height="16" fill="#ff6b5c"/>
+            </svg>`;
+
+        case 'draw':
+          /* 2. 畫畫屋（屋頂有大調色盤與畫筆、彩色溫馨小屋） */
+          return `
+            <svg viewBox="0 0 176 144" aria-hidden="true">
+              <ellipse cx="88" cy="134" rx="70" ry="9" fill="#89a8c9" opacity="0.55"/>
+              <!-- 屋身 -->
+              <rect x="30" y="68" width="116" height="64" rx="8" fill="#fff8e6" stroke="#1e7a4c" stroke-width="3.5"/>
+              <rect x="30" y="114" width="116" height="18" rx="4" fill="#1e7a4c"/>
+              <!-- 門與卡片窗 -->
+              <rect x="74" y="92" width="28" height="40" rx="5" fill="#c0392b" stroke="#6e160f" stroke-width="2.5"/>
+              <circle cx="96" cy="112" r="2.5" fill="#ffd54f"/>
+              <rect x="40" y="80" width="24" height="24" rx="4" fill="#ffe57f" stroke="#8e1c14" stroke-width="2.5"/>
+              <line x1="52" y1="80" x2="52" y2="104" stroke="#8e1c14" stroke-width="2"/>
+              <rect x="112" y="80" width="24" height="24" rx="4" fill="#ffe57f" stroke="#8e1c14" stroke-width="2.5"/>
+              <line x1="124" y1="80" x2="124" y2="104" stroke="#8e1c14" stroke-width="2"/>
+              <!-- 積雪屋頂 -->
+              <polygon points="18,74 88,30 158,74" fill="#1e7a4c" stroke="#0f4529" stroke-width="3.5" stroke-linejoin="round"/>
+              <path d="M18,72 Q42,84 64,72 Q88,82 112,72 Q134,84 158,72 L88,30 Z" fill="#fffdf8" stroke="#bdd5ea" stroke-width="2.5"/>
+              <!-- 屋頂超大調色盤與畫筆 -->
+              <path d="M56,28 C56,10 116,6 122,26 C125,38 110,44 100,40 C94,38 92,46 84,48 C66,50 56,40 56,28 Z" fill="#e6b06b" stroke="#7c4724" stroke-width="3"/>
+              <circle cx="71" cy="24" r="5" fill="#e55039"/>
+              <circle cx="85" cy="18" r="5" fill="#ffd54f"/>
+              <circle cx="101" cy="21" r="5" fill="#1e7a4c"/>
+              <circle cx="110" cy="31" r="4.8" fill="#3498db"/>
+              <circle cx="74" cy="36" r="4.5" fill="#fff8e6" stroke="#7c4724" stroke-width="2"/>
+              <!-- 畫筆 -->
+              <line x1="104" y1="42" x2="138" y2="12" stroke="#c0392b" stroke-width="5" stroke-linecap="round"/>
+              <polygon points="136,14 146,5 142,18" fill="#ffd54f" stroke="#7c4724" stroke-width="1.5"/>
+            </svg>`;
+
+        case 'catch':
+          /* 3. 雪橇跑道（拐杖糖拱門＋紅金大雪橇＋雪地賽道） */
+          return `
+            <svg viewBox="0 0 180 144" aria-hidden="true">
+              <ellipse cx="90" cy="134" rx="74" ry="9" fill="#89a8c9" opacity="0.55"/>
+              <!-- 彎曲雪地跑道 -->
+              <path d="M26,132 Q90,104 154,132 Q122,140 58,140 Z" fill="#cfe6fa" stroke="#7ea6cc" stroke-width="2.5"/>
+              <!-- 拐杖糖起點拱門 -->
+              <path d="M36,122 L36,52 C36,20 144,20 144,52 L144,122" fill="none" stroke="#fff8e6" stroke-width="14" stroke-linecap="round"/>
+              <path d="M36,122 L36,52 C36,20 144,20 144,52 L144,122" fill="none" stroke="#c0392b" stroke-width="14" stroke-dasharray="11 11" stroke-linecap="round"/>
+              <!-- 拱門頂部彩旗與鈴鐺 -->
+              <polygon points="62,36 74,48 86,34" fill="#1e7a4c"/>
+              <polygon points="94,34 106,48 118,36" fill="#e6a817"/>
+              <circle cx="90" cy="34" r="9" fill="#ffd54f" stroke="#996405" stroke-width="2.5"/>
+              <!-- 紅金大雪橇 -->
+              <path d="M52,118 L128,118 C138,118 144,110 138,104" fill="none" stroke="#e6a817" stroke-width="5" stroke-linecap="round"/>
+              <line x1="68" y1="118" x2="68" y2="104" stroke="#996405" stroke-width="4"/>
+              <line x1="110" y1="118" x2="110" y2="104" stroke="#996405" stroke-width="4"/>
+              <path d="M56,82 C58,106 72,108 122,108 L130,86 C112,92 86,92 74,78 Z" fill="#c0392b" stroke="#6e160f" stroke-width="3" stroke-linejoin="round"/>
+              <path d="M62,84 C80,96 108,96 126,90" fill="none" stroke="#ffd54f" stroke-width="3"/>
+              <!-- 雪橇上的小禮物 -->
+              <rect x="74" y="66" width="22" height="20" rx="3" fill="#1e7a4c" stroke="#0d4227" stroke-width="2.5"/>
+              <rect x="83" y="66" width="4" height="20" fill="#ffd54f"/>
+              <rect x="98" y="72" width="18" height="16" rx="3" fill="#ffd54f" stroke="#996405" stroke-width="2"/>
+              <rect x="105" y="72" width="4" height="16" fill="#c0392b"/>
+            </svg>`;
+
+        case 'memory':
+          /* 4. 記憶小木屋（圓木小屋＋翻牌配對雙卡看板＋冒煙煙囪） */
+          return `
+            <svg viewBox="0 0 176 144" aria-hidden="true">
+              <ellipse cx="88" cy="134" rx="70" ry="9" fill="#89a8c9" opacity="0.55"/>
+              <!-- 煙囪與白煙 -->
+              <circle cx="132" cy="16" r="6" fill="#fff8e6" opacity="0.85"/>
+              <circle cx="126" cy="26" r="4.5" fill="#fff8e6" opacity="0.75"/>
+              <rect x="116" y="32" width="18" height="26" rx="3" fill="#8e1c14" stroke="#52100b" stroke-width="2.5"/>
+              <!-- 圓木牆體 -->
+              <rect x="30" y="68" width="116" height="64" rx="8" fill="#9c6236" stroke="#543016" stroke-width="3.5"/>
+              <line x1="32" y1="84" x2="144" y2="84" stroke="#6e411f" stroke-width="2.5"/>
+              <line x1="32" y1="100" x2="144" y2="100" stroke="#6e411f" stroke-width="2.5"/>
+              <line x1="32" y1="116" x2="144" y2="116" stroke="#6e411f" stroke-width="2.5"/>
+              <!-- 木門與窗戶 -->
+              <rect x="74" y="92" width="28" height="40" rx="5" fill="#5e361b" stroke="#3b1f0d" stroke-width="2.5"/>
+              <circle cx="96" cy="112" r="2.5" fill="#ffd54f"/>
+              <rect x="40" y="84" width="24" height="22" rx="4" fill="#ffe57f" stroke="#543016" stroke-width="2.5"/>
+              <rect x="112" y="84" width="24" height="22" rx="4" fill="#ffe57f" stroke="#543016" stroke-width="2.5"/>
+              <!-- 屋頂 -->
+              <polygon points="18,74 88,30 158,74" fill="#c0392b" stroke="#6e160f" stroke-width="3.5" stroke-linejoin="round"/>
+              <path d="M18,72 Q42,84 64,72 Q88,82 112,72 Q134,84 158,72 L88,30 Z" fill="#fffdf8" stroke="#bdd5ea" stroke-width="2.5"/>
+              <!-- 屋頂上兩張翻牌配對大卡片 -->
+              <g transform="rotate(-10 72 34)">
+                <rect x="52" y="14" width="32" height="40" rx="6" fill="#c0392b" stroke="#ffd54f" stroke-width="3"/>
+                <polygon points="68,22 71,29 79,30 73,35 75,43 68,38 61,43 63,35 57,30 65,29" fill="#ffd54f"/>
+              </g>
+              <g transform="rotate(10 104 34)">
+                <rect x="88" y="14" width="32" height="40" rx="6" fill="#1e7a4c" stroke="#ffd54f" stroke-width="3"/>
+                <polygon points="104,22 107,29 115,30 109,35 111,43 104,38 97,43 99,35 93,30 101,29" fill="#fff8e6"/>
+              </g>
+            </svg>`;
+
+        case 'tree':
+          /* 5. 聖誕樹廣場（石板圓廣場＋高大閃亮聖誕樹＋禮物堆） */
+          return `
+            <svg viewBox="0 0 176 148" aria-hidden="true">
+              <!-- 石板小廣場 -->
+              <ellipse cx="88" cy="130" rx="74" ry="15" fill="#d9c09c" stroke="#9e7f56" stroke-width="3"/>
+              <ellipse cx="88" cy="130" rx="56" ry="10" fill="#f3e3c8"/>
+              <!-- 樹幹 -->
+              <rect x="78" y="108" width="20" height="22" rx="3" fill="#7c4724" stroke="#472610" stroke-width="2.5"/>
+              <!-- 三層茂密松樹 -->
+              <polygon points="88,52 34,114 142,114" fill="#16603b" stroke="#0d3b23" stroke-width="3" stroke-linejoin="round"/>
+              <polygon points="88,32 44,88 132,88" fill="#1e7a4c" stroke="#0d3b23" stroke-width="3" stroke-linejoin="round"/>
+              <polygon points="88,16 56,62 120,62" fill="#27995f" stroke="#0d3b23" stroke-width="3" stroke-linejoin="round"/>
+              <!-- 金色裝飾彩帶 -->
+              <path d="M62,54 Q88,64 114,52" fill="none" stroke="#ffd54f" stroke-width="3.5" stroke-linecap="round"/>
+              <path d="M50,80 Q88,92 126,78" fill="none" stroke="#ffd54f" stroke-width="3.5" stroke-linecap="round"/>
+              <path d="M40,106 Q88,118 136,104" fill="none" stroke="#ffd54f" stroke-width="3.5" stroke-linecap="round"/>
+              <!-- 彩色圓球裝飾 -->
+              <circle cx="74" cy="48" r="5" fill="#e55039"/>
+              <circle cx="102" cy="52" r="5" fill="#ffd54f"/>
+              <circle cx="64" cy="76" r="5.5" fill="#ffd54f"/>
+              <circle cx="92" cy="78" r="5.5" fill="#e55039"/>
+              <circle cx="114" cy="74" r="5" fill="#fff8e6"/>
+              <circle cx="58" cy="102" r="5.5" fill="#e55039"/>
+              <circle cx="84" cy="104" r="5.5" fill="#fff8e6"/>
+              <circle cx="114" cy="100" r="5.5" fill="#ffd54f"/>
+              <!-- 樹頂大金星 -->
+              <polygon points="88,2 93,12 104,13 96,20 98,31 88,25 78,31 80,20 72,13 83,12" fill="#ffd54f" stroke="#996405" stroke-width="2"/>
+              <!-- 樹下禮物堆 -->
+              <rect x="44" y="114" width="20" height="18" rx="3" fill="#c0392b" stroke="#6e160f" stroke-width="2"/>
+              <rect x="52" y="114" width="4" height="18" fill="#ffd54f"/>
+              <rect x="112" y="115" width="22" height="17" rx="3" fill="#1e7a4c" stroke="#0d4227" stroke-width="2"/>
+              <rect x="121" y="115" width="4" height="17" fill="#ff6b5c"/>
+            </svg>`;
+
+        case 'snowman':
+        default:
+          /* 6. 雪人公園（雪丘＋木柵欄＋戴高帽紅綠圍巾的微笑大雪人） */
+          return `
+            <svg viewBox="0 0 176 144" aria-hidden="true">
+              <!-- 雪地公園小山丘 -->
+              <ellipse cx="88" cy="128" rx="74" ry="15" fill="#d3e8fa" stroke="#98bddb" stroke-width="2.5"/>
+              <!-- 公園矮木柵欄 -->
+              <rect x="26" y="102" width="124" height="6" rx="3" fill="#a86d42"/>
+              <rect x="34" y="94" width="8" height="26" rx="3" fill="#c78a5b" stroke="#6b4020" stroke-width="2"/>
+              <rect x="54" y="94" width="8" height="26" rx="3" fill="#c78a5b" stroke="#6b4020" stroke-width="2"/>
+              <rect x="114" y="94" width="8" height="26" rx="3" fill="#c78a5b" stroke="#6b4020" stroke-width="2"/>
+              <rect x="134" y="94" width="8" height="26" rx="3" fill="#c78a5b" stroke="#6b4020" stroke-width="2"/>
+              <!-- 雪人樹枝雙手 -->
+              <path d="M58,86 L34,68 M44,76 L38,64" fill="none" stroke="#6b4020" stroke-width="4" stroke-linecap="round"/>
+              <path d="M118,86 L142,68 M132,76 L138,64" fill="none" stroke="#6b4020" stroke-width="4" stroke-linecap="round"/>
+              <!-- 雪人圓滾滾身體與頭 -->
+              <circle cx="88" cy="104" r="30" fill="#ffffff" stroke="#9ebbd6" stroke-width="3"/>
+              <circle cx="88" cy="60" r="22" fill="#ffffff" stroke="#9ebbd6" stroke-width="3"/>
+              <!-- 鈕扣 -->
+              <circle cx="88" cy="94" r="3.5" fill="#2c3e50"/>
+              <circle cx="88" cy="106" r="3.5" fill="#2c3e50"/>
+              <circle cx="88" cy="118" r="3.5" fill="#2c3e50"/>
+              <!-- 紅綠條紋圍巾 -->
+              <path d="M68,75 Q88,83 108,75 L106,85 Q88,92 70,85 Z" fill="#c0392b" stroke="#751810" stroke-width="2"/>
+              <path d="M96,81 L104,100 L94,102 L88,83 Z" fill="#1e7a4c" stroke="#0d4227" stroke-width="2"/>
+              <!-- 眼睛、胡蘿蔔鼻與微笑 -->
+              <circle cx="80" cy="55" r="3.2" fill="#1e272e"/>
+              <circle cx="96" cy="55" r="3.2" fill="#1e272e"/>
+              <polygon points="88,59 108,63 88,66" fill="#f39c12" stroke="#b96707" stroke-width="1.5"/>
+              <path d="M80,67 Q88,73 96,67" fill="none" stroke="#3a1f16" stroke-width="2.5" stroke-linecap="round"/>
+              <!-- 高禮帽與冬青葉 -->
+              <rect x="64" y="38" width="48" height="7" rx="3.5" fill="#2c3e50"/>
+              <rect x="72" y="16" width="32" height="24" rx="4" fill="#2c3e50"/>
+              <rect x="72" y="32" width="32" height="6" fill="#c0392b"/>
+              <circle cx="98" cy="35" r="3.5" fill="#ffd54f"/>
+              <!-- 旁邊小雪球 -->
+              <circle cx="138" cy="122" r="10" fill="#ffffff" stroke="#9ebbd6" stroke-width="2.5"/>
+            </svg>`;
+      }
+    }
+
+    /* 地圖小彩蛋 SVG：薑餅人與聖誕襪 */
+    function svgGingerbread() {
+      return `
+        <svg viewBox="0 0 64 74" width="46" height="54" aria-hidden="true">
+          <circle cx="32" cy="18" r="13" fill="#c57b3b" stroke="#6b3d16" stroke-width="2.5"/>
+          <path d="M12,34 Q32,28 52,34 L46,44 L40,42 L45,64 Q38,68 34,62 L32,52 L30,62 Q26,68 19,64 L24,42 L18,44 Z" fill="#c57b3b" stroke="#6b3d16" stroke-width="2.5" stroke-linejoin="round"/>
+          <circle cx="27" cy="16" r="2.2" fill="#2b1b12"/>
+          <circle cx="37" cy="16" r="2.2" fill="#2b1b12"/>
+          <path d="M27,22 Q32,26 37,22" fill="none" stroke="#fff8e6" stroke-width="2.4" stroke-linecap="round"/>
+          <circle cx="32" cy="38" r="3" fill="#c0392b"/>
+          <circle cx="32" cy="47" r="3" fill="#1e7a4c"/>
+        </svg>`;
+    }
+
+    function svgStockingPost() {
+      return `
+        <svg viewBox="0 0 68 72" width="48" height="52" aria-hidden="true">
+          <rect x="30" y="10" width="8" height="56" rx="3" fill="#7c4724" stroke="#472610" stroke-width="2"/>
+          <rect x="12" y="16" width="44" height="7" rx="3" fill="#9c6236" stroke="#472610" stroke-width="2"/>
+          <!-- 左聖誕襪 -->
+          <path d="M18,22 L28,22 L28,44 C28,50 18,52 14,48 C10,44 14,38 18,38 Z" fill="#c0392b" stroke="#6e160f" stroke-width="2"/>
+          <rect x="16" y="20" width="14" height="6" rx="3" fill="#fff8e6"/>
+          <!-- 右聖誕襪 -->
+          <path d="M40,22 L50,22 L50,38 C54,38 58,44 54,48 C50,52 40,50 40,44 Z" fill="#1e7a4c" stroke="#0d4227" stroke-width="2"/>
+          <rect x="38" y="20" width="14" height="6" rx="3" fill="#fff8e6"/>
+        </svg>`;
+    }
+
+    /* =========================================================================
+       4. 原創 Web Audio API 音效合成器（不使用任何外部音檔或既有歌曲）
+       ========================================================================= */
+    const SoundFX = (() => {
+      let ctx = null;
+      let enabled = true;
+      /* 五聲音階頻率（滑過 6 棟建築宛如雪地風鈴） */
+      const pentatonic = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5];
+
+      function ensureContext() {
+        if (!enabled) return null;
+        try {
+          if (!ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return null;
+            ctx = new AudioCtx();
+          }
+          if (ctx.state === 'suspended') {
+            ctx.resume().catch(() => {});
+          }
+          return ctx;
+        } catch (err) {
+          return null;
+        }
+      }
+
+      function playTone(freq, startOffset, duration, type, volume) {
+        const audio = ensureContext();
+        if (!audio) return;
+        const now = audio.currentTime + startOffset;
+        const osc = audio.createOscillator();
+        const gain = audio.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(volume, now + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        osc.connect(gain);
+        gain.connect(audio.destination);
+        osc.start(now);
+        osc.stop(now + duration + 0.02);
+      }
+
+      return {
+        isEnabled: () => enabled,
+        toggle() {
+          enabled = !enabled;
+          if (enabled) {
+            playTone(659.25, 0, 0.12, 'triangle', 0.14);
+            playTone(987.77, 0.08, 0.18, 'sine', 0.14);
+          }
+          return enabled;
+        },
+        playHover(index = 0) {
+          const f = pentatonic[index % pentatonic.length];
+          playTone(f, 0, 0.16, 'sine', 0.09);
+          playTone(f * 2, 0, 0.09, 'triangle', 0.03);
+        },
+        playEnter() {
+          playTone(523.25, 0, 0.11, 'triangle', 0.15);
+          playTone(659.25, 0.07, 0.12, 'triangle', 0.15);
+          playTone(783.99, 0.14, 0.14, 'triangle', 0.16);
+          playTone(1046.5, 0.21, 0.26, 'sine', 0.17);
+        },
+        playGreet() {
+          playTone(783.99, 0, 0.12, 'sine', 0.12);
+          playTone(987.77, 0.07, 0.14, 'triangle', 0.12);
+          playTone(1174.66, 0.14, 0.22, 'sine', 0.11);
+        },
+        playSparkle() {
+          playTone(880, 0, 0.1, 'sine', 0.1);
+          playTone(1318.5, 0.06, 0.16, 'sine', 0.1);
+        }
+      };
+    })();
+
+    /* =========================================================================
+       5. 安全讀取 localStorage（僅讀取，絕不寫入）
+       ========================================================================= */
+    function safeReadStorage(key) {
+      try {
+        return window.localStorage.getItem(key);
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function readBuildingBadge(building) {
+      const raw = safeReadStorage(building.storageKey);
+      if (raw === null || String(raw).trim() === '') {
+        return { hasStar: false, badgeText: '' };
+      }
+      if (building.badgeType === 'score') {
+        const num = parseInt(raw, 10);
+        if (!Number.isNaN(num) && num >= 0 && num <= 12) {
+          return { hasStar: false, badgeText: GAME_TEXTS.badgeFormat.score(num) };
+        }
+        return { hasStar: false, badgeText: '' };
+      }
+      if (building.badgeType === 'catchBest') {
+        const num = parseInt(raw, 10);
+        if (!Number.isNaN(num) && num >= 0) {
+          return { hasStar: false, badgeText: GAME_TEXTS.badgeFormat.catchBest(num) };
+        }
+        return { hasStar: false, badgeText: '' };
+      }
+      if (building.badgeType === 'memoryBest') {
+        const num = parseInt(raw, 10);
+        if (!Number.isNaN(num) && num > 0) {
+          return { hasStar: false, badgeText: GAME_TEXTS.badgeFormat.memoryBest(num) };
+        }
+        return { hasStar: false, badgeText: '' };
+      }
+      if (building.badgeType === 'done') {
+        return { hasStar: String(raw).trim() === '1', badgeText: '' };
+      }
+      return { hasStar: false, badgeText: '' };
+    }
+
+    /* =========================================================================
+       6. 介面渲染與互動邏輯
+       ========================================================================= */
+    const state = {
+      dingDingIdx: 0,
+      snowballIdx: 0,
+      greetTimer: null,
+      hoverBuildingId: null
+    };
+
+    const welcomeTextEl = document.getElementById('welcomeText');
+    const welcomeSubEl = document.getElementById('welcomeSub');
+    const dingDingHolder = document.getElementById('dingDingHolder');
+    const snowballHolder = document.getElementById('snowballHolder');
+    const dingDingBtn = document.getElementById('dingDingBtn');
+    const snowballBtn = document.getElementById('snowballBtn');
+    const mapObjectsLayer = document.getElementById('mapObjectsLayer');
+    const portraitList = document.getElementById('portraitList');
+    const helpModal = document.getElementById('helpModal');
+    const helpBtn = document.getElementById('helpBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const soundBtn = document.getElementById('soundBtn');
+    const soundIcon = document.getElementById('soundIcon');
+    const soundText = document.getElementById('soundText');
+
+    function setGreeting(text, autoResetMs = 0) {
+      welcomeTextEl.textContent = text;
+      if (state.greetTimer) {
+        clearTimeout(state.greetTimer);
+        state.greetTimer = null;
+      }
+      if (autoResetMs > 0) {
+        state.greetTimer = setTimeout(() => {
+          if (!state.hoverBuildingId) {
+            welcomeTextEl.textContent = GAME_TEXTS.defaultGreeting;
+          }
+        }, autoResetMs);
+      }
+    }
+
+    /* 產生點擊驚喜的小星星特效 */
+    function burstSparkles(clientX, clientY) {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const icons = ['⭐', '❄', '⭐'];
+      icons.forEach((icon, idx) => {
+        const el = document.createElement('span');
+        el.className = 'sparkle-fx';
+        el.textContent = icon;
+        el.style.left = `${clientX}px`;
+        el.style.top = `${clientY}px`;
+        const angle = (-135 + idx * 45) * (Math.PI / 180);
+        el.style.setProperty('--dx', `${Math.round(Math.cos(angle) * 44)}px`);
+        el.style.setProperty('--dy', `${Math.round(Math.sin(angle) * 48 - 14)}px`);
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 900);
+      });
+    }
+
+    /* 初始化頂部燈串 */
+    function initLightStrand() {
+      const strand = document.getElementById('lightStrand');
+      const colors = ['bulb-red', 'bulb-gold', 'bulb-green', 'bulb-cream'];
+      const count = 24;
+      let html = '';
+      for (let i = 0; i < count; i++) {
+        const colorCls = colors[i % colors.length];
+        html += `<button type="button" class="bulb-btn ${colorCls}" tabindex="-1" aria-hidden="true"><span class="bulb-cap"></span><span class="bulb-glass"></span></button>`;
+      }
+      strand.innerHTML = html;
+
+      strand.addEventListener('click', (e) => {
+        const btn = e.target.closest('.bulb-btn');
+        if (!btn) return;
+        btn.classList.add('flash');
+        SoundFX.playSparkle();
+        burstSparkles(e.clientX, e.clientY);
+        setGreeting(GAME_TEXTS.decoLines.bulb, 2600);
+        setTimeout(() => btn.classList.remove('flash'), 350);
+      });
+    }
+
+    /* 初始化卡片角落冬青葉與角色 */
+    function initStaticDecorations() {
+      document.getElementById('siteTitle').textContent = GAME_TEXTS.siteTitle;
+      document.getElementById('helpBtnText').textContent = GAME_TEXTS.helpBtn;
+      document.getElementById('modalTitle').textContent = GAME_TEXTS.modalTitle;
+      closeModalBtn.textContent = GAME_TEXTS.modalCloseBtn;
+
+      document.querySelectorAll('[data-holly="1"]').forEach((node) => {
+        node.innerHTML = svgHollyCorner();
+      });
+
+      dingDingHolder.innerHTML = svgDingDing(94, 'happy');
+      snowballHolder.innerHTML = svgSnowball(98, 'happy');
+
+      /* 說明彈窗條目與底部禮物插畫 */
+      const guideList = document.getElementById('modalGuideList');
+      guideList.innerHTML = GAME_TEXTS.modalGuides.map((line) => `<li>${line}</li>`).join('');
+      document.getElementById('modalGifts').innerHTML =
+        svgGift('red', 'square', 62) + svgGift('green', 'round', 62);
+    }
+
+    /* 角色點擊互動（歡呼跳躍＋台詞輪替） */
+    function setupCharacterInteractions() {
+      dingDingBtn.addEventListener('click', (e) => {
+        SoundFX.playGreet();
+        dingDingHolder.innerHTML = svgDingDing(94, 'cheer');
+        dingDingBtn.classList.remove('cheer-hop');
+        void dingDingBtn.offsetWidth;
+        dingDingBtn.classList.add('cheer-hop');
+        burstSparkles(e.clientX || 120, e.clientY || 140);
+
+        const msg = GAME_TEXTS.dingDingLines[state.dingDingIdx % GAME_TEXTS.dingDingLines.length];
+        state.dingDingIdx += 1;
+        setGreeting(msg, 3400);
+
+        setTimeout(() => {
+          dingDingHolder.innerHTML = svgDingDing(94, 'happy');
+        }, 1200);
+      });
+
+      snowballBtn.addEventListener('click', (e) => {
+        SoundFX.playGreet();
+        snowballHolder.innerHTML = svgSnowball(98, 'cheer');
+        snowballBtn.classList.remove('cheer-hop');
+        void snowballBtn.offsetWidth;
+        snowballBtn.classList.add('cheer-hop');
+        burstSparkles(e.clientX || window.innerWidth - 120, e.clientY || 140);
+
+        const msg = GAME_TEXTS.snowballLines[state.snowballIdx % GAME_TEXTS.snowballLines.length];
+        state.snowballIdx += 1;
+        setGreeting(msg, 3400);
+
+        setTimeout(() => {
+          snowballHolder.innerHTML = svgSnowball(98, 'happy');
+        }, 1200);
+      });
+    }
+
+    /* 點擊建築時播放原創出發音效再跳轉 */
+    function handleBuildingClick(event, href) {
+      /* 若使用者按住 Ctrl / Shift / Alt / Meta 鍵，尊重瀏覽器原生開新分頁行為 */
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) {
+        return;
+      }
+      event.preventDefault();
+      SoundFX.playEnter();
+      const delay = SoundFX.isEnabled() ? 180 : 30;
+      setTimeout(() => {
+        window.location.href = href;
+      }, delay);
+    }
+
+    /* 渲染地圖上的 6 棟建築、彩蛋小物件，以及手機直立大卡片 */
+    function renderMapAndCards() {
+      let mapHtml = '';
+      let portraitHtml = '';
+      let visitedCount = 0;
+
+      /* 地圖互動彩蛋：薑餅人、聖誕襪木樁、禮物堆 */
+      const mapDecos = [
+        { key: 'gingerbread', x: 35, y: 55, label: '點一下可愛薑餅人', svg: svgGingerbread() },
+        { key: 'stocking', x: 65, y: 55, label: '點一下聖誕襪木樁', svg: svgStockingPost() },
+        {
+          key: 'gifts',
+          x: 61,
+          y: 37,
+          label: '點一下聖誕禮物堆',
+          svg: `<div style="display:flex;align-items:flex-end;gap:0;">${svgGift('red', 'square', 40)}${svgGift('green', 'round', 34)}</div>`
+        }
+      ];
+
+      mapDecos.forEach((deco) => {
+        mapHtml += `
+          <button type="button" class="deco-spot" data-deco="${deco.key}"
+            style="left:${deco.x}%; top:${deco.y}%;" aria-label="${deco.label}">
+            ${deco.svg}
+          </button>`;
+      });
+
+      /* 6 棟建築節點與手機卡片 */
+      BUILDINGS.forEach((b) => {
+        const badge = readBuildingBadge(b);
+        if (badge.hasStar || badge.badgeText) {
+          visitedCount += 1;
+        }
+
+        const artSvg = svgBuildingArt(b.id);
+        const mainRibbon = b.isMain ? `<span class="main-quest-ribbon">${GAME_TEXTS.mainQuestLabel}</span>` : '';
+        const starHtml = badge.hasStar
+          ? `<span class="done-star" title="${GAME_TEXTS.badgeFormat.doneStarTitle}" aria-label="${GAME_TEXTS.badgeFormat.doneStarTitle}">⭐</span>`
+          : '';
+        const scoreBadgeHtml = badge.badgeText
+          ? `<span class="score-badge">${badge.badgeText}</span>`
+          : '';
+
+        /* 橫向俯視地圖建築節點 */
+        mapHtml += `
+          <a href="${b.href}" class="building-node ${b.isMain ? 'is-main' : ''}"
+             data-building="${b.id}" data-note="${b.noteIndex}"
+             style="left:${b.posX}%; top:${b.posY}%;">
+            <span class="building-tooltip" aria-hidden="true">${b.desc}</span>
+            <span class="building-glow" aria-hidden="true"></span>
+            ${mainRibbon}
+            <div class="building-art">${artSvg}</div>
+            <div class="building-plate">
+              <span class="plate-name">${b.name}</span>
+              ${starHtml}
+            </div>
+            ${scoreBadgeHtml}
+          </a>`;
+
+        /* 手機直立大卡片 */
+        portraitHtml += `
+          <a href="${b.href}" class="portrait-card ${b.isMain ? 'is-main' : ''}" data-building="${b.id}">
+            <div class="portrait-thumb">${artSvg}</div>
+            <div class="portrait-info">
+              <div class="portrait-head">
+                <span class="portrait-name">${b.name}</span>
+                ${starHtml}
+              </div>
+              <p class="portrait-desc">${b.shortDesc}</p>
+              <div class="portrait-meta">
+                ${mainRibbon}
+                ${scoreBadgeHtml}
+              </div>
+            </div>
+            <span class="portrait-go" aria-hidden="true">${GAME_TEXTS.goBtnText}</span>
+          </a>`;
+      });
+
+      mapObjectsLayer.innerHTML = mapHtml;
+      portraitList.innerHTML = portraitHtml;
+
+      /* 若有讀到任何工坊紀錄，於對話卡下方顯示溫馨進度提示（讀不到則顯示探索小提示） */
+      if (visitedCount > 0) {
+        welcomeSubEl.innerHTML = `<span class="progress-pill">🎄 已探索 ${visitedCount} / ${BUILDINGS.length} 個工坊景點</span><span>${GAME_TEXTS.defaultSubHint}</span>`;
+      } else {
+        welcomeSubEl.textContent = GAME_TEXTS.defaultSubHint;
+      }
+
+      /* 綁定地圖建築滑鼠／鍵盤／點擊互動 */
+      mapObjectsLayer.querySelectorAll('.building-node').forEach((node) => {
+        const b = BUILDINGS.find((item) => item.id === node.dataset.building);
+        if (!b) return;
+
+        const onEnter = () => {
+          state.hoverBuildingId = b.id;
+          setGreeting(`${b.name}：${b.desc}`);
+          SoundFX.playHover(b.noteIndex);
+        };
+
+        const onLeave = () => {
+          if (state.hoverBuildingId === b.id) {
+            state.hoverBuildingId = null;
+            setGreeting(GAME_TEXTS.defaultGreeting);
+          }
+        };
+
+        node.addEventListener('pointerenter', onEnter);
+        node.addEventListener('focus', onEnter);
+        node.addEventListener('pointerleave', onLeave);
+        node.addEventListener('blur', onLeave);
+        node.addEventListener('click', (e) => handleBuildingClick(e, b.href));
+      });
+
+      /* 綁定手機直立卡片點擊音效 */
+      portraitList.querySelectorAll('.portrait-card').forEach((card) => {
+        const b = BUILDINGS.find((item) => item.id === card.dataset.building);
+        if (!b) return;
+        card.addEventListener('click', (e) => handleBuildingClick(e, b.href));
+      });
+
+      /* 綁定地圖小彩蛋點擊互動 */
+      mapObjectsLayer.querySelectorAll('.deco-spot').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const key = btn.dataset.deco;
+          SoundFX.playSparkle();
+          btn.classList.remove('pop');
+          void btn.offsetWidth;
+          btn.classList.add('pop');
+          burstSparkles(e.clientX, e.clientY);
+          if (GAME_TEXTS.decoLines[key]) {
+            setGreeting(GAME_TEXTS.decoLines[key], 3000);
+          }
+        });
+      });
+    }
+
+    /* =========================================================================
+       7. 音效開關與說明彈窗控制（關閉時加 visibility:hidden 與 inert）
+       ========================================================================= */
+    function setupTopControls() {
+      soundBtn.addEventListener('click', () => {
+        const isOn = SoundFX.toggle();
+        soundIcon.textContent = isOn ? '🔊' : '🔇';
+        soundText.textContent = isOn ? GAME_TEXTS.soundOnLabel : GAME_TEXTS.soundOffLabel;
+        soundBtn.setAttribute('aria-pressed', String(isOn));
+      });
+
+      function openModal() {
+        SoundFX.playGreet();
+        helpModal.classList.remove('is-hidden');
+        helpModal.removeAttribute('inert');
+        helpModal.setAttribute('aria-hidden', 'false');
+        closeModalBtn.focus();
+      }
+
+      function closeModal() {
+        SoundFX.playHover(2);
+        helpModal.classList.add('is-hidden');
+        helpModal.setAttribute('inert', '');
+        helpModal.setAttribute('aria-hidden', 'true');
+        helpBtn.focus();
+      }
+
+      helpBtn.addEventListener('click', openModal);
+      closeModalBtn.addEventListener('click', closeModal);
+      helpModal.addEventListener('click', (e) => {
+        if (e.target === helpModal) closeModal();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !helpModal.classList.contains('is-hidden')) {
+          closeModal();
+        }
+      });
+    }
+
+    /* =========================================================================
+       8. 背景飄雪動畫（自動尊重 prefers-reduced-motion）
+       ========================================================================= */
+    function initSnowfall() {
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (reducedMotion.matches) return;
+
+      const canvas = document.getElementById('snowCanvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      let width = 0;
+      let height = 0;
+      let flakes = [];
+      let rafId = null;
+
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+        const count = Math.min(72, Math.max(36, Math.floor(width / 22)));
+        flakes = Array.from({ length: count }, () => ({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: 1.8 + Math.random() * 3.4,
+          speedY: 0.45 + Math.random() * 0.95,
+          sway: Math.random() * Math.PI * 2,
+          swaySpeed: 0.008 + Math.random() * 0.015,
+          alpha: 0.45 + Math.random() * 0.5
+        }));
+      }
+
+      function tick() {
+        if (reducedMotion.matches) {
+          ctx.clearRect(0, 0, width, height);
+          return;
+        }
+        ctx.clearRect(0, 0, width, height);
+        for (let i = 0; i < flakes.length; i++) {
+          const f = flakes[i];
+          f.y += f.speedY;
+          f.sway += f.swaySpeed;
+          f.x += Math.sin(f.sway) * 0.45;
+          if (f.y > height + 8) {
+            f.y = -8;
+            f.x = Math.random() * width;
+          }
+          if (f.x > width + 8) f.x = -8;
+          if (f.x < -8) f.x = width + 8;
+
+          ctx.beginPath();
+          ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 248, 230, ${f.alpha})`;
+          ctx.fill();
+        }
+        rafId = window.requestAnimationFrame(tick);
+      }
+
+      resize();
+      tick();
+      window.addEventListener('resize', resize);
+      reducedMotion.addEventListener('change', () => {
+        if (reducedMotion.matches && rafId) {
+          window.cancelAnimationFrame(rafId);
+          ctx.clearRect(0, 0, width, height);
+        } else if (!reducedMotion.matches) {
+          resize();
+          tick();
+        }
+      });
+    }
+
+    /* =========================================================================
+       9. 啟動初始化
+       ========================================================================= */
+    function initApp() {
+      initLightStrand();
+      initStaticDecorations();
+      setupCharacterInteractions();
+      renderMapAndCards();
+      setupTopControls();
+      initSnowfall();
+    }
+
+    initApp();
+  </script>
+<script defer src="../../assets/js/beacon.js"></script>
+</body>
+</html>
