@@ -1,0 +1,3860 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>打字擂台 — 國小雙人打字對戰</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== 注音字型（只套用於目標文章與錯字回顧） ===== */
+@font-face {
+  font-family: 'Bpmf Huninn';
+  src: url('fonts/bpmf-huninn-duel.woff2') format('woff2');
+  font-display: swap;
+}
+
+/* ===== 設計系統變數（卡通格鬥擂台風，確保對比 >= 4.5:1） ===== */
+:root {
+  --ink: #1b1b3a;          /* 主文字與粗描邊（白底對比 16.4:1） */
+  --ink-2: #3d3d63;        /* 次要文字（白底 10.1:1、米黃底 9.1:1） */
+  --cream: #fff4d6;        /* 擂台米黃底色 */
+  --paper: #ffffff;        /* 卡片白底 */
+  --me: #2458e6;           /* 我方藍角（白字 5.8:1） */
+  --me-soft: #dbe6ff;
+  --opp: #c92a2a;          /* 對手紅角（白字 5.4:1） */
+  --opp-soft: #ffdede;
+  --gold: #ffc93c;         /* 金黃主色（深靛字 11.5:1） */
+  --good: #0f5f32;         /* 進步貼紙深綠（白字 7.9:1） */
+  --good-soft: #d6f5de;
+  --done-text: #1f7a45;    /* 已打對文字淡綠（白底對比 5.3:1，無底色塊） */
+  --warn-soft: #fff0b8;
+  --line: 3px solid var(--ink);
+  --shadow: 0 5px 0 var(--ink);
+  --shadow-sm: 0 3px 0 var(--ink);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--cream);
+  font-family: 'Noto Sans TC', sans-serif;
+  color: var(--ink);
+  font-size: 18px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.num {
+  font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== 整體舞台容器（全螢幕一屏不捲動） ===== */
+.arena {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(27, 27, 58, 0.10) 1.5px, transparent 1.6px) 0 0 / 22px 22px,
+    var(--cream);
+  padding: 10px 20px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 擂台底部黃黑警示斜條紋 */
+.arena::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 12px;
+  background: repeating-linear-gradient(-45deg, var(--ink) 0 14px, var(--gold) 14px 28px);
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* ===== 畫面切換 ===== */
+.screen {
+  display: none;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: clamp(6px, 1.2vh, 12px);
+}
+.screen.active {
+  display: flex;
+}
+
+/* ===== 頂部列（左側保留 120×44px 空白給外部回首頁按鈕） ===== */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 46px;
+  padding-left: 132px; /* 避開左上角 120×44px 空白區 */
+  flex: none;
+}
+
+.topbar-left, .topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: clamp(24px, 3.6vh, 34px);
+  font-weight: 900;
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+
+.logo .tag {
+  font-size: 18px;
+  background: var(--ink);
+  color: #fff;
+  padding: 2px 12px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+/* ===== 通用元件 ===== */
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 900;
+  font-size: clamp(18px, 2.6vh, 22px);
+  min-height: clamp(44px, 6.8vh, 54px);
+  padding: 0 20px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  white-space: nowrap;
+}
+.btn:hover:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 3px 0 var(--ink);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(5px);
+  box-shadow: 0 0 0 var(--ink);
+}
+.btn.gold { background: var(--gold); color: var(--ink); }
+.btn.blue { background: var(--me); color: #fff; }
+.btn.red  { background: var(--opp); color: #fff; }
+.btn.big  {
+  font-size: clamp(22px, 3.4vh, 28px);
+  min-height: clamp(54px, 8vh, 66px);
+  padding: 0 36px;
+}
+.btn.sm {
+  font-size: 18px;
+  min-height: 40px;
+  padding: 0 14px;
+  box-shadow: var(--shadow-sm);
+  border-radius: 12px;
+}
+.btn.sm:hover:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 2px 0 var(--ink);
+}
+.btn.sm:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 var(--ink);
+}
+.btn:disabled {
+  background: #dcd7c7;
+  color: #434057;
+  box-shadow: 0 4px 0 #7b7666;
+  border-color: #7b7666;
+  cursor: not-allowed;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: clamp(18px, 2.4vh, 20px);
+  min-height: clamp(40px, 6vh, 46px);
+  padding: 0 14px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  white-space: nowrap;
+}
+.chip:hover:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 2px 0 var(--ink);
+}
+.chip:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 var(--ink);
+}
+.chip.on {
+  background: var(--gold);
+  font-weight: 900;
+}
+.chip.on::before {
+  content: "✓ ";
+}
+.chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.78;
+}
+.chip.on:disabled {
+  opacity: 1;
+}
+
+.btn:focus-visible,
+.chip:focus-visible,
+.wc:focus-visible,
+.sw-btn:focus-visible,
+input:focus-visible {
+  outline: 4px solid var(--me);
+  outline-offset: 3px;
+}
+
+.card {
+  background: var(--paper);
+  border: var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: clamp(10px, 1.8vh, 16px) clamp(14px, 1.6vw, 20px);
+}
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 19px;
+  font-weight: 900;
+  color: var(--ink-2);
+  letter-spacing: 1px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: var(--line);
+  border-radius: 10px;
+  padding: 2px 12px;
+  font-weight: 900;
+  font-size: 18px;
+  background: var(--paper);
+  white-space: nowrap;
+}
+.pill.sci { background: var(--good-soft); }
+.pill.goal { background: var(--warn-soft); }
+.pill.best { background: var(--gold); }
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ===== SVG 角色頭像與動畫（眨眼、出拳、受擊皺眉晃動） ===== */
+.avatar-wrap {
+  width: clamp(50px, 8vh, 64px);
+  height: clamp(50px, 8vh, 64px);
+  flex: none;
+  position: relative;
+  display: inline-block;
+}
+.avatar-wrap.sm {
+  width: 44px;
+  height: 44px;
+}
+.avatar-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.avatar-svg .eyes-normal {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: av-blink 4.2s infinite;
+}
+.avatar-svg .eyes-hurt,
+.avatar-svg .mouth-hurt {
+  display: none;
+}
+.avatar-wrap.hurt .eyes-normal,
+.avatar-wrap.hurt .mouth-normal {
+  display: none;
+}
+.avatar-wrap.hurt .eyes-hurt,
+.avatar-wrap.hurt .mouth-hurt {
+  display: inline;
+}
+.avatar-wrap.hurt {
+  animation: av-shake 0.42s ease;
+}
+.avatar-wrap.punch-right {
+  animation: av-punch-r 0.28s ease;
+}
+.avatar-wrap.punch-left {
+  animation: av-punch-l 0.28s ease;
+}
+
+@keyframes av-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.12); }
+}
+@keyframes av-shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  20% { transform: translateX(-8px) rotate(-8deg); }
+  45% { transform: translateX(8px) rotate(7deg); }
+  70% { transform: translateX(-5px) rotate(-4deg); }
+}
+@keyframes av-punch-r {
+  0% { transform: translateX(0) scale(1); }
+  35% { transform: translateX(18px) rotate(8deg) scale(1.08); }
+  100% { transform: translateX(0) scale(1); }
+}
+@keyframes av-punch-l {
+  0% { transform: translateX(0) scale(1); }
+  35% { transform: translateX(-18px) rotate(-8deg) scale(1.08); }
+  100% { transform: translateX(0) scale(1); }
+}
+
+/* ===== ① 開場大廳 ===== */
+.lobby-main {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 20px;
+  padding: clamp(6px, 1.8vh, 18px) 8px 6px;
+  align-items: stretch;
+}
+
+.entry-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(10px, 1.8vh, 16px);
+  padding: clamp(16px, 2.6vh, 26px) clamp(18px, 2.2vw, 28px);
+}
+
+.entry-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.entry-title {
+  margin: 0;
+  font-size: clamp(24px, 3.6vh, 30px);
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.entry-desc {
+  margin: 4px 0 0;
+  font-size: 19px;
+  color: var(--ink-2);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.net-banner {
+  background: var(--warn-soft);
+  border: var(--line);
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-size: 19px;
+  font-weight: 900;
+  color: var(--ink);
+  display: none;
+}
+.net-banner.show {
+  display: block;
+}
+
+.net-blocks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  flex: 1;
+  align-items: stretch;
+}
+
+.sub-box {
+  background: #fffdf5;
+  border: var(--line);
+  border-radius: 16px;
+  padding: clamp(12px, 2vh, 18px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+}
+.sub-box h4 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 900;
+}
+.sub-box p {
+  margin: 0;
+  font-size: 18px;
+  color: var(--ink-2);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.code-input {
+  width: 100%;
+  height: clamp(50px, 7.5vh, 62px);
+  border: var(--line);
+  border-radius: 14px;
+  font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+  font-weight: 700;
+  font-size: 32px;
+  letter-spacing: 10px;
+  text-align: center;
+  background: #ffffff;
+  color: var(--ink);
+}
+.code-input::placeholder {
+  color: #676787;
+  letter-spacing: 8px;
+}
+.code-input:disabled {
+  background: #e5e1d4;
+  color: #55526b;
+  border-color: #7b7666;
+  cursor: not-allowed;
+}
+
+.practice-card {
+  background: var(--me);
+  color: #fff;
+  border: var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: clamp(16px, 2.6vh, 26px) clamp(18px, 2.2vw, 28px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(10px, 1.8vh, 16px);
+}
+.practice-card .entry-desc {
+  color: #eef3ff;
+}
+
+.bot-level-box {
+  background: rgba(255, 255, 255, 0.14);
+  border: 3px solid rgba(255, 255, 255, 0.55);
+  border-radius: 16px;
+  padding: clamp(12px, 2vh, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bot-level-box b {
+  font-size: 20px;
+}
+.bot-levels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.bot-levels .chip {
+  min-height: clamp(48px, 7vh, 58px);
+  font-size: 20px;
+}
+
+.bot-tip {
+  background: var(--paper);
+  color: var(--ink);
+  border: var(--line);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* ===== ② 房間 ===== */
+.room-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: clamp(330px, 29vw, 390px) 1fr;
+  gap: 16px;
+}
+
+.room-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 0;
+}
+
+.roomno {
+  display: flex;
+  gap: 8px;
+  margin: 2px 0 4px;
+}
+.roomno span {
+  display: inline-grid;
+  place-items: center;
+  flex: 1;
+  height: clamp(64px, 10.5vh, 84px);
+  background: var(--ink);
+  color: var(--gold);
+  border-radius: 12px;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700;
+  font-size: clamp(40px, 6.8vh, 54px);
+  border-bottom: 5px solid #000;
+}
+
+.slot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 3px dashed var(--ink-2);
+  border-radius: 14px;
+  padding: clamp(6px, 1.2vh, 10px) 12px;
+  background: #fffdf5;
+}
+.slot.me {
+  border: var(--line);
+  background: var(--me-soft);
+}
+.slot.opp {
+  border: var(--line);
+  background: var(--opp-soft);
+}
+.slot b {
+  font-size: 21px;
+  display: block;
+}
+.slot small {
+  display: block;
+  font-size: 18px;
+  color: var(--ink-2);
+  font-weight: 700;
+}
+
+.vsline {
+  text-align: center;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.room-opts {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(6px, 1.4vh, 12px);
+  min-height: 0;
+}
+
+.opt-row {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.opt-row > b {
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.mode-grid .chip {
+  min-height: clamp(46px, 7vh, 56px);
+  font-size: clamp(20px, 2.8vh, 23px);
+}
+
+.switch-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 700;
+}
+.sw-btn {
+  width: 66px;
+  height: 36px;
+  border: var(--line);
+  border-radius: 20px;
+  background: #c8c4b5;
+  position: relative;
+  flex: none;
+  padding: 0;
+  transition: background 0.15s ease;
+}
+.sw-btn[aria-checked="true"] {
+  background: var(--me);
+}
+.sw-btn::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--ink);
+  transition: transform 0.15s ease;
+}
+.sw-btn[aria-checked="true"]::after {
+  transform: translateX(30px);
+}
+.sw-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.focus-banner {
+  background: var(--warn-soft);
+  border: var(--line);
+  border-radius: 12px;
+  padding: 6px 12px;
+  font-size: 18px;
+  font-weight: 900;
+  display: none;
+}
+.focus-banner.show {
+  display: block;
+}
+
+.room-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex: none;
+  padding-top: 2px;
+}
+
+.guest-wait {
+  font-size: 21px;
+  font-weight: 900;
+  color: var(--ink-2);
+  background: var(--paper);
+  border: var(--line);
+  border-radius: 14px;
+  padding: 10px 24px;
+}
+
+/* ===== ④ 對戰中 ===== */
+.battle-topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding-left: 132px; /* 避開左上角 120×44px 空白區 */
+  flex: none;
+}
+.battle-title {
+  font-size: clamp(19px, 2.8vh, 23px);
+  font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.battle-topbar .spacer {
+  flex: 1;
+}
+
+.hud {
+  display: grid;
+  grid-template-columns: 1fr 122px 1fr;
+  gap: 12px;
+  align-items: center;
+  height: clamp(74px, 11.5vh, 88px);
+  flex: none;
+}
+
+.fighter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--paper);
+  border: var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 6px 14px;
+  height: 100%;
+  position: relative;
+}
+.fighter.opp {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+.fighter .info {
+  flex: 1;
+  min-width: 0;
+}
+.fighter .name {
+  font-size: clamp(19px, 2.8vh, 22px);
+  font-weight: 900;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.fighter.opp .name {
+  flex-direction: row-reverse;
+}
+.fighter .name small {
+  font-size: 18px;
+  color: var(--ink-2);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.hp {
+  height: clamp(22px, 3.4vh, 26px);
+  background: #e4e0d0;
+  border: var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 4px;
+  position: relative;
+}
+/* 分格刻度蓋在血條上方 */
+.hp::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(90deg, transparent 0 28px, rgba(27, 27, 58, 0.35) 28px 30px);
+  pointer-events: none;
+}
+.hp i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  transition: width 0.2s ease;
+}
+.fighter.me .hp i { background: var(--me); }
+.fighter.opp .hp i { background: var(--opp); left: auto; right: 0; }
+
+/* 傷害飄字 */
+.dmg-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 10;
+}
+.dmg-float {
+  position: absolute;
+  top: -10px;
+  right: 18px;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700;
+  font-size: 32px;
+  color: var(--opp);
+  background: var(--paper);
+  border: var(--line);
+  border-radius: 12px;
+  padding: 0 12px;
+  box-shadow: var(--shadow-sm);
+  animation: dmg-pop 0.85s ease-out forwards;
+}
+.fighter.me .dmg-float {
+  right: auto;
+  left: 18px;
+}
+.dmg-float.super {
+  font-size: 44px;
+  background: var(--gold);
+  color: var(--ink);
+  border-width: 4px;
+}
+@keyframes dmg-pop {
+  0% { opacity: 0; transform: translateY(10px) scale(0.75) rotate(-4deg); }
+  20% { opacity: 1; transform: translateY(-10px) scale(1.12) rotate(4deg); }
+  100% { opacity: 0; transform: translateY(-42px) scale(0.95) rotate(2deg); }
+}
+
+/* 中央圓形倒數秒數 */
+.timer {
+  position: relative;
+  width: clamp(82px, 13vh, 102px);
+  height: clamp(82px, 13vh, 102px);
+  margin: 0 auto;
+}
+.timer svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.timer .t {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  line-height: 1;
+}
+.timer .t b {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(32px, 5.2vh, 42px);
+  font-weight: 700;
+  display: block;
+}
+.timer .t span {
+  display: block;
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--ink-2);
+  margin-top: -2px;
+}
+.timer.urgent .t b {
+  color: var(--opp);
+}
+
+/* 雙方文章進度條 */
+.race {
+  flex: none;
+  display: grid;
+  grid-template-columns: 110px 1fr 92px;
+  gap: 4px 10px;
+  align-items: center;
+  font-weight: 900;
+  font-size: 18px;
+}
+.race-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.track {
+  height: 14px;
+  background: #e4e0d0;
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.track i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 6px;
+  width: 0%;
+  transition: width 0.2s ease;
+}
+.track.me i { background: var(--me); }
+.track.opp i { background: var(--opp); }
+.race .cnt {
+  font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+  font-size: 18px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* 中間大面積文章舞台 */
+.stage {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  background: var(--paper);
+  border: 5px solid var(--ink);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.passage-banner {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  background: var(--gold);
+  border: var(--line);
+  border-radius: 12px;
+  padding: 4px 14px;
+  font-weight: 900;
+  font-size: 19px;
+  z-index: 6;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.passage-banner.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.text-viewport {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: clamp(14px, 2.4vh, 22px) 24px 10px;
+  position: relative;
+}
+
+.text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  row-gap: 10px;
+  font-size: clamp(32px, 4.8vh, 36px); /* 嚴守 32~36px */
+  font-weight: 700;
+  line-height: 1.32;
+}
+.text.lang-zh .c {
+  font-family: 'Bpmf Huninn', 'Noto Sans TC', sans-serif;
+  margin: 0 4px;
+  padding: 0 4px;
+  border-radius: 8px;
+  display: inline-block;
+  white-space: nowrap;
+}
+.text.lang-en .c {
+  font-family: 'Noto Sans TC', sans-serif;
+  margin: 0 1px;
+  padding: 0 2px;
+  border-radius: 6px;
+  display: inline-block;
+  white-space: pre;
+}
+.text .c.sp {
+  min-width: 14px;
+  text-align: center;
+}
+.text .c.sp.cur {
+  background: var(--opp-soft);
+}
+.text .p {
+  font-family: 'Noto Sans TC', sans-serif;
+  margin: 0 8px 0 0;
+  display: inline-block;
+}
+.text .g {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+}
+
+/* 修改點 2：已打對的字改成淡綠色文字、底色不變 */
+.text .done {
+  background: transparent;
+  color: var(--done-text);
+}
+
+/* 目前要打的字：設計稿紅框醒目樣式 */
+.text .cur {
+  background: var(--opp-soft);
+  outline: 4px solid var(--opp);
+  color: var(--ink);
+  position: relative;
+  z-index: 2;
+}
+.text .cur.flash {
+  background: var(--opp);
+  color: #fff;
+  outline: 4px solid var(--ink);
+  animation: char-flash 0.36s ease;
+}
+@keyframes char-flash {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  60% { transform: translateX(5px); }
+}
+
+/* 修改點 1：固定於文章框下緣的提示列（絕不遮擋文章與注音） */
+.hint-bar {
+  flex: none;
+  min-height: 46px;
+  border-top: 3px solid var(--ink);
+  background: #fffdf5;
+  padding: 6px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.hint-bar.active {
+  background: var(--ink);
+  color: #fff;
+}
+.hint-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.hint-left .zh-read {
+  color: var(--gold);
+  font-size: 23px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+.hint-keys {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 38px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ink);
+  font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  border: 2px solid var(--ink);
+  border-bottom: 4px solid #6b6b88;
+}
+.keycap .sub-sym {
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 16px;
+  color: var(--me);
+  font-weight: 900;
+}
+
+/* 第 3 次錯誤展開的簡化鍵盤圖 */
+.kb-panel {
+  flex: none;
+  display: none;
+  background: #f5eedb;
+  border-top: 3px solid var(--ink);
+  padding: 6px 12px 8px;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+.kb-panel.show {
+  display: flex;
+}
+.kb-row {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  width: 100%;
+}
+.kb-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: clamp(46px, 5.2vw, 66px);
+  height: clamp(26px, 4.1vh, 32px);
+  padding: 0 6px;
+  background: #fff;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-bottom-width: 3px;
+  border-radius: 7px;
+  font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  position: relative;
+}
+.kb-key.wide {
+  min-width: clamp(92px, 10vw, 130px);
+}
+.kb-key.space {
+  min-width: clamp(190px, 24vw, 290px);
+}
+.kb-key .bop {
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--ink-2);
+}
+.kb-key.lit {
+  background: var(--gold);
+  border-color: var(--opp);
+  border-width: 3px;
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+.kb-key.lit .bop {
+  color: var(--opp);
+}
+.kb-step {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--opp);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  display: inline-grid;
+  place-items: center;
+  border: 2px solid var(--ink);
+}
+
+/* 下方輸入框與連擊卡 */
+.inputbar {
+  display: grid;
+  grid-template-columns: 1fr 250px;
+  gap: 12px;
+  flex: none;
+  height: clamp(54px, 8.2vh, 64px);
+  align-items: stretch;
+}
+
+.inputbox-wrap {
+  border: 5px solid var(--me);
+  border-radius: 16px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+.inputbox-wrap.warn {
+  border-color: var(--opp);
+}
+.input-tag {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--me);
+  white-space: nowrap;
+  flex: none;
+}
+.type-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none !important;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: clamp(24px, 3.8vh, 30px);
+  font-weight: 700;
+  color: var(--ink);
+  background: transparent;
+}
+.type-input::placeholder {
+  color: #5b5b7a;
+  font-size: 20px;
+}
+
+.combo {
+  border: var(--line);
+  border-radius: 16px;
+  background: var(--gold);
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-weight: 900;
+  padding: 0 12px;
+  transition: transform 0.12s ease;
+}
+.combo.hot {
+  background: #ffda55;
+  border-color: var(--opp);
+}
+.combo.bump {
+  transform: scale(1.06);
+}
+.combo .n {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(32px, 5.2vh, 40px);
+  font-weight: 700;
+  line-height: 1;
+}
+.combo .cinfo {
+  font-size: 18px;
+  line-height: 1.15;
+}
+.combo .cinfo small {
+  display: block;
+  font-size: 18px;
+  color: var(--ink-2);
+}
+
+/* 提示階梯列 */
+.ladder {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-2);
+  min-height: 30px;
+}
+.ladder .st {
+  display: inline-block;
+  border: 3px solid var(--ink-2);
+  border-radius: 20px;
+  padding: 0 12px;
+  background: #fffdf5;
+  color: var(--ink);
+  font-size: 18px;
+}
+.ladder .st.now {
+  background: var(--opp);
+  color: #fff;
+  border-color: var(--ink);
+}
+.ladder .rule {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* ===== ⑤ 結算 ===== */
+.res-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  min-height: 46px;
+  padding-left: 132px; /* 避開左上角 120×44px 空白區 */
+}
+.ribbon {
+  background: var(--ink);
+  color: var(--gold);
+  font-weight: 900;
+  font-size: clamp(22px, 3.2vh, 26px);
+  padding: 4px 20px;
+  border-radius: 12px;
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+.res-top .sub {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.res-top .spacer { flex: 1; }
+
+.res-grid {
+  display: grid;
+  grid-template-columns: 1fr clamp(400px, 34vw, 460px);
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+.progress-hero {
+  background: var(--me);
+  color: #fff;
+  border: 5px solid var(--ink);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  padding: clamp(12px, 2.2vh, 20px) clamp(16px, 2vw, 24px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(8px, 1.4vh, 12px);
+  min-height: 0;
+}
+.progress-hero h2 {
+  margin: 0;
+  font-size: clamp(24px, 3.8vh, 30px);
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+.progress-hero h2 small {
+  font-size: 18px;
+  font-weight: 700;
+  margin-left: 10px;
+  color: #e9f0ff;
+}
+
+.prog {
+  display: grid;
+  grid-template-columns: 145px 1fr;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  color: var(--ink);
+  border: var(--line);
+  border-radius: 16px;
+  padding: clamp(8px, 1.5vh, 12px) 16px;
+}
+.prog .k {
+  font-size: 21px;
+  font-weight: 900;
+}
+.prog .k small {
+  display: block;
+  font-size: 18px;
+  color: var(--ink-2);
+  font-weight: 700;
+}
+.prog .v {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+.prog .old {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(24px, 3.6vh, 30px);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.prog .arrow {
+  font-size: 24px;
+  color: var(--ink-2);
+  font-weight: 900;
+}
+.prog .new {
+  font-family: 'Fredoka', sans-serif;
+  font-size: clamp(44px, 7.2vh, 60px);
+  font-weight: 700;
+  line-height: 1;
+}
+.prog .new small {
+  font-size: 20px;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+
+.delta-badge {
+  display: inline-block;
+  background: var(--good);
+  color: #fff;
+  border-radius: 12px;
+  padding: 2px 14px;
+  font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+  font-weight: 700;
+  font-size: clamp(22px, 3.6vh, 28px);
+  border: var(--line);
+  transform: rotate(-3deg);
+  white-space: nowrap;
+}
+.delta-badge.flat {
+  background: var(--gold);
+  color: var(--ink);
+}
+.delta-badge.down {
+  background: var(--ink-2);
+  color: #fff;
+}
+
+.prog .bar {
+  flex: 1;
+  height: 18px;
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  background: #e4e0d0;
+  position: relative;
+  min-width: 72px;
+}
+.prog .bar i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--good);
+  border-radius: 6px;
+}
+.prog .bar u {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 4px;
+  background: var(--ink);
+  text-decoration: none;
+  left: 90%;
+}
+
+.goalrow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 19px;
+  font-weight: 700;
+  background: var(--warn-soft);
+  color: var(--ink);
+  border: var(--line);
+  border-radius: 14px;
+  padding: 8px 14px;
+}
+.goalrow .star {
+  width: 34px;
+  height: 34px;
+  flex: none;
+}
+.hero-foot {
+  font-size: 19px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.duel-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.score-table {
+  display: grid;
+  grid-template-columns: 1fr 94px 1fr;
+  text-align: center;
+  align-items: center;
+  row-gap: 4px;
+}
+.score-who {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-weight: 900;
+  font-size: 19px;
+}
+.win-tag {
+  display: inline-block;
+  background: var(--gold);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: 18px;
+  font-weight: 900;
+}
+.score-mid {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--ink-2);
+}
+.score-val {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700;
+  font-size: clamp(22px, 3.4vh, 26px);
+}
+.score-val.me { color: var(--me); }
+.score-val.opp { color: var(--opp); }
+
+.wrong-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wrong-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  overflow-y: auto;
+  max-height: clamp(86px, 16vh, 132px);
+  padding: 2px;
+}
+.wc {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: var(--line);
+  border-radius: 12px;
+  background: var(--opp-soft);
+  color: var(--ink);
+  text-align: center;
+  min-width: 78px;
+  padding: 4px 8px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.wc:hover {
+  transform: translateY(-1px);
+  background: var(--warn-soft);
+}
+.wc.selected {
+  background: var(--gold);
+}
+.wc .z {
+  font-family: 'Bpmf Huninn', 'Noto Sans TC', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.wc.en .z {
+  font-family: 'Noto Sans TC', sans-serif;
+}
+.wc em {
+  display: block;
+  font-style: normal;
+  font-size: 18px;
+  color: var(--ink-2);
+  font-weight: 700;
+}
+
+.wrong-detail {
+  background: var(--ink);
+  color: #fff;
+  border-radius: 12px;
+  padding: 6px 12px;
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.res-btns {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 0.85fr;
+  gap: 8px;
+  margin-top: auto;
+}
+.res-btns .btn {
+  padding: 0 10px;
+  font-size: 18px;
+  min-height: 46px;
+}
+
+/* ===== 彈出視窗與倒數遮罩（關閉時同時 visibility:hidden 與 inert） ===== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 27, 58, 0.74);
+  display: grid;
+  place-items: center;
+  z-index: 60;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+.overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.modal {
+  background: var(--paper);
+  border: 5px solid var(--ink);
+  border-radius: 22px;
+  box-shadow: 0 8px 0 var(--ink);
+  padding: 24px 28px;
+  width: min(460px, 90vw);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.modal h3 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 900;
+}
+.modal p {
+  margin: 0;
+  font-size: 19px;
+  color: var(--ink-2);
+  font-weight: 700;
+  line-height: 1.45;
+}
+.modal-input {
+  width: 100%;
+  height: 56px;
+  border: var(--line);
+  border-radius: 14px;
+  padding: 0 16px;
+  font-size: 24px;
+  font-weight: 900;
+  font-family: inherit;
+  color: var(--ink);
+  background: #fffdf5;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* 倒數大字 */
+.countdown-box {
+  text-align: center;
+  color: var(--gold);
+}
+.countdown-num {
+  font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+  font-weight: 900;
+  font-size: clamp(110px, 24vh, 180px);
+  line-height: 1;
+  text-shadow: 0 10px 0 var(--ink), 6px 0 0 var(--ink), -6px 0 0 var(--ink), 0 -6px 0 var(--ink);
+  animation: cd-pop 0.55s ease;
+}
+.countdown-sub {
+  margin-top: 10px;
+  display: inline-block;
+  background: var(--paper);
+  color: var(--ink);
+  border: var(--line);
+  border-radius: 16px;
+  padding: 6px 22px;
+  font-size: 24px;
+  font-weight: 900;
+  box-shadow: var(--shadow);
+}
+@keyframes cd-pop {
+  0% { transform: scale(0.45); opacity: 0.2; }
+  65% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ===== 行動裝置／無鍵盤提示卡 ===== */
+.mobile-guard {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--cream);
+  padding: 24px;
+  place-items: center;
+}
+.mobile-card {
+  background: var(--paper);
+  border: 5px solid var(--ink);
+  border-radius: 24px;
+  box-shadow: 0 8px 0 var(--ink);
+  padding: 28px 24px;
+  max-width: 440px;
+  text-align: center;
+}
+.mobile-card h2 {
+  margin: 12px 0 10px;
+  font-size: 26px;
+  font-weight: 900;
+}
+.mobile-card p {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+@media (max-width: 960px), ((hover: none) and (pointer: coarse)) {
+  .arena { display: none !important; }
+  .mobile-guard { display: grid; }
+}
+
+/* ===== 減少動態偏好支援 ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .avatar-svg .eyes-normal {
+    animation: none !important;
+  }
+}
+/* ===== 整合修（Claude，2026-11-19）=====
+   重叫 Gemini 產生這頁後要補回這個區塊（記錄在 project_typing_duel_plan）
+   1. 我方傷害飄字原本在卡片左上，會跑進左上角 120×44 回首頁按鈕的保留區 → 改到卡片右側 */
+.fighter.me .dmg-float { left: auto; right: 18px; }
+</style>
+</head>
+<body>
+
+<!-- ===== 平板／手機提示卡 ===== -->
+<div class="mobile-guard" role="alert">
+  <div class="mobile-card">
+    <svg width="72" height="72" viewBox="0 0 64 64" aria-hidden="true">
+      <rect x="6" y="16" width="52" height="32" rx="6" fill="#ffc93c" stroke="#1b1b3a" stroke-width="4"/>
+      <rect x="13" y="23" width="8" height="7" rx="2" fill="#fff" stroke="#1b1b3a" stroke-width="2"/>
+      <rect x="24" y="23" width="8" height="7" rx="2" fill="#fff" stroke="#1b1b3a" stroke-width="2"/>
+      <rect x="35" y="23" width="8" height="7" rx="2" fill="#fff" stroke="#1b1b3a" stroke-width="2"/>
+      <rect x="46" y="23" width="6" height="7" rx="2" fill="#fff" stroke="#1b1b3a" stroke-width="2"/>
+      <rect x="18" y="34" width="28" height="7" rx="2" fill="#fff" stroke="#1b1b3a" stroke-width="2"/>
+    </svg>
+    <h2 id="mobile-guard-title">打字擂台要用有鍵盤的電腦玩</h2>
+    <p id="mobile-guard-desc">請換到電腦教室的筆電或桌上型電腦，用實體鍵盤就能開始打字對戰！</p>
+  </div>
+</div>
+
+<!-- ===== 主擂台舞台 ===== -->
+<main class="arena" id="app-arena">
+
+  <!-- ==================== ① 開場大廳 ==================== -->
+  <section class="screen active" id="screen-lobby" aria-label="開場大廳">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="logo">
+          <span class="avatar-wrap sm" id="lobby-logo-av"></span>
+          <span id="txt-app-title">打字擂台</span>
+          <span class="tag" id="txt-app-tag">1 對 1 即時對戰</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="pill best" id="lobby-best-pill" style="display:none"></span>
+        <span class="pill" id="lobby-nick-pill">目前暱稱：小選手</span>
+        <button type="button" class="btn sm" id="btn-change-nick">換暱稱</button>
+        <button type="button" class="btn sm sound-toggle" aria-pressed="true">🔊 音效開</button>
+      </div>
+    </header>
+
+    <div class="lobby-main">
+      <!-- 入口一：連線對戰 -->
+      <div class="card entry-card">
+        <div>
+          <div class="entry-head">
+            <h2 class="entry-title" id="txt-net-title">連線對戰</h2>
+            <span class="pill" id="txt-net-badge">兩台電腦互打</span>
+          </div>
+          <p class="entry-desc" id="txt-net-desc">一個人開房間拿房號，同學輸入 4 位數房號就能進來對戰！</p>
+        </div>
+
+        <div class="net-banner" id="net-unavailable-banner" role="status">
+          連線對戰即將開放，先對電腦練習吧！
+        </div>
+
+        <div class="net-blocks">
+          <div class="sub-box">
+            <div>
+              <h4 id="txt-create-title">建立擂台</h4>
+              <p id="txt-create-desc">當房主選題目，產生 4 格大房號等同學進來。</p>
+            </div>
+            <button type="button" class="btn gold" id="btn-create-net">建立擂台</button>
+          </div>
+
+          <div class="sub-box">
+            <div>
+              <h4 id="txt-join-title">有房號？來挑戰</h4>
+              <p id="txt-join-desc">輸入同學給你的 4 位數房號。</p>
+            </div>
+            <input type="text" class="code-input" id="join-code-input" inputmode="numeric" maxlength="4" placeholder="____" aria-label="輸入 4 位數房號" autocomplete="off">
+            <button type="button" class="btn blue" id="btn-join-net">加入擂台</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 入口二：對電腦練習 -->
+      <div class="practice-card">
+        <div>
+          <div class="entry-head">
+            <h2 class="entry-title" id="txt-bot-title">對電腦練習</h2>
+            <span class="pill" style="color:var(--ink)" id="txt-bot-badge">隨時開打</span>
+          </div>
+          <p class="entry-desc" id="txt-bot-desc">沒有對手也沒關係！選一個適合自己的機器人強度，馬上進擂台練習。</p>
+        </div>
+
+        <div class="bot-level-box">
+          <b id="txt-bot-level-label">選擇機器人強度</b>
+          <div class="bot-levels" role="radiogroup" aria-label="機器人強度">
+            <button type="button" class="chip bot-lv-btn" data-level="easy">慢慢來</button>
+            <button type="button" class="chip bot-lv-btn on" data-level="normal">普通</button>
+            <button type="button" class="chip bot-lv-btn" data-level="hard">很厲害</button>
+          </div>
+        </div>
+
+        <div class="bot-tip">
+          <span class="avatar-wrap sm" id="lobby-bot-av"></span>
+          <span id="bot-level-desc">機器人「普通」：速度穩穩的，適合三、四年級練習節奏！</span>
+        </div>
+
+        <button type="button" class="btn gold big" id="btn-start-bot">對電腦練習！</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== ② 房間 ==================== -->
+  <section class="screen" id="screen-room" aria-label="擂台房間">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="logo">
+          <span id="txt-room-title">擂台房間</span>
+          <span class="tag" id="room-mode-tag">對電腦練習</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button type="button" class="btn sm" id="btn-room-leave">回大廳</button>
+        <button type="button" class="btn sm sound-toggle" aria-pressed="true">🔊 音效開</button>
+      </div>
+    </header>
+
+    <div class="room-grid">
+      <!-- 左欄：房號／機器人強度與雙方座位卡 -->
+      <div class="card room-left">
+        <!-- 連線模式：4 格大房號 -->
+        <div id="room-code-section">
+          <h3 id="txt-roomno-label">你的擂台房號</h3>
+          <div class="roomno num" id="room-code-digits" aria-label="房號">
+            <span>-</span><span>-</span><span>-</span><span>-</span>
+          </div>
+          <p style="margin:0;font-size:18px;font-weight:700;color:var(--ink-2)" id="txt-roomno-tip">把房號告訴同學，請他輸入就能進來</p>
+        </div>
+
+        <!-- 電腦模式：可快速調整強度 -->
+        <div id="room-bot-section" style="display:none">
+          <h3 id="txt-room-bot-label">對手機器人強度</h3>
+          <div class="row" id="room-bot-levels">
+            <button type="button" class="chip room-bot-lv" data-level="easy">慢慢來</button>
+            <button type="button" class="chip room-bot-lv on" data-level="normal">普通</button>
+            <button type="button" class="chip room-bot-lv" data-level="hard">很厲害</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="slot me" id="slot-me">
+            <span class="avatar-wrap" id="room-me-av"></span>
+            <div>
+              <b id="room-me-name">小明</b>
+              <small id="room-me-role">房主・藍角</small>
+            </div>
+          </div>
+          <div class="vsline">VS</div>
+          <div class="slot" id="slot-opp">
+            <span class="avatar-wrap" id="room-opp-av"></span>
+            <div>
+              <b id="room-opp-name">等待對手加入…</b>
+              <small id="room-opp-role">紅角</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右欄：對戰設定 -->
+      <div class="card room-opts">
+        <div class="focus-banner" id="room-focus-banner"></div>
+
+        <div class="opt-row">
+          <b id="txt-opt-lang">練什麼</b>
+          <div class="mode-grid" id="opt-lang-group">
+            <button type="button" class="chip" data-lang="en">英打 ABC</button>
+            <button type="button" class="chip on" data-lang="zh">中打 ㄅㄆㄇ</button>
+          </div>
+        </div>
+
+        <div class="opt-row">
+          <b id="txt-opt-grade">年級</b>
+          <div class="row" id="opt-grade-group">
+            <button type="button" class="chip" data-grade="low">低年級</button>
+            <button type="button" class="chip on" data-grade="mid">中年級</button>
+            <button type="button" class="chip" data-grade="high">高年級</button>
+          </div>
+        </div>
+
+        <div class="opt-row">
+          <b id="txt-opt-domain">領域</b>
+          <div class="row" id="opt-domain-group"></div>
+        </div>
+
+        <div class="opt-row">
+          <b id="txt-opt-duration">時間</b>
+          <div class="row" id="opt-duration-group">
+            <button type="button" class="chip" data-duration="60">60 秒</button>
+            <button type="button" class="chip on" data-duration="90">90 秒</button>
+            <button type="button" class="chip" data-duration="120">120 秒</button>
+          </div>
+        </div>
+
+        <div class="opt-row">
+          <b id="txt-opt-handicap">讓分</b>
+          <div class="switch-wrap">
+            <button type="button" class="sw-btn" id="opt-handicap-sw" role="switch" aria-checked="true" aria-label="讓分開關"></button>
+            <span id="txt-handicap-desc">開啟：速度慢的人血量多一點，打起來更公平</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="room-footer">
+      <button type="button" class="btn gold big" id="btn-room-start">開始對戰！</button>
+      <div class="guest-wait" id="room-guest-wait" style="display:none">房主正在挑選題目，準備好就會開始！</div>
+    </div>
+  </section>
+
+  <!-- ==================== ④ 對戰中 ==================== -->
+  <section class="screen" id="screen-battle" aria-label="對戰中">
+    <!-- 頂部條（避開左上角 120×44px） -->
+    <div class="battle-topbar">
+      <span class="pill sci" id="battle-domain-pill">自然科學</span>
+      <span class="pill" id="battle-grade-pill">中年級</span>
+      <span class="battle-title" id="battle-title-txt">《準備中》</span>
+      <span class="spacer"></span>
+      <span class="pill goal" id="battle-goal-pill">本局目標：正確率 90% 以上</span>
+      <button type="button" class="btn sm sound-toggle" aria-pressed="true">🔊 音效開</button>
+      <button type="button" class="btn sm" id="btn-battle-quit">離開</button>
+    </div>
+
+    <!-- 雙方血條與中央圓形倒數 -->
+    <div class="hud">
+      <div class="fighter me" id="hud-me">
+        <span class="avatar-wrap" id="battle-me-av"></span>
+        <div class="info">
+          <div class="name">
+            <span id="battle-me-name">小明（你）</span>
+            <small class="num" id="battle-me-hp-txt">血量 100</small>
+          </div>
+          <div class="hp" role="img" aria-label="我的血量"><i id="battle-me-hp-bar"></i></div>
+        </div>
+        <div class="dmg-layer" id="dmg-me"></div>
+      </div>
+
+      <div class="timer" id="battle-timer">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle cx="60" cy="60" r="52" fill="#fff" stroke="#1b1b3a" stroke-width="5"/>
+          <circle cx="60" cy="60" r="42" fill="none" stroke="#e4e0d0" stroke-width="10"/>
+          <circle id="timer-ring" cx="60" cy="60" r="42" fill="none" stroke="#c92a2a" stroke-width="10"
+            stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+        </svg>
+        <div class="t"><div><b id="timer-sec">90</b><span>秒</span></div></div>
+      </div>
+
+      <div class="fighter opp" id="hud-opp">
+        <span class="avatar-wrap" id="battle-opp-av"></span>
+        <div class="info">
+          <div class="name">
+            <span id="battle-opp-name">對手</span>
+            <small class="num" id="battle-opp-hp-txt">血量 100</small>
+          </div>
+          <div class="hp" role="img" aria-label="對手血量"><i id="battle-opp-hp-bar"></i></div>
+        </div>
+        <div class="dmg-layer" id="dmg-opp"></div>
+      </div>
+    </div>
+
+    <!-- 雙方文章進度條（打對字數／目前這篇總字數） -->
+    <div class="race">
+      <span class="race-name" style="color:var(--me)" id="race-me-name">小明</span>
+      <div class="track me"><i id="race-me-bar"></i></div>
+      <span class="cnt" id="race-me-cnt">0 / 0</span>
+
+      <span class="race-name" style="color:var(--opp)" id="race-opp-name">對手</span>
+      <div class="track opp"><i id="race-opp-bar"></i></div>
+      <span class="cnt" id="race-opp-cnt">0 / 0</span>
+    </div>
+
+    <!-- 中間大面積文章區 + 固定下緣提示列 + 第 3 次簡化鍵盤 -->
+    <div class="stage">
+      <div class="passage-banner" id="passage-banner">⭐ 完成一篇！換下一篇！</div>
+      <div class="text-viewport" id="text-viewport">
+        <div class="text lang-zh" id="passage-text" aria-live="off"></div>
+      </div>
+
+      <!-- 固定於文章框下緣的提示列（絕不浮在文章上） -->
+      <div class="hint-bar" id="hint-bar" aria-live="polite">
+        <div class="hint-left" id="hint-left">看著紅框裡的字打下去，加油！</div>
+        <div class="hint-keys" id="hint-keys"></div>
+      </div>
+
+      <!-- 第 3 次以上展開的簡化鍵盤 -->
+      <div class="kb-panel" id="kb-panel" aria-label="按鍵位置圖"></div>
+    </div>
+
+    <!-- 下方輸入框與連擊卡 -->
+    <div class="inputbar">
+      <div class="inputbox-wrap" id="inputbox-wrap">
+        <span class="input-tag" id="input-tag">輸入區</span>
+        <input type="text" class="type-input" id="type-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="看著紅框裡的字開始打吧！">
+      </div>
+      <div class="combo" id="combo-card">
+        <span class="n" id="combo-num">0</span>
+        <div class="cinfo">連擊<small id="combo-mult">傷害 ×1.0</small></div>
+      </div>
+    </div>
+
+    <!-- 提示階梯列 -->
+    <div class="ladder" id="ladder-bar">
+      <span>打錯提示：</span>
+      <span class="st" id="st-1">① 字框紅閃</span>
+      <span class="st" id="st-2">② 顯示按鍵</span>
+      <span class="st" id="st-3">③ 鍵盤圖</span>
+      <span class="rule" id="txt-ladder-rule">打錯不扣血，只是連擊歸零</span>
+    </div>
+  </section>
+
+  <!-- ==================== ⑤ 結算 ==================== -->
+  <section class="screen" id="screen-result" aria-label="對戰結算">
+    <header class="res-top">
+      <span class="ribbon" id="res-ribbon">小明 獲勝</span>
+      <span class="sub" id="res-sub">自然科學・90 秒・讓分：開</span>
+      <span class="spacer"></span>
+      <button type="button" class="btn sm sound-toggle" aria-pressed="true">🔊 音效開</button>
+    </header>
+
+    <div class="res-grid">
+      <!-- 左大區：你比上次進步了！ -->
+      <div class="progress-hero">
+        <h2 id="res-hero-title">你比上次進步了！<small id="res-hero-sub">和你自己上一局比</small></h2>
+
+        <div class="prog">
+          <div class="k">打字速度<small>每分鐘字數</small></div>
+          <div class="v">
+            <span class="old" id="res-old-cpm">38</span>
+            <span class="arrow" id="res-cpm-arrow">→</span>
+            <span class="new num"><span id="res-new-cpm">46</span><small> 字/分</small></span>
+            <span class="delta-badge" id="res-cpm-delta">+8</span>
+          </div>
+        </div>
+
+        <div class="prog">
+          <div class="k">正確率<small>打對的比例</small></div>
+          <div class="v">
+            <span class="old" id="res-old-acc">84%</span>
+            <span class="arrow" id="res-acc-arrow">→</span>
+            <span class="new num"><span id="res-new-acc">92</span><small>%</small></span>
+            <span class="delta-badge" id="res-acc-delta">+8</span>
+            <div class="bar" aria-hidden="true"><i id="res-acc-bar" style="width:92%"></i><u></u></div>
+          </div>
+        </div>
+
+        <div class="goalrow">
+          <svg class="star" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2l3 7 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.4 21.8l1.8-7.3L1.5 9.6 9 9z"
+              fill="#ffc93c" stroke="#1b1b3a" stroke-width="1.8" stroke-linejoin="round"/>
+          </svg>
+          <span id="res-goal-text">本局目標「正確率 90% 以上」達成！下一局目標：連擊 15 字</span>
+        </div>
+
+        <div class="hero-foot">
+          <span id="res-extra-stats">最長連擊 0 字・打對 0 字</span>
+          <span class="pill best" id="res-record-pill" style="display:none;color:var(--ink)">⭐ 打破個人最快紀錄！</span>
+        </div>
+      </div>
+
+      <!-- 右小區：對戰成績＋錯字回顧＋按鈕 -->
+      <div class="duel-col">
+        <div class="card">
+          <h3>對戰成績</h3>
+          <div class="score-table">
+            <div class="score-who">
+              <span class="avatar-wrap sm" id="res-me-av"></span>
+              <span id="res-me-name">小明</span>
+              <span class="win-tag" id="res-me-win" style="display:none">勝</span>
+            </div>
+            <div class="score-mid">VS</div>
+            <div class="score-who">
+              <span class="avatar-wrap sm" id="res-opp-av"></span>
+              <span id="res-opp-name">對手</span>
+              <span class="win-tag" id="res-opp-win" style="display:none">勝</span>
+            </div>
+
+            <div class="score-val me" id="res-me-cpm">0</div>
+            <div class="score-mid">字/分</div>
+            <div class="score-val opp" id="res-opp-cpm">0</div>
+
+            <div class="score-val me" id="res-me-acc">0%</div>
+            <div class="score-mid">正確率</div>
+            <div class="score-val opp" id="res-opp-acc">0%</div>
+
+            <div class="score-val me" id="res-me-hp">0</div>
+            <div class="score-mid">剩餘血量</div>
+            <div class="score-val opp" id="res-opp-hp">0</div>
+          </div>
+        </div>
+
+        <div class="card wrong-card">
+          <h3 id="res-wrong-title">我的錯字回顧（0 個）</h3>
+          <div class="wrong-list" id="res-wrong-list"></div>
+          <div class="wrong-detail" id="res-wrong-detail">點選上方的錯字，可以查看要按哪些鍵！</div>
+          <div class="res-btns">
+            <button type="button" class="btn blue" id="btn-practice-wrong">再練這幾個字</button>
+            <button type="button" class="btn gold" id="btn-rematch">再來一局</button>
+            <button type="button" class="btn" id="btn-res-lobby">回大廳</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== ③ 倒數遮罩 ===== -->
+<div class="overlay" id="overlay-countdown" inert aria-live="assertive">
+  <div class="countdown-box">
+    <div class="countdown-num" id="cd-num">3</div>
+    <div class="countdown-sub" id="cd-sub">雙手放好鍵盤，準備開打！</div>
+  </div>
+</div>
+
+<!-- ===== 彈窗：修改暱稱 ===== -->
+<div class="overlay" id="modal-nick" inert role="dialog" aria-modal="true" aria-labelledby="modal-nick-title">
+  <div class="modal">
+    <h3 id="modal-nick-title">幫自己取個暱稱</h3>
+    <p id="modal-nick-desc">最多 8 個字，對戰時會顯示在擂台上喔！</p>
+    <input type="text" class="modal-input" id="nick-input" maxlength="8" placeholder="例如：小明">
+    <div class="modal-actions">
+      <button type="button" class="btn sm" id="btn-nick-cancel">取消</button>
+      <button type="button" class="btn sm gold" id="btn-nick-save">確定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 彈窗：通用訊息／錯誤提示 ===== -->
+<div class="overlay" id="modal-alert" inert role="dialog" aria-modal="true" aria-labelledby="modal-alert-title">
+  <div class="modal">
+    <h3 id="modal-alert-title">提醒</h3>
+    <p id="modal-alert-msg"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn sm gold" id="btn-alert-ok">我知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 彈窗：確認離開對戰 ===== -->
+<div class="overlay" id="modal-quit" inert role="dialog" aria-modal="true" aria-labelledby="modal-quit-title">
+  <div class="modal">
+    <h3 id="modal-quit-title">確定要離開這場對戰嗎？</h3>
+    <p id="modal-quit-desc">現在離開的話，這局的成績不會記錄下來喔。</p>
+    <div class="modal-actions">
+      <button type="button" class="btn sm" id="btn-quit-cancel">繼續打字</button>
+      <button type="button" class="btn sm red" id="btn-quit-confirm">離開回大廳</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 依序載入核心邏輯腳本 ===== -->
+<script src="passages.js"></script>
+<script src="duel-rules.js"></script>
+<script src="duel-core.js"></script>
+<script src="duel-net.js" onerror="void 0"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================================================================
+   * 1. 介面文字集中管理常數（方便老師依教學需求修改）
+   * ================================================================ */
+  const TEXT = {
+    appTitle: '打字擂台',
+    appTag: '1 對 1 即時對戰',
+    defaultNick: '小選手',
+    nickPrefix: '目前暱稱：',
+    bestBadgePrefix: '⭐ 最高紀錄 ',
+    bestBadgeSuffix: ' 字/分',
+    soundOn: '🔊 音效開',
+    soundOff: '🔇 音效關',
+
+    netUnavailable: '連線對戰即將開放，先對電腦練習吧！',
+    netCodeError: '請輸入完整的 4 位數房號喔！',
+    botModeTag: '對電腦練習',
+    netModeTag: '連線對戰',
+    botNames: { easy: '慢慢來機器人', normal: '普通機器人', hard: '很厲害機器人' },
+    botDescs: {
+      easy: '機器人「慢慢來」：打字慢慢的，剛學打字也能輕鬆上手！',
+      normal: '機器人「普通」：速度穩穩的，適合三、四年級練習節奏！',
+      hard: '機器人「很厲害」：手速飛快，來挑戰看看能不能打贏它！'
+    },
+
+    gradeLabels: { low: '低年級', mid: '中年級', high: '高年級' },
+    langLabels: { zh: '中打 ㄅㄆㄇ', en: '英打 ABC' },
+    randomDomainLabel: '隨機',
+
+    roomHostRole: '房主・藍角',
+    roomGuestRole: '挑戰者・藍角',
+    roomOppWaiting: '等待對手加入…',
+    roomOppReady: '已進入擂台，準備好了',
+    roomOppBotReady: '電腦對手，隨時可以開打',
+    roomStartReady: '開始對戰！',
+    roomStartWaiting: '等待對手加入…',
+
+    countdownSub: '雙手放好鍵盤，準備開打！',
+    countdownGo: '開打！',
+
+    goalLabel: '本局目標：正確率 90% 以上',
+    hintDefaultZh: '看著紅框裡的字打下去，加油！',
+    hintDefaultEn: '直接按鍵盤打紅框裡的字母或符號，加油！',
+    hintFlash: '哎呀打錯了！看清楚紅框裡的字，再試一次！',
+    hintZhPrefix: '這個字唸 ',
+    hintEnPrefix: '這個字是 ',
+    hintEnSpace: '空白鍵',
+    inputPlaceholderZh: '在這裡用注音輸入…',
+    inputPlaceholderEn: '直接按鍵盤開始打字…',
+    passageNextMsg: '⭐ 完成一篇！換下一篇！',
+
+    resultWinSuffix: ' 獲勝',
+    resultTie: '平手！勢均力敵',
+    resultFirstTitle: '這是你的第一筆紀錄！',
+    resultFirstSub: '下次再玩就能看到自己進步多少',
+    resultFirstBadge: '首戰完成',
+    resultImproveTitle: '你比上次進步了！',
+    resultImproveSub: '和你自己上一局比',
+    resultSteadyTitle: '表現很穩，再接再厲！',
+    resultSteadySub: '每次練習都會越來越順手',
+    goalPassPrefix: '本局目標「正確率 90% 以上」達成！　下一局目標：',
+    goalFailMsg: '本局目標「正確率 90% 以上」差一點點！　下一局目標：放慢一點把正確率練到 90% 以上',
+    noMistakeMsg: '太棒了！這一局一個字都沒打錯 ⭐',
+    wrongDetailIdle: '點選上方的錯字，可以查看要按哪些鍵！',
+    oppLeftBattle: '對手剛剛離開擂台了，你可以回到大廳重新開始喔！',
+    oppLeftRoom: '對手離開了房間。',
+    coreMissing: '找不到遊戲核心程式，請確認 duel-core.js 是否在同一資料夾。'
+  };
+
+  /* ================================================================
+   * 2. LocalStorage 成績與暱稱管理（全程 try/catch 防錯）
+   * ================================================================ */
+  const STORAGE_KEYS = {
+    score: 'edtech-unit23-score',
+    best: 'edtech-unit23-best',
+    last: 'edtech-unit23-last',
+    nick: 'edtech-unit23-nick'
+  };
+
+  function safeReadJSON(key, fallback) {
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) return fallback;
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function safeWrite(key, value) {
+    try {
+      window.localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+    } catch (e) {
+      // 隱私模式或儲存空間受限時靜默略過
+    }
+  }
+
+  function getSavedNick() {
+    try {
+      const n = (window.localStorage.getItem(STORAGE_KEYS.nick) || '').trim();
+      return n ? n.slice(0, 8) : TEXT.defaultNick;
+    } catch (e) {
+      return TEXT.defaultNick;
+    }
+  }
+
+  function getSavedScore() {
+    try {
+      const v = Number(window.localStorage.getItem(STORAGE_KEYS.score));
+      return Number.isFinite(v) && v > 0 ? v : 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  function getSavedBest() {
+    const obj = safeReadJSON(STORAGE_KEYS.best, {});
+    return {
+      zh: obj.zh && typeof obj.zh.cpm === 'number' ? obj.zh : { cpm: 0, acc: 0 },
+      en: obj.en && typeof obj.en.cpm === 'number' ? obj.en : { cpm: 0, acc: 0 }
+    };
+  }
+
+  function getSavedLast() {
+    const obj = safeReadJSON(STORAGE_KEYS.last, {});
+    return {
+      zh: obj.zh && typeof obj.zh.cpm === 'number' ? obj.zh : null,
+      en: obj.en && typeof obj.en.cpm === 'number' ? obj.en : null
+    };
+  }
+
+  /* ================================================================
+   * 3. Web Audio API 即時合成音效模組（預設開啟）
+   * ================================================================ */
+  const Sound = (function () {
+    let ctx = null;
+    let enabled = true;
+
+    function ensureCtx() {
+      if (!enabled) return null;
+      try {
+        if (!ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return null;
+          ctx = new AC();
+        }
+        if (ctx.state === 'suspended') {
+          ctx.resume().catch(function () {});
+        }
+        return ctx;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function tone(freq, startOffset, duration, type, gainPeak, endFreq) {
+      const c = ensureCtx();
+      if (!c) return;
+      const now = c.currentTime + startOffset;
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type || 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+      if (endFreq) {
+        osc.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
+      }
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(gainPeak || 0.14, now + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0008, now + duration);
+      osc.connect(gain);
+      gain.connect(c.destination);
+      osc.start(now);
+      osc.stop(now + duration + 0.02);
+    }
+
+    return {
+      isEnabled: function () { return enabled; },
+      toggle: function () {
+        enabled = !enabled;
+        if (enabled) {
+          ensureCtx();
+          tone(523.25, 0, 0.09, 'sine', 0.12);
+        }
+        return enabled;
+      },
+      unlock: function () { ensureCtx(); },
+      tick: function () { tone(440, 0, 0.12, 'triangle', 0.15, 390); },
+      bell: function () {
+        // 擂台開打雙響鐘聲
+        tone(880, 0, 0.55, 'sine', 0.22);
+        tone(1318.5, 0, 0.45, 'triangle', 0.12);
+        tone(880, 0.16, 0.6, 'sine', 0.2);
+        tone(1760, 0.16, 0.4, 'sine', 0.08);
+      },
+      punch: function () {
+        tone(190, 0, 0.09, 'sawtooth', 0.12, 85);
+        tone(587.3, 0.02, 0.09, 'triangle', 0.12, 740);
+      },
+      combo: function () {
+        tone(587.3, 0, 0.1, 'triangle', 0.15);
+        tone(880, 0.06, 0.14, 'triangle', 0.16);
+      },
+      hurt: function () {
+        tone(210, 0, 0.14, 'sawtooth', 0.11, 130);
+      },
+      wrong: function () {
+        tone(240, 0, 0.11, 'square', 0.07, 175);
+      },
+      win: function () {
+        tone(523.25, 0.00, 0.14, 'triangle', 0.16);
+        tone(659.25, 0.11, 0.14, 'triangle', 0.16);
+        tone(783.99, 0.22, 0.14, 'triangle', 0.16);
+        tone(1046.5, 0.34, 0.38, 'triangle', 0.20);
+      }
+    };
+  })();
+
+  /* ================================================================
+   * 4. 共用 SVG 角色小人產生器（獨立節點，支援眨眼／皺眉／晃動）
+   * ================================================================ */
+  function createAvatarMarkup(color) {
+    return (
+      '<svg class="avatar-svg" viewBox="0 0 64 64" aria-hidden="true">' +
+        '<circle cx="32" cy="34" r="25" fill="#ffe3b3" stroke="#1b1b3a" stroke-width="4"/>' +
+        '<path d="M7 24 Q32 6 57 24 L57 31 Q32 16 7 31 Z" fill="' + color + '" stroke="#1b1b3a" stroke-width="3" stroke-linejoin="round"/>' +
+        '<g class="eyes-normal">' +
+          '<circle cx="23" cy="38" r="4" fill="#1b1b3a"/>' +
+          '<circle cx="41" cy="38" r="4" fill="#1b1b3a"/>' +
+        '</g>' +
+        '<g class="eyes-hurt">' +
+          '<path d="M18 35 L27 39 L18 43" fill="none" stroke="#1b1b3a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<path d="M46 35 L37 39 L46 43" fill="none" stroke="#1b1b3a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</g>' +
+        '<path class="mouth-normal" d="M24 49 Q32 55 40 49" fill="none" stroke="#1b1b3a" stroke-width="3.5" stroke-linecap="round"/>' +
+        '<path class="mouth-hurt" d="M25 52 Q32 46 39 52" fill="none" stroke="#1b1b3a" stroke-width="3.5" stroke-linecap="round"/>' +
+      '</svg>'
+    );
+  }
+
+  function mountAvatar(el, color) {
+    if (el) el.innerHTML = createAvatarMarkup(color);
+  }
+
+  function triggerAnimClass(el, cls, ms) {
+    if (!el) return;
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+    window.setTimeout(function () {
+      el.classList.remove(cls);
+    }, ms || 450);
+  }
+
+  /* ================================================================
+   * 5. 簡化大千注音／英文鍵盤定義（第 3 次錯誤高亮用）
+   * ================================================================ */
+  const KEYBOARD_ROWS = [
+    [
+      { k: '1', b: 'ㄅ' }, { k: '2', b: 'ㄉ' }, { k: '3', b: 'ˇ' }, { k: '4', b: 'ˋ' },
+      { k: '5', b: 'ㄓ' }, { k: '6', b: 'ˊ' }, { k: '7', b: '˙' }, { k: '8', b: 'ㄚ' },
+      { k: '9', b: 'ㄞ' }, { k: '0', b: 'ㄢ' }, { k: '-', b: 'ㄦ' }
+    ],
+    [
+      { k: 'Q', b: 'ㄆ' }, { k: 'W', b: 'ㄊ' }, { k: 'E', b: 'ㄍ' }, { k: 'R', b: 'ㄐ' },
+      { k: 'T', b: 'ㄔ' }, { k: 'Y', b: 'ㄗ' }, { k: 'U', b: 'ㄧ' }, { k: 'I', b: 'ㄛ' },
+      { k: 'O', b: 'ㄟ' }, { k: 'P', b: 'ㄣ' }
+    ],
+    [
+      { k: 'A', b: 'ㄇ' }, { k: 'S', b: 'ㄋ' }, { k: 'D', b: 'ㄎ' }, { k: 'F', b: 'ㄑ' },
+      { k: 'G', b: 'ㄕ' }, { k: 'H', b: 'ㄘ' }, { k: 'J', b: 'ㄨ' }, { k: 'K', b: 'ㄜ' },
+      { k: 'L', b: 'ㄠ' }, { k: ';', b: 'ㄤ' }
+    ],
+    [
+      { k: 'SHIFT', b: '', cls: 'wide', label: 'Shift' },
+      { k: 'Z', b: 'ㄈ' }, { k: 'X', b: 'ㄌ' }, { k: 'C', b: 'ㄏ' }, { k: 'V', b: 'ㄒ' },
+      { k: 'B', b: 'ㄖ' }, { k: 'N', b: 'ㄙ' }, { k: 'M', b: 'ㄩ' }, { k: ',', b: 'ㄝ' },
+      { k: '.', b: 'ㄡ' }, { k: '/', b: 'ㄥ' }
+    ],
+    [
+      { k: 'SPACE', b: '一聲', cls: 'space', label: '空白鍵' }
+    ]
+  ];
+
+  function normalizeKey(raw) {
+    if (raw === null || raw === undefined) return '';
+    const s = String(raw);
+    if (s === ' ' || s.toLowerCase() === 'space' || s === '空白' || s === '空白鍵') return 'SPACE';
+    if (s.toLowerCase() === 'shift') return 'SHIFT';
+    return s.toUpperCase();
+  }
+
+  /* ================================================================
+   * 6. 應用程式全域狀態
+   * ================================================================ */
+  const state = {
+    nick: getSavedNick(),
+    selectedBotLevel: 'normal',
+    transport: null,
+    mode: 'bot', // 'bot' | 'net'
+    room: null,
+    myId: null,
+    oppId: null,
+    settings: {
+      lang: 'zh',
+      grade: 'mid',
+      domain: 'random',
+      duration: 90,
+      handicap: true
+    },
+    tracker: null,
+    currentPassage: null,
+    charEls: [],
+    passageTypableTotal: 0,
+    completedTypableBefore: 0,
+    passageTotalsHistory: [],
+    lastPassageTitle: '',
+    lastPassageDomain: '',
+    battleActive: false,
+    isComposing: false,
+    countdownTimer: null,
+    countdownLastSec: null,
+    focusBackTimer: null,
+    practiceFocusChars: [],
+    alertCallback: null
+  };
+
+  /* ================================================================
+   * 7. DOM 節點快取
+   * ================================================================ */
+  const $ = function (id) { return document.getElementById(id); };
+
+  const screens = {
+    lobby: $('screen-lobby'),
+    room: $('screen-room'),
+    battle: $('screen-battle'),
+    result: $('screen-result')
+  };
+
+  /* ================================================================
+   * 8. 畫面切換與彈出視窗輔助（關閉時同步設 visibility:hidden 與 inert）
+   * ================================================================ */
+  function showScreen(name) {
+    Object.keys(screens).forEach(function (k) {
+      screens[k].classList.toggle('active', k === name);
+    });
+    if (name !== 'battle') {
+      state.battleActive = false;
+      clearTimeout(state.focusBackTimer);
+    }
+  }
+
+  function openOverlay(el) {
+    if (!el) return;
+    el.removeAttribute('inert');
+    el.classList.add('open');
+  }
+
+  function closeOverlay(el) {
+    if (!el) return;
+    el.classList.remove('open');
+    el.setAttribute('inert', '');
+  }
+
+  function showAlert(title, message, onClose) {
+    $('modal-alert-title').textContent = title || '提醒';
+    $('modal-alert-msg').textContent = message || '';
+    state.alertCallback = onClose || null;
+    openOverlay($('modal-alert'));
+    $('btn-alert-ok').focus();
+  }
+
+  function updateSoundButtons() {
+    const label = Sound.isEnabled() ? TEXT.soundOn : TEXT.soundOff;
+    document.querySelectorAll('.sound-toggle').forEach(function (btn) {
+      btn.textContent = label;
+      btn.setAttribute('aria-pressed', Sound.isEnabled() ? 'true' : 'false');
+    });
+  }
+
+  /* ================================================================
+   * 9. 大廳渲染與操作
+   * ================================================================ */
+  function hasDuelCore() {
+    return typeof window.DuelCore !== 'undefined' && window.DuelCore !== null;
+  }
+
+  function isNetAvailable() {
+    return hasDuelCore() && typeof window.DuelCore.netAvailable === 'function' && !!window.DuelCore.netAvailable();
+  }
+
+  function renderLobby() {
+    $('lobby-nick-pill').textContent = TEXT.nickPrefix + state.nick;
+
+    const topScore = getSavedScore();
+    const bestPill = $('lobby-best-pill');
+    if (topScore > 0) {
+      bestPill.textContent = TEXT.bestBadgePrefix + topScore + TEXT.bestBadgeSuffix;
+      bestPill.style.display = 'inline-flex';
+    } else {
+      bestPill.style.display = 'none';
+    }
+
+    // 檢查連線對戰是否開放
+    const netOk = isNetAvailable();
+    $('net-unavailable-banner').textContent = TEXT.netUnavailable;
+    $('net-unavailable-banner').classList.toggle('show', !netOk);
+    $('btn-create-net').disabled = !netOk;
+    $('btn-join-net').disabled = !netOk;
+    $('join-code-input').disabled = !netOk;
+
+    updateBotLevelUI();
+  }
+
+  function updateBotLevelUI() {
+    document.querySelectorAll('.bot-lv-btn').forEach(function (btn) {
+      btn.classList.toggle('on', btn.dataset.level === state.selectedBotLevel);
+    });
+    document.querySelectorAll('.room-bot-lv').forEach(function (btn) {
+      btn.classList.toggle('on', btn.dataset.level === state.selectedBotLevel);
+    });
+    $('bot-level-desc').textContent = TEXT.botDescs[state.selectedBotLevel] || '';
+  }
+
+  /* ================================================================
+   * 10. 連線與電腦對手的統一 Transport 管理
+   * ================================================================ */
+  function cleanupTransport() {
+    clearInterval(state.countdownTimer);
+    state.countdownTimer = null;
+    closeOverlay($('overlay-countdown'));
+    if (state.transport) {
+      try {
+        state.transport.leave();
+      } catch (e) {
+        // 忽略已關閉的連線錯誤
+      }
+      state.transport = null;
+    }
+    state.room = null;
+    state.battleActive = false;
+  }
+
+  function attachTransportEvents(t) {
+    t.on('room', handleRoomEvent);
+    t.on('countdown', handleCountdownEvent);
+    t.on('state', handleStateEvent);
+    t.on('hit', handleHitEvent);
+    t.on('end', handleEndEvent);
+    t.on('left', handleLeftEvent);
+    t.on('error', handleErrorEvent);
+  }
+
+  function currentBestCpmForLang(lang) {
+    const best = getSavedBest();
+    const entry = best[lang === 'en' ? 'en' : 'zh'];
+    return entry && typeof entry.cpm === 'number' ? entry.cpm : 0;
+  }
+
+  function startBotRoom(keepSettings, focusChars) {
+    if (!hasDuelCore()) {
+      showAlert('無法啟動', TEXT.coreMissing);
+      return;
+    }
+    Sound.unlock();
+    cleanupTransport();
+    state.mode = 'bot';
+    state.practiceFocusChars = Array.isArray(focusChars) ? focusChars : [];
+    const t = window.DuelCore.createBotTransport({ level: state.selectedBotLevel });
+    state.transport = t;
+    attachTransportEvents(t);
+    t.create({
+      nick: state.nick,
+      best: currentBestCpmForLang(state.settings.lang)
+    });
+    if (keepSettings) {
+      t.setSettings({
+        lang: state.settings.lang,
+        grade: state.settings.grade,
+        domain: state.settings.domain,
+        duration: state.settings.duration,
+        handicap: state.settings.handicap
+      });
+    }
+  }
+
+  function startNetCreate() {
+    if (!isNetAvailable()) return;
+    Sound.unlock();
+    cleanupTransport();
+    state.mode = 'net';
+    state.practiceFocusChars = [];
+    const t = window.DuelCore.createNetTransport({});
+    state.transport = t;
+    attachTransportEvents(t);
+    t.create({
+      nick: state.nick,
+      best: currentBestCpmForLang(state.settings.lang)
+    });
+  }
+
+  function startNetJoin() {
+    if (!isNetAvailable()) return;
+    const code = $('join-code-input').value.replace(/\D/g, '').trim();
+    if (code.length !== 4) {
+      showAlert('房號格式不對', TEXT.netCodeError);
+      return;
+    }
+    Sound.unlock();
+    cleanupTransport();
+    state.mode = 'net';
+    state.practiceFocusChars = [];
+    const t = window.DuelCore.createNetTransport({});
+    state.transport = t;
+    attachTransportEvents(t);
+    t.join(code, {
+      nick: state.nick,
+      best: currentBestCpmForLang(state.settings.lang)
+    });
+  }
+
+  /* ================================================================
+   * 11. 房間畫面渲染與設定同步
+   * ================================================================ */
+  function getDomainList(lang, grade) {
+    let raw = [];
+    if (hasDuelCore() && typeof window.DuelCore.domains === 'function') {
+      try {
+        raw = window.DuelCore.domains(lang, grade) || [];
+      } catch (e) {
+        raw = [];
+      }
+    }
+    const list = raw.map(function (item) {
+      if (typeof item === 'string') {
+        return { value: item, label: item };
+      }
+      return {
+        value: item.id || item.value || item.name || '',
+        label: item.label || item.name || item.id || ''
+      };
+    }).filter(function (x) { return x.value !== ''; });
+    list.push({ value: 'random', label: TEXT.randomDomainLabel });
+    return list;
+  }
+
+  function renderDomainChips(isHost) {
+    const host = $('opt-domain-group');
+    const list = getDomainList(state.settings.lang, state.settings.grade);
+    host.innerHTML = '';
+    let matched = false;
+    list.forEach(function (d) {
+      if (d.value === state.settings.domain) matched = true;
+    });
+    if (!matched && list.length > 0) {
+      state.settings.domain = 'random';
+    }
+    list.forEach(function (d) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'chip' + (d.value === state.settings.domain ? ' on' : '');
+      btn.textContent = d.label;
+      btn.dataset.domain = d.value;
+      btn.disabled = !isHost;
+      btn.addEventListener('click', function () {
+        if (!isHost) return;
+        applyHostSetting({ domain: d.value });
+      });
+      host.appendChild(btn);
+    });
+  }
+
+  function applyHostSetting(patch) {
+    if (!state.transport || !state.room || !state.room.you.isHost) return;
+    const next = Object.assign({}, state.settings, patch);
+    // 切換語言或年級時檢查領域是否存在
+    if (patch.lang !== undefined || patch.grade !== undefined) {
+      const validDomains = getDomainList(next.lang, next.grade).map(function (d) { return d.value; });
+      if (validDomains.indexOf(next.domain) === -1) {
+        next.domain = 'random';
+      }
+    }
+    state.settings = next;
+    state.transport.setSettings({
+      lang: next.lang,
+      grade: next.grade,
+      domain: next.domain,
+      duration: next.duration,
+      handicap: next.handicap
+    });
+    // 立即更新本地按鈕回饋
+    renderRoomSettings(true);
+  }
+
+  function renderRoomSettings(isHost) {
+    document.querySelectorAll('#opt-lang-group .chip').forEach(function (btn) {
+      btn.classList.toggle('on', btn.dataset.lang === state.settings.lang);
+      btn.disabled = !isHost;
+    });
+    document.querySelectorAll('#opt-grade-group .chip').forEach(function (btn) {
+      btn.classList.toggle('on', btn.dataset.grade === state.settings.grade);
+      btn.disabled = !isHost;
+    });
+    renderDomainChips(isHost);
+    document.querySelectorAll('#opt-duration-group .chip').forEach(function (btn) {
+      btn.classList.toggle('on', Number(btn.dataset.duration) === Number(state.settings.duration));
+      btn.disabled = !isHost;
+    });
+    const sw = $('opt-handicap-sw');
+    sw.setAttribute('aria-checked', state.settings.handicap ? 'true' : 'false');
+    sw.disabled = !isHost;
+  }
+
+  function handleRoomEvent(ev) {
+    state.room = ev;
+    state.mode = ev.mode || state.mode;
+    state.myId = ev.you ? ev.you.id : null;
+    if (ev.settings) {
+      state.settings = {
+        lang: ev.settings.lang || 'zh',
+        grade: ev.settings.grade || 'mid',
+        domain: ev.settings.domain || 'random',
+        duration: Number(ev.settings.duration) || 90,
+        handicap: ev.settings.handicap !== false
+      };
+    }
+
+    const isHost = !!(ev.you && ev.you.isHost);
+    $('room-mode-tag').textContent = state.mode === 'net' ? TEXT.netModeTag : TEXT.botModeTag;
+
+    // 房號 vs 電腦強度區
+    if (state.mode === 'net') {
+      $('room-code-section').style.display = 'block';
+      $('room-bot-section').style.display = 'none';
+      const codeStr = String(ev.code || '----').padEnd(4, '-');
+      const spans = $('room-code-digits').querySelectorAll('span');
+      for (let i = 0; i < 4; i++) {
+        spans[i].textContent = codeStr.charAt(i);
+      }
+    } else {
+      $('room-code-section').style.display = 'none';
+      $('room-bot-section').style.display = 'block';
+      updateBotLevelUI();
+    }
+
+    // 錯字複習提示條
+    const focusBanner = $('room-focus-banner');
+    if (state.practiceFocusChars.length > 0) {
+      const sample = state.practiceFocusChars.slice(0, 8).join('、');
+      focusBanner.textContent = '⭐ 剛才容易打錯的字：' + sample + '，這局特別注意喔！';
+      focusBanner.classList.add('show');
+    } else {
+      focusBanner.classList.remove('show');
+    }
+
+    // 雙方座位卡
+    const players = ev.players || [];
+    const me = players.find(function (p) { return p.id === state.myId; }) || { nick: state.nick };
+    const opp = players.find(function (p) { return p.id !== state.myId; }) || null;
+    state.oppId = opp ? opp.id : null;
+
+    $('room-me-name').textContent = me.nick || state.nick;
+    $('room-me-role').textContent = isHost ? TEXT.roomHostRole : TEXT.roomGuestRole;
+
+    const slotOpp = $('slot-opp');
+    if (opp && opp.connected !== false) {
+      slotOpp.classList.add('opp');
+      $('room-opp-name').textContent = opp.nick || (opp.isBot ? TEXT.botNames[state.selectedBotLevel] : '對手');
+      $('room-opp-role').textContent = opp.isBot ? TEXT.roomOppBotReady : TEXT.roomOppReady;
+    } else {
+      slotOpp.classList.remove('opp');
+      $('room-opp-name').textContent = TEXT.roomOppWaiting;
+      $('room-opp-role').textContent = '紅角';
+    }
+
+    // 設定按鈕與開打按鈕權限
+    renderRoomSettings(isHost);
+    const startBtn = $('btn-room-start');
+    const guestWait = $('room-guest-wait');
+    if (isHost) {
+      startBtn.style.display = 'inline-flex';
+      guestWait.style.display = 'none';
+      const canStart = !!opp && opp.connected !== false;
+      startBtn.disabled = !canStart;
+      startBtn.textContent = canStart ? TEXT.roomStartReady : TEXT.roomStartWaiting;
+    } else {
+      startBtn.style.display = 'none';
+      guestWait.style.display = 'block';
+    }
+
+    showScreen('room');
+  }
+
+  /* ================================================================
+   * 12. 倒數與對戰初始化
+   * ================================================================ */
+  function countTypableChars(passage) {
+    if (!passage || !passage.text) return 0;
+    let total = 0;
+    for (let i = 0; i < passage.text.length; i++) {
+      if (!window.DuelCore.isAuto(passage, i)) total++;
+    }
+    return total;
+  }
+
+  function renderPassage(passage) {
+    state.currentPassage = passage;
+    state.charEls = [];
+    state.passageTypableTotal = countTypableChars(passage);
+    state.lastPassageTitle = passage.title || '';
+    state.lastPassageDomain = passage.domain || '';
+
+    // 頂部標籤
+    $('battle-domain-pill').textContent = passage.domain || TEXT.randomDomainLabel;
+    $('battle-grade-pill').textContent = TEXT.gradeLabels[state.settings.grade] || '';
+    $('battle-title-txt').textContent = passage.title ? '《' + passage.title + '》' : '';
+
+    const container = $('passage-text');
+    const isZh = state.settings.lang === 'zh';
+    container.className = 'text ' + (isZh ? 'lang-zh' : 'lang-en');
+    container.innerHTML = '';
+
+    const text = passage.text || '';
+    const els = new Array(text.length);
+
+    if (isZh) {
+      // 中打：把字與後方的標點包成 .g，避免標點跑到下一行開頭
+      let currentGroup = null;
+      for (let i = 0; i < text.length; i++) {
+        const auto = window.DuelCore.isAuto(passage, i);
+        const disp = window.DuelCore.displayChar(passage, i);
+        const span = document.createElement('span');
+        span.textContent = disp;
+        span.className = auto ? 'p' : 'c';
+        els[i] = span;
+
+        if (auto && currentGroup) {
+          currentGroup.appendChild(span);
+        } else {
+          currentGroup = document.createElement('span');
+          currentGroup.className = 'g';
+          currentGroup.appendChild(span);
+          container.appendChild(currentGroup);
+        }
+      }
+    } else {
+      // 英打：以單字為單位包進 .g，空白獨立成節點，避免英文單字被截斷換行
+      let wordGroup = null;
+      for (let i = 0; i < text.length; i++) {
+        const disp = window.DuelCore.displayChar(passage, i);
+        const span = document.createElement('span');
+        const isSpace = disp === ' ';
+        span.className = isSpace ? 'c sp' : 'c';
+        span.textContent = isSpace ? ' ' : disp;
+        els[i] = span;
+
+        if (isSpace) {
+          wordGroup = null;
+          container.appendChild(span);
+        } else {
+          if (!wordGroup) {
+            wordGroup = document.createElement('span');
+            wordGroup.className = 'g';
+            container.appendChild(wordGroup);
+          }
+          wordGroup.appendChild(span);
+        }
+      }
+    }
+
+    state.charEls = els;
+    $('text-viewport').scrollTop = 0;
+  }
+
+  function buildKeyboardMarkup(lang, highlightKeys) {
+    const panel = $('kb-panel');
+    panel.innerHTML = '';
+    const keyOrderMap = {};
+    highlightKeys.forEach(function (k, idx) {
+      const nk = normalizeKey(k);
+      if (nk && keyOrderMap[nk] === undefined) {
+        keyOrderMap[nk] = idx + 1;
+      }
+    });
+
+    KEYBOARD_ROWS.forEach(function (row) {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'kb-row';
+      row.forEach(function (item) {
+        const keyEl = document.createElement('span');
+        const order = keyOrderMap[item.k];
+        keyEl.className = 'kb-key' + (item.cls ? ' ' + item.cls : '') + (order ? ' lit' : '');
+
+        const mainText = item.label || item.k;
+        const mainSpan = document.createElement('span');
+        mainSpan.textContent = mainText;
+        keyEl.appendChild(mainSpan);
+
+        if (lang === 'zh' && item.b) {
+          const bop = document.createElement('span');
+          bop.className = 'bop';
+          bop.textContent = item.b;
+          keyEl.appendChild(bop);
+        }
+
+        if (order && highlightKeys.length > 1) {
+          const badge = document.createElement('span');
+          badge.className = 'kb-step';
+          badge.textContent = String(order);
+          keyEl.appendChild(badge);
+        }
+        rowEl.appendChild(keyEl);
+      });
+      panel.appendChild(rowEl);
+    });
+  }
+
+  function renderKeycapsHTML(lang, ch, zhuyin) {
+    const caps = [];
+    const rawKeys = [];
+
+    if (lang === 'zh') {
+      const list = (typeof window.DuelCore.zhKeys === 'function' && zhuyin)
+        ? (window.DuelCore.zhKeys(zhuyin) || [])
+        : [];
+      list.forEach(function (item) {
+        const kLabel = item.key === ' ' ? '空白' : String(item.key || '').toUpperCase();
+        rawKeys.push(item.key);
+        caps.push(
+          '<span class="keycap">' + escapeHtml(kLabel) +
+          (item.sym ? '<span class="sub-sym">' + escapeHtml(item.sym) + '</span>' : '') +
+          '</span>'
+        );
+      });
+    } else {
+      const info = typeof window.DuelCore.enKey === 'function' ? window.DuelCore.enKey(ch) : null;
+      if (info && info.key) {
+        if (info.shift) {
+          rawKeys.push('SHIFT');
+          caps.push('<span class="keycap">Shift</span><span>＋</span>');
+        }
+        const kLabel = info.key === ' ' ? '空白鍵' : String(info.key).toUpperCase();
+        rawKeys.push(info.key);
+        caps.push('<span class="keycap">' + escapeHtml(kLabel) + '</span>');
+      }
+    }
+
+    return { html: caps.join(''), keys: rawKeys };
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function updateHintUI(tier, ch, zhuyin, isFlash) {
+    const bar = $('hint-bar');
+    const left = $('hint-left');
+    const keysBox = $('hint-keys');
+    const kb = $('kb-panel');
+    const lang = state.settings.lang;
+
+    // 更新底部提示階梯高亮
+    $('st-1').classList.toggle('now', tier === 1);
+    $('st-2').classList.toggle('now', tier === 2);
+    $('st-3').classList.toggle('now', tier >= 3);
+
+    if (tier >= 2) {
+      bar.classList.add('active');
+      const kc = renderKeycapsHTML(lang, ch, zhuyin);
+      if (lang === 'zh') {
+        left.innerHTML = TEXT.hintZhPrefix + '<span class="zh-read">' + escapeHtml(zhuyin || ch) + '</span>';
+      } else {
+        const displayCh = ch === ' ' ? TEXT.hintEnSpace : '「' + escapeHtml(ch) + '」';
+        left.innerHTML = TEXT.hintEnPrefix + '<span class="zh-read">' + displayCh + '</span>';
+      }
+      keysBox.innerHTML = kc.html;
+
+      if (tier >= 3) {
+        buildKeyboardMarkup(lang, kc.keys);
+        kb.classList.add('show');
+      } else {
+        kb.classList.remove('show');
+      }
+    } else {
+      bar.classList.remove('active');
+      kb.classList.remove('show');
+      keysBox.innerHTML = '';
+      if (isFlash || tier === 1) {
+        left.textContent = TEXT.hintFlash;
+      } else {
+        left.textContent = lang === 'zh' ? TEXT.hintDefaultZh : TEXT.hintDefaultEn;
+      }
+    }
+  }
+
+  function syncTrackerVisual(flashWrong) {
+    if (!state.tracker) return;
+    const cur = state.tracker.current();
+    if (!cur || !cur.passage) return;
+
+    if (cur.passage !== state.currentPassage) {
+      renderPassage(cur.passage);
+    }
+
+    const idx = cur.index;
+    const els = state.charEls;
+    let doneTypable = 0;
+
+    for (let i = 0; i < els.length; i++) {
+      const el = els[i];
+      if (!el) continue;
+      const isDone = i < idx;
+      const isCur = i === idx;
+      el.classList.toggle('done', isDone);
+      el.classList.toggle('cur', isCur);
+      if (!isCur) el.classList.remove('flash');
+      if (isDone && !window.DuelCore.isAuto(cur.passage, i)) {
+        doneTypable++;
+      }
+    }
+
+    const curEl = els[idx];
+    if (curEl) {
+      if (flashWrong) {
+        triggerAnimClass(curEl, 'flash', 380);
+      }
+      // 自動把目前要打的字捲到可視區上方舒適位置（不顯示捲軸）
+      const vp = $('text-viewport');
+      const targetTop = Math.max(0, curEl.offsetTop - Math.floor(vp.clientHeight * 0.28));
+      vp.scrollTop = targetTop;
+    }
+
+    // 更新我方文章進度條（打對的字數／目前這篇總字數）
+    const total = Math.max(1, state.passageTypableTotal);
+    const pct = Math.min(100, Math.round((doneTypable / total) * 100));
+    $('race-me-bar').style.width = pct + '%';
+    $('race-me-cnt').textContent = doneTypable + ' / ' + total;
+
+    updateHintUI(cur.tier || 0, cur.ch, cur.zhuyin, !!flashWrong);
+  }
+
+  function updateOppProgress(oppPos) {
+    const total = Math.max(1, state.passageTypableTotal);
+    const base = state.completedTypableBefore;
+    let shownDone = 0;
+    let shownTotal = total;
+
+    if (oppPos >= base) {
+      // 對手與我在同一篇或已進下一篇
+      shownDone = Math.min(total, oppPos - base);
+      const pct = Math.min(100, Math.round((shownDone / total) * 100));
+      $('race-opp-bar').style.width = pct + '%';
+      $('race-opp-cnt').textContent = (oppPos > base + total) ? (total + ' / ' + total + '+') : (shownDone + ' / ' + total);
+    } else {
+      // 對手還在我們剛打完的前面某一篇，依歷史篇長還原該篇進度
+      let acc = 0;
+      for (let i = 0; i < state.passageTotalsHistory.length; i++) {
+        const len = state.passageTotalsHistory[i];
+        if (oppPos < acc + len) {
+          shownDone = Math.max(0, oppPos - acc);
+          shownTotal = Math.max(1, len);
+          break;
+        }
+        acc += len;
+      }
+      const pct = Math.min(100, Math.round((shownDone / shownTotal) * 100));
+      $('race-opp-bar').style.width = pct + '%';
+      $('race-opp-cnt').textContent = shownDone + ' / ' + shownTotal;
+    }
+  }
+
+  function updateHpUI(side, hp, maxHp) {
+    const safeMax = Math.max(1, maxHp || 100);
+    const safeHp = Math.max(0, Math.round(hp || 0));
+    const pct = Math.min(100, Math.max(0, (safeHp / safeMax) * 100));
+    if (side === 'me') {
+      $('battle-me-hp-txt').textContent = '血量 ' + safeHp;
+      $('battle-me-hp-bar').style.width = pct + '%';
+      $('hud-me').querySelector('.hp').setAttribute('aria-label', '我的血量 ' + safeHp + ' / ' + safeMax);
+    } else {
+      $('battle-opp-hp-txt').textContent = '血量 ' + safeHp;
+      $('battle-opp-hp-bar').style.width = pct + '%';
+      $('hud-opp').querySelector('.hp').setAttribute('aria-label', '對手血量 ' + safeHp + ' / ' + safeMax);
+    }
+  }
+
+  function updateTimerUI(remainingSec) {
+    const dur = Math.max(1, state.settings.duration || 90);
+    const sec = Math.max(0, Math.ceil(remainingSec));
+    $('timer-sec').textContent = String(sec);
+    const ratio = Math.max(0, Math.min(1, remainingSec / dur));
+    const dashOffset = 264 * (1 - ratio);
+    $('timer-ring').setAttribute('stroke-dashoffset', dashOffset.toFixed(1));
+    $('battle-timer').classList.toggle('urgent', sec <= 10);
+  }
+
+  function updateComboUI(combo) {
+    const c = Math.max(0, combo || 0);
+    $('combo-num').textContent = String(c);
+    let mult = '傷害 ×1.0';
+    if (c >= 20) mult = '黃金火力！';
+    else if (c >= 10) mult = '金色連擊！';
+    else if (c >= 5) mult = '火力加成中';
+    $('combo-mult').textContent = mult;
+    $('combo-card').classList.toggle('hot', c >= 10);
+  }
+
+  function handleCountdownEvent(ev) {
+    if (ev.settings) {
+      state.settings = Object.assign({}, state.settings, ev.settings);
+    }
+    if (ev.duration) {
+      state.settings.duration = ev.duration;
+    }
+
+    // 建立打字比對器
+    state.tracker = window.DuelCore.createTracker(ev.seq, state.settings.lang);
+    state.completedTypableBefore = 0;
+    state.passageTotalsHistory = [];
+    state.battleActive = false;
+    state.isComposing = false;
+
+    const players = ev.players || [];
+    const me = players.find(function (p) { return p.id === state.myId; }) || { id: state.myId, nick: state.nick };
+    const opp = players.find(function (p) { return p.id !== state.myId; }) || { id: state.oppId, nick: '對手' };
+    state.oppId = opp.id;
+
+    $('battle-me-name').textContent = (me.nick || state.nick) + '（你）';
+    $('battle-opp-name').textContent = opp.nick || '對手';
+    $('race-me-name').textContent = me.nick || state.nick;
+    $('race-opp-name').textContent = opp.nick || '對手';
+
+    const maxHpMap = ev.maxHp || {};
+    const myHpInfo = maxHpMap[state.myId] || { hp: 100, maxHp: 100 };
+    const oppHpInfo = maxHpMap[state.oppId] || { hp: 100, maxHp: 100 };
+    updateHpUI('me', myHpInfo.hp, myHpInfo.maxHp);
+    updateHpUI('opp', oppHpInfo.hp, oppHpInfo.maxHp);
+    updateTimerUI(state.settings.duration);
+    updateComboUI(0);
+    updateOppProgress(0);
+
+    // 清空輸入框並設定對應語言提示
+    const inp = $('type-input');
+    inp.value = '';
+    inp.placeholder = state.settings.lang === 'zh' ? TEXT.inputPlaceholderZh : TEXT.inputPlaceholderEn;
+    $('input-tag').textContent = state.settings.lang === 'zh' ? '注音輸入' : '英打區';
+
+    // 渲染第一篇文章
+    const first = state.tracker.current();
+    if (first && first.passage) {
+      renderPassage(first.passage);
+      syncTrackerVisual(false);
+    }
+
+    showScreen('battle');
+
+    // 啟動 3、2、1、開打倒數（一律以 transport.now() 計時）
+    const overlay = $('overlay-countdown');
+    const cdNum = $('cd-num');
+    $('cd-sub').textContent = TEXT.countdownSub;
+    openOverlay(overlay);
+    state.countdownLastSec = null;
+
+    clearInterval(state.countdownTimer);
+    function tickCountdown() {
+      if (!state.transport) {
+        clearInterval(state.countdownTimer);
+        closeOverlay(overlay);
+        return;
+      }
+      const diffMs = ev.startsAt - state.transport.now();
+      if (diffMs > 0) {
+        const sec = Math.max(1, Math.ceil(diffMs / 1000));
+        if (sec !== state.countdownLastSec) {
+          state.countdownLastSec = sec;
+          cdNum.textContent = String(sec);
+          triggerAnimClass(cdNum, 'cd-pop', 400);
+          Sound.tick();
+        }
+      } else {
+        clearInterval(state.countdownTimer);
+        state.countdownTimer = null;
+        cdNum.textContent = TEXT.countdownGo;
+        Sound.bell();
+        state.battleActive = true;
+        window.setTimeout(function () {
+          closeOverlay(overlay);
+          focusTypeInput();
+        }, 420);
+      }
+    }
+
+    tickCountdown();
+    state.countdownTimer = window.setInterval(tickCountdown, 50);
+  }
+
+  /* ================================================================
+   * 13. 對戰進行中事件：state 與 hit
+   * ================================================================ */
+  function handleStateEvent(ev) {
+    if (!screens.battle.classList.contains('active')) return;
+    if (typeof ev.remaining === 'number') {
+      updateTimerUI(ev.remaining);
+    }
+    const map = ev.players || {};
+    const meState = map[state.myId];
+    const oppState = map[state.oppId];
+    if (meState) {
+      updateHpUI('me', meState.hp, meState.maxHp);
+      updateComboUI(meState.combo);
+    }
+    if (oppState) {
+      updateHpUI('opp', oppState.hp, oppState.maxHp);
+      updateOppProgress(oppState.pos || 0);
+    }
+  }
+
+  function spawnDamageFloat(layerId, damage, isSuper) {
+    const layer = $(layerId);
+    if (!layer) return;
+    const el = document.createElement('span');
+    el.className = 'dmg-float' + (isSuper ? ' super' : '');
+    el.textContent = '-' + Math.round(damage || 1);
+    layer.appendChild(el);
+    window.setTimeout(function () {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 900);
+  }
+
+  function handleHitEvent(ev) {
+    if (!screens.battle.classList.contains('active')) return;
+    const isMyAttack = ev.from === state.myId;
+    const isSuper = (ev.combo || 0) >= 10;
+
+    if (isMyAttack) {
+      triggerAnimClass($('battle-me-av'), 'punch-right', 300);
+      triggerAnimClass($('battle-opp-av'), 'hurt', 450);
+      triggerAnimClass($('combo-card'), 'bump', 180);
+      spawnDamageFloat('dmg-opp', ev.damage, isSuper);
+      if (isSuper) Sound.combo();
+      else Sound.punch();
+    } else if (ev.to === state.myId) {
+      triggerAnimClass($('battle-opp-av'), 'punch-left', 300);
+      triggerAnimClass($('battle-me-av'), 'hurt', 450);
+      spawnDamageFloat('dmg-me', ev.damage, isSuper);
+      Sound.hurt();
+    }
+  }
+
+  /* ================================================================
+   * 14. 打字輸入處理（中打 IME 穩定處理、英打 keydown、禁貼上拖放、自動焦點）
+   * ================================================================ */
+  function focusTypeInput() {
+    if (!state.battleActive) return;
+    if ($('modal-quit').classList.contains('open') || $('modal-alert').classList.contains('open')) return;
+    const inp = $('type-input');
+    if (inp && document.activeElement !== inp) {
+      inp.focus();
+    }
+  }
+
+  function showPassageNextBanner() {
+    const banner = $('passage-banner');
+    banner.textContent = TEXT.passageNextMsg;
+    banner.classList.add('show');
+    window.setTimeout(function () {
+      banner.classList.remove('show');
+    }, 1500);
+  }
+
+  function processTrackerResult(res) {
+    if (!res || !state.transport || !state.tracker) return;
+
+    // 每次打字後回報給 DuelCore
+    state.transport.progress(state.tracker.pos, state.tracker.miss);
+
+    if (res.passageDone) {
+      state.passageTotalsHistory.push(state.passageTypableTotal);
+      state.completedTypableBefore += state.passageTypableTotal;
+      Sound.combo();
+      showPassageNextBanner();
+    }
+
+    if (res.wrong) {
+      Sound.wrong();
+      triggerAnimClass($('inputbox-wrap'), 'warn', 300);
+    }
+
+    syncTrackerVisual(!!res.wrong);
+  }
+
+  const typeInput = $('type-input');
+
+  // 禁止貼上與拖放
+  typeInput.addEventListener('paste', function (e) { e.preventDefault(); });
+  typeInput.addEventListener('drop', function (e) { e.preventDefault(); });
+  typeInput.addEventListener('dragover', function (e) { e.preventDefault(); });
+
+  // 失焦 0.2 秒後自動拉回焦點
+  typeInput.addEventListener('blur', function () {
+    clearTimeout(state.focusBackTimer);
+    if (!state.battleActive) return;
+    state.focusBackTimer = window.setTimeout(focusTypeInput, 200);
+  });
+
+  // 中打組字狀態管理
+  let suppressNextInput = false;
+
+  typeInput.addEventListener('compositionstart', function () {
+    state.isComposing = true;
+  });
+
+  typeInput.addEventListener('compositionend', function () {
+    state.isComposing = false;
+    if (!state.battleActive || !state.tracker || state.settings.lang !== 'zh') {
+      typeInput.value = '';
+      return;
+    }
+    suppressNextInput = true;
+    window.setTimeout(function () {
+      suppressNextInput = false;
+      const text = typeInput.value;
+      typeInput.value = '';
+      if (text && state.battleActive && state.tracker) {
+        const res = state.tracker.commit(text);
+        processTrackerResult(res);
+      }
+    }, 0);
+  });
+
+  typeInput.addEventListener('input', function () {
+    if (!state.battleActive || !state.tracker) {
+      typeInput.value = '';
+      return;
+    }
+    if (state.settings.lang === 'en') {
+      typeInput.value = '';
+      return;
+    }
+    // 中打非組字狀態（例如直接輸入數字或半形字）
+    if (state.isComposing || suppressNextInput) return;
+    const text = typeInput.value;
+    if (!text) return;
+    typeInput.value = '';
+    const res = state.tracker.commit(text);
+    processTrackerResult(res);
+  });
+
+  // 英打走 keydown，單一字元直接交給 tr.key(e.key) 並 preventDefault
+  typeInput.addEventListener('keydown', function (e) {
+    if (!state.battleActive || !state.tracker) return;
+    if (state.settings.lang !== 'en') return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key && e.key.length === 1) {
+      e.preventDefault();
+      const res = state.tracker.key(e.key);
+      processTrackerResult(res);
+    }
+  });
+
+  /* ================================================================
+   * 15. 結算畫面與成績紀錄
+   * ================================================================ */
+  function setDeltaBadge(el, diff, suffix) {
+    el.className = 'delta-badge';
+    if (diff > 0) {
+      el.textContent = '+' + diff + (suffix || '');
+    } else if (diff === 0) {
+      el.classList.add('flat');
+      el.textContent = '持平';
+    } else {
+      el.classList.add('down');
+      el.textContent = String(diff) + (suffix || '');
+    }
+  }
+
+  function renderWrongReview() {
+    const mistakes = state.tracker && typeof state.tracker.mistakes === 'function'
+      ? (state.tracker.mistakes() || [])
+      : [];
+    const listEl = $('res-wrong-list');
+    const detailEl = $('res-wrong-detail');
+    const isZh = state.settings.lang === 'zh';
+
+    $('res-wrong-title').textContent = '我的錯字回顧（' + mistakes.length + ' 個）';
+    listEl.innerHTML = '';
+
+    if (mistakes.length === 0) {
+      const msg = document.createElement('div');
+      msg.style.cssText = 'font-size:19px;font-weight:900;color:var(--good);padding:8px 4px;';
+      msg.textContent = TEXT.noMistakeMsg;
+      listEl.appendChild(msg);
+      detailEl.textContent = '🎉 繼續保持這個好手感！';
+      return;
+    }
+
+    detailEl.textContent = TEXT.wrongDetailIdle;
+
+    function showMistakeKeys(item, cardBtn) {
+      listEl.querySelectorAll('.wc').forEach(function (b) { b.classList.remove('selected'); });
+      cardBtn.classList.add('selected');
+      const kc = renderKeycapsHTML(state.settings.lang, item.ch, item.zhuyin);
+      if (isZh) {
+        detailEl.innerHTML =
+          '<span>「' + escapeHtml(item.ch) + '」唸 <b style="color:var(--gold)">' + escapeHtml(item.zhuyin || '') + '</b></span>' +
+          '<span class="hint-keys">' + (kc.html || '<span>—</span>') + '</span>';
+      } else {
+        const label = item.ch === ' ' ? TEXT.hintEnSpace : item.ch;
+        detailEl.innerHTML =
+          '<span>「' + escapeHtml(label) + '」按鍵：</span>' +
+          '<span class="hint-keys">' + (kc.html || '<span>—</span>') + '</span>';
+      }
+    }
+
+    mistakes.forEach(function (item, idx) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'wc' + (isZh ? '' : ' en');
+      const displayCh = (!isZh && item.ch === ' ') ? '空白' : item.ch;
+      btn.innerHTML = '<span class="z">' + escapeHtml(displayCh) + '</span><em>錯 ' + item.count + ' 次</em>';
+      btn.addEventListener('click', function () {
+        showMistakeKeys(item, btn);
+      });
+      listEl.appendChild(btn);
+      if (idx === 0) {
+        showMistakeKeys(item, btn);
+      }
+    });
+  }
+
+  function handleEndEvent(ev) {
+    state.battleActive = false;
+    clearInterval(state.countdownTimer);
+    clearTimeout(state.focusBackTimer);
+    closeOverlay($('overlay-countdown'));
+    closeOverlay($('modal-quit'));
+
+    const players = ev.players || [];
+    const me = players.find(function (p) { return p.id === state.myId; }) || {
+      id: state.myId, nick: state.nick, chars: 0, miss: 0, cpm: 0, acc: 0, hp: 0, maxHp: 100, maxCombo: 0
+    };
+    const opp = players.find(function (p) { return p.id !== state.myId; }) || {
+      id: state.oppId, nick: '對手', chars: 0, miss: 0, cpm: 0, acc: 0, hp: 0, maxHp: 100, maxCombo: 0
+    };
+
+    const myCpm = Math.round(me.cpm || 0);
+    const myAcc = Math.round(me.acc || 0);
+    const oppCpm = Math.round(opp.cpm || 0);
+    const oppAcc = Math.round(opp.acc || 0);
+
+    // 勝負小緞帶
+    if (ev.winner === null || ev.winner === undefined) {
+      $('res-ribbon').textContent = TEXT.resultTie;
+      $('res-me-win').style.display = 'none';
+      $('res-opp-win').style.display = 'none';
+      Sound.win();
+    } else if (ev.winner === state.myId) {
+      $('res-ribbon').textContent = (me.nick || state.nick) + TEXT.resultWinSuffix;
+      $('res-me-win').style.display = 'inline-block';
+      $('res-opp-win').style.display = 'none';
+      Sound.win();
+    } else {
+      $('res-ribbon').textContent = (opp.nick || '對手') + TEXT.resultWinSuffix;
+      $('res-me-win').style.display = 'none';
+      $('res-opp-win').style.display = 'inline-block';
+      Sound.bell();
+    }
+
+    // 副標
+    const subParts = [
+      state.lastPassageDomain || TEXT.langLabels[state.settings.lang],
+      state.lastPassageTitle ? '《' + state.lastPassageTitle + '》' : '',
+      state.settings.duration + ' 秒',
+      '讓分：' + (state.settings.handicap ? '開' : '關')
+    ].filter(Boolean);
+    $('res-sub').textContent = subParts.join('・');
+
+    // 讀取上一局與歷史紀錄
+    const langKey = state.settings.lang === 'en' ? 'en' : 'zh';
+    const lastAll = getSavedLast();
+    const prevLast = lastAll[langKey];
+    const oldBestAll = getSavedBest();
+    const oldTopScore = getSavedScore();
+
+    // 進步比較大卡
+    $('res-new-cpm').textContent = String(myCpm);
+    $('res-new-acc').textContent = String(myAcc);
+    $('res-acc-bar').style.width = Math.min(100, Math.max(0, myAcc)) + '%';
+
+    if (!prevLast) {
+      $('res-hero-title').innerHTML = TEXT.resultFirstTitle + '<small>' + TEXT.resultFirstSub + '</small>';
+      $('res-old-cpm').style.display = 'none';
+      $('res-cpm-arrow').style.display = 'none';
+      $('res-old-acc').style.display = 'none';
+      $('res-acc-arrow').style.display = 'none';
+
+      $('res-cpm-delta').className = 'delta-badge flat';
+      $('res-cpm-delta').textContent = TEXT.resultFirstBadge;
+      $('res-acc-delta').className = 'delta-badge flat';
+      $('res-acc-delta').textContent = '紀錄已存';
+    } else {
+      const cpmDiff = myCpm - Math.round(prevLast.cpm || 0);
+      const accDiff = myAcc - Math.round(prevLast.acc || 0);
+      const improved = cpmDiff > 0 || accDiff > 0;
+
+      $('res-hero-title').innerHTML =
+        (improved ? TEXT.resultImproveTitle : TEXT.resultSteadyTitle) +
+        '<small>' + (improved ? TEXT.resultImproveSub : TEXT.resultSteadySub) + '</small>';
+
+      $('res-old-cpm').style.display = 'inline';
+      $('res-cpm-arrow').style.display = 'inline';
+      $('res-old-acc').style.display = 'inline';
+      $('res-acc-arrow').style.display = 'inline';
+
+      $('res-old-cpm').textContent = String(Math.round(prevLast.cpm || 0));
+      $('res-old-acc').textContent = Math.round(prevLast.acc || 0) + '%';
+      setDeltaBadge($('res-cpm-delta'), cpmDiff, '');
+      setDeltaBadge($('res-acc-delta'), accDiff, '');
+    }
+
+    // 目標達成與下一局建議
+    const maxCombo = me.maxCombo || 0;
+    if (myAcc >= 90) {
+      const nextCombo = Math.max(15, Math.ceil((maxCombo + 5) / 5) * 5);
+      $('res-goal-text').textContent = TEXT.goalPassPrefix + '連擊 ' + nextCombo + ' 字';
+    } else {
+      $('res-goal-text').textContent = TEXT.goalFailMsg;
+    }
+
+    $('res-extra-stats').textContent =
+      '最長連擊 ' + maxCombo + ' 字・打對 ' + (me.chars || 0) + ' 字・失誤 ' + (me.miss || 0) + ' 次';
+
+    // 判斷是否打破歷史最高速度並更新 localStorage
+    const isNewRecord = myCpm > oldTopScore && myCpm > 0;
+    $('res-record-pill').style.display = isNewRecord ? 'inline-flex' : 'none';
+
+    if (isNewRecord) {
+      safeWrite(STORAGE_KEYS.score, String(myCpm));
+    }
+
+    oldBestAll[langKey] = {
+      cpm: Math.max(oldBestAll[langKey].cpm || 0, myCpm),
+      acc: Math.max(oldBestAll[langKey].acc || 0, myAcc)
+    };
+    safeWrite(STORAGE_KEYS.best, oldBestAll);
+
+    lastAll[langKey] = { cpm: myCpm, acc: myAcc };
+    safeWrite(STORAGE_KEYS.last, lastAll);
+
+    // 右側雙方成績小卡
+    $('res-me-name').textContent = me.nick || state.nick;
+    $('res-opp-name').textContent = opp.nick || '對手';
+    $('res-me-cpm').textContent = String(myCpm);
+    $('res-opp-cpm').textContent = String(oppCpm);
+    $('res-me-acc').textContent = myAcc + '%';
+    $('res-opp-acc').textContent = oppAcc + '%';
+    $('res-me-hp').textContent = String(Math.max(0, Math.round(me.hp || 0)));
+    $('res-opp-hp').textContent = String(Math.max(0, Math.round(opp.hp || 0)));
+
+    // 錯字回顧
+    renderWrongReview();
+
+    showScreen('result');
+    $('btn-rematch').focus();
+  }
+
+  /* ================================================================
+   * 16. 對手離開與錯誤事件
+   * ================================================================ */
+  function handleLeftEvent() {
+    if (screens.battle.classList.contains('active')) {
+      state.battleActive = false;
+      clearInterval(state.countdownTimer);
+      closeOverlay($('overlay-countdown'));
+      showAlert('對手離開了', TEXT.oppLeftBattle, function () {
+        cleanupTransport();
+        renderLobby();
+        showScreen('lobby');
+      });
+    } else if (screens.room.classList.contains('active')) {
+      showAlert('對手離開房間', TEXT.oppLeftRoom);
+    }
+  }
+
+  function handleErrorEvent(ev) {
+    const msg = (ev && ev.message) ? ev.message : '發生了一點狀況，請再試一次！';
+    showAlert('提醒', msg);
+  }
+
+  /* ================================================================
+   * 17. 所有按鈕與互動事件綁定
+   * ================================================================ */
+  function bindEvents() {
+    // 音效開關（共用所有畫面的按鈕）
+    document.querySelectorAll('.sound-toggle').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        Sound.toggle();
+        updateSoundButtons();
+      });
+    });
+
+    // 換暱稱
+    $('btn-change-nick').addEventListener('click', function () {
+      Sound.unlock();
+      $('nick-input').value = state.nick;
+      openOverlay($('modal-nick'));
+      $('nick-input').focus();
+      $('nick-input').select();
+    });
+
+    $('btn-nick-cancel').addEventListener('click', function () {
+      closeOverlay($('modal-nick'));
+    });
+
+    function saveNick() {
+      const val = $('nick-input').value.trim().slice(0, 8);
+      if (!val) {
+        $('nick-input').focus();
+        return;
+      }
+      state.nick = val;
+      safeWrite(STORAGE_KEYS.nick, val);
+      closeOverlay($('modal-nick'));
+      renderLobby();
+    }
+
+    $('btn-nick-save').addEventListener('click', saveNick);
+    $('nick-input').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') saveNick();
+      if (e.key === 'Escape') closeOverlay($('modal-nick'));
+    });
+
+    // 通用提醒彈窗
+    $('btn-alert-ok').addEventListener('click', function () {
+      closeOverlay($('modal-alert'));
+      const cb = state.alertCallback;
+      state.alertCallback = null;
+      if (typeof cb === 'function') cb();
+    });
+
+    // 大廳：連線對戰
+    $('btn-create-net').addEventListener('click', startNetCreate);
+    $('btn-join-net').addEventListener('click', startNetJoin);
+    $('join-code-input').addEventListener('input', function () {
+      this.value = this.value.replace(/\D/g, '').slice(0, 4);
+    });
+    $('join-code-input').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !$('btn-join-net').disabled) startNetJoin();
+    });
+
+    // 大廳：選擇機器人強度與進房
+    document.querySelectorAll('.bot-lv-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        Sound.unlock();
+        state.selectedBotLevel = btn.dataset.level;
+        updateBotLevelUI();
+      });
+    });
+    $('btn-start-bot').addEventListener('click', function () {
+      startBotRoom(false, []);
+    });
+
+    // 房間內：即時切換機器人強度
+    document.querySelectorAll('.room-bot-lv').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (state.mode !== 'bot') return;
+        const lv = btn.dataset.level;
+        if (lv === state.selectedBotLevel) return;
+        state.selectedBotLevel = lv;
+        updateBotLevelUI();
+        startBotRoom(true, state.practiceFocusChars);
+      });
+    });
+
+    // 房間內：設定（打字方式、年級、時間、讓分）
+    document.querySelectorAll('#opt-lang-group .chip').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        applyHostSetting({ lang: btn.dataset.lang });
+      });
+    });
+    document.querySelectorAll('#opt-grade-group .chip').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        applyHostSetting({ grade: btn.dataset.grade });
+      });
+    });
+    document.querySelectorAll('#opt-duration-group .chip').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        applyHostSetting({ duration: Number(btn.dataset.duration) });
+      });
+    });
+    $('opt-handicap-sw').addEventListener('click', function () {
+      applyHostSetting({ handicap: !state.settings.handicap });
+    });
+
+    // 房間內：開始對戰與回大廳
+    $('btn-room-start').addEventListener('click', function () {
+      if (!state.transport) return;
+      Sound.unlock();
+      state.transport.start();
+    });
+    $('btn-room-leave').addEventListener('click', function () {
+      cleanupTransport();
+      renderLobby();
+      showScreen('lobby');
+    });
+
+    // 對戰中：離開確認彈窗
+    $('btn-battle-quit').addEventListener('click', function () {
+      clearTimeout(state.focusBackTimer);
+      openOverlay($('modal-quit'));
+      $('btn-quit-cancel').focus();
+    });
+    $('btn-quit-cancel').addEventListener('click', function () {
+      closeOverlay($('modal-quit'));
+      focusTypeInput();
+    });
+    $('btn-quit-confirm').addEventListener('click', function () {
+      closeOverlay($('modal-quit'));
+      cleanupTransport();
+      renderLobby();
+      showScreen('lobby');
+    });
+
+    // 結算頁：再練這幾個字（回房間並自動開對電腦練習）
+    $('btn-practice-wrong').addEventListener('click', function () {
+      const mistakes = state.tracker && typeof state.tracker.mistakes === 'function'
+        ? (state.tracker.mistakes() || []).map(function (m) { return m.ch; })
+        : [];
+      startBotRoom(true, mistakes);
+    });
+
+    // 結算頁：再來一局
+    $('btn-rematch').addEventListener('click', function () {
+      if (state.transport) {
+        Sound.unlock();
+        state.practiceFocusChars = [];
+        state.transport.rematch();
+      } else {
+        startBotRoom(true, []);
+      }
+    });
+
+    // 結算頁：回大廳
+    $('btn-res-lobby').addEventListener('click', function () {
+      cleanupTransport();
+      renderLobby();
+      showScreen('lobby');
+    });
+  }
+
+  /* ================================================================
+   * 18. 啟動初始化
+   * ================================================================ */
+  function init() {
+    // 掛載所有角色 SVG 頭像
+    mountAvatar($('lobby-logo-av'), '#2458e6');
+    mountAvatar($('lobby-bot-av'), '#c92a2a');
+    mountAvatar($('room-me-av'), '#2458e6');
+    mountAvatar($('room-opp-av'), '#c92a2a');
+    mountAvatar($('battle-me-av'), '#2458e6');
+    mountAvatar($('battle-opp-av'), '#c92a2a');
+    mountAvatar($('res-me-av'), '#2458e6');
+    mountAvatar($('res-opp-av'), '#c92a2a');
+
+    updateSoundButtons();
+    bindEvents();
+    renderLobby();
+    showScreen('lobby');
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<title>打字擂台三版設計</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: 頂部比較表＋三版各一節（彩色標題帶＋整頁截圖＋開完整頁連結） */
+:root{
+  --bg:#e8edf3; --paper:#f6f8fb; --fg:#1d2733; --muted:#4a5868; --line:#c9d3df;
+  --thead:#1f3a5f; --thead-fg:#fff; --chip:#dde6f0;
+  --a:#2a3f9e; --b:#b8860b; --c:#3d6b5a; --warn:#9a4a12; --warn-bg:#fbeadc;
+  --sans:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  --display:"Space Grotesk","Noto Sans TC",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1a222c; --paper:#222c38; --fg:#e4eaf1; --muted:#aab6c4; --line:#3a4757;
+  --thead:#2c4d78; --chip:#2e3b4b; --warn:#f2b483; --warn-bg:#3a2a1e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1a222c; --paper:#222c38; --fg:#e4eaf1; --muted:#aab6c4; --line:#3a4757;
+  --thead:#2c4d78; --chip:#2e3b4b; --warn:#f2b483; --warn-bg:#3a2a1e; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.7}
+.wrap{max-width:1000px;margin:0 auto;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+h1{font-family:var(--display);font-size:1.8rem;margin:0;text-wrap:balance}
+header p{margin:.3rem 0 0;color:var(--muted)}
+section{background:var(--paper);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+section>h2{margin:0;padding:9px 16px;font-size:1.05rem;color:#fff}
+.ha{background:var(--a)}.hb{background:var(--b)}.hc{background:var(--c)}.hs{background:var(--thead)}
+.body{padding:12px 16px 16px;min-width:0}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:640px}
+th{background:var(--thead);color:var(--thead-fg);text-align:left;padding:6px 9px;font-weight:500}
+td{padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+ul{margin:.3rem 0;padding-left:1.3rem}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin:.4rem 0 .8rem}
+.links a{background:var(--chip);color:var(--fg);padding:4px 12px;border-radius:4px;text-decoration:none;font-weight:500}
+.links a:hover,.links a:focus-visible{outline:2px solid var(--thead)}
+.shot{display:block;width:100%;border:1px solid var(--line);border-radius:4px}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:4px;padding:8px 12px;margin:.5rem 0}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>打字擂台：三版設計比較</h1>
+  <p>edtech unit23 M0。每版都是同樣三個畫面（開房大廳、對戰中、結算），每個框 1366×657，目標文章用注音粉圓字型。點「開完整頁」看實際大小。</p>
+</header>
+
+<section><h2 class="hs">一眼比較</h2><div class="body"><div class="tbl"><table>
+<tr><th>版本</th><th>風格</th><th>強項</th><th>要修的地方</th></tr>
+<tr><td><b>A</b> frontend-design</td><td>深藍拳擊擂台，紅藍圍繩框住文章，標題用明體粗字</td><td>擂台感最強；結算成績表是對帳單風；提示卡把注音拆成按鍵（ㄓ 在 5）</td><td>提示泡泡蓋到文章字；計時器下方標題小字擠在一起；深色底整片較重</td></tr>
+<tr><td><b>B</b> ui-ux-pro-max</td><td>米黃卡通格鬥風，粗黑描邊、硬陰影、黃黑警示條</td><td>最像遊戲、最活潑；有角色頭像；結算進步區最大最醒目</td><td>提示泡泡蓋到文章字；已打的字用綠底塊，整篇看起來較花</td></tr>
+<tr><td><b>C</b> interface-design</td><td>米白紙感教室風，只用藍（我）橙（對手）兩色</td><td>文章最清楚、提示條放文章下方不擋字；結算「多打 14 個字」用句子講，孩子最好懂</td><td>對戰感最弱，比較像練習軟體；要加一點擂台元素</td></tr>
+</table></div>
+<div class="note">三版都檢查過：注音字型有載入、三個框都沒超出 1366×657、沒有程式錯誤。選定之後也可以混搭，例如「C 的版面＋B 的角色頭像」。</div>
+</div></section>
+
+<section><h2 class="ha">A：深藍拳擊擂台（frontend-design）</h2><div class="body">
+<div class="links"><a href="unit23-mockup-a.html" target="_blank" rel="noopener">開完整頁</a></div>
+<img class="shot" src="shots/mockup-a.png" alt="A 版三個畫面：深藍底、紅藍圍繩框住文章">
+</div></section>
+
+<section><h2 class="hb">B：卡通格鬥擂台（ui-ux-pro-max）</h2><div class="body">
+<div class="links"><a href="unit23-mockup-b.html" target="_blank" rel="noopener">開完整頁</a></div>
+<img class="shot" src="shots/mockup-b.png" alt="B 版三個畫面：米黃底、粗黑描邊、黃黑警示條">
+</div></section>
+
+<section><h2 class="hc">C：紙感教室風（interface-design）</h2><div class="body">
+<div class="links"><a href="unit23-mockup-c.html" target="_blank" rel="noopener">開完整頁</a></div>
+<img class="shot" src="shots/mockup-c.png" alt="C 版三個畫面：米白紙面、藍橙兩色">
+</div></section>
+</div>

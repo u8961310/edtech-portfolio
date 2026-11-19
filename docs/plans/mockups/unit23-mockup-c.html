@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>打字擂台 mockup C：資訊清楚、焦點明確</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+@font-face { font-family: 'Bpmf Huninn'; src: url('fonts/bpmf-huninn-mockup.woff2') format('woff2'); font-display: swap; }
+/* ===== Tokens（紙感教室：米白紙面＋墨藍字＋藍橙對戰雙色）===== */
+:root{
+  --desk:#D8D4C8;          /* 框外桌面 */
+  --paper:#F3F0E8;         /* 畫面底 */
+  --card:#FFFFFF;          /* 一階表面：卡片 */
+  --inset:#ECE8DD;         /* 下凹：輸入框、軌道 */
+  --ink:#1D2742;           /* 主字 15:1 */
+  --ink-2:#44506B;         /* 次字 ~7:1 */
+  --ink-3:#5A6479;         /* 輔字 ≥5:1（白底）*/
+  --line:rgba(29,39,66,.14);
+  --line-strong:rgba(29,39,66,.28);
+  --me:#1F5FD6;            /* 我方：藍 */
+  --me-soft:#E3ECFC;
+  --opp:#C2410C;           /* 對手：橙 */
+  --opp-soft:#FBE6DA;
+  --good:#16703E;
+  --good-soft:#DDF1E4;
+  --bad:#B42318;
+  --bad-soft:#FDE4E1;
+  --hl:#FFE28A;            /* 目前字：螢光黃 */
+  --r-s:8px; --r-m:14px; --r-l:20px;
+  --u:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--desk)}
+body{font-family:'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;color:var(--ink);padding:32px 0 64px;-webkit-font-smoothing:antialiased}
+.shot{width:1366px;margin:0 auto 40px}
+.shot>h2{font-size:18px;font-weight:700;margin-bottom:10px;color:var(--ink)}
+.shot>h2 small{font-weight:400;color:var(--ink-2);margin-left:8px;font-size:14px}
+.frame{width:1366px;height:657px;background:var(--paper);border:1px solid var(--line-strong);border-radius:var(--r-s);overflow:hidden;position:relative;padding:24px 32px;display:flex;flex-direction:column}
+.num{font-variant-numeric:tabular-nums}
+button{font-family:inherit;cursor:pointer}
+
+/* 共用：頂欄 */
+.top{height:56px;display:flex;align-items:center;gap:16px;flex:none}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:22px;letter-spacing:-.01em}
+.logo i{width:36px;height:36px;border-radius:10px;background:var(--ink);display:grid;place-items:center}
+.logo i svg{width:22px;height:22px}
+.spacer{flex:1}
+.pill{height:40px;padding:0 16px;border-radius:20px;background:var(--card);border:1px solid var(--line);display:inline-flex;align-items:center;gap:8px;font-size:16px;color:var(--ink-2);font-weight:500}
+.pill b{color:var(--ink);font-weight:700}
+
+/* 按鈕 */
+.btn{height:56px;padding:0 28px;border-radius:var(--r-m);border:2px solid var(--ink);background:var(--card);color:var(--ink);font-size:20px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s cubic-bezier(.23,1,.32,1),background .12s}
+.btn:hover{background:var(--inset)}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:3px solid var(--me);outline-offset:3px}
+.btn.primary{background:var(--me);border-color:var(--me);color:#fff;box-shadow:0 4px 0 #14439A}
+.btn.primary:hover{background:#1A52BA}
+.btn.primary:active{box-shadow:0 1px 0 #14439A;transform:translateY(3px)}
+.btn.ghost{border-color:var(--line-strong);color:var(--ink-2);font-weight:500}
+.btn[disabled]{background:var(--inset);border-color:var(--line);color:var(--ink-3);box-shadow:none;cursor:not-allowed}
+
+/* ============ ① 大廳 ============ */
+.lobby{flex:1;display:grid;grid-template-columns:420px 1fr;gap:24px;margin-top:8px;min-height:0}
+.col{display:flex;flex-direction:column;gap:16px;min-height:0}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);padding:20px 24px}
+.label{font-size:14px;font-weight:700;color:var(--ink-3);letter-spacing:.08em;margin-bottom:8px}
+.room{padding:20px 24px 22px}
+.room .digits{display:flex;gap:10px;margin:2px 0 14px}
+.room .digits span{flex:1;height:84px;border-radius:var(--r-m);background:var(--ink);color:#fff;font-size:60px;font-weight:900;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.seats{display:flex;flex-direction:column;gap:10px}
+.seat{height:64px;border-radius:var(--r-m);display:flex;align-items:center;gap:14px;padding:0 16px;font-size:20px;font-weight:700}
+.seat .av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:20px;font-weight:900}
+.seat.me{background:var(--me-soft)} .seat.me .av{background:var(--me)}
+.seat.opp{background:var(--opp-soft)} .seat.opp .av{background:var(--opp)}
+.seat small{margin-left:auto;font-size:15px;font-weight:500;color:var(--ink-2);display:flex;align-items:center;gap:6px}
+.seat small:before{content:"";width:10px;height:10px;border-radius:50%;background:var(--good)}
+.join{display:flex;gap:10px;align-items:center}
+.join .code{flex:1;height:56px;border-radius:var(--r-m);background:var(--inset);border:2px solid transparent;font-size:28px;font-weight:700;letter-spacing:.4em;padding-left:18px;display:flex;align-items:center;color:var(--ink-3)}
+.join .btn{height:56px;padding:0 20px;font-size:18px}
+
+.settings{display:flex;flex-direction:column;gap:14px;flex:1}
+.row{display:grid;grid-template-columns:96px 1fr;align-items:center;gap:16px}
+.row>b{font-size:18px;color:var(--ink)}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.opt{height:48px;min-width:92px;padding:0 20px;border-radius:var(--r-m);border:2px solid var(--line-strong);background:var(--card);color:var(--ink-2);font-size:18px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.opt:hover{background:var(--inset)}
+.opt.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:700}
+.opt.on:before{content:"✓";font-size:16px}
+.toggle{display:flex;align-items:center;gap:14px;font-size:16px;color:var(--ink-2)}
+.sw{width:64px;height:36px;border-radius:18px;background:var(--me);position:relative;flex:none}
+.sw:after{content:"";position:absolute;right:4px;top:4px;width:28px;height:28px;border-radius:50%;background:#fff}
+.bottom{display:flex;gap:16px;align-items:stretch;margin-top:auto}
+.cpu{flex:1;border:2px dashed var(--line-strong);border-radius:var(--r-l);padding:0 22px;display:flex;align-items:center;gap:16px;background:transparent;text-align:left;color:var(--ink)}
+.cpu:hover{background:var(--card)}
+.cpu .ic{width:48px;height:48px;border-radius:12px;background:var(--good-soft);display:grid;place-items:center;font-size:26px;flex:none}
+.cpu b{display:block;font-size:20px}
+.cpu span{font-size:15px;color:var(--ink-2)}
+.start{width:380px;height:88px;font-size:28px;border-radius:var(--r-l)}
+
+/* ============ ② 對戰 ============ */
+.battle .top{height:52px}
+.goal{display:flex;align-items:center;gap:10px}
+.goal .chk{width:22px;height:22px;border-radius:50%;background:var(--good);color:#fff;font-size:14px;display:grid;place-items:center;font-weight:900}
+.timer{display:flex;align-items:center;gap:12px}
+.timer .t{font-size:36px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1}
+.timer .track{width:140px;height:10px;border-radius:5px;background:var(--inset);overflow:hidden}
+.timer .track i{display:block;height:100%;width:60%;background:var(--ink-2)}
+
+.fighters{display:grid;grid-template-columns:1fr 140px 1fr;gap:16px;margin-top:12px;height:92px;flex:none;align-items:stretch}
+.f{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);padding:10px 16px;display:flex;flex-direction:column;justify-content:space-between}
+.f.me{border-left:6px solid var(--me)} .f.opp{border-right:6px solid var(--opp)}
+.f .h{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700}
+.f .h em{margin-left:auto;font-style:normal;font-size:16px;font-weight:500;color:var(--ink-2)}
+.f.opp .h{flex-direction:row-reverse} .f.opp .h em{margin-left:0;margin-right:auto}
+.tag{font-size:13px;font-weight:700;padding:2px 8px;border-radius:6px;color:#fff}
+.me .tag{background:var(--me)} .opp .tag{background:var(--opp)}
+.hp{display:flex;gap:3px;height:16px}
+.hp i{flex:1;border-radius:3px;background:var(--inset)}
+.me .hp i.on{background:var(--me)} .opp .hp i.on{background:var(--opp)}
+.f.opp .hp{flex-direction:row-reverse}
+.prog{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-3);font-weight:500}
+.prog .bar{flex:1;height:6px;border-radius:3px;background:var(--inset);overflow:hidden}
+.prog .bar i{display:block;height:100%}
+.me .prog .bar i{background:var(--me)} .opp .prog .bar i{background:var(--opp)}
+.f.opp .prog{flex-direction:row-reverse}
+.combo{border-radius:var(--r-m);background:var(--ink);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.combo small{font-size:14px;font-weight:500;color:#D5DAE8;letter-spacing:.1em}
+.combo b{font-size:44px;line-height:1;font-weight:900;font-variant-numeric:tabular-nums}
+.combo span{font-size:13px;color:#FFD966;font-weight:700}
+
+/* 主角：文章卡 */
+.stage{flex:1;margin-top:12px;background:var(--card);border:2px solid var(--ink);border-radius:var(--r-l);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.stage .meta{display:flex;align-items:center;gap:12px;padding:12px 28px 0;font-size:15px;color:var(--ink-3);font-weight:500}
+.stage .meta b{color:var(--ink-2)}
+.text{flex:1;padding:4px 32px 0;font-family:'Bpmf Huninn','Noto Sans TC',sans-serif;font-size:32px;font-weight:400;line-height:1.8;letter-spacing:0;color:var(--ink);display:flex;align-items:center;overflow:hidden}
+.text p{width:100%}
+.d{color:var(--good)}
+.cur{background:var(--hl);outline:3px dashed var(--bad);outline-offset:1px;border-radius:6px;color:var(--ink)}
+.hint{height:60px;margin:0 16px 14px;border-radius:var(--r-m);background:var(--bad-soft);display:flex;align-items:center;gap:16px;padding:0 20px;font-size:20px;font-weight:700;color:var(--bad)}
+.hint .z{background:#fff;border-radius:8px;padding:2px 14px;font-size:28px;color:var(--ink);font-weight:900}
+.ladder{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2);font-weight:500}
+.ladder i{width:34px;height:34px;border-radius:50%;background:#fff;border:2px solid var(--line-strong);display:grid;place-items:center;font-style:normal;font-weight:700;color:var(--ink-3);font-size:16px}
+.ladder i.on{background:var(--bad);border-color:var(--bad);color:#fff}
+.ladder i.done{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.ladder u{width:14px;height:2px;background:var(--line-strong);text-decoration:none}
+
+.inputrow{height:68px;margin-top:12px;flex:none;display:grid;grid-template-columns:1fr 300px;gap:16px}
+.input{border-radius:var(--r-m);background:var(--inset);border:3px solid var(--me);display:flex;align-items:center;padding:0 20px;gap:12px;font-size:30px;font-weight:700}
+.input .typed{color:var(--good);letter-spacing:.06em}
+.input .comp{color:var(--ink);border-bottom:3px solid var(--me);padding:0 4px}
+.input .caret{width:3px;height:34px;background:var(--me);animation:b 1s steps(1) infinite}
+@keyframes b{50%{opacity:0}}
+.input .ph{margin-left:auto;font-size:15px;font-weight:500;color:var(--ink-3)}
+.live{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.live div{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);padding:6px 14px;display:flex;flex-direction:column;justify-content:center}
+.live small{font-size:13px;color:var(--ink-3);font-weight:500}
+.live b{font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.live b span{font-size:15px;color:var(--ink-2);font-weight:500;margin-left:2px}
+
+/* ============ ③ 結算 ============ */
+.result{flex:1;display:grid;grid-template-columns:1fr 440px;gap:24px;margin-top:8px;min-height:0}
+.grow{background:var(--card);border:2px solid var(--ink);border-radius:var(--r-l);padding:24px 32px;display:flex;flex-direction:column}
+.grow .k{font-size:16px;font-weight:700;color:var(--good);letter-spacing:.06em}
+.grow h1{font-size:48px;font-weight:900;letter-spacing:-.02em;line-height:1.2;margin:4px 0 18px}
+.grow h1 mark{background:linear-gradient(transparent 58%,var(--hl) 58%);color:inherit}
+.deltas{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.dl{background:var(--paper);border-radius:var(--r-m);padding:14px 18px}
+.dl .n{font-size:14px;font-weight:700;color:var(--ink-3);letter-spacing:.06em}
+.dl .big{display:flex;align-items:baseline;gap:10px;margin:2px 0 10px}
+.dl .big b{font-size:60px;line-height:1;font-weight:900;color:var(--good);font-variant-numeric:tabular-nums}
+.dl .big span{font-size:20px;font-weight:700;color:var(--ink-2)}
+.cmp{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--ink-2);font-weight:500}
+.cmp div{display:grid;grid-template-columns:44px 1fr 56px;align-items:center;gap:8px}
+.cmp .b{height:12px;border-radius:6px;background:var(--inset);overflow:hidden}
+.cmp .b i{display:block;height:100%;background:var(--ink-3)}
+.cmp .now i{background:var(--good)}
+.cmp .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);font-weight:700}
+.goalres{margin-top:auto;display:flex;align-items:center;gap:12px;font-size:18px;font-weight:700;color:var(--good);background:var(--good-soft);border-radius:var(--r-m);padding:10px 16px}
+.goalres .chk{width:26px;height:26px;border-radius:50%;background:var(--good);color:#fff;display:grid;place-items:center;font-size:15px}
+.side{display:flex;flex-direction:column;gap:14px;min-height:0}
+.vs{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);padding:16px 20px}
+.vs .res{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:18px;font-weight:700}
+.vs .res .w{background:var(--me);color:#fff;padding:2px 12px;border-radius:8px;font-size:16px}
+table{width:100%;border-collapse:collapse;font-size:16px}
+th{font-size:14px;font-weight:700;color:var(--ink-3);text-align:right;padding:4px 0;border-bottom:2px solid var(--ink)}
+th:first-child,td:first-child{text-align:left}
+td{padding:7px 0;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;font-weight:500;color:var(--ink-2)}
+td.me{color:var(--me);font-weight:700} td.opp{color:var(--opp);font-weight:700}
+th.me{color:var(--me)} th.opp{color:var(--opp)}
+.review{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);padding:16px 20px;flex:1}
+.chars{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.ch{min-width:92px;border-radius:var(--r-m);background:var(--bad-soft);text-align:center;padding:8px 12px}
+.ch b{display:block;font-family:'Bpmf Huninn','Noto Sans TC',sans-serif;font-size:34px;line-height:1.3;font-weight:400;color:var(--ink)}
+.actions{display:flex;gap:12px;margin-top:14px;flex:none}
+.actions .btn{height:64px;flex:1;font-size:22px}
+.actions .primary{flex:1.3}
+.cap{font-size:13px;color:var(--ink-2);margin-top:8px}
+</style>
+</head>
+<body>
+
+<!-- ======================= ① 開房大廳 ======================= -->
+<section class="shot">
+<h2>① 開房大廳<small>房主視角：房號、選項、對電腦練習</small></h2>
+<div class="frame">
+  <div class="top">
+    <div class="logo"><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M4 18 12 5l8 13M7.5 13h9"/></svg></i>打字擂台</div>
+    <div class="spacer"></div>
+    <span class="pill">我的暱稱 <b>小明</b></span>
+  </div>
+
+  <div class="lobby">
+    <div class="col">
+      <div class="panel room">
+        <div class="label">你的擂台房號（唸給同學聽）</div>
+        <div class="digits"><span>4</span><span>7</span><span>2</span><span>9</span></div>
+        <div class="seats">
+          <div class="seat me"><div class="av">明</div>小明<small>房主</small></div>
+          <div class="seat opp"><div class="av">寶</div>阿寶<small>已加入</small></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="label">我是挑戰者：輸入同學的房號</div>
+        <div class="join"><div class="code">＿ ＿ ＿ ＿</div><button class="btn">加入</button></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel settings">
+        <div class="label" style="margin-bottom:0">擂台設定（只有房主能改）</div>
+        <div class="row"><b>打字方式</b><div class="seg"><button class="opt">英打</button><button class="opt on">中打（注音）</button></div></div>
+        <div class="row"><b>年級</b><div class="seg"><button class="opt">低年級</button><button class="opt on">中年級</button><button class="opt">高年級</button></div></div>
+        <div class="row"><b>文章領域</b><div class="seg"><button class="opt">國語文</button><button class="opt on">自然科學</button><button class="opt">社會</button><button class="opt">藝術</button><button class="opt">健康</button></div></div>
+        <div class="row"><b>時間</b><div class="seg"><button class="opt">60 秒</button><button class="opt on">90 秒</button><button class="opt">120 秒</button></div></div>
+        <div class="row"><b>讓分</b><div class="toggle"><div class="sw"></div>打得慢的人，每個字扣的血比較少</div></div>
+      </div>
+      <div class="bottom">
+        <button class="cpu"><div class="ic">🤖</div><div><b>先對電腦練習</b><span>一個人也能練，不會輸給誰</span></div></button>
+        <button class="btn primary start">開始對戰</button>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= ② 對戰中 ======================= -->
+<section class="shot">
+<h2>② 對戰中<small>中打、自然科學中年級；第 38 字出現第 2 層提示</small></h2>
+<div class="frame battle">
+  <div class="top">
+    <div class="logo"><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M4 18 12 5l8 13M7.5 13h9"/></svg></i></div>
+    <span class="pill">自然科學 · 中年級　<b>《水的三態》</b></span>
+    <div class="spacer"></div>
+    <span class="pill goal"><span>本局目標</span><b>正確率 90% 以上</b><span class="chk">✓</span><b class="num" style="color:var(--good)">目前 93%</b></span>
+    <div class="spacer"></div>
+    <div class="timer"><div class="track"><i></i></div><div class="t">00:54</div></div>
+  </div>
+
+  <div class="fighters">
+    <div class="f me">
+      <div class="h"><span class="tag">你</span>小明<em class="num">血量 68</em></div>
+      <div class="hp" data-n="20" data-on="14"></div>
+      <div class="prog">文章<div class="bar"><i style="width:51%"></i></div><span class="num">51%</span></div>
+    </div>
+    <div class="combo"><small>連擊</small><b>12</b><span>傷害 +50%</span></div>
+    <div class="f opp">
+      <div class="h"><span class="tag">對手</span>阿寶<em class="num">血量 52</em></div>
+      <div class="hp" data-n="20" data-on="10"></div>
+      <div class="prog">文章<div class="bar"><i style="width:44%"></i></div><span class="num">44%</span></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="meta"><b>請照著這篇文章打</b>　已打 <span class="num">37</span> ／ <span class="num">72</span> 字</div>
+    <div class="text"><p id="article"></p></div>
+    <div class="hint">
+      <span>這個字有點難！</span>注音是<span class="z">ㄓㄥ</span>
+      <div class="ladder">提示<i class="done">1</i><u></u><i class="on">2</i><u></u><i>3</i>鍵盤圖</div>
+    </div>
+  </div>
+
+  <div class="inputrow">
+    <div class="input"><span class="typed">水有三種樣子。冰是固態…</span><span class="comp">ㄓ</span><span class="caret"></span><span class="ph">打完注音按空白鍵選字</span></div>
+    <div class="live"><div><small>速度</small><b>96<span>字／分</span></b></div><div><small>正確率</small><b>93<span>%</span></b></div></div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= ③ 結算 ======================= -->
+<section class="shot">
+<h2>③ 結算<small>「自己進步多少」比輸贏更大</small></h2>
+<div class="frame">
+  <div class="top">
+    <div class="logo"><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M4 18 12 5l8 13M7.5 13h9"/></svg></i>打字擂台</div>
+    <span class="pill">自然科學 · 《水的三態》</span>
+    <div class="spacer"></div>
+    <span class="pill">小明 對 阿寶</span>
+  </div>
+
+  <div class="result">
+    <div class="grow">
+      <div class="k">你的進步</div>
+      <h1>比上一局多打了 <mark>14 個字</mark>，錯字少了 3 個！</h1>
+      <div class="deltas">
+        <div class="dl">
+          <div class="n">速度（每分鐘字數）</div>
+          <div class="big"><b class="num">+14</b><span>88 → 102</span></div>
+          <div class="cmp">
+            <div><span>上次</span><span class="b"><i style="width:73%"></i></span><span class="v num">88</span></div>
+            <div class="now"><span>這次</span><span class="b"><i style="width:85%"></i></span><span class="v num">102</span></div>
+          </div>
+        </div>
+        <div class="dl">
+          <div class="n">正確率</div>
+          <div class="big"><b class="num">+5%</b><span>88% → 93%</span></div>
+          <div class="cmp">
+            <div><span>上次</span><span class="b"><i style="width:88%"></i></span><span class="v num">88%</span></div>
+            <div class="now"><span>這次</span><span class="b"><i style="width:93%"></i></span><span class="v num">93%</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="goalres" style="margin-top:20px"><span class="chk">✓</span>達成本局目標：正確率 90% 以上</div>
+    </div>
+
+    <div class="side">
+      <div class="vs">
+        <div class="res"><span class="w">勝</span>這局你贏了，阿寶也打得很棒！</div>
+        <table>
+          <tr><th></th><th class="me">小明（你）</th><th class="opp">阿寶</th></tr>
+          <tr><td>速度（字／分）</td><td class="me num">102</td><td class="opp num">95</td></tr>
+          <tr><td>正確率</td><td class="me num">93%</td><td class="opp num">89%</td></tr>
+          <tr><td>最高連擊</td><td class="me num">21</td><td class="opp num">15</td></tr>
+          <tr><td>剩餘血量</td><td class="me num">68</td><td class="opp num">0</td></tr>
+        </table>
+      </div>
+      <div class="review">
+        <div class="label" style="margin-bottom:0">錯字回顧（點一下看注音怎麼打）</div>
+        <div class="chars">
+          <div class="ch"><b>蒸</b></div>
+          <div class="ch"><b>態</b></div>
+          <div class="ch"><b>液</b></div>
+          <div class="ch"><b>曬</b></div>
+        </div>
+        <div class="cap">共 4 個字需要多練習</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions" style="justify-content:flex-end">
+    <button class="btn ghost" style="flex:none;width:160px">回大廳</button>
+    <button class="btn" style="flex:none;width:300px">再練這幾個字</button>
+    <button class="btn primary" style="flex:none;width:300px">再來一局</button>
+  </div>
+</div>
+</section>
+
+<script>
+/* 血條 */
+document.querySelectorAll('.hp').forEach(function(el){
+  var n=+el.dataset.n,on=+el.dataset.on,h='';
+  for(var i=0;i<n;i++)h+='<i class="'+(i<on?'on':'')+'"></i>';
+  el.innerHTML=h;
+});
+/* 示範文章：字|注音，空白分隔；標點不加注音。真實產品改用注音粉圓字型 */
+var raw='水|ㄕㄨㄟˇ 有|ㄧㄡˇ 三|ㄙㄢ 種|ㄓㄨㄥˇ 樣|ㄧㄤˋ 子|˙ㄗ 。 冰|ㄅㄧㄥ 是|ㄕˋ 固|ㄍㄨˋ 態|ㄊㄞˋ ， 水|ㄕㄨㄟˇ 是|ㄕˋ 液|ㄧㄝˋ 態|ㄊㄞˋ ， 水|ㄕㄨㄟˇ 蒸|ㄓㄥ 氣|ㄑㄧˋ 是|ㄕˋ 氣|ㄑㄧˋ 態|ㄊㄞˋ 。 太|ㄊㄞˋ 陽|ㄧㄤˊ 曬|ㄕㄞˋ 熱|ㄖㄜˋ 水|ㄕㄨㄟˇ ， 水|ㄕㄨㄟˇ 會|ㄏㄨㄟˋ 慢|ㄇㄢˋ 慢|ㄇㄢˋ 變|ㄅㄧㄢˋ 成|ㄔㄥˊ 水|ㄕㄨㄟˇ 蒸|ㄓㄥ 氣|ㄑㄧˋ ； 遇|ㄩˋ 冷|ㄌㄥˇ ， 又|ㄧㄡˋ 會|ㄏㄨㄟˋ 變|ㄅㄧㄢˋ 回|ㄏㄨㄟˊ 小|ㄒㄧㄠˇ 水|ㄕㄨㄟˇ 珠|ㄓㄨ 。 這|ㄓㄜˋ 就|ㄐㄧㄡˋ 是|ㄕˋ 水|ㄕㄨㄟˇ 的|˙ㄉㄜ 三|ㄙㄢ 態|ㄊㄞˋ 變|ㄅㄧㄢˋ 化|ㄏㄨㄚˋ 。 雲|ㄩㄣˊ 和|ㄏㄜˊ 雨|ㄩˇ 也|ㄧㄝˇ 是|ㄕˋ 這|ㄓㄜˋ 樣|ㄧㄤˋ 來|ㄌㄞˊ 的|˙ㄉㄜ 。';
+var CUR=37, html='', k=0;
+raw.split(' ').forEach(function(t){
+  var ch=t.split('|')[0];
+  var cls = k<CUR?'d':(k===CUR?'cur':'');
+  html += '<span class="'+cls+'">'+ch+'</span>';
+  k++;
+});
+document.getElementById('article').innerHTML=html;
+</script>
+</body>
+</html>

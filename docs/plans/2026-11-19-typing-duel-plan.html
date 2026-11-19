@@ -1,0 +1,228 @@
+<title>打字擂台開發計畫</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: 單欄閱讀＋每節彩色標題帶；表格走對帳單風（深藍表頭、數字靠右） */
+:root{
+  --bg:#e8edf3; --paper:#f6f8fb; --fg:#1d2733; --muted:#4a5868; --line:#c9d3df;
+  --thead:#1f3a5f; --thead-fg:#ffffff;
+  --b1:#2f6db5; --b2:#2c8a6e; --b3:#b4632a; --b4:#7a4fb0; --b5:#b23a55; --b6:#3d7d93;
+  --chip-bg:#dde6f0; --warn:#9a4a12; --warn-bg:#fbeadc;
+  --sans:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  --display:"Space Grotesk","Noto Sans TC",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1a222c; --paper:#222c38; --fg:#e4eaf1; --muted:#aab6c4; --line:#3a4757;
+  --thead:#2c4d78; --thead-fg:#ffffff; --chip-bg:#2e3b4b; --warn:#f2b483; --warn-bg:#3a2a1e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1a222c; --paper:#222c38; --fg:#e4eaf1; --muted:#aab6c4; --line:#3a4757;
+  --thead:#2c4d78; --thead-fg:#ffffff; --chip-bg:#2e3b4b; --warn:#f2b483; --warn-bg:#3a2a1e; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.7}
+.wrap{max-width:900px;margin:0 auto;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+header h1{font-family:var(--display);font-size:1.9rem;margin:0;text-wrap:balance}
+header p{margin:.3rem 0 0;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{background:var(--chip-bg);border-radius:4px;padding:2px 9px;font-size:.85rem}
+section{background:var(--paper);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+section>h2{margin:0;padding:9px 16px;font-size:1.05rem;color:#fff;font-weight:700;letter-spacing:.02em}
+.c1>h2{background:var(--b1)}.c2>h2{background:var(--b2)}.c3>h2{background:var(--b3)}
+.c4>h2{background:var(--b4)}.c5>h2{background:var(--b5)}.c6>h2{background:var(--b6)}
+.body{padding:12px 16px 16px;min-width:0}
+.body p{margin:.4rem 0}
+ul,ol{margin:.3rem 0;padding-left:1.3rem}
+li{margin:.15rem 0}
+h3{font-size:.98rem;margin:.9rem 0 .3rem}
+.tbl{overflow-x:auto;margin:.5rem 0}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:560px}
+th{background:var(--thead);color:var(--thead-fg);text-align:left;padding:6px 9px;font-weight:500}
+td{padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+code{font-family:Consolas,monospace;font-size:.86em;background:var(--chip-bg);padding:0 4px;border-radius:3px}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:4px;padding:8px 12px;margin:.5rem 0}
+pre.mermaid{background:transparent;margin:.5rem 0}
+.check{list-style:none;padding-left:0}
+.check li::before{content:"☐ ";color:var(--muted)}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>打字擂台：雙人連線對戰</h1>
+  <p>edtech-portfolio 新單元規劃 · 英打／中打（注音字型選文集）· 兩台電腦 1 對 1 即時對打</p>
+  <div class="meta">
+    <span class="chip">建議資料夾 <code>units/unit23-typing-duel</code></span>
+    <span class="chip">2026-11-19 草案</span>
+    <span class="chip">狀態：M0 定案 B 版，下一步 M2</span>
+  </div>
+</header>
+
+<section class="c1"><h2>你已經決定的</h2><div class="body">
+<div class="tbl"><table>
+<tr><th>題目</th><th>選擇</th><th>帶來的影響</th></tr>
+<tr><td>對打形式</td><td>兩台電腦連線</td><td>純靜態站要多一個即時後端：新開 Cloudflare Worker＋Durable Objects（WebSocket）</td></tr>
+<tr><td>組隊意思</td><td>1 對 1 互打</td><td>一間房間只開 2 個位子，打對字就攻擊對方血條</td></tr>
+<tr><td>教學理論</td><td>照標準做</td><td>選文分級、課綱對應、分層回饋、結算回顧都要做（見第 4 節）</td></tr>
+<tr><td>選文來源</td><td>原創短文＋公版古詩</td><td>不碰課本課文；我寫初稿，你審過才上線</td></tr>
+</table></div>
+</div></section>
+
+<section class="c2"><h2>1. 玩法</h2><div class="body">
+<ol>
+  <li><b>開房</b>：甲按「建立擂台」拿到 4 位數房號，輸入暱稱（只要暱稱，不收姓名學號）</li>
+  <li><b>加入</b>：乙在自己的電腦輸入房號進房</li>
+  <li><b>房主設定</b>：英打／中打、年級（低／中／高）、領域、對戰時間、讓分</li>
+  <li><b>開打</b>：3-2-1 倒數，兩人拿到<b>同一篇文章</b>同時打</li>
+  <li><b>攻擊</b>：每打對 1 字扣對方血；連擊 10 字以上傷害加成；打錯不扣自己血，但連擊歸零</li>
+  <li><b>勝負</b>：先把對方血打光，或時間到比剩餘血量</li>
+  <li><b>結算</b>：雙方 CPM（每分鐘字數）、正確率、自己的錯字回顧</li>
+</ol>
+<p>畫面左半是自己的文章與輸入框，右半是對手進度條＋雙方血條。一畫面不捲動，沿用 <code>tools/check-no-scroll.py</code> 檢查。</p>
+<p>另做一個<b>「對電腦練習」</b>：對手換成固定速度的機器人。用途有三個：沒人配對時能玩、學校網路擋連線時有備案、開發時不用開兩台電腦測。</p>
+</div></section>
+
+<section class="c3"><h2>2. 系統架構</h2><div class="body">
+<pre class="mermaid">
+flowchart LR
+  A[甲的瀏覽器<br>GitHub Pages 靜態頁] -- WebSocket wss --> W[Cloudflare Worker<br>edtech-duel]
+  B[乙的瀏覽器] -- WebSocket wss --> W
+  W --> R[Durable Object<br>一間房一個實體]
+  R -- 廣播進度與血量 --> A
+  R -- 廣播進度與血量 --> B
+</pre>
+<div class="tbl"><table>
+<tr><th>元件</th><th>位置</th><th>做什麼</th></tr>
+<tr><td>前端單頁</td><td><code>units/unit23-typing-duel/index.html</code></td><td><b>Gemini 產（比照 unit22，用 agy）</b>：畫面、打字判定、注音顯示；提示詞要求英打判定照 unit11、中打選字判定（<code>compositionend</code>）照 unit12，連線部分照我給的訊息格式寫</td></tr>
+<tr><td>選文集</td><td><code>units/unit23-typing-duel/passages.js</code></td><td>中英文題庫，每篇帶年級、領域、課綱代碼標籤</td></tr>
+<tr><td>注音字型</td><td><code>units/unit23-typing-duel/fonts/</code></td><td>注音粉圓子集，只在中打模式才載入</td></tr>
+<tr><td>連線後端</td><td><code>duel-worker/</code>（repo 根目錄新資料夾）</td><td>開房、配對、計時、判定血量，由伺服器說了算（防作弊）</td></tr>
+</table></div>
+<h3>分工：Gemini 做遊戲、Claude 做其他</h3>
+<ul>
+  <li><b>Gemini（agy）</b>：前端遊戲頁。提示詞放 <code>docs/plans/unit23-gemini-prompt.md</code>，沿用 <code>board/CANVAS_PROMPT.md</code> v3 契約，附上選定的 mockup 當視覺規格、選文格式、WebSocket 訊息格式</li>
+  <li><b>Claude</b>：先定 WebSocket 訊息格式（雙方照同一份規格寫）、Worker 後端、選文集、字型工具、整合修正，再用 <code>board/verify-canvas.py --unit 23</code> 驗收</li>
+  <li>前端要先能接一個假的對手（對電腦練習），Gemini 產完不用等後端就能驗；後端好了再切成真的連線</li>
+</ul>
+<h3>為什麼另開 Worker，不併進 analytics-worker</h3>
+<p>統計跟對戰掛在一起，對戰出問題時會連累造訪統計。分開部署、分開看 log 比較好管。</p>
+<h3>防作弊（小學生一定會試）</h3>
+<ul>
+  <li>文章由伺服器發，客戶端只回報「打對到第幾字」，伺服器檢查速度上限（例如每秒超過 8 字視為異常不計）</li>
+  <li>輸入框擋貼上（paste）與拖放</li>
+  <li>血量、勝負只在伺服器算，前端改數字沒用</li>
+</ul>
+<h3>隱私</h3>
+<p>只存暱稱與房間狀態，房間 30 分鐘沒動靜自動清掉，伺服器不留對戰紀錄。個人最佳成績照 SDD 存瀏覽器 <code>edtech-unit23-score</code>。</p>
+</div></section>
+
+<section class="c4"><h2>3. 選文集（國小各領域）</h2><div class="body">
+<h3>分級規格</h3>
+<div class="tbl"><table>
+<tr><th>年級帶</th><th>中文篇長</th><th>用字範圍</th><th>英文內容</th></tr>
+<tr><td>低年級（1–2）</td><td class="num">30–50 字</td><td>教育部國小常用字低年級字表內</td><td>字母、3–4 字母單字</td></tr>
+<tr><td>中年級（3–4）</td><td class="num">60–100 字</td><td>中年級字表內，新字不超過 5%</td><td>國小基本字彙、短句</td></tr>
+<tr><td>高年級（5–6）</td><td class="num">100–150 字</td><td>高年級字表內</td><td>短句、短段落</td></tr>
+</table></div>
+<p>寫一支檢核腳本 <code>tools/check-passages.py</code>：逐篇算字數、標出超出年級字表的字，你審稿時看報表就好，不用一個字一個字對。</p>
+
+<h3>領域分布（108 課綱）</h3>
+<div class="tbl"><table>
+<tr><th>領域</th><th>選文主題舉例</th><th>適用年級</th><th class="num">篇數</th></tr>
+<tr><td>國語文</td><td>童詩、生活記敘短文、公版唐詩（靜夜思、春曉、登鸛雀樓）、成語故事</td><td>全</td><td class="num">8</td></tr>
+<tr><td>生活課程</td><td>上學路上、四季變化、照顧小動物</td><td>低</td><td class="num">4</td></tr>
+<tr><td>數學</td><td>生活中的時間、錢幣、形狀（文字敘述，不放算式）</td><td>全</td><td class="num">5</td></tr>
+<tr><td>自然科學</td><td>植物的一生、水的變化、月亮圓缺</td><td>中、高</td><td class="num">5</td></tr>
+<tr><td>社會</td><td>家鄉與社區、台灣的節慶、地圖方位</td><td>中、高</td><td class="num">5</td></tr>
+<tr><td>健康與體育</td><td>洗手五步驟、均衡飲食、護眼 3010</td><td>全</td><td class="num">5</td></tr>
+<tr><td>藝術</td><td>色彩、節奏、廟宇彩繪</td><td>中、高</td><td class="num">4</td></tr>
+<tr><td>綜合活動</td><td>情緒、合作、垃圾分類</td><td>中、高</td><td class="num">4</td></tr>
+<tr><td>資訊議題</td><td>密碼安全、網路禮儀、正確坐姿</td><td>全</td><td class="num">5</td></tr>
+<tr><td colspan="3"><b>第一版合計</b></td><td class="num"><b>45</b></td></tr>
+</table></div>
+
+<h3>每篇的資料格式</h3>
+<pre style="overflow-x:auto;background:var(--chip-bg);padding:10px;border-radius:4px;font-size:.85rem"><code style="background:none">{ id: "nat-m-03", lang: "zh", grade: "mid", domain: "自然科學",
+  curriculum: "INa-II-…",  // 對應的學習內容代碼，審稿時填
+  source: "原創",          // 或「公版：唐・王之渙」
+  title: "水的三種樣子",
+  text: "水遇冷會結成冰……",
+  polyphones: { 12: "ㄓㄠˊ" }  // 破音字位置與正確讀音
+}</code></pre>
+<p>英文題庫用同一格式；單字取自教育部國小基本字彙，句子原創。</p>
+</div></section>
+
+<section class="c5"><h2>4. 教學設計（照理論標準）</h2><div class="body">
+<div class="tbl"><table>
+<tr><th>理論</th><th>落在遊戲哪裡</th></tr>
+<tr><td>Gagné 九大教學事件</td><td>開局畫面講清楚本局目標（「正確率 90% 以上」）；倒數前顯示本篇領域與標題，喚起舊經驗；結算頁做回顧</td></tr>
+<tr><td>ARCS 注意</td><td>擂台開場動畫、攻擊特效、連擊數字跳動</td></tr>
+<tr><td>ARCS 相關</td><td>文章就是各科學過的主題，打完順便複習課內知識</td></tr>
+<tr><td>ARCS 信心</td><td>年級分級；房主可開「讓分」（較強的一方血量加倍或傷害減半），避免程度差太多一面倒</td></tr>
+<tr><td>ARCS 滿足</td><td>個人最佳紀錄、勝場徽章、首頁島嶼點亮徽章</td></tr>
+<tr><td>分層回饋（鷹架）</td><td>同一字錯第 1 次：字框紅閃；第 2 次：顯示該字注音（中）／按鍵位置（英）；第 3 次：顯示鍵盤圖並標出要按的鍵</td></tr>
+<tr><td>結算回顧</td><td>錯字清單（含注音）、CPM、正確率；可按「再練這幾個字」進對電腦練習</td></tr>
+</table></div>
+<div class="note">競賽型遊戲對程度弱的孩子壓力大。除了讓分，結算頁也把「自己這局進步多少」放得比輸贏大，輸的一方也看得到成就感。</div>
+</div></section>
+
+<section class="c6"><h2>5. 注音字型與中打的技術細節</h2><div class="body">
+<ul>
+  <li><b>字型</b>：沿用 unit22 的注音粉圓（Bpmf Huninn，SIL OFL）子集。<code>tools/subset-bpmf-font.py</code> 現在只抓 <code>.html</code> 裡的字、輸出檔名寫死成 xmas，要改成也讀 <code>.js</code>、檔名可指定</li>
+  <li><b>破音字</b>：注音字型靠 Unicode 異體字選擇器（IVS）切換讀音。題庫用 <code>polyphones</code> 標位置，顯示時自動補上選擇器；比對輸入前先把選擇器去掉，不然永遠判錯。實作前要先讀 bpmfvs 官方說明確認用法</li>
+  <li><b>字型大小</b>：45 篇大約 800–1200 個不重複字，子集估 0.6–1 MB；只在選中打時才載入，英打不受影響</li>
+  <li><b>輸入框</b>用一般字型，只有目標文章顯示注音，免得選字視窗跟注音疊在一起</li>
+  <li><b>裝置</b>：限電腦版（要實體鍵盤）；平板手機進來顯示提示</li>
+</ul>
+</div></section>
+
+<section class="c1"><h2>6. 里程碑</h2><div class="body">
+<div class="tbl"><table>
+<tr><th>#</th><th>里程碑</th><th>產出</th><th>誰動手</th></tr>
+<tr><td>M0</td><td>畫面設計三選一</td><td>frontend-design／ui-ux-pro-max／interface-design 各出一版對戰畫面 mockup</td><td>我出，你選</td></tr>
+<tr><td>M1</td><td>選文集 v1</td><td><code>passages.js</code> 45 篇＋英文題庫＋字表檢核報表</td><td>我寫初稿，你審</td></tr>
+<tr><td>M2</td><td>訊息格式＋Gemini 提示詞</td><td>WebSocket 訊息格式文件（房間人數不寫死、分房主／選手／觀戰角色，預留班級模式）、<code>unit23-gemini-prompt.md</code>（含 B 版 mockup、選文格式）</td><td>我</td></tr>
+<tr><td>M3</td><td>Gemini 產前端</td><td>agy 產遊戲頁（先接對電腦練習）；我跑驗收、開本機網址給你玩、修改意見回餵</td><td>Gemini＋我，你試玩</td></tr>
+<tr><td>M4</td><td>連線後端＋整合</td><td><code>duel-worker/</code>：開房、配對、計時、伺服器判血、單元測試；前端切成真連線、斷線重連、對手離開處理</td><td>我</td></tr>
+<tr><td>M5</td><td>注音字型</td><td>子集工具改版、破音字處理、目視檢查截圖</td><td>我</td></tr>
+<tr><td>M6</td><td>上島與文件</td><td><code>island/data.js</code>、<code>list.html</code> 卡片、README、SDD、首頁徽章迴圈加 23、重跑產圖</td><td>我</td></tr>
+<tr><td>M7</td><td>部署與實測</td><td>GitHub Pages＋<code>wrangler deploy</code>；Playwright 開兩個視窗自動對打；你在學校兩台電腦實測</td><td>我＋你</td></tr>
+</table></div>
+</div></section>
+
+<section class="c3"><h2>7. 風險</h2><div class="body">
+<div class="tbl"><table>
+<tr><th>風險</th><th>影響</th><th>對策</th></tr>
+<tr><td>學校網路擋 WebSocket</td><td>連不上就不能對戰</td><td>走 443 埠的 wss 通常會過；M4 後端一部署就先在學校測一次；連不上時自動提示改玩對電腦練習</td></tr>
+<tr><td>重叫 Gemini 會蓋掉手修</td><td>整合修正消失（unit22 踩過）</td><td>手修一律放在 <code>&lt;/style&gt;</code> 前的「整合修」區塊並記在專案檔，重產後補回</td></tr>
+<tr><td>Cloudflare 免費額度</td><td>一班同時開 15 間房會不會超量</td><td>動手前用 context7 查最新的 Durable Objects 免費方案限制；房間閒置就關</td></tr>
+<tr><td>注音輸入法差異</td><td>微軟注音、新注音、Chromebook 選字行為不同</td><td>沿用 unit12 已驗證的 compositionend 邏輯；M7 實測至少兩種輸入法</td></tr>
+<tr><td>破音字顯示錯</td><td>孩子學到錯的讀音</td><td>審稿報表列出所有破音字，你逐一確認</td></tr>
+</table></div>
+</div></section>
+
+<section class="c4"><h2>8. 未來評估：班級競賽（25–30 人）</h2><div class="body">
+<h3>三種玩法比較</h3>
+<div class="tbl"><table>
+<tr><th>玩法</th><th>怎麼進行</th><th class="num">一場時間</th><th>優點</th><th>問題</th></tr>
+<tr><td>全班大亂鬥</td><td>老師開班級擂台，全班同一篇文章同時打，投影幕即時排行</td><td class="num">約 3 分</td><td>最簡單、最熱鬧</td><td>30 人公開排名，後段的孩子每次都墊底，挫折感最大</td></tr>
+<tr><td>淘汰賽</td><td>兩兩對打，贏的晉級，共 5 輪</td><td class="num">約 15–20 分</td><td>直接沿用 1 對 1 擂台</td><td>第一輪輸的一半人之後都在等；奇數人要輪空</td></tr>
+<tr><td><b>分組隊伍賽（建議）</b></td><td>4–5 人一組共 6 組同時打；每人算「進步分」再加總成小組分</td><td class="num">約 3 分／輪</td><td>人人都在打；程度差的只要比自己上次好就替組上加分</td><td>老師要先分組；需要每個人的歷史紀錄</td></tr>
+</table></div>
+<h3>為什麼建議分組隊伍賽</h3>
+<p>這就是合作學習的 STAD（學生小組成就區分法）：小組分不看原始速度，看每個人<b>比自己基準進步多少</b>，所以打字快的孩子拿不到全部分數，慢的孩子也能替小組加分，會互相教。跟這次結算頁「進步比輸贏顯眼」是同一個方向。</p>
+<h3>技術上要多做的</h3>
+<ul>
+  <li><b>老師控制台</b>：開班級房、分組（自動平均或手動）、開始／暫停／結束、踢人、鎖房。投影用的排行頁<b>只顯示小組分</b>，不顯示個人排名</li>
+  <li><b>身分</b>：用座號＋暱稱，不收姓名。進步分的基準存在學生瀏覽器（電腦教室每台固定座位就有效）；要跨電腦就得存伺服器，會碰到個資，先不做</li>
+  <li><b>流量</b>：30 人每打一字都送進度太頻繁 → 伺服器每秒合併一次再廣播。Durable Objects 一間房撐 30 條連線沒問題，但免費方案每日額度要在動手前用最新文件算過</li>
+  <li><b>斷線</b>：小學生一定會按重新整理或關掉分頁 → 用座號重連後接回原本進度；老師端看得到誰斷線</li>
+  <li><b>學校網路</b>：30 台電腦從同一個對外 IP 連線，要確認 Cloudflare 不會當成攻擊擋掉（M4 學校實測時一起測）</li>
+</ul>
+<h3>現在就要做的準備（不加工時）</h3>
+<p>M2 寫連線訊息格式時，房間人數不要寫死成 2，角色分成房主／選手／觀戰（老師），分數由伺服器算。這樣 1 對 1 只是「2 人房」，之後加班級模式不用重寫後端。</p>
+</div></section>
+
+<section class="c2"><h2>9. 決定紀錄</h2><div class="body">
+<p>11-19 使用者回「照建議」：名稱「打字擂台」、資料夾 <code>unit23-typing-duel</code>、預設 90 秒、做對電腦練習；前端走 Gemini。</p>
+<p>11-19 M0 定案：<b>B 版（卡通格鬥擂台）</b>，<a href="https://claude.ai/artifact/3gt3DiaXFD4qHPmugd9F94">三版比較頁</a>。帶進 Gemini 規格時要改：第 2 層提示泡泡不能蓋到文章字（改成文章下方提示條，取 C 版做法）；已打字的綠底塊調淡。</p>
+</div></section>
+</div>

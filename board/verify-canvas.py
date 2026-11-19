@@ -64,12 +64,15 @@ allowed_host = ('fonts.googleapis.com', 'fonts.gstatic.com')
 # 整合階段才加的四區共用證書（board/ 底下的本地檔）。Canvas 交件時不該出現，
 # 但整合後的檔案要能重跑這支腳本，所以放行。
 allowed_local = ('certificate.js', 'certificate.css')
+# unit23 打字擂台：遊戲邏輯刻意拆在同資料夾的 JS（Claude 維護），Gemini 產的頁面只載入它們
+UNIT_LOCAL_JS = {'23': ('passages.js', 'duel-rules.js', 'duel-core.js', 'duel-net.js')}
 
 
 def is_allowed(url):
     # 單元模式另外放行整合階段放進同資料夾的子集字型（unit22 注音粉圓 fonts/*.woff2）
     local_font = bool(UNIT) and url.startswith('fonts/') and url.endswith('.woff2')
-    return any(h in url for h in allowed_host) or url in allowed_local or local_font
+    unit_js = url in UNIT_LOCAL_JS.get(UNIT, ())
+    return any(h in url for h in allowed_host) or url in allowed_local or local_font or unit_js
 
 
 bad_script = [s for s in ext_script if not is_allowed(s)]

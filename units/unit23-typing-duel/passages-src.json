@@ -1,0 +1,35 @@
+{
+  "_說明": "打字擂台選文原稿。字後面加 [n] 指定第 n 個讀音（破音字）。改完跑 tools/build-passages.py 產生 passages.js。grade：low=1-2 年級、mid=3-4、high=5-6。curriculum 填課綱學習內容代碼，審稿時補。這 6 篇是 M2 的種子題，正式 45 篇在 M1 補齊。",
+  "passages": [
+    {
+      "id": "life-l-01", "lang": "zh", "grade": "low", "domain": "生活課程",
+      "curriculum": "", "source": "原創", "title": "早上的準備",
+      "text": "早上起床，我先刷牙洗臉，再吃早餐。媽媽[2]說，吃飽才有力氣上學。"
+    },
+    {
+      "id": "nat-m-01", "lang": "zh", "grade": "mid", "domain": "自然科學",
+      "curriculum": "", "source": "原創", "title": "水的三態",
+      "text": "水有三種樣子[2]。天氣很冷時，水會結成冰。太陽照在水面上，水會慢慢變成水蒸氣。水蒸氣遇到冷空氣，又會變回小水珠，形成雲和雨。"
+    },
+    {
+      "id": "it-h-01", "lang": "zh", "grade": "high", "domain": "資訊議題",
+      "curriculum": "", "source": "原創", "title": "設一個好密碼",
+      "text": "設定密碼時，不要用生日或電話號碼，因為別人很容易猜到。好的密碼要夠長，最好混合英文字母和數字，而且不能告訴同學。如果覺得[2]密碼可能被偷看，就要馬上更[2]換。"
+    },
+    {
+      "id": "en-l-01", "lang": "en", "grade": "low", "domain": "英語文",
+      "curriculum": "", "source": "原創", "title": "Short Words",
+      "text": "cat dog sun red big run fun hat pig cup"
+    },
+    {
+      "id": "en-m-01", "lang": "en", "grade": "mid", "domain": "英語文",
+      "curriculum": "", "source": "原創", "title": "My Dog",
+      "text": "I have a dog. My dog is small. He can run fast and jump high."
+    },
+    {
+      "id": "en-h-01", "lang": "en", "grade": "high", "domain": "健康與體育",
+      "curriculum": "", "source": "原創", "title": "Clean Hands",
+      "text": "Wash your hands before you eat. Use soap and water for twenty seconds. Clean hands keep you healthy."
+    }
+  ]
+}
