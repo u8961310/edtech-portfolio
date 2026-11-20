@@ -1,975 +1,1436 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>魔法字彈：極速覺醒！</title>
-    <!-- 引入 Tailwind CSS 與 Google Playful 字体 -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Noto Sans TC', 'Fredoka One', sans-serif;
-            background: radial-gradient(circle, #1e1b4b 0%, #0f172a 100%);
-            overflow: hidden;
-            user-select: none;
-        }
-        /* 魔法發光特效 */
-        .glow-text {
-            text-shadow: 0 0 10px rgba(168, 85, 247, 0.8), 0 0 20px rgba(168, 85, 247, 0.4);
-        }
-        .glow-border {
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
-        }
-        /* 獎狀列印專用樣式 */
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            #certificate-print-area, #certificate-print-area * {
-                visibility: visible;
-            }
-            #certificate-print-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                background: #fef3c7 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-        }
-    </style>
-</head>
-<body class="h-screen w-screen flex items-center justify-center text-white select-none">
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>魔法字彈極速覺醒 - 打字島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Fredoka:wght@500;600&display=swap">
+  <link rel="stylesheet" href="../../assets/css/typing-island.css">
+  <style>
+    /* ============================================================
+       魔法字彈極速覺醒 — 繪本剪紙風場景樣式（全部以 sc- 開頭）
+       ============================================================ */
+    .sc-stage {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      background: linear-gradient(180deg, var(--sky-soft) 0%, #EAF5FB 42%, var(--card) 80%, var(--paper) 100%);
+      font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+    }
 
-<script>
-    // 遊戲狀態與設定
-    const state = {
-        gameState: 'welcome', // welcome, playing, gameover, victory
-        playerName: '',
-        score: 0,
-        passingScore: 1000,
-        gameDuration: 600, // 預設 10 分鐘 (600秒)
-        timeLeft: 600,
-        combo: 0,
-        maxCombo: 0,
-        hp: 100,
-        activeWords: [],
-        currentInput: '',
-        activeTargetId: null, // 當前正在鎖定打字的單字 ID
-        lastSpawnTime: 0,
-        spawnInterval: 2500, // 生成怪獸間隔 (ms)
-        difficultyMultiplier: 1.0,
-        muted: false
+    /* 暫停時凍結所有 CSS 動畫與過渡，確保場景完全靜止 */
+    .sc-stage.sc-paused,
+    .sc-stage.sc-paused * {
+      animation-play-state: paused !important;
+      transition: none !important;
+    }
+
+    /* 繪本暖紙微紋理（不搶前景字） */
+    .sc-paper-grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(rgba(94, 72, 56, 0.045) 1px, transparent 1px),
+        radial-gradient(rgba(201, 166, 107, 0.06) 1px, transparent 1px);
+      background-size: 22px 22px, 31px 31px;
+      background-position: 0 0, 11px 13px;
+    }
+
+    /* 遠景剪紙層：魔法學院尖塔、雲朵、星星貼紙 */
+    .sc-bg-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .sc-bg-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* 頂端兩側三角彩旗（柔和微風輕擺，週期 6 秒，遠低於 3Hz） */
+    .sc-bunting-left,
+    .sc-bunting-right {
+      position: absolute;
+      top: -2px;
+      width: 24%;
+      max-width: 300px;
+      min-width: 150px;
+      height: 54px;
+      pointer-events: none;
+      transform-origin: top center;
+      animation: sc-bunting-sway 6s ease-in-out infinite alternate;
+    }
+    .sc-bunting-left { left: -4px; }
+    .sc-bunting-right { right: -4px; animation-delay: -2.2s; }
+
+    @keyframes sc-bunting-sway {
+      from { transform: rotate(-1.1deg); }
+      to   { transform: rotate(1.1deg); }
+    }
+
+    /* 魔力覺醒狀態小紙貼紙徽章（放在左上彩旗下，不擋泡泡） */
+    .sc-awaken-badge {
+      position: absolute;
+      left: 14px;
+      bottom: 10px;   /* 放欄杆區：上方是泡泡掉落區，放上面會蓋住要打的字 */
+      z-index: 16;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 10px 14px 12px 8px;
+      background: var(--butter-soft);
+      border: 2px solid var(--kraft-2);
+      color: var(--ink-1);
+      font-size: 15px;
+      font-weight: 700;
+      box-shadow: 0 3px 0 rgba(94, 72, 56, 0.16);
+      opacity: 0;
+      transform: translateY(-6px);
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .sc-stage.sc-awakened .sc-awaken-badge {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .sc-awaken-bar {
+      width: 48px;
+      height: 7px;
+      border-radius: 99px;
+      background: rgba(94, 72, 56, 0.16);
+      overflow: hidden;
+    }
+    .sc-awaken-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: var(--peach-dk);
+      border-radius: 99px;
+      transform-origin: left center;
+    }
+
+    /* 陽台欄杆（底線＝扣愛心線） */
+    .sc-balcony {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+    .sc-rail-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      border-top: 3px dashed var(--berry-dk);
+    }
+    .sc-rail-tag {
+      position: absolute;
+      right: 14px;
+      top: -27px;
+      padding: 2px 10px;
+      border-radius: 8px 10px 6px 8px;
+      background: rgba(255, 248, 230, 0.92);
+      border: 1.5px solid var(--kraft-2);
+      color: var(--berry-dk);
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 2px 0 rgba(94, 72, 56, 0.1);
+      white-space: nowrap;
+    }
+    .sc-rail-top {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 2px;
+      height: 11px;
+      background: var(--kraft);
+      border-top: 2px solid var(--ink-2);
+      border-bottom: 2px solid var(--ink-2);
+      box-shadow: inset 0 2px 0 rgba(255, 248, 230, 0.55);
+    }
+    .sc-rail-body {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 13px;
+      bottom: 0;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0px,
+          transparent 34px,
+          var(--kraft) 34px,
+          var(--kraft) 46px,
+          var(--kraft-2) 46px,
+          var(--kraft-2) 49px,
+          transparent 49px,
+          transparent 66px
+        ),
+        linear-gradient(180deg, rgba(247, 232, 203, 0.82) 0%, var(--card-2) 60%, var(--kraft) 100%);
+      border-bottom: 4px solid var(--kraft-2);
+    }
+
+    /* 欄杆上的可愛墨漬層（回合結束清除） */
+    .sc-splat-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 7;
+      pointer-events: none;
+    }
+    .sc-splat {
+      position: absolute;
+      width: 46px;
+      height: 30px;
+      margin-left: -23px;
+      margin-top: -10px;
+      pointer-events: none;
+    }
+
+    /* 小狐狸魔法師（z-index 低於泡泡，絕不遮擋字） */
+    .sc-fox-wrap {
+      position: absolute;
+      left: 0;
+      bottom: 2px;
+      width: 98px;
+      height: 102px;
+      margin-left: -49px;
+      z-index: 6;
+      pointer-events: none;
+      will-change: transform;
+    }
+    .sc-fox-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+    /* 帽子柔和光暈：覺醒時平順亮起，無高頻閃爍 */
+    .sc-hat-glow {
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    .sc-stage.sc-awakened .sc-hat-glow {
+      opacity: 0.92;
+      animation: sc-glow-breathe 2.6s ease-in-out infinite alternate;
+    }
+    @keyframes sc-glow-breathe {
+      from { opacity: 0.65; }
+      to   { opacity: 0.95; }
+    }
+
+    /* 小狐狸覺醒對話框（「魔力覺醒！」顯示 2 秒） */
+    .sc-fox-speech {
+      position: absolute;
+      bottom: 62px;
+      left: 84px;
+      z-index: 15;
+      padding: 5px 12px;
+      border-radius: 12px 14px 14px 4px;
+      background: var(--butter-soft);
+      border: 2.5px solid var(--ink-1);
+      color: var(--ink-1);
+      font-size: 16px;
+      font-weight: 900;
+      white-space: nowrap;
+      box-shadow: 0 3px 0 rgba(59, 42, 32, 0.16);
+      opacity: 0;
+      transform: scale(0.9);
+      pointer-events: none;
+    }
+    .sc-fox-speech.sc-speech-left {
+      left: auto;
+      right: 84px;
+      border-radius: 14px 12px 4px 14px;
+    }
+    .sc-fox-speech.sc-speech-show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* 調皮墨水泡泡層 */
+    .sc-bubble-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* 單顆墨水泡泡：高明度粉嫩柔和底＋深咖啡字（對比 > 10:1） */
+    .sc-bubble {
+      position: absolute;
+      left: 0;
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 52% 48% 50% 50% / 50% 52% 48% 50%;
+      border: 3px solid var(--kraft-2);
+      background: rgba(255, 248, 230, 0.92);
+      box-shadow:
+        inset -6px -8px 0 rgba(201, 166, 107, 0.14),
+        inset 4px 5px 0 rgba(255, 255, 255, 0.85),
+        0 4px 0 rgba(94, 72, 56, 0.14);
+      color: var(--ink-1);
+      opacity: 0.88;
+      will-change: transform, opacity;
+    }
+
+    /* 泡泡反光高光點（繪本水彩質感） */
+    .sc-bubble::before {
+      content: '';
+      position: absolute;
+      left: 16%;
+      top: 11%;
+      width: 18px;
+      height: 9px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.82);
+      transform: rotate(-24deg);
+      pointer-events: none;
+    }
+    .sc-bubble::after {
+      content: '';
+      position: absolute;
+      left: 11%;
+      top: 24%;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.78);
+      pointer-events: none;
+    }
+
+    /* 柔和泡泡色盤（皆為極淺柔和底，保證深色字對比 ≥ 10:1） */
+    .sc-bubble-tone-0 { background: rgba(230, 245, 253, 0.94); border-color: #7BB4D6; }
+    .sc-bubble-tone-1 { background: rgba(255, 238, 226, 0.94); border-color: #E3A080; }
+    .sc-bubble-tone-2 { background: rgba(232, 247, 228, 0.94); border-color: #8BC480; }
+    .sc-bubble-tone-3 { background: rgba(255, 246, 209, 0.94); border-color: #D9B75E; }
+    .sc-bubble-tone-4 { background: rgba(244, 236, 252, 0.94); border-color: #B49BD4; }
+
+    /* 目前要打的目標：天藍粗框＋天藍虛線瞄準圈，最清晰顯眼 */
+    .sc-bubble.sc-bubble-active {
+      z-index: 12;
+      opacity: 1;
+      background: var(--card);
+      border: 4px solid var(--sky-dk);
+      outline: 3.5px dashed var(--sky-dk);
+      outline-offset: 6px;
+      box-shadow:
+        inset 0 -6px 0 rgba(31, 107, 156, 0.1),
+        0 6px 0 rgba(31, 107, 156, 0.18);
+    }
+
+    /* 覺醒期間第二個泡泡的暖金預告樣式（純視覺提示下一個，對比 > 11:1） */
+    .sc-bubble.sc-bubble-gold {
+      z-index: 11;
+      opacity: 0.98;
+      background: var(--butter-soft);
+      border: 3.5px solid #C88A1E;
+      box-shadow:
+        0 0 0 4px rgba(255, 217, 102, 0.55),
+        0 5px 0 rgba(168, 114, 24, 0.22);
+    }
+    .sc-gold-tag {
+      position: absolute;
+      top: -16px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 1px 8px;
+      border-radius: 99px;
+      background: var(--butter);
+      border: 1.5px solid var(--ink-1);
+      color: var(--ink-1);
+      font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1.3;
+      white-space: nowrap;
+      display: none;
+    }
+    .sc-bubble.sc-bubble-gold .sc-gold-tag {
+      display: block;
+    }
+
+    /* 打錯時的溫和標示（紅框＋✗ 徽章，不閃整場） */
+    .sc-bubble.sc-bubble-miss {
+      border-color: var(--berry-dk);
+      background: #FFF0EE;
+      outline-color: var(--berry);
+    }
+    .sc-miss-badge {
+      position: absolute;
+      top: -12px;
+      right: -10px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--berry);
+      border: 2px solid var(--card);
+      color: #FFFFFF;
+      font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 0 rgba(179, 38, 43, 0.35);
+    }
+    .sc-bubble.sc-bubble-miss .sc-miss-badge {
+      display: flex;
+    }
+
+    /* 泡泡內的字：中打 var(--f-zh) ≥ 48px；英打 Fredoka/Consolas ≥ 44px */
+    .sc-bubble-char {
+      display: inline-block;
+      line-height: 1;
+      color: var(--ink-1);
+      white-space: nowrap;
+      text-align: center;
+      pointer-events: none;
+    }
+    .sc-stage[data-sc-lang="zh"] .sc-bubble-char {
+      font-family: var(--f-zh);
+      font-weight: 400;
+    }
+    .sc-stage[data-sc-lang="zh"][data-sc-tier="t1"] .sc-bubble-char { font-size: 54px; }
+    .sc-stage[data-sc-lang="zh"][data-sc-tier="t2"] .sc-bubble-char { font-size: 50px; }
+    .sc-stage[data-sc-lang="zh"][data-sc-tier="t3"] .sc-bubble-char { font-size: 48px; }
+
+    .sc-stage[data-sc-lang="en"] .sc-bubble-char {
+      font-family: 'Fredoka', Consolas, monospace;
+      font-weight: 600;
+      text-transform: none;
+    }
+    .sc-stage[data-sc-lang="en"][data-sc-tier="t1"] .sc-bubble-char { font-size: 50px; }
+    .sc-stage[data-sc-lang="en"][data-sc-tier="t2"] .sc-bubble-char { font-size: 48px; }
+    .sc-stage[data-sc-lang="en"][data-sc-tier="t3"] .sc-bubble-char { font-size: 46px; }
+
+    /* 特效層：星星字彈、花瓣星星粒子、+1 飄字（皆不擋泡泡互動） */
+    .sc-fx-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 14;
+      pointer-events: none;
+    }
+    .sc-shot {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 26px;
+      height: 26px;
+      margin-left: -13px;
+      margin-top: -13px;
+      will-change: transform;
+    }
+    .sc-particle {
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+    .sc-pop-text {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform: translate(-50%, -50%);
+      padding: 2px 9px;
+      border-radius: 99px;
+      background: rgba(255, 248, 230, 0.94);
+      border: 2px solid var(--leaf-dk);
+      color: var(--leaf-dk);
+      font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+      font-size: 19px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 2px 0 rgba(45, 122, 56, 0.18);
+      pointer-events: none;
+    }
+
+    /* 尊重使用者「減少動態效果」偏好設定 */
+    @media (prefers-reduced-motion: reduce) {
+      .sc-bunting-left,
+      .sc-bunting-right,
+      .sc-stage.sc-awakened .sc-hat-glow {
+        animation: none !important;
+      }
+      .sc-awaken-badge,
+      .sc-hat-glow {
+        transition: none !important;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/typing/passages.js"></script>
+  <script src="../../assets/typing/en-items.js"></script>
+  <script src="../../assets/js/typing-core.js"></script>
+  <script src="../../assets/js/typing-ui.js"></script>
+  <script>
+    /* ============================================================
+       本關設定與集中常數 SCENE_CONFIG
+       ============================================================ */
+    var SCENE_CONFIG = {
+      // 依難度（tier）設定同畫面目標數量：初階 3、進階 4、高階 5
+      bubbleCount: { t1: 3, t2: 4, t3: 5 },
+      // 目標從頂端飄到陽台欄杆線所需秒數：初階 >= 14 秒、進階 10 秒、高階 7 秒
+      fallSeconds: { t1: 15, t2: 10, t3: 7 },
+      // 泡泡外觀尺寸（寬 × 高，px），確保容納 48px 以上國字＋注音或 44px 以上英數
+      bubbleSize: {
+        t1: { w: 108, h: 94 },
+        t2: { w: 102, h: 90 },
+        t3: { w: 98, h: 86 }
+      },
+      // 尚未輪到的目標速度比例與最大前進距離（最多前進全程 1/3）
+      waitingSpeedRatio: 1 / 3,
+      waitingMaxProgress: 1 / 3,
+      // 單幀時間差上限（秒），避免切分頁回來大跳躍
+      maxDt: 0.1,
+      // 陽台欄杆高度佔場景高度比例與最小值
+      railHeightRatio: 0.23,
+      railMinHeight: 58,
+      railMaxHeight: 80,
+      // 覺醒機制：每 10 連擊觸發，持續 6 秒，台詞顯示 2 秒
+      awakenEveryCombo: 10,
+      awakenDuration: 6.0,
+      awakenSpeechDuration: 2.0,
+      // 特效與回饋時間（秒）
+      shotDuration: 0.22,
+      goldArcDuration: 0.26,
+      popTextDuration: 0.72,
+      missEffectDuration: 0.50,    // 0.5 秒內僅做 1 次柔緩左右來回（2 次/秒，低於 3 次/秒上限）
+      foxJumpDuration: 0.30,
+      foxMoveSpeed: 9.5,           // 小狐狸跟隨目標的平滑速度係數
+      maxSplats: 8,                // 欄杆上最多保留的墨漬數量
+      // 泡泡柔和色盤數量（對應 CSS .sc-bubble-tone-0..4）
+      bubbleToneCount: 5,
+      // 花瓣與星星粒子色票（取自 system.md 色票）
+      particleColors: ['#FF9E7A', '#FFD966', '#7CCB6F', '#1F6B9C', '#E4CC9C'],
+      // 墨漬可愛深色（取自 system.md 深色系）
+      splatColors: ['#3B2A20', '#1F6B9C', '#5E4838']
     };
 
-    // 音效合成器 (Web Audio API)
-    let audioCtx = null;
-
-    function initAudio() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-    }
-
-    function playSound(type) {
-        if (state.muted) return;
-        initAudio();
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-
-        const osc = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        osc.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-
-        const now = audioCtx.currentTime;
-
-        if (type === 'shoot') {
-            // 魔法射擊聲 (快速向上頻率掃描)
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(300, now);
-            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
-            gainNode.gain.setValueAtTime(0.15, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-            osc.start(now);
-            osc.stop(now + 0.15);
-        } else if (type === 'hit') {
-            // 打倒怪獸爆炸聲
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(150, now);
-            osc.frequency.exponentialRampToValueAtTime(40, now + 0.3);
-            gainNode.gain.setValueAtTime(0.2, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-            osc.start(now);
-            osc.stop(now + 0.3);
-        } else if (type === 'combo') {
-            // Combo 連擊音效 (清脆的雙音階)
-            osc.type = 'sine';
-            const freq = 523.25 + (state.combo * 20); // 隨 combo 提高音高
-            osc.frequency.setValueAtTime(freq, now);
-            osc.frequency.setValueAtTime(freq * 1.5, now + 0.08);
-            gainNode.gain.setValueAtTime(0.1, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-            osc.start(now);
-            osc.stop(now + 0.2);
-        } else if (type === 'hurt') {
-            // 城堡受傷
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(180, now);
-            osc.frequency.linearRampToValueAtTime(60, now + 0.4);
-            gainNode.gain.setValueAtTime(0.3, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-            osc.start(now);
-            osc.stop(now + 0.4);
-        } else if (type === 'victory') {
-            // 勝利凱旋號角
-            const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
-            notes.forEach((freq, idx) => {
-                const noteOsc = audioCtx.createOscillator();
-                const noteGain = audioCtx.createGain();
-                noteOsc.connect(noteGain);
-                noteGain.connect(audioCtx.destination);
-                noteOsc.type = 'sine';
-                noteOsc.frequency.setValueAtTime(freq, now + idx * 0.12);
-                noteGain.gain.setValueAtTime(0.15, now + idx * 0.12);
-                noteGain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.3);
-                noteOsc.start(now + idx * 0.12);
-                noteOsc.stop(now + idx * 0.12 + 0.4);
-            });
-        } else if (type === 'defeat') {
-            // 失敗哀傷旋律
-            const notes = [293.66, 277.18, 261.63, 220.00];
-            notes.forEach((freq, idx) => {
-                const noteOsc = audioCtx.createOscillator();
-                const noteGain = audioCtx.createGain();
-                noteOsc.connect(noteGain);
-                noteGain.connect(audioCtx.destination);
-                noteOsc.type = 'triangle';
-                noteOsc.frequency.setValueAtTime(freq, now + idx * 0.18);
-                noteGain.gain.setValueAtTime(0.15, now + idx * 0.18);
-                noteGain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.18 + 0.4);
-                noteOsc.start(now + idx * 0.18);
-                noteOsc.stop(now + idx * 0.18 + 0.5);
-            });
-        }
-    }
-</script>
-
-<script>
-    // 適合三年級國小學生的打字字庫區
-    const WORD_POOLS = {
-        // 階段一：單一基礎英文字母鍵 (鍵盤基本功)
-        stage1: ['A', 'S', 'D', 'F', 'J', 'K', 'L', 'G', 'H', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'C', 'V', 'B', 'N', 'M'],
-        // 階段二：簡單的 3 到 4 字母生活英文單字
-        stage2: ['CAT', 'DOG', 'SUN', 'BOY', 'GIRL', 'BOOK', 'PLAY', 'RUN', 'JUMP', 'CUP', 'RED', 'BLUE', 'GOOD', 'LOVE', 'STAR', 'FISH', 'TREE', 'BIRD', 'MILK', 'CAKE'],
-        // 階段三：酷炫魔法咒語與鼓勵句子
-        stage3: ['MAGIC', 'WAND', 'FIRE', 'WATER', 'POWER', 'SPELL', 'HAPPY', 'HELLO', 'SMILE', 'FRIEND', 'DREAM', 'CHAMP', 'GREAT', 'AWESOME', 'SUPER', 'WINNER', 'SWEET']
-    };
-
-    // 怪獸外觀資料庫 (Emoji 與色彩主題)
-    const MONSTER_TEMPLATES = [
-        { emoji: '👾', bg: 'bg-purple-600', border: 'border-purple-400', name: '果凍小惡魔' },
-        { emoji: 'slime', bg: 'bg-emerald-600', border: 'border-emerald-400', name: 'Ｑ彈綠史萊姆' },
-        { emoji: '👻', bg: 'bg-cyan-600', border: 'border-cyan-400', name: '搗蛋幽靈' },
-        { emoji: '🐉', bg: 'bg-rose-600', border: 'border-rose-400', name: '迷你熔岩龍' },
-        { emoji: '🦉', bg: 'bg-amber-600', border: 'border-amber-400', name: '智慧魔法鴞' }
-    ];
-
-    function getRandomWord() {
-        // 根據剩餘時間百分比來分配掉落難度
-        const elapsedPercent = (state.gameDuration - state.timeLeft) / state.gameDuration;
-        let pool = [];
-        
-        if (elapsedPercent < 0.3) {
-            // 前 30% 時間：主要練習單字母
-            pool = WORD_POOLS.stage1;
-        } else if (elapsedPercent < 0.7) {
-            // 中間 40% 時間：單字與字母混合
-            pool = Math.random() < 0.4 ? WORD_POOLS.stage1 : WORD_POOLS.stage2;
-        } else {
-            // 最後 30% 時間：中階單字與魔法詞彙混合
-            pool = Math.random() < 0.3 ? WORD_POOLS.stage2 : WORD_POOLS.stage3;
-        }
-
-        const randomIndex = Math.floor(Math.random() * pool.length);
-        return pool[randomIndex];
-    }
-</script>
-
-<!-- 遊戲主容器 -->
-<div class="w-full max-w-4xl h-[95vh] flex flex-col justify-between p-4 relative z-10 bg-slate-900/80 backdrop-blur-md rounded-3xl border-2 border-indigo-500/30 shadow-2xl shadow-indigo-500/10">
-
-    <!-- 1. 頂部狀態列 -->
-    <header class="flex justify-between items-center bg-slate-800/80 p-4 rounded-2xl border border-slate-700/50">
-        <!-- 魔法師資訊 -->
-        <div class="flex items-center space-x-3">
-            <div class="relative">
-                <span class="text-4xl">🧙‍♂️</span>
-                <span id="player-badge" class="absolute -bottom-1 -right-1 text-xs bg-purple-600 px-1.5 py-0.5 rounded-full font-bold">學徒</span>
-            </div>
-            <div>
-                <h2 id="hud-name" class="font-bold text-lg text-indigo-300">新手魔法師</h2>
-                <!-- HP 條 -->
-                <div class="flex items-center space-x-2 w-48 mt-1">
-                    <span class="text-xs font-semibold text-rose-400">城堡HP</span>
-                    <div class="w-full bg-slate-700 h-3 rounded-full overflow-hidden">
-                        <div id="hp-bar" class="bg-gradient-to-r from-rose-500 to-red-600 h-full transition-all duration-300" style="width: 100%"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 計時器與關卡資訊 -->
-        <div class="text-center">
-            <div id="stage-badge" class="text-xs uppercase tracking-wider text-amber-400 font-extrabold bg-amber-950/40 px-3 py-1 rounded-full border border-amber-500/30">
-                微光森林 (階段 1)
-            </div>
-            <div id="timer-display" class="text-4xl font-extrabold text-white font-mono mt-1 tracking-wider">
-                10:00
-            </div>
-        </div>
-
-        <!-- 分數與連擊數 -->
-        <div class="text-right">
-            <div class="text-xs text-slate-400 font-semibold">神聖積分 / 及格門檻</div>
-            <div class="text-3xl font-extrabold text-emerald-400 font-mono">
-                <span id="score-display">0</span><span class="text-slate-500 text-lg"> / 1000</span>
-            </div>
-            <!-- Combo 浮動框 -->
-            <div id="combo-container" class="opacity-0 transition-all duration-200 mt-1 flex items-center justify-end space-x-1">
-                <span class="text-xs text-amber-400 font-bold uppercase animate-pulse">Combo!</span>
-                <span id="combo-display" class="text-2xl font-black text-amber-500 italic">0</span>
-            </div>
-        </div>
-    </header>
-
-    <!-- 2. 核心遊戲戰鬥視窗 (Canvas / DOM 物件掉落區) -->
-    <main id="game-arena" class="relative flex-1 bg-slate-950/80 rounded-2xl my-4 border border-indigo-950 overflow-hidden shadow-inner flex flex-col justify-between">
-        
-        <!-- 背景星空與防護罩魔法裝飾 -->
-        <div class="absolute inset-0 pointer-events-none opacity-25">
-            <div class="absolute top-10 left-1/4 w-2 h-2 bg-blue-400 rounded-full animate-ping"></div>
-            <div class="absolute top-1/2 left-2/3 w-3 h-3 bg-purple-400 rounded-full animate-ping"></div>
-            <div class="absolute bottom-20 left-10 w-2.5 h-2.5 bg-yellow-400 rounded-full animate-ping"></div>
-            <!-- 防線特效 -->
-            <div class="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-rose-500/40 to-transparent border-t border-rose-500/50"></div>
-        </div>
-
-        <!-- 魔法守護塔 (下方防禦點) -->
-        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center z-10 pointer-events-none">
-            <div class="text-5xl animate-bounce">🏰</div>
-            <div class="text-xs bg-indigo-950/90 text-indigo-300 px-2.5 py-0.5 rounded-full border border-indigo-500/40 mt-1 shadow-md">
-                學術魔法防護罩
-            </div>
-        </div>
-
-        <!-- 動態漂浮怪獸渲染區域 -->
-        <div id="monsters-layer" class="absolute inset-0"></div>
-
-        <!-- 即時輸入提示特效與反饋 -->
-        <div class="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center">
-            <!-- 擊鍵波紋與輸入顯示 -->
-            <div id="typing-echo" class="text-3xl font-extrabold text-purple-400 tracking-wider h-10 glow-text scale-100 transition-all"></div>
-        </div>
-    </main>
-
-    <!-- 3. 底部操作面板 -->
-    <footer class="flex justify-between items-center bg-slate-800/50 px-5 py-3 rounded-2xl border border-slate-700/30 text-sm">
-        <div class="flex items-center space-x-4">
-            <div class="flex items-center space-x-1 text-slate-400">
-                <span class="text-lg">⌨️</span>
-                <span>打字即可發射魔法！無需手動點選滑鼠。</span>
-            </div>
-        </div>
-        
-        <!-- 功能按鈕組 -->
-        <div class="flex items-center space-x-3">
-            <button onclick="toggleMute()" id="mute-btn" class="p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-slate-300 transition-all">
-                🔊 音效開
-            </button>
-            <button onclick="pauseGame()" id="pause-btn" class="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-slate-300 transition-all font-semibold">
-                ⏸ 暫停
-            </button>
-            <button onclick="showInstructions()" class="px-4 py-2 bg-indigo-600/50 hover:bg-indigo-600 rounded-lg text-indigo-100 transition-all font-semibold">
-                ❓ 玩法說明
-            </button>
-        </div>
-    </footer>
-</div>
-
-<!-- ================= 浮層面板組 ================= -->
-
-<!-- 1. 歡迎與姓名設定面板 -->
-<div id="panel-welcome" class="fixed inset-0 z-50 bg-slate-950/95 flex items-center justify-center p-4">
-    <div class="bg-gradient-to-b from-indigo-900 to-slate-900 p-8 rounded-3xl border-2 border-indigo-500 glow-border max-w-md w-full text-center space-y-6 relative overflow-hidden">
-        <!-- 背景流星裝飾 -->
-        <div class="absolute -top-10 -right-10 w-40 h-40 bg-purple-600/20 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl"></div>
-
-        <div class="space-y-2">
-            <div class="text-6xl animate-bounce">⚡🧙‍♂️🔮</div>
-            <h1 class="text-3xl font-black tracking-wider bg-gradient-to-r from-amber-400 via-pink-400 to-indigo-400 bg-clip-text text-transparent">
-                魔法字彈：極速覺醒
-            </h1>
-            <p class="text-sm text-indigo-200">國小三年級專屬 RPG 趣味打字修練</p>
-        </div>
-
-        <!-- 姓名輸入 -->
-        <div class="space-y-2 text-left">
-            <label class="block text-sm font-bold text-indigo-300">輸入魔法師的名字 (印在獎狀上喔！)：</label>
-            <input type="text" id="input-player-name" placeholder="小布丁 / 魔法小王子" maxlength="10" 
-                   class="w-full px-4 py-3 rounded-xl bg-slate-800 border-2 border-indigo-500/50 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 font-bold text-center text-lg transition-all">
-        </div>
-
-        <!-- 時間試煉選擇 -->
-        <div class="space-y-2 text-left">
-            <label class="block text-sm font-bold text-indigo-300">選擇魔法修練模式：</label>
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="selectTimeMode(600)" id="mode-600" class="py-3 px-4 rounded-xl border-2 border-indigo-500 bg-indigo-950/80 font-bold text-indigo-200 hover:bg-indigo-900/60 transition-all text-center">
-                    🏰 10分鐘標準試煉<br><span class="text-xs font-normal text-slate-400">(學校練習首選)</span>
-                </button>
-                <button onclick="selectTimeMode(120)" id="mode-120" class="py-3 px-4 rounded-xl border-2 border-slate-700 bg-slate-800 font-bold text-slate-300 hover:bg-slate-700/60 transition-all text-center">
-                    🚀 2分鐘快速體驗<br><span class="text-xs font-normal text-slate-400">(快速展示模式)</span>
-                </button>
-            </div>
-        </div>
-
-        <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xl rounded-xl shadow-lg shadow-emerald-900/40 transform active:scale-95 transition-all">
-            ✨ 開啟傳送門，出發！
-        </button>
-
-        <p class="text-xs text-slate-400">貼心提醒：及格門檻為 <span class="text-emerald-400 font-bold">1000 分</span>，達標就能獲得皇家認證獎狀！</p>
-    </div>
-</div>
-
-<!-- 2. 暫停面板 -->
-<div id="panel-pause" class="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center">
-    <div class="bg-slate-900 border-2 border-slate-700 p-8 rounded-3xl max-w-sm w-full text-center space-y-6">
-        <h2 class="text-3xl font-bold text-indigo-400">魔法凍結中 ❄️</h2>
-        <p class="text-slate-300">戰場上的魔獸已暫時被冰凍，準備好了隨時可以重新施展魔法！</p>
-        <div class="space-y-3">
-            <button onclick="resumeGame()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold transition-all">
-                ▶ 繼續修練
-            </button>
-            <button onclick="quitToWelcome()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold transition-all">
-                🚪 放棄本次挑戰 (返回首頁)
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- 3. 玩法說明面板 -->
-<div id="panel-instructions" class="fixed inset-0 z-40 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border-2 border-indigo-500/50 p-6 rounded-3xl max-w-lg w-full space-y-4">
-        <h2 class="text-2xl font-black text-amber-400 text-center">🔮 魔法修練指南 (適合三年級)</h2>
-        <div class="space-y-3 text-sm text-slate-300 leading-relaxed overflow-y-auto max-h-[60vh] pr-2">
-            <div class="bg-indigo-950/50 p-3 rounded-xl border border-indigo-500/20">
-                <span class="font-bold text-indigo-300 text-base">🛡️ 城堡保衛戰</span><br>
-                畫面上會掉落許多可愛的怪獸，每隻怪獸腳下都有一個<b>神秘魔咒 (英文字母或單字)</b>。按鍵盤打出對應字，城堡就會自動射出火球擊碎牠！
-            </div>
-            <div class="bg-indigo-950/50 p-3 rounded-xl border border-indigo-500/20">
-                <span class="font-bold text-amber-400 text-base">🔥 Combo 連擊大絕招</span><br>
-                連續不間斷打對字母，會累積「Combo 連擊數」，分數獲得加倍！如果打錯字，Combo 會重置，但別擔心不扣分！
-            </div>
-            <div class="bg-indigo-950/50 p-3 rounded-xl border border-indigo-500/20">
-                <span class="font-bold text-emerald-400 text-base">🏆 皇家獎狀系統</span><br>
-                當計時器歸零且分數<b>超過 1000 分</b>，就能取得「皇家魔法師證書」，證書上會展示你的最高 Combo、最終分數和自訂大名！
-            </div>
-        </div>
-        <button onclick="closeInstructions()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold transition-all">
-            我知道了，回去玩！
-        </button>
-    </div>
-</div>
-
-<!-- 4. 遊戲結束/結算面板 (未達標) -->
-<div id="panel-gameover" class="fixed inset-0 z-40 bg-slate-950/95 hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border-2 border-rose-500 p-8 rounded-3xl max-w-md w-full text-center space-y-6">
-        <div class="text-6xl">🤕💤</div>
-        <h2 class="text-3xl font-black text-rose-500">魔力耗盡了！</h2>
-        <p class="text-slate-300">
-            親愛的 <span id="gameover-player-name" class="text-indigo-300 font-bold"></span>，
-            魔力防護罩在猛烈的攻擊下暫時關閉了。<br>別氣餒，差一點點就能及格拿到獎狀囉！
-        </p>
-        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-            <div class="flex justify-between">
-                <span class="text-slate-400">最終獲得積分</span>
-                <span id="gameover-score" class="text-emerald-400 font-bold text-lg">0 分</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-slate-400">及格標準分數</span>
-                <span class="text-slate-300 font-bold">1000 分</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-slate-400">最高連擊 (Combo)</span>
-                <span id="gameover-combo" class="text-amber-400 font-bold">0</span>
-            </div>
-        </div>
-        <div class="flex space-x-3">
-            <button onclick="restartGame()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold transition-all">
-                🔄 再次挑戰
-            </button>
-            <button onclick="quitToWelcome()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold transition-all">
-                🏡 返回首頁
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- 5. 勝利/結算面板與皇家獎狀 (已達標) -->
-<div id="panel-victory" class="fixed inset-0 z-40 bg-slate-950/95 overflow-y-auto hidden flex flex-col items-center justify-start p-4 md:p-8">
-    <div class="max-w-3xl w-full text-center space-y-6 mt-4">
-        <!-- 頂部歡慶特效 -->
-        <div class="space-y-2">
-            <div class="text-6xl animate-bounce">🏆🎉✨</div>
-            <h2 class="text-3xl md:text-4xl font-black text-amber-400">恭喜通過魔法考核！</h2>
-            <p class="text-slate-300 text-sm md:text-base">你展現了令人驚嘆的打字速度與精準度，特此授予皇家皇家魔法學院最高榮譽獎狀！</p>
-        </div>
-
-        <!-- 皇家古典羊皮紙獎狀 -->
-        <div id="certificate-print-area" class="bg-amber-50 text-slate-900 border-[12px] border-amber-800/80 rounded-2xl p-6 md:p-12 shadow-2xl relative overflow-hidden mx-auto max-w-2xl select-text">
-            
-            <!-- 羊皮紙精緻邊框與花紋 -->
-            <div class="absolute inset-2 border border-amber-800/20 pointer-events-none rounded-sm"></div>
-            
-            <!-- 裝飾花紋背景 (SVG) -->
-            <div class="absolute top-4 left-4 text-amber-800/15 text-5xl pointer-events-none">⚜️</div>
-            <div class="absolute top-4 right-4 text-amber-800/15 text-5xl pointer-events-none">⚜️</div>
-            <div class="absolute bottom-4 left-4 text-amber-800/15 text-5xl pointer-events-none">⚜️</div>
-            <div class="absolute bottom-4 right-4 text-amber-800/15 text-5xl pointer-events-none">⚜️</div>
-
-            <!-- 獎狀主體內容 -->
-            <div class="space-y-6 relative z-10 text-center">
-                
-                <h3 class="text-xl md:text-2xl font-black tracking-widest text-amber-900 uppercase">
-                    🏰 皇家魔法學院 📜
-                </h3>
-                <div class="w-24 h-0.5 bg-amber-800/50 mx-auto"></div>
-                
-                <h1 class="text-3xl md:text-4xl font-extrabold text-amber-950 tracking-wider">
-                    皇家特許榮譽證書
-                </h1>
-
-                <p class="text-md md:text-lg text-slate-800 leading-relaxed font-semibold">
-                    茲證明勇敢的魔法學徒
-                </p>
-
-                <p class="text-3xl font-black text-indigo-900 underline decoration-amber-600 decoration-wavy underline-offset-8">
-                    <span id="cert-player-name">打字魔法勇士</span>
-                </p>
-
-                <div class="max-w-md mx-auto space-y-3 py-4 text-left bg-amber-100/50 p-4 rounded-xl border border-amber-800/20 text-slate-800">
-                    <p class="text-sm md:text-base leading-loose font-medium indent-8">
-                        於 <span id="cert-time-mode" class="font-bold text-amber-900"></span> 內，順利通過【極速覺醒打字試煉】。勇闖幽暗森林，以精確神速的指法化解魔力字彈，捍衛魔法城堡！
-                    </p>
-                    <div class="grid grid-cols-2 gap-4 pt-3 border-t border-amber-800/10 text-center">
-                        <div>
-                            <span class="text-xs text-slate-500 font-bold block">試煉最終得分</span>
-                            <span id="cert-score" class="text-xl font-bold text-emerald-700">1,250 分</span>
-                        </div>
-                        <div>
-                            <span class="text-xs text-slate-500 font-bold block">最高連擊 (Max Combo)</span>
-                            <span id="cert-combo" class="text-xl font-bold text-amber-700">24 次</span>
-                        </div>
-                    </div>
-                </div>
-
-                <p class="text-sm md:text-base font-bold text-slate-700">
-                    榮譽稱號：<span id="cert-title" class="text-lg text-amber-900 bg-amber-200/50 px-3 py-1 rounded-full">🎓 皇家首席大魔導士</span>
-                </p>
-
-                <!-- 印章與簽名區 -->
-                <div class="flex justify-between items-center pt-6 px-4">
-                    <div class="text-left">
-                        <div class="text-xs text-slate-500">魔法評議會大長老</div>
-                        <div class="text-lg font-bold font-mono text-slate-700 italic">Gandalf the Wise</div>
-                    </div>
-                    <!-- 精緻紅蠟封印 -->
-                    <div class="relative w-20 h-20 flex items-center justify-center">
-                        <svg class="absolute inset-0 w-full h-full text-red-600/90 drop-shadow-md transform hover:rotate-12 transition-transform" viewBox="0 0 100 100" fill="currentColor">
-                            <path d="M50 5 C25 5, 5 25, 5 50 C5 75, 25 95, 50 95 C75 95, 95 75, 95 50 C95 25, 75 5, 50 5 Z" />
-                            <path d="M50 12 C29 12, 12 29, 12 50 C12 71, 29 88, 50 88 C71 88, 88 71, 88 50 C88 29, 71 12, 50 12 Z" fill="#880000" />
-                        </svg>
-                        <span class="relative z-10 text-2xl font-extrabold text-amber-300">合格</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 獎狀下方控制列 -->
-        <div class="flex flex-col sm:flex-row justify-center items-center gap-4 py-4">
-            <button onclick="printCertificate()" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-extrabold text-lg rounded-xl shadow-lg shadow-amber-900/40 transition-all flex items-center justify-center space-x-2">
-                <span>🖨️ 列印 / 儲存獎狀檔案</span>
-            </button>
-            <button onclick="restartGame()" class="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-lg rounded-xl shadow-lg shadow-indigo-900/40 transition-all flex items-center justify-center space-x-2">
-                <span>🔄 重新自我修練</span>
-            </button>
-            <button onclick="quitToWelcome()" class="w-full sm:w-auto px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-lg rounded-xl transition-all">
-                🚪 返回首頁
-            </button>
-        </div>
-    </div>
-</div>
-
-<script>
-    // 監聽鍵盤全域輸入 (除輸入框外，玩家只要直接按下對應字母鍵即反應)
-    window.addEventListener('keydown', (e) => {
-        if (state.gameState !== 'playing') return;
-
-        // 避免捕捉系統控制鍵與空白鍵滾動
-        if (e.key === ' ' || e.key === 'Spacebar') {
-            e.preventDefault();
-        }
-
-        const char = e.key.toUpperCase();
-        
-        // 只接受標準字母與空白(有些長句含有空白)
-        if (char.length !== 1) return;
-
-        playSound('shoot');
-
-        // 展示魔法彈回饋
-        const typingEchoEl = document.getElementById('typing-echo');
-        typingEchoEl.innerText = char;
-        typingEchoEl.classList.add('scale-150');
-        setTimeout(() => typingEchoEl.classList.remove('scale-150'), 100);
-
-        // 打字匹配邏輯
-        let matchFound = false;
-
-        if (state.activeTargetId !== null) {
-            // 已有鎖定目標，必須繼續打該目標
-            const target = state.activeWords.find(w => w.id === state.activeTargetId);
-            if (target) {
-                const nextCharNeeded = target.text[target.typedText.length].toUpperCase();
-                if (char === nextCharNeeded) {
-                    target.typedText += e.key; // 紀錄實際輸入的大小寫
-                    matchFound = true;
-                    // 若完成打字
-                    if (target.typedText.length === target.text.length) {
-                        eliminateMonster(target.id);
-                    }
-                }
-            } else {
-                state.activeTargetId = null; // 防呆：鎖定對象若消失，解除鎖定
-            }
-        }
-
-        // 若無鎖定目標，或剛剛沒匹配成功，尋找首字母匹配的怪物
-        if (!matchFound) {
-            // 優先尋找高度最低、最逼近防線的怪獸
-            const potentialTargets = state.activeWords
-                .filter(w => w.text[0].toUpperCase() === char)
-                .sort((a, b) => b.y - a.y); // 按 Y 軸高度降序排列 (底部者優先)
-
-            if (potentialTargets.length > 0) {
-                const bestTarget = potentialTargets[0];
-                state.activeTargetId = bestTarget.id;
-                bestTarget.typedText = e.key;
-                matchFound = true;
-
-                // 若單字長度只有 1 (例如 Stage 1)
-                if (bestTarget.typedText.length === bestTarget.text.length) {
-                    eliminateMonster(bestTarget.id);
-                }
-            }
-        }
-
-        if (matchFound) {
-            updateMonstersUI();
-        } else {
-            // 打錯字：中斷 Combo
-            state.combo = 0;
-            document.getElementById('combo-container').style.opacity = '0';
-            state.activeTargetId = null; // 解除鎖定
-            updateMonstersUI(); // 重置顏色提示
-        }
-    });
-
-    // 成功擊潰怪獸
-    function eliminateMonster(id) {
-        const index = state.activeWords.findIndex(w => w.id === id);
-        if (index === -1) return;
-
-        playSound('hit');
-        state.activeWords.splice(index, 1);
-
-        // 獲得積分與 Combo
-        state.score += 50;
-        state.combo += 1;
-        if (state.combo > state.maxCombo) {
-            state.maxCombo = state.combo;
-        }
-
-        // Combo 介面更新
-        if (state.combo >= 2) {
-            playSound('combo');
-            const comboContainer = document.getElementById('combo-container');
-            comboContainer.style.opacity = '1';
-            document.getElementById('combo-display').innerText = state.combo;
-            
-            // 分數因連擊加乘
-            const bonus = Math.min(state.combo * 5, 50); // 最高每個怪額外 +50 分
-            state.score += bonus;
-        }
-
-        // 解除鎖定
-        state.activeTargetId = null;
-
-        // 更新 HUD
-        document.getElementById('score-display').innerText = state.score;
-
-        updateMonstersUI();
-    }
-</script>
-
-<script>
-    // 選擇時間模式
-    function selectTimeMode(seconds) {
-        state.gameDuration = seconds;
-        state.timeLeft = seconds;
-        
-        // 切換按鈕樣式
-        const btn600 = document.getElementById('mode-600');
-        const btn120 = document.getElementById('mode-120');
-
-        if (seconds === 600) {
-            btn600.className = "py-3 px-4 rounded-xl border-2 border-indigo-500 bg-indigo-950/80 font-bold text-indigo-200 hover:bg-indigo-900/60 transition-all text-center";
-            btn120.className = "py-3 px-4 rounded-xl border-2 border-slate-700 bg-slate-800 font-bold text-slate-300 hover:bg-slate-700/60 transition-all text-center";
-        } else {
-            btn600.className = "py-3 px-4 rounded-xl border-2 border-slate-700 bg-slate-800 font-bold text-slate-300 hover:bg-slate-700/60 transition-all text-center";
-            btn120.className = "py-3 px-4 rounded-xl border-2 border-indigo-500 bg-indigo-950/80 font-bold text-indigo-200 hover:bg-indigo-900/60 transition-all text-center";
-        }
-    }
-
-    // 啟動遊戲
-    function startGame() {
-        const nameInput = document.getElementById('input-player-name').value.trim();
-        state.playerName = nameInput || '匿名魔法師';
-        
-        // 初始化狀態
-        state.score = 0;
-        state.timeLeft = state.gameDuration;
-        state.combo = 0;
-        state.maxCombo = 0;
-        state.hp = 100;
-        state.activeWords = [];
-        state.activeTargetId = null;
-        state.gameState = 'playing';
-
-        // 初始化 Web Audio API (在使用者點擊後激活)
-        initAudio();
-
-        // 介面數據重設
-        document.getElementById('hud-name').innerText = state.playerName;
-        document.getElementById('score-display').innerText = '0';
-        document.getElementById('hp-bar').style.width = '100%';
-        document.getElementById('panel-welcome').classList.add('hidden');
-        document.getElementById('panel-gameover').classList.add('hidden');
-        document.getElementById('panel-victory').classList.add('hidden');
-
-        // 更改魔法學徒徽章
-        updateHUD();
-
-        // 開始計時與遊戲主循環
-        if (window.gameInterval) clearInterval(window.gameInterval);
-        window.gameInterval = setInterval(gameTick, 1000);
-
-        if (window.animationFrameId) cancelAnimationFrame(window.animationFrameId);
-        state.lastSpawnTime = Date.now();
-        gameLoop();
-    }
-
-    // 遊戲時間滴答器 (每秒執行一次)
-    function gameTick() {
-        if (state.gameState !== 'playing') return;
-
-        state.timeLeft--;
-        
-        // 格式化時間 (分:秒)
-        const mins = Math.floor(state.timeLeft / 60);
-        const secs = state.timeLeft % 60;
-        document.getElementById('timer-display').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-
-        // 動態難度增加
-        const elapsed = state.gameDuration - state.timeLeft;
-        state.difficultyMultiplier = 1.0 + (elapsed / state.gameDuration) * 0.8; // 最多增快 1.8 倍
-
-        // 更改關卡徽章名稱
-        updateHUD();
-
-        // 時間終了結算
-        if (state.timeLeft <= 0) {
-            endGame();
-        }
-    }
-
-    // 更新 HUD 等級稱號
-    function updateHUD() {
-        const elapsedPercent = (state.gameDuration - state.timeLeft) / state.gameDuration;
-        const stageBadge = document.getElementById('stage-badge');
-        const playerBadge = document.getElementById('player-badge');
-
-        if (elapsedPercent < 0.3) {
-            stageBadge.innerText = '微光森林 (階段 1)';
-            stageBadge.className = 'text-xs uppercase tracking-wider text-emerald-400 font-extrabold bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-500/30';
-            playerBadge.innerText = '初階學徒';
-        } else if (elapsedPercent < 0.7) {
-            stageBadge.innerText = '熔岩地窟 (階段 2)';
-            stageBadge.className = 'text-xs uppercase tracking-wider text-orange-400 font-extrabold bg-orange-950/40 px-3 py-1 rounded-full border border-orange-500/30';
-            playerBadge.innerText = '中級法師';
-        } else {
-            stageBadge.innerText = '終界魔王城 (階段 3)';
-            stageBadge.className = 'text-xs uppercase tracking-wider text-rose-400 font-extrabold bg-rose-950/40 px-3 py-1 rounded-full border border-rose-500/30';
-            playerBadge.innerText = '大法師';
-        }
-    }
-
-    // 遊戲繪圖與更新主循環 (FPS級)
-    function gameLoop() {
-        if (state.gameState !== 'playing') return;
-
-        const now = Date.now();
-        const arena = document.getElementById('game-arena');
-        const arenaHeight = arena.clientHeight;
-
-        // 1. 自動生成怪獸
-        const adjustedInterval = state.spawnInterval / state.difficultyMultiplier;
-        if (now - state.lastSpawnTime > adjustedInterval) {
-            spawnMonster();
-            state.lastSpawnTime = now;
-        }
-
-        // 2. 移動怪獸
-        for (let i = state.activeWords.length - 1; i >= 0; i--) {
-            const word = state.activeWords[i];
-            
-            // 隨時間與難度，速度逐步提高
-            const speed = word.speed * state.difficultyMultiplier;
-            word.y += speed;
-
-            // 3. 碰撞城堡防線
-            if (word.y >= arenaHeight - 110) { // 預留防禦塔與底部的高度
-                playSound('hurt');
-                
-                // 受傷扣城堡血量
-                state.hp -= 15;
-                if (state.hp < 0) state.hp = 0;
-                document.getElementById('hp-bar').style.width = `${state.hp}%`;
-
-                // 重置 Combo 與鎖定
-                state.combo = 0;
-                document.getElementById('combo-container').style.opacity = '0';
-                if (state.activeTargetId === word.id) {
-                    state.activeTargetId = null;
-                }
-
-                // 移除該怪獸
-                state.activeWords.splice(i, 1);
-
-                // 血量歸零：死亡結算
-                if (state.hp <= 0) {
-                    endGame();
-                    return;
-                }
-            }
-        }
-
-        // 渲染更新 DOM
-        updateMonstersUI();
-
-        window.animationFrameId = requestAnimationFrame(gameLoop);
-    }
-
-    // 生成一隻怪獸
-    function spawnMonster() {
-        const text = getRandomWord();
-        const template = MONSTER_TEMPLATES[Math.floor(Math.random() * MONSTER_TEMPLATES.length)];
-        const arenaWidth = document.getElementById('game-arena').clientWidth;
-        
-        // 確保怪獸不會超出視窗邊緣 (邊距 50px)
-        const minX = 40;
-        const maxX = arenaWidth - 140;
-        const x = minX + Math.random() * (maxX - minX);
-
-        const newMonster = {
-            id: Date.now() + Math.random().toString(36).substr(2, 5),
-            text: text,
-            typedText: '',
-            x: x,
-            y: -40, // 從上方隱藏處滑落
-            speed: 0.5 + Math.random() * 0.4, // 基本速度
-            emoji: template.emoji,
-            bg: template.bg,
-            border: template.border,
-            name: template.name
+    TypingIsland.mount({
+      unit: 14,
+      title: '魔法字彈極速覺醒',
+      subtitle: '射擊類・中打／英打',
+      langs: ['zh', 'en'],
+      homeUrl: '../../index.html',
+      scene: function (api) {
+        var field = api.field;
+        var initialized = false;
+        var running = false;
+        var rafId = 0;
+        var lastTime = 0;
+        var clock = 0;             // 場景累積運行時間（暫停時停止）
+
+        // 場景容器參考
+        var stageEl = null;
+        var balconyEl = null;
+        var splatLayer = null;
+        var bubbleLayer = null;
+        var fxLayer = null;
+        var foxWrap = null;
+        var foxSpeech = null;
+        var awakenBarFill = null;
+
+        // 動態尺寸快取（透過 api.field.clientWidth/Height 計算，不寫死）
+        var metrics = { w: 960, h: 300, railY: 230, railH: 70 };
+
+        // 遊戲物件狀態
+        var bubbles = [];          // 與 api.upcoming(n) 一一對齊的泡泡清單
+        var ghosts = [];           // 打中後等待星彈撞擊或淡出的殘影泡泡
+        var shots = [];            // 飛向目標的星星字彈（含覺醒金光弧線）
+        var particles = [];        // 爆破小花瓣、小星星、星彈尾跡
+        var popTexts = [];         // +1 漂浮文字
+        var splats = [];           // 陽台欄杆上的墨漬 DOM
+        var toneCursor = 0;        // 泡泡色盤輪替索引
+
+        // 小狐狸魔法師狀態
+        var fox = {
+          x: 480,
+          targetX: 480,
+          jumpTimer: 0,
+          oopsTimer: 0
         };
 
-        state.activeWords.push(newMonster);
-    }
+        // 魔力覺醒狀態
+        var awakenRemain = 0;      // 剩餘覺醒秒數（0 表示未覺醒）
+        var speechRemain = 0;      // 「魔力覺醒！」台詞剩餘秒數
 
-    // 渲染或更新怪獸 DOM 物件
-    function updateMonstersUI() {
-        const container = document.getElementById('monsters-layer');
-        container.innerHTML = ''; // 清空重新渲染
+        // 偵測 prefers-reduced-motion
+        var reduceMotionMQ = (typeof window !== 'undefined' && window.matchMedia)
+          ? window.matchMedia('(prefers-reduced-motion: reduce)')
+          : null;
+        function isReducedMotion() {
+          return !!(reduceMotionMQ && reduceMotionMQ.matches);
+        }
 
-        state.activeWords.forEach(word => {
-            const isLocked = state.activeTargetId === word.id;
-            
-            // 建立怪獸卡片
-            const monsterDiv = document.createElement('div');
-            monsterDiv.className = `absolute flex flex-col items-center justify-center transition-all pointer-events-none`;
-            monsterDiv.style.left = `${word.x}px`;
-            monsterDiv.style.top = `${word.y}px`;
-            monsterDiv.style.width = '100px';
+        // 取得目前難度與語言設定
+        function getTier() {
+          var t = api.settings && api.settings.tier;
+          return (t === 't1' || t === 't2' || t === 't3') ? t : 't1';
+        }
+        function getLang() {
+          return (api.settings && api.settings.lang === 'en') ? 'en' : 'zh';
+        }
+        function getTargetCount() {
+          return SCENE_CONFIG.bubbleCount[getTier()];
+        }
+        function getBubbleDim() {
+          return SCENE_CONFIG.bubbleSize[getTier()];
+        }
+        function getFallSeconds() {
+          return SCENE_CONFIG.fallSeconds[getTier()];
+        }
 
-            // 根據是否鎖定，套用外邊框發光
-            const lockedClass = isLocked ? 'ring-4 ring-pink-500 scale-110 glow-border' : 'border border-slate-700';
+        // 顯示字元：一律使用 display（含破音字 IVS）；空白轉為 ␣；英打保留原始大小寫
+        function formatDisplay(item) {
+          var d = (item && typeof item.display === 'string') ? item.display : '';
+          return d === ' ' ? '␣' : d;
+        }
 
-            // 怪獸角色與文字背景渲染
-            const emojiRender = word.emoji === 'slime' ? '🟢' : word.emoji;
+        // 量測 api.field 實際尺寸並更新陽台位置
+        function measure() {
+          var w = field.clientWidth || 960;
+          var h = field.clientHeight || 300;
+          var railH = Math.round(h * SCENE_CONFIG.railHeightRatio);
+          railH = Math.max(SCENE_CONFIG.railMinHeight, Math.min(SCENE_CONFIG.railMaxHeight, railH));
+          metrics.w = w;
+          metrics.h = h;
+          metrics.railH = railH;
+          metrics.railY = h - railH;
+          if (balconyEl) {
+            balconyEl.style.height = railH + 'px';
+          }
+          if (stageEl) {
+            stageEl.setAttribute('data-sc-lang', getLang());
+            stageEl.setAttribute('data-sc-tier', getTier());
+          }
+        }
 
-            // 切分單字：已打、未打
-            let textHtml = '';
-            for (let i = 0; i < word.text.length; i++) {
-                const char = word.text[i];
-                if (i < word.typedText.length) {
-                    // 已打對：綠色
-                    textHtml += `<span class="text-emerald-400 font-extrabold text-lg drop-shadow-md">${char}</span>`;
-                } else {
-                    // 未打：白色
-                    textHtml += `<span class="text-white font-semibold text-lg">${char}</span>`;
-                }
+        // 計算每個水平槽位（lane）的中心 x 座標，確保同畫面泡泡均勻不重疊
+        function laneToX(lane, totalLanes) {
+          var dim = getBubbleDim();
+          var margin = Math.max(dim.w * 0.5 + 18, metrics.w * 0.11);
+          var usable = Math.max(40, metrics.w - margin * 2);
+          if (totalLanes <= 1) return metrics.w * 0.5;
+          return margin + (usable * lane) / (totalLanes - 1);
+        }
+
+        // 計算垂直進度 progress（0..1）對應的泡泡中心 y 座標
+        function progressToY(progress) {
+          var dim = getBubbleDim();
+          var halfH = dim.h * 0.5;
+          var startY = halfH + 10;
+          var endY = metrics.railY - halfH + 3;
+          var travel = Math.max(48, endY - startY);
+          return startY + travel * progress;
+        }
+
+        // 為新泡泡挑選未被佔用的水平槽位
+        function pickFreeLane(totalLanes, usedLanes, lastLane) {
+          var free = [];
+          for (var i = 0; i < totalLanes; i++) {
+            if (!usedLanes[i]) free.push(i);
+          }
+          if (!free.length) return 0;
+          // 優先避開與剛消失槽位相同的鄰近位置，讓畫面更錯落活潑
+          if (free.length > 1 && typeof lastLane === 'number') {
+            free.sort(function (a, b) {
+              return Math.abs(b - lastLane) - Math.abs(a - lastLane);
+            });
+          }
+          return free[0];
+        }
+
+        // 繪製靜態繪本剪紙背景（inline SVG，無外部圖片）
+        function buildSceneDOM() {
+          field.innerHTML = '';
+          stageEl = document.createElement('div');
+          stageEl.className = 'sc-stage sc-paused';
+          stageEl.setAttribute('data-sc-lang', getLang());
+          stageEl.setAttribute('data-sc-tier', getTier());
+
+          // 暖色紙張紋理 + 遠景魔法學院屋頂剪紙 + 星星貼紙 + 兩側彩旗
+          stageEl.innerHTML =
+            '<div class="sc-paper-grain"></div>' +
+            '<div class="sc-bg-layer">' +
+              '<svg class="sc-bg-svg" viewBox="0 0 1200 300" preserveAspectRatio="none" aria-hidden="true">' +
+                /* 暖陽柔和光暈 */
+                '<circle cx="1010" cy="64" r="56" fill="#FFF1B8" opacity="0.72"/>' +
+                '<circle cx="1010" cy="64" r="34" fill="#FFD966" opacity="0.45"/>' +
+                /* 剪紙雲朵 */
+                '<g fill="#FFF8E6" stroke="#E4CC9C" stroke-width="2" opacity="0.9">' +
+                  '<path d="M165 88 C165 72 184 62 199 68 C208 52 236 52 246 68 C262 66 276 76 276 88 Z"/>' +
+                  '<path d="M760 72 C760 58 776 50 790 56 C800 42 824 44 832 58 C848 56 860 64 860 72 Z"/>' +
+                '</g>' +
+                /* 左側遠景魔法學院剪紙尖塔 */
+                '<g opacity="0.75">' +
+                  '<rect x="30" y="138" width="58" height="106" rx="4" fill="#F2DFBA" stroke="#C9A66B" stroke-width="2"/>' +
+                  '<polygon points="22,140 59,74 96,140" fill="#D6EEFB" stroke="#7BB4D6" stroke-width="2"/>' +
+                  '<line x1="59" y1="74" x2="59" y2="54" stroke="#5E4838" stroke-width="2"/>' +
+                  '<polygon points="59,54 78,61 59,68" fill="#FF9E7A"/>' +
+                  '<path d="M48 182 C48 166 70 166 70 182 L70 202 L48 202 Z" fill="#FFF1B8" stroke="#C9A66B" stroke-width="2"/>' +
+                '</g>' +
+                /* 右側遠景魔法學院剪紙鐘塔 */
+                '<g opacity="0.75">' +
+                  '<rect x="1104" y="130" width="64" height="114" rx="4" fill="#F2DFBA" stroke="#C9A66B" stroke-width="2"/>' +
+                  '<polygon points="1096,132 1136,64 1176,132" fill="#FFDCCB" stroke="#D98B6A" stroke-width="2"/>' +
+                  '<line x1="1136" y1="64" x2="1136" y2="45" stroke="#5E4838" stroke-width="2"/>' +
+                  '<polygon points="1136,45 1154,52 1136,59" fill="#FFD966"/>' +
+                  '<circle cx="1136" cy="166" r="14" fill="#FFF8E6" stroke="#C9A66B" stroke-width="2"/>' +
+                  '<path d="M1136 166 L1136 157 M1136 166 L1143 169" stroke="#5E4838" stroke-width="2" stroke-linecap="round"/>' +
+                '</g>' +
+                /* 可愛奶油黃星星貼紙（帶白紙邊） */
+                '<g stroke="#FFF8E6" stroke-width="3" stroke-linejoin="round">' +
+                  '<polygon points="122,102 126,112 137,112 128,118 131,128 122,122 113,128 116,118 107,112 118,112" fill="#FFD966"/>' +
+                  '<polygon points="1064,98 1067,106 1076,106 1069,111 1071,119 1064,114 1057,119 1059,111 1052,106 1061,106" fill="#FFD966"/>' +
+                  '<polygon points="620,46 623,53 630,53 624,57 626,64 620,60 614,64 616,57 610,53 617,53" fill="#FFD966" opacity="0.85"/>' +
+                '</g>' +
+              '</svg>' +
+              /* 左上與右上屋頂紙片三角彩旗 */
+              '<svg class="sc-bunting-left" viewBox="0 0 260 54" aria-hidden="true">' +
+                '<path d="M0 4 Q130 34 260 6" fill="none" stroke="#74604E" stroke-width="2.5"/>' +
+                '<polygon points="18,9 48,16 28,36" fill="#FF9E7A" stroke="#FFF8E6" stroke-width="2"/>' +
+                '<polygon points="62,18 94,22 74,44" fill="#FFD966" stroke="#FFF8E6" stroke-width="2"/>' +
+                '<polygon points="108,22 140,22 124,45" fill="#7CCB6F" stroke="#FFF8E6" stroke-width="2"/>' +
+                '<polygon points="154,20 186,16 174,40" fill="#D6EEFB" stroke="#7BB4D6" stroke-width="1.8"/>' +
+                '<polygon points="200,14 230,9 220,32" fill="#FFDCCB" stroke="#FFF8E6" stroke-width="2"/>' +
+              '</svg>' +
+              '<svg class="sc-bunting-right" viewBox="0 0 260 54" aria-hidden="true">' +
+                '<path d="M0 6 Q130 34 260 4" fill="none" stroke="#74604E" stroke-width="2.5"/>' +
+                '<polygon points="30,9 60,14 40,32" fill="#FFDCCB" stroke="#FFF8E6" stroke-width="2"/>' +
+                '<polygon points="74,16 106,20 86,40" fill="#D6EEFB" stroke="#7BB4D6" stroke-width="1.8"/>' +
+                '<polygon points="120,22 152,22 136,45" fill="#FFD966" stroke="#FFF8E6" stroke-width="2"/>' +
+                '<polygon points="166,22 198,18 186,44" fill="#FF9E7A" stroke="#FFF8E6" stroke-width="2"/>' +
+                '<polygon points="212,16 242,9 232,36" fill="#7CCB6F" stroke="#FFF8E6" stroke-width="2"/>' +
+              '</svg>' +
+            '</div>' +
+            /* 覺醒期間左下角小徽章（欄杆區） */
+            '<div class="sc-awaken-badge" aria-hidden="true">' +
+              '<span>★ 魔力覺醒中</span>' +
+              '<div class="sc-awaken-bar"><div class="sc-awaken-bar-fill"></div></div>' +
+            '</div>' +
+            /* 陽台欄杆（底線＝扣愛心線） */
+            '<div class="sc-balcony">' +
+              '<div class="sc-rail-line"><span class="sc-rail-tag">陽台欄杆線：掉到這裡少一顆愛心</span></div>' +
+              '<div class="sc-rail-top"></div>' +
+              '<div class="sc-rail-body"></div>' +
+            '</div>' +
+            '<div class="sc-splat-layer"></div>' +
+            /* 小狐狸魔法師（戴尖帽、拿星星魔杖） */
+            '<div class="sc-fox-wrap" aria-hidden="true">' +
+              '<div class="sc-fox-speech">魔力覺醒！</div>' +
+              '<svg class="sc-fox-svg" viewBox="0 0 110 112">' +
+                /* 覺醒時帽子柔和光暈（無高頻閃爍） */
+                '<ellipse class="sc-hat-glow" cx="53" cy="28" rx="34" ry="20" fill="#FFD966"/>' +
+                /* 蓬鬆狐狸大尾巴 */
+                '<path d="M27 88 C6 82 4 60 19 56 C27 54 34 64 35 76 Z" fill="#FF9E7A" stroke="#3B2A20" stroke-width="2.4" stroke-linejoin="round"/>' +
+                '<path d="M13 67 C9 62 14 55 21 57 C19 63 17 67 13 67 Z" fill="#FFF8E6"/>' +
+                /* 魔法小斗篷身體 */
+                '<path d="M31 74 C31 64 75 64 75 74 L81 102 C64 106 42 106 25 102 Z" fill="#1F6B9C" stroke="#3B2A20" stroke-width="2.4" stroke-linejoin="round"/>' +
+                '<polygon points="46,74 60,74 53,86" fill="#FFD966" stroke="#3B2A20" stroke-width="1.8" stroke-linejoin="round"/>' +
+                /* 兩隻狐狸大耳朵 */
+                '<polygon points="28,48 22,22 44,36" fill="#FF9E7A" stroke="#3B2A20" stroke-width="2.4" stroke-linejoin="round"/>' +
+                '<polygon points="30,43 26,28 40,36" fill="#FFF8E6"/>' +
+                '<polygon points="78,48 84,22 62,36" fill="#FF9E7A" stroke="#3B2A20" stroke-width="2.4" stroke-linejoin="round"/>' +
+                '<polygon points="76,43 80,28 66,36" fill="#FFF8E6"/>' +
+                /* 圓潤狐狸頭 */
+                '<ellipse cx="53" cy="54" rx="25" ry="20" fill="#FF9E7A" stroke="#3B2A20" stroke-width="2.4"/>' +
+                /* 奶油白雙頰 */
+                '<path d="M29 56 C33 49 44 51 53 60 C62 51 73 49 77 56 C76 68 65 74 53 74 C41 74 30 68 29 56 Z" fill="#FFF8E6"/>' +
+                /* 腮紅、豆豆眼、鼻子與笑嘴 */
+                '<ellipse cx="37" cy="60" rx="4.2" ry="2.4" fill="#FFDCCB"/>' +
+                '<ellipse cx="69" cy="60" rx="4.2" ry="2.4" fill="#FFDCCB"/>' +
+                '<circle cx="43" cy="54" r="3.3" fill="#3B2A20"/>' +
+                '<circle cx="44" cy="52.8" r="1.1" fill="#FFF8E6"/>' +
+                '<circle cx="63" cy="54" r="3.3" fill="#3B2A20"/>' +
+                '<circle cx="64" cy="52.8" r="1.1" fill="#FFF8E6"/>' +
+                '<ellipse cx="53" cy="60" rx="3.2" ry="2.2" fill="#3B2A20"/>' +
+                '<path d="M48 64 Q53 68 58 64" fill="none" stroke="#3B2A20" stroke-width="2" stroke-linecap="round"/>' +
+                /* 魔法師尖帽 */
+                '<ellipse cx="53" cy="37" rx="31" ry="7.5" fill="#1F6B9C" stroke="#3B2A20" stroke-width="2.4"/>' +
+                '<path d="M31 36 L47 6 C50 2 56 3 58 7 L75 36 Z" fill="#1F6B9C" stroke="#3B2A20" stroke-width="2.4" stroke-linejoin="round"/>' +
+                '<path d="M34 32 Q53 38 72 32 L74 36 Q53 42 32 36 Z" fill="#FFD966" stroke="#3B2A20" stroke-width="1.6"/>' +
+                '<polygon points="53,16 55,22 61,22 56,25 58,31 53,27 48,31 50,25 45,22 51,22" fill="#FFF1B8" stroke="#3B2A20" stroke-width="1.2" stroke-linejoin="round"/>' +
+                /* 右手與星星魔杖（發射起點約在 x=92, y=38） */
+                '<line x1="76" y1="82" x2="92" y2="42" stroke="#C9A66B" stroke-width="4.5" stroke-linecap="round"/>' +
+                '<line x1="76" y1="82" x2="92" y2="42" stroke="#3B2A20" stroke-width="1.6" stroke-linecap="round"/>' +
+                '<polygon points="93,26 96.5,35 106,35.5 98.5,41 101,50 93,45 85,50 87.5,41 80,35.5 89.5,35" fill="#FFD966" stroke="#3B2A20" stroke-width="2" stroke-linejoin="round"/>' +
+                '<circle cx="75" cy="81" r="5.5" fill="#FF9E7A" stroke="#3B2A20" stroke-width="2"/>' +
+              '</svg>' +
+            '</div>' +
+            '<div class="sc-bubble-layer"></div>' +
+            '<div class="sc-fx-layer"></div>';
+
+          field.appendChild(stageEl);
+          balconyEl = stageEl.querySelector('.sc-balcony');
+          splatLayer = stageEl.querySelector('.sc-splat-layer');
+          bubbleLayer = stageEl.querySelector('.sc-bubble-layer');
+          fxLayer = stageEl.querySelector('.sc-fx-layer');
+          foxWrap = stageEl.querySelector('.sc-fox-wrap');
+          foxSpeech = stageEl.querySelector('.sc-fox-speech');
+          awakenBarFill = stageEl.querySelector('.sc-awaken-bar-fill');
+          initialized = true;
+        }
+
+        // 建立單顆調皮墨水泡泡 DOM
+        function createBubbleEl(text, toneIdx) {
+          var el = document.createElement('div');
+          el.className = 'sc-bubble sc-bubble-tone-' + toneIdx;
+          el.innerHTML =
+            '<span class="sc-gold-tag">★ 下一個</span>' +
+            '<span class="sc-miss-badge">✗</span>' +
+            '<span class="sc-bubble-char"></span>';
+          el.querySelector('.sc-bubble-char').textContent = text;
+          bubbleLayer.appendChild(el);
+          return el;
+        }
+
+        // 對齊畫面泡泡與 api.upcoming(count)
+        function syncBubbles(lastRemovedLane) {
+          if (!initialized) return;
+          measure();
+          var count = getTargetCount();
+          var want = api.upcoming(count) || [];
+          var dim = getBubbleDim();
+
+          // 移掉多餘的舊泡泡
+          while (bubbles.length > want.length) {
+            var extra = bubbles.pop();
+            if (extra && extra.el) extra.el.remove();
+          }
+
+          // 先記錄目前仍留在場上的泡泡已佔用哪些水平槽位
+          var usedLanes = {};
+          for (var j = 0; j < want.length; j++) {
+            var ex = bubbles[j];
+            var keyCheck = want[j].passageIndex + ':' + want[j].index;
+            if (ex && ex.key === keyCheck) {
+              if (ex.lane >= count) ex.lane = j % count;
+              usedLanes[ex.lane] = true;
+            }
+          }
+
+          // 逐一對齊或新建泡泡
+          for (var i = 0; i < want.length; i++) {
+            var u = want[i];
+            var key = u.passageIndex + ':' + u.index;
+            var item = bubbles[i];
+
+            if (!item || item.key !== key) {
+              if (item && item.el) item.el.remove();
+              var toneIdx = toneCursor % SCENE_CONFIG.bubbleToneCount;
+              toneCursor++;
+              var lane = pickFreeLane(count, usedLanes, lastRemovedLane);
+              usedLanes[lane] = true;
+              var el = createBubbleEl(formatDisplay(u), toneIdx);
+              item = bubbles[i] = {
+                key: key,
+                el: el,
+                lane: lane,
+                toneIdx: toneIdx,
+                progress: 0,
+                swayPhase: (toneCursor * 1.37) % (Math.PI * 2),
+                spawnFade: 0,
+                missTimer: 0,
+                goldHint: false
+              };
             }
 
-            monsterDiv.innerHTML = `
-                <div class="flex flex-col items-center">
-                    <!-- 怪獸表情符號與身體 -->
-                    <div class="w-12 h-12 flex items-center justify-center text-3xl rounded-full ${word.bg} ${lockedClass} relative">
-                        <span class="animate-bounce" style="animation-duration: ${1.5 + Math.random()}s">${emojiRender}</span>
-                    </div>
-                    <!-- 打字英文字詞牌 -->
-                    <div class="mt-1.5 px-2 py-0.5 bg-slate-900/90 rounded-md border border-slate-700/80 shadow-md text-center flex justify-center items-center min-w-[50px]">
-                        ${textHtml}
-                    </div>
-                </div>
-            `;
-            container.appendChild(monsterDiv);
-        });
-    }
-</script>
+            // 輪到目前要打的目標時，取消金色預告樣式，改由天藍瞄準圈凸顯
+            if (i === 0) {
+              item.goldHint = false;
+            }
 
-<script>
-    // 暫停與恢復
-    function pauseGame() {
-        if (state.gameState !== 'playing') return;
-        state.gameState = 'paused';
-        document.getElementById('panel-pause').classList.remove('hidden');
-    }
+            // 套用對應難度的泡泡大小
+            item.el.style.width = dim.w + 'px';
+            item.el.style.height = dim.h + 'px';
+            item.el.style.marginLeft = (-dim.w * 0.5) + 'px';
+            item.el.style.marginTop = (-dim.h * 0.5) + 'px';
+            item.el.classList.toggle('sc-bubble-active', i === 0);
+            item.el.classList.toggle('sc-bubble-gold', i === 1 && item.goldHint && awakenRemain > 0);
+          }
 
-    function resumeGame() {
-        state.gameState = 'playing';
-        document.getElementById('panel-pause').classList.add('hidden');
-        gameLoop();
-    }
-
-    function toggleMute() {
-        state.muted = !state.muted;
-        document.getElementById('mute-btn').innerText = state.muted ? '🔇 靜音中' : '🔊 音效開';
-        document.getElementById('mute-btn').className = state.muted 
-            ? "p-2 bg-rose-950/80 hover:bg-rose-900 rounded-lg text-rose-300 border border-rose-500/20 transition-all"
-            : "p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-slate-300 transition-all";
-    }
-
-    // 玩法說明
-    function showInstructions() {
-        pauseGame();
-        document.getElementById('panel-instructions').classList.remove('hidden');
-    }
-
-    function closeInstructions() {
-        document.getElementById('panel-instructions').classList.add('hidden');
-        resumeGame();
-    }
-
-    // 返回首頁
-    function quitToWelcome() {
-        if (window.gameInterval) clearInterval(window.gameInterval);
-        if (window.animationFrameId) cancelAnimationFrame(window.animationFrameId);
-        
-        state.gameState = 'welcome';
-        document.getElementById('panel-welcome').classList.remove('hidden');
-        document.getElementById('panel-pause').classList.add('hidden');
-        document.getElementById('panel-gameover').classList.add('hidden');
-        document.getElementById('panel-victory').classList.add('hidden');
-    }
-
-    // 結束/結算
-    function endGame() {
-        if (window.gameInterval) clearInterval(window.gameInterval);
-        if (window.animationFrameId) cancelAnimationFrame(window.animationFrameId);
-
-        // 及格判定 (滿 1000 分為及格門檻)
-        if (state.score >= state.passingScore) {
-            state.gameState = 'victory';
-            playSound('victory');
-            showVictoryCertificate();
-        } else {
-            state.gameState = 'gameover';
-            playSound('defeat');
-            showGameOver();
+          // 小狐狸瞄準目前第一個目標的正下方，若沒有目標則回到中央
+          if (bubbles.length > 0) {
+            fox.targetX = laneToX(bubbles[0].lane, count);
+          } else {
+            fox.targetX = metrics.w * 0.5;
+          }
+          renderAll();
         }
-    }
 
-    // 未及格畫面
-    function showGameOver() {
-        document.getElementById('gameover-player-name').innerText = state.playerName;
-        document.getElementById('gameover-score').innerText = `${state.score} 分`;
-        document.getElementById('gameover-combo').innerText = `${state.maxCombo} 次`;
-        document.getElementById('panel-gameover').classList.remove('hidden');
-    }
-
-    // 重新開始
-    function restartGame() {
-        startGame();
-    }
-
-    // 及格！展示精美皇家證書
-    function showVictoryCertificate() {
-        const victoryPanel = document.getElementById('panel-victory');
-        victoryPanel.classList.remove('hidden');
-
-        // 填入證書資訊
-        document.getElementById('cert-player-name').innerText = state.playerName;
-        
-        const modeText = state.gameDuration === 600 ? '「十分鐘皇家正式試煉」' : '「兩分鐘極速修練」';
-        document.getElementById('cert-time-mode').innerText = modeText;
-        document.getElementById('cert-score').innerText = `${state.score.toLocaleString()} 分`;
-        document.getElementById('cert-combo').innerText = `${state.maxCombo} 次`;
-
-        // 根據分數判定稱號
-        let title = '🎓 皇家精英打字學徒';
-        if (state.score >= 2500) {
-            title = '👑 皇家終極大魔導大師 (神速級)';
-        } else if (state.score >= 1800) {
-            title = '🪄 皇家首席大魔導士 (高階級)';
-        } else if (state.score >= 1200) {
-            title = '📜 皇家大魔法使 (進階級)';
+        // 取得小狐狸魔杖星星尖端在場景中的座標
+        function getWandTip() {
+          return {
+            x: fox.x + 38,
+            y: metrics.h - 68
+          };
         }
-        document.getElementById('cert-title').innerText = title;
-    }
 
-    // 列印/儲存獎狀PDF或圖片
-    function printCertificate() {
-        // 直接調用系統列印，結合 CSS 媒體查詢達成極佳的排版
-        window.print();
-    }
-</script>
+        // 在陽台欄杆上留下一小灘可愛墨漬（下一回合清除）
+        function addRailSplat(x) {
+          if (!splatLayer) return;
+          var color = SCENE_CONFIG.splatColors[splats.length % SCENE_CONFIG.splatColors.length];
+          var el = document.createElement('div');
+          el.className = 'sc-splat';
+          el.style.left = Math.max(28, Math.min(metrics.w - 28, x)) + 'px';
+          el.style.top = (metrics.railY + 4) + 'px';
+          el.innerHTML =
+            '<svg viewBox="0 0 56 36" width="46" height="30" aria-hidden="true">' +
+              '<path d="M6 16 C4 8 15 5 22 9 C27 3 38 4 41 11 C50 10 53 20 45 23 C42 29 33 28 29 24 C24 31 12 29 12 22 C7 22 6 19 6 16 Z" fill="' + color + '" opacity="0.86"/>' +
+              '<circle cx="23" cy="15" r="2.2" fill="#FFF8E6"/>' +
+              '<circle cx="33" cy="15" r="2.2" fill="#FFF8E6"/>' +
+              '<circle cx="23.5" cy="15" r="1" fill="#3B2A20"/>' +
+              '<circle cx="33.5" cy="15" r="1" fill="#3B2A20"/>' +
+            '</svg>';
+          splatLayer.appendChild(el);
+          splats.push(el);
+          while (splats.length > SCENE_CONFIG.maxSplats) {
+            var oldest = splats.shift();
+            if (oldest) oldest.remove();
+          }
+        }
 
-<script defer src="../../assets/js/beacon.js"></script>
-</body>
-</html>
+        // 建立爆破花瓣與小星星粒子（reduced-motion 時跳過）
+        function spawnBurst(x, y, isGold) {
+          if (isReducedMotion() || !fxLayer) return;
+          var total = isGold ? 6 : 9;
+          for (var i = 0; i < total; i++) {
+            var angle = (Math.PI * 2 * i) / total + (Math.random() * 0.4 - 0.2);
+            var speed = (isGold ? 48 : 74) + Math.random() * 58;
+            var isStar = (i % 2 === 0);
+            var color = isGold
+              ? (i % 2 === 0 ? '#FFD966' : '#FFF1B8')
+              : SCENE_CONFIG.particleColors[i % SCENE_CONFIG.particleColors.length];
+            var el = document.createElement('div');
+            el.className = 'sc-particle';
+            if (isStar) {
+              el.innerHTML =
+                '<svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true">' +
+                  '<polygon points="10,1 12.6,7 19,7.5 14,11.8 15.5,18 10,14.6 4.5,18 6,11.8 1,7.5 7.4,7" fill="' + color + '" stroke="#3B2A20" stroke-width="1.2" stroke-linejoin="round"/>' +
+                '</svg>';
+            } else {
+              // 繪本剪紙小花瓣
+              el.innerHTML =
+                '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">' +
+                  '<path d="M8 1 C12 4 14 9 8 15 C2 9 4 4 8 1 Z" fill="' + color + '" stroke="#FFF8E6" stroke-width="1.2"/>' +
+                '</svg>';
+            }
+            fxLayer.appendChild(el);
+            particles.push({
+              el: el,
+              x: x,
+              y: y,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed - 22,
+              gravity: 130,
+              rot: Math.random() * 360,
+              vrot: (Math.random() - 0.5) * 260,
+              age: 0,
+              life: 0.45 + Math.random() * 0.25,
+              scale: 0.85 + Math.random() * 0.3
+            });
+          }
+        }
+
+        // 建立星星字彈的小尾巴微粒
+        function spawnTrailDot(x, y, isGold) {
+          if (isReducedMotion() || !fxLayer) return;
+          var el = document.createElement('div');
+          el.className = 'sc-particle';
+          var fill = isGold ? '#FFD966' : '#FFF1B8';
+          el.innerHTML =
+            '<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">' +
+              '<circle cx="5" cy="5" r="4" fill="' + fill + '" stroke="#D9531F" stroke-width="1"/>' +
+            '</svg>';
+          fxLayer.appendChild(el);
+          particles.push({
+            el: el,
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 14,
+            vy: 14,
+            gravity: 0,
+            rot: 0,
+            vrot: 0,
+            age: 0,
+            life: 0.22,
+            scale: 0.9
+          });
+        }
+
+        // 飄出打對的開心回饋文字（例如 ✓ +1），不擋目前要打的字
+        function spawnPopText(x, y, label) {
+          if (!fxLayer) return;
+          var el = document.createElement('div');
+          el.className = 'sc-pop-text';
+          el.textContent = label;
+          fxLayer.appendChild(el);
+          popTexts.push({
+            el: el,
+            x: x,
+            y: y,
+            age: 0,
+            life: SCENE_CONFIG.popTextDuration
+          });
+        }
+
+        // 發射星星字彈（或覺醒期間飛向第二個泡泡的金光弧線）
+        function spawnShot(sx, sy, tx, ty, opts) {
+          if (!fxLayer) return;
+          var isGoldArc = !!(opts && opts.isGoldArc);
+          var onArrive = opts && opts.onArrive;
+
+          if (isReducedMotion()) {
+            if (onArrive) onArrive();
+            return;
+          }
+
+          var el = document.createElement('div');
+          el.className = 'sc-shot';
+          var starColor = isGoldArc ? '#FFD966' : '#FFF1B8';
+          var strokeColor = isGoldArc ? '#C88A1E' : '#1F6B9C';
+          el.innerHTML =
+            '<svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true">' +
+              '<polygon points="14,2 17.6,10 26,10.8 19.6,16.6 21.5,25 14,20.5 6.5,25 8.4,16.6 2,10.8 10.4,10" fill="' + starColor + '" stroke="' + strokeColor + '" stroke-width="2" stroke-linejoin="round"/>' +
+            '</svg>';
+          fxLayer.appendChild(el);
+
+          shots.push({
+            el: el,
+            sx: sx,
+            sy: sy,
+            tx: tx,
+            ty: ty,
+            arcLift: isGoldArc ? 38 : 20,
+            age: 0,
+            life: isGoldArc ? SCENE_CONFIG.goldArcDuration : SCENE_CONFIG.shotDuration,
+            trailAccum: 0,
+            isGoldArc: isGoldArc,
+            onArrive: onArrive
+          });
+        }
+
+        // 清空所有回合動態元素（泡泡、粒子、星彈、墨漬、覺醒計時）
+        function clearDynamicObjects() {
+          bubbles.forEach(function (b) { if (b.el) b.el.remove(); });
+          ghosts.forEach(function (g) { if (g.el) g.el.remove(); });
+          shots.forEach(function (s) { if (s.el) s.el.remove(); });
+          particles.forEach(function (p) { if (p.el) p.el.remove(); });
+          popTexts.forEach(function (t) { if (t.el) t.el.remove(); });
+          splats.forEach(function (sp) { sp.remove(); });
+          bubbles = [];
+          ghosts = [];
+          shots = [];
+          particles = [];
+          popTexts = [];
+          splats = [];
+          awakenRemain = 0;
+          speechRemain = 0;
+          fox.jumpTimer = 0;
+          fox.oopsTimer = 0;
+          updateAwakenUI();
+        }
+
+        // 更新覺醒光暈、徽章進度條與小狐狸台詞顯示
+        function updateAwakenUI() {
+          if (!stageEl) return;
+          var active = awakenRemain > 0;
+          stageEl.classList.toggle('sc-awakened', active);
+          if (awakenBarFill) {
+            var ratio = active ? Math.max(0, Math.min(1, awakenRemain / SCENE_CONFIG.awakenDuration)) : 0;
+            awakenBarFill.style.transform = 'scaleX(' + ratio.toFixed(3) + ')';
+          }
+          if (foxSpeech) {
+            foxSpeech.classList.toggle('sc-speech-show', speechRemain > 0);
+            // 小狐狸靠右半邊時，對話框改放左側以免超出畫框
+            foxSpeech.classList.toggle('sc-speech-left', fox.x > metrics.w * 0.65);
+          }
+        }
+
+        // 將目前所有物件狀態渲染到 DOM
+        function renderAll() {
+          if (!initialized) return;
+          var count = getTargetCount();
+          var reduced = isReducedMotion();
+
+          // 1. 渲染調皮墨水泡泡
+          for (var i = 0; i < bubbles.length; i++) {
+            var b = bubbles[i];
+            var baseX = laneToX(b.lane, count);
+            var baseY = progressToY(b.progress);
+            // 輕柔微浮（reduced-motion 時停用）
+            var swayX = reduced ? 0 : Math.sin(clock * 1.4 + b.swayPhase) * 4.5;
+            var missOffsetX = 0;
+            if (b.missTimer > 0) {
+              if (!reduced) {
+                // 0.5 秒內柔和左右來回 1 次（2 次/秒，符合護眼規範）
+                var mt = b.missTimer / SCENE_CONFIG.missEffectDuration;
+                missOffsetX = Math.sin(mt * Math.PI * 2) * 7;
+              }
+              b.el.classList.add('sc-bubble-miss');
+            } else {
+              b.el.classList.remove('sc-bubble-miss');
+            }
+
+            var scale = (i === 0) ? 1.04 : 0.96;
+            b.x = baseX + swayX + missOffsetX;
+            b.y = baseY;
+            b.el.style.transform = 'translate(' + b.x.toFixed(1) + 'px,' + b.y.toFixed(1) + 'px) scale(' + scale + ')';
+            var baseOpacity = (i === 0) ? 1 : (b.goldHint && awakenRemain > 0 ? 0.98 : 0.88);
+            var fade = Math.min(1, b.spawnFade);
+            b.el.style.opacity = (baseOpacity * fade).toFixed(3);
+            b.el.classList.toggle('sc-bubble-gold', i === 1 && b.goldHint && awakenRemain > 0);
+          }
+
+          // 2. 渲染等待擊破或淡出的殘影泡泡
+          for (var g = 0; g < ghosts.length; g++) {
+            var gh = ghosts[g];
+            var gRatio = Math.max(0, 1 - gh.age / gh.life);
+            var gScale = reduced ? 1 : (1 + (1 - gRatio) * 0.14);
+            gh.el.style.transform = 'translate(' + gh.x.toFixed(1) + 'px,' + gh.y.toFixed(1) + 'px) scale(' + gScale.toFixed(3) + ')';
+            gh.el.style.opacity = gRatio.toFixed(3);
+          }
+
+          // 3. 渲染小狐狸魔法師位置與跳躍／微驚訝表情
+          if (foxWrap) {
+            var jumpY = 0;
+            var tiltDeg = 0;
+            if (!reduced && fox.jumpTimer > 0) {
+              var jt = fox.jumpTimer / SCENE_CONFIG.foxJumpDuration;
+              jumpY = -Math.sin(jt * Math.PI) * 14;
+            } else if (!reduced && fox.oopsTimer > 0) {
+              var ot = fox.oopsTimer / SCENE_CONFIG.missEffectDuration;
+              tiltDeg = Math.sin(ot * Math.PI * 2) * 5;
+            }
+            foxWrap.style.transform =
+              'translate(' + fox.x.toFixed(1) + 'px,' + jumpY.toFixed(1) + 'px) rotate(' + tiltDeg.toFixed(2) + 'deg)';
+          }
+
+          updateAwakenUI();
+        }
+
+        // 主動畫迴圈（唯一計時來源，以時間差 dt 運算，dt 上限 0.1 秒）
+        function tick(now) {
+          if (!running) return;
+          var dt = (now - lastTime) / 1000;
+          lastTime = now;
+          if (dt < 0) dt = 0;
+          if (dt > SCENE_CONFIG.maxDt) dt = SCENE_CONFIG.maxDt;
+
+          clock += dt;
+          var reduced = isReducedMotion();
+          var fallSec = getFallSeconds();
+
+          // 1. 更新覺醒倒數與台詞倒數
+          if (awakenRemain > 0) {
+            awakenRemain = Math.max(0, awakenRemain - dt);
+            if (awakenRemain === 0) {
+              // 覺醒結束時清除所有泡泡金色提示
+              for (var k = 0; k < bubbles.length; k++) bubbles[k].goldHint = false;
+            }
+          }
+          if (speechRemain > 0) {
+            speechRemain = Math.max(0, speechRemain - dt);
+          }
+
+          // 2. 更新小狐狸平滑水平滑動與小動作計時
+          if (reduced) {
+            fox.x = fox.targetX;
+          } else {
+            var lerp = 1 - Math.exp(-SCENE_CONFIG.foxMoveSpeed * dt);
+            fox.x += (fox.targetX - fox.x) * lerp;
+          }
+          if (fox.jumpTimer > 0) fox.jumpTimer = Math.max(0, fox.jumpTimer - dt);
+          if (fox.oopsTimer > 0) fox.oopsTimer = Math.max(0, fox.oopsTimer - dt);
+
+          // 3. 更新泡泡飄落（未輪到的目標速度為 1/3，且最多前進全程 1/3）
+          var hitRail = false;
+          var railHitX = 0;
+          for (var i = 0; i < bubbles.length; i++) {
+            var b = bubbles[i];
+            if (b.spawnFade < 1) {
+              b.spawnFade = Math.min(1, b.spawnFade + dt * 4.5);
+            }
+            if (b.missTimer > 0) {
+              b.missTimer = Math.max(0, b.missTimer - dt);
+            }
+
+            if (i === 0) {
+              b.progress += dt / fallSec;
+              if (b.progress >= 1) {
+                // 觸碰陽台欄杆線：記下位置並重置到頂端重新飄落
+                hitRail = true;
+                railHitX = laneToX(b.lane, getTargetCount());
+                b.progress = 0;
+                b.spawnFade = 0;
+                b.missTimer = 0;
+              }
+            } else {
+              // 還沒輪到的目標：速度約 1/3，最多停在全程 1/3 處等待
+              if (b.progress < SCENE_CONFIG.waitingMaxProgress) {
+                b.progress = Math.min(
+                  SCENE_CONFIG.waitingMaxProgress,
+                  b.progress + (dt / fallSec) * SCENE_CONFIG.waitingSpeedRatio
+                );
+              }
+            }
+          }
+
+          // 若目前目標落到陽台欄杆線，留墨漬並扣一顆愛心
+          if (hitRail) {
+            addRailSplat(railHitX);
+            fox.oopsTimer = SCENE_CONFIG.missEffectDuration;
+            api.loseLife();
+            // 若愛心歸零導致共用程式立刻呼叫 pause()/stop()，中止本幀後續更新
+            if (!running) return;
+          }
+
+          // 4. 更新殘影泡泡
+          for (var g = ghosts.length - 1; g >= 0; g--) {
+            ghosts[g].age += dt;
+            if (ghosts[g].age >= ghosts[g].life) {
+              ghosts[g].el.remove();
+              ghosts.splice(g, 1);
+            }
+          }
+
+          // 5. 更新星星字彈與尾跡
+          for (var s = shots.length - 1; s >= 0; s--) {
+            var sh = shots[s];
+            sh.age += dt;
+            var t = Math.min(1, sh.age / sh.life);
+            // 二次貝茲微弧線，讓星彈軌跡活潑靈動
+            var mx = (sh.sx + sh.tx) * 0.5;
+            var my = Math.min(sh.sy, sh.ty) - sh.arcLift;
+            var inv = 1 - t;
+            var x = inv * inv * sh.sx + 2 * inv * t * mx + t * t * sh.tx;
+            var y = inv * inv * sh.sy + 2 * inv * t * my + t * t * sh.ty;
+
+            sh.el.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) rotate(' + (t * 360).toFixed(0) + 'deg)';
+            sh.trailAccum += dt;
+            if (sh.trailAccum >= 0.032) {
+              sh.trailAccum = 0;
+              spawnTrailDot(x, y, sh.isGoldArc);
+            }
+
+            if (t >= 1) {
+              sh.el.remove();
+              shots.splice(s, 1);
+              if (sh.onArrive) sh.onArrive();
+            }
+          }
+
+          // 6. 更新花瓣與星星粒子
+          for (var p = particles.length - 1; p >= 0; p--) {
+            var pt = particles[p];
+            pt.age += dt;
+            if (pt.age >= pt.life) {
+              pt.el.remove();
+              particles.splice(p, 1);
+              continue;
+            }
+            pt.vy += pt.gravity * dt;
+            pt.x += pt.vx * dt;
+            pt.y += pt.vy * dt;
+            pt.rot += pt.vrot * dt;
+            var alpha = Math.max(0, 1 - pt.age / pt.life);
+            pt.el.style.transform =
+              'translate(' + pt.x.toFixed(1) + 'px,' + pt.y.toFixed(1) + 'px) rotate(' + pt.rot.toFixed(0) + 'deg) scale(' + (pt.scale * (0.5 + alpha * 0.5)).toFixed(2) + ')';
+            pt.el.style.opacity = alpha.toFixed(3);
+          }
+
+          // 7. 更新 +1 飄字
+          for (var m = popTexts.length - 1; m >= 0; m--) {
+            var pop = popTexts[m];
+            pop.age += dt;
+            if (pop.age >= pop.life) {
+              pop.el.remove();
+              popTexts.splice(m, 1);
+              continue;
+            }
+            var pr = pop.age / pop.life;
+            var dy = reduced ? 0 : (-34 * pr);
+            pop.el.style.left = pop.x.toFixed(1) + 'px';
+            pop.el.style.top = (pop.y + dy).toFixed(1) + 'px';
+            pop.el.style.opacity = Math.max(0, 1 - pr * pr).toFixed(3);
+          }
+
+          renderAll();
+          if (running) {
+            rafId = requestAnimationFrame(tick);
+          }
+        }
+
+        // 回傳共用程式所需的生命週期介面
+        return {
+          // 第一回合開始前呼叫一次：建立場景元素
+          start: function () {
+            if (!initialized) {
+              buildSceneDOM();
+            }
+            measure();
+            fox.x = metrics.w * 0.5;
+            fox.targetX = metrics.w * 0.5;
+            renderAll();
+          },
+
+          // 每回合開始：清空上一回合所有目標、粒子、墨漬、覺醒狀態，重新對齊 upcoming
+          roundStart: function () {
+            if (!initialized) {
+              buildSceneDOM();
+            }
+            measure();
+            clearDynamicObjects();
+            fox.x = metrics.w * 0.5;
+            fox.targetX = metrics.w * 0.5;
+            syncBubbles();
+            // 回合開始直接讓小狐狸對齊第一顆目標
+            fox.x = fox.targetX;
+            renderAll();
+          },
+
+          // 開始動／恢復動畫
+          resume: function () {
+            if (!initialized) return;
+            measure();
+            if (stageEl) stageEl.classList.remove('sc-paused');
+            if (running) return;
+            running = true;
+            lastTime = performance.now();
+            rafId = requestAnimationFrame(tick);
+          },
+
+          // 暫停：停掉 rAF 與所有 CSS 動畫，場景完全靜止
+          pause: function () {
+            running = false;
+            if (rafId) {
+              cancelAnimationFrame(rafId);
+              rafId = 0;
+            }
+            if (stageEl) stageEl.classList.add('sc-paused');
+          },
+
+          // 整局結束：停掉一切動畫
+          stop: function () {
+            running = false;
+            if (rafId) {
+              cancelAnimationFrame(rafId);
+              rafId = 0;
+            }
+            if (stageEl) stageEl.classList.add('sc-paused');
+          },
+
+          // 打對：魔杖射出星星字彈、泡泡爆成花瓣星星、每 10 連擊觸發魔力覺醒
+          hit: function (res) {
+            if (!initialized) return;
+            var correct = (res && typeof res.correct === 'number' && res.correct > 0) ? res.correct : 1;
+            var combo = (res && typeof res.combo === 'number') ? res.combo : api.combo();
+            var prevCombo = Math.max(0, combo - correct);
+            var count = getTargetCount();
+            var wand = getWandTip();
+            var hitPositions = [];
+            var lastRemovedLane;
+
+            // 先移走前面 res.correct 個已打對的泡泡，並保留原位殘影等星彈擊破
+            for (var i = 0; i < correct && bubbles.length > 0; i++) {
+              var target = bubbles.shift();
+              lastRemovedLane = target.lane;
+              var tx = (typeof target.x === 'number') ? target.x : laneToX(target.lane, count);
+              var ty = (typeof target.y === 'number') ? target.y : progressToY(target.progress);
+              hitPositions.push({ x: tx, y: ty });
+
+              // 移至殘影列表，待星彈飛抵時爆破
+              target.el.classList.remove('sc-bubble-active', 'sc-bubble-miss', 'sc-bubble-gold');
+              ghosts.push({
+                el: target.el,
+                x: tx,
+                y: ty,
+                age: 0,
+                life: isReducedMotion() ? 0.24 : SCENE_CONFIG.shotDuration
+              });
+
+              (function (bx, by, idx) {
+                spawnShot(wand.x, wand.y, bx, by, {
+                  onArrive: function () {
+                    spawnBurst(bx, by, false);
+                    if (idx === 0) {
+                      spawnPopText(bx, by - 12, '✓ +' + correct);
+                    }
+                  }
+                });
+              })(tx, ty, i);
+            }
+
+            // 小狐狸開心跳一下
+            fox.jumpTimer = SCENE_CONFIG.foxJumpDuration;
+
+            // 連擊每跨過 10 的倍數觸發「魔力覺醒！」（6 秒覺醒、2 秒台詞）
+            if (combo > 0 && Math.floor(combo / SCENE_CONFIG.awakenEveryCombo) > Math.floor(prevCombo / SCENE_CONFIG.awakenEveryCombo)) {
+              awakenRemain = SCENE_CONFIG.awakenDuration;
+              speechRemain = SCENE_CONFIG.awakenSpeechDuration;
+            }
+
+            // 重新對齊剩餘目標並從 upcoming 補齊新泡泡
+            syncBubbles(lastRemovedLane);
+
+            // 覺醒期間（6 秒）打對時，星彈分出一道金光把「第二個」泡泡染成金色提示下一個（純視覺）
+            if (awakenRemain > 0 && bubbles.length >= 2) {
+              var nextTarget = bubbles[1];
+              var origin = hitPositions.length ? hitPositions[hitPositions.length - 1] : wand;
+              var nx = laneToX(nextTarget.lane, getTargetCount());
+              var ny = progressToY(nextTarget.progress);
+              spawnShot(origin.x, origin.y, nx, ny, {
+                isGoldArc: true,
+                onArrive: function () {
+                  if (awakenRemain > 0 && bubbles[1] === nextTarget) {
+                    nextTarget.goldHint = true;
+                    spawnBurst(nx, ny, true);
+                    renderAll();
+                  }
+                }
+              });
+            }
+
+            updateAwakenUI();
+          },
+
+          // 打錯：目前目標輕輕晃動並顯示溫和紅框與 ✗ 徽章，不閃紅整個場景
+          miss: function () {
+            if (!initialized) return;
+            if (bubbles[0]) {
+              bubbles[0].missTimer = SCENE_CONFIG.missEffectDuration;
+            }
+            fox.oopsTimer = SCENE_CONFIG.missEffectDuration;
+            renderAll();
+          },
+
+          // 視窗大小改變：重新量測容器並重算位置
+          resize: function () {
+            if (!initialized) return;
+            measure();
+            if (bubbles.length > 0) {
+              fox.targetX = laneToX(bubbles[0].lane, getTargetCount());
+              if (!running) fox.x = fox.targetX;
+            } else {
+              fox.targetX = metrics.w * 0.5;
+              if (!running) fox.x = fox.targetX;
+            }
+            renderAll();
+          }
+        };
+      }
+    });
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

@@ -11,6 +11,7 @@
 // 與 from:'<島 id>'（吊橋從哪座島接過來），不然會沒有位置。
 
 const G1 = '🎒 一年級', GM = '📘 中年級', G3 = '🎓 三年級', GA = '🎲 都能玩';
+const T1 = '🌱 初階 1–3 年級', T2 = '🌿 進階 4–5 年級', T3 = '🌳 高階 6 年級';   // 打字島三階
 
 export const ISLANDS = [
   { id:'mouse', name:'滑鼠島', icon:'🖱️', color:0x5fd38d, units:[
@@ -18,14 +19,15 @@ export const ISLANDS = [
     ['滑鼠勇士','🖱️','mouse','units/unit21-mouse-challenge/','滑鼠小勇士大冒險',G1,21],
     ['拔蔬菜','🥕','carrots','units/unit19-farm-harvest/','快樂農場：蔬菜拔拔樂',G1,19] ] },
   { id:'type', name:'打字島', icon:'⌨️', color:0xffc94d, units:[
-    ['打地鼠','🐹','moles','units/unit4-whack-keyboard/','鍵盤打地鼠',G1,4],
-    ['太空打字','🚀','rocket','units/unit3-space-typing/','太空打字防衛戰',G1,3],
-    ['恐龍打字','🦖','dino','units/unit16-dino-typing/','恐龍打字大冒險',G1,16],
-    ['雷射森林','🌲','pines','units/unit13-forest-typing-defense/','極速雷射森林戰',G1,13],
-    ['中文打字','🔤','keyboard','units/unit1-typing-adventure/','中文打字冒險王',GM,1],
-    ['英打特攻','🛸','ufo','units/unit11-space-typing-pro/','英打太空特攻',GM,11],
-    ['中打特攻','🌙','rocket2','units/unit12-space-typing-zh/','中打太空特攻',GM,12],
-    ['魔法字彈','✨','crystal','units/unit14-magic-word-bullet/','魔法字彈極速覺醒',G3,14] ] },
+    // 打字島三階（2026-11-20 改版）：每關進去都能自己換階，連結的 ?tier= 只是建議起點
+    ['怪獸冒頭','🐹','moles','units/unit4-whack-keyboard/?tier=t1','鍵盤怪獸冒冒頭',T1,4],
+    ['太空打字','🚀','rocket','units/unit3-space-typing/?tier=t1','太空打字防衛戰',T1,3],
+    ['恐龍打字','🦖','dino','units/unit16-dino-typing/?tier=t1','恐龍打字大冒險',T1,16],
+    ['中文打字','🔤','keyboard','units/unit1-typing-adventure/?tier=t1','中文打字冒險王',T1,1],
+    ['雷射森林','🌲','pines','units/unit13-forest-typing-defense/?tier=t2','極速雷射森林戰',T2,13],
+    ['英打特攻','🛸','ufo','units/unit11-space-typing-pro/?tier=t2','英打太空特攻',T2,11],
+    ['中打特攻','🌙','rocket2','units/unit12-space-typing-zh/?tier=t2','中打特攻',T2,12],
+    ['魔法字彈','✨','crystal','units/unit14-magic-word-bullet/?tier=t3','魔法字彈極速覺醒',T3,14] ] },
   { id:'think', name:'思考島', icon:'🧩', color:0x6fb3ff, units:[
     ['烏龜指揮','🐢','turtle','units/unit6-turtle-commander/','烏龜小指揮官',G1,6],
     ['指令法師','🧙','mushroom','units/unit7-spell-commander/','指令小法師',G1,7],

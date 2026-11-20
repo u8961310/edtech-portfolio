@@ -1,0 +1,283 @@
+/* ================= 打字島共用樣式（C 版「繪本剪紙」） =================
+ * 規範：.interface-design/system.md；來源設計稿 docs/plans/mockups/typing-island-interface-design.html
+ * 畫面外殼 typing-ui.js 的 class 一律 ti- 開頭；各關場景（.ti-field 裡面）自己的樣式請用別的前綴
+ * 主版面 1366×657 一屏不捲動；字型路徑相對於本檔：../typing/fonts/
+ */
+@font-face { font-family: 'Bpmf Huninn'; src: url('../typing/fonts/bpmf-huninn-typing.woff2') format('woff2'); font-display: block; }
+
+:root {
+  --paper: #F7E8CB; --card: #FFF8E6; --card-2: #FDF1D8;
+  --kraft: #E4CC9C; --kraft-2: #C9A66B;
+  --ink-1: #3B2A20; --ink-2: #5E4838; --ink-3: #74604E; --ink-4: #53402D;
+  --peach: #FF9E7A; --peach-dk: #D9531F; --peach-soft: #FFDCCB;
+  --sky: #8CCBF0; --sky-dk: #1F6B9C; --sky-soft: #D6EEFB;
+  --leaf: #7CCB6F; --leaf-dk: #2D7A38;
+  --butter: #FFD966; --butter-soft: #FFF1B8;
+  --berry: #E5484D; --berry-dk: #B3262B; --berry-soft: #FFD9D6;
+  --cap: #FFFFFF; --cap-edge: #C9A66B;
+  --sh: 0 2px 0 rgba(150,100,50,.24), 0 9px 16px -6px rgba(150,100,50,.32);
+  --f-ui: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  --f-num: 'Fredoka', 'Bahnschrift', 'Noto Sans TC', sans-serif;
+  --f-zh: 'Bpmf Huninn', 'Noto Sans TC', sans-serif;
+}
+.ti-app.no-zy { --f-zh: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif; }
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body {
+  color: var(--ink-1); font-family: var(--f-ui); font-size: 18px; -webkit-font-smoothing: antialiased;
+  background: radial-gradient(#EAD3A2 2.2px, transparent 2.8px) 0 0/30px 30px, var(--paper);
+}
+.ti-app { height: 100%; position: relative; }
+.ti-app section { height: 100%; position: relative; overflow: hidden; }
+.ti-app section[hidden], .ti-app [hidden] { display: none !important; }
+:where(.ti-app) :where(button) { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+.ti-app h1, .ti-app h2, .ti-app p { margin: 0; }
+.ti-app :focus-visible { outline: 3px solid var(--sky-dk); outline-offset: 2px; }
+.num { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.zh { font-family: var(--f-zh); }
+.label { font-size: 16px; font-weight: 500; color: var(--ink-3); letter-spacing: .06em; }
+
+/* 紙片面板：略不規則的邊＋疊層陰影 */
+.ti-panel { background: var(--card); border: 1.5px solid var(--kraft); border-radius: 20px 24px 18px 26px / 24px 18px 26px 20px; box-shadow: var(--sh); position: relative; }
+.tape::after { content: ""; position: absolute; top: -10px; left: 50%; width: 84px; height: 20px; margin-left: -42px; background: rgba(255,217,102,.8); transform: rotate(-2.5deg); border-radius: 3px; box-shadow: 0 1px 2px rgba(150,100,50,.25); }
+
+/* 按鈕 */
+.ti-btn1 { height: 64px; padding: 0 28px; border-radius: 26px 30px 24px 32px / 30px 24px 32px 26px; background: var(--peach) !important; border: 2px solid var(--peach-dk) !important; box-shadow: 0 5px 0 var(--peach-dk); font-size: 28px !important; font-weight: 900; letter-spacing: .08em; display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.ti-btn1:hover { background: #FFAE90 !important; }
+.ti-btn1:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--peach-dk); }
+.ti-btn2 { height: 52px; padding: 0 22px; border-radius: 22px 26px 20px 26px; background: var(--card) !important; border: 2px solid var(--kraft-2) !important; box-shadow: 0 4px 0 var(--kraft-2); font-size: 22px !important; font-weight: 900; letter-spacing: .06em; }
+.ti-btn2:hover { background: var(--butter-soft) !important; }
+.ti-btn2:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--kraft-2); }
+
+/* 鍵帽 */
+.ti-kcs { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.ti-kc { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 40px; height: 46px; padding: 0 6px; background: var(--cap); color: var(--ink-1); border: 2px solid var(--cap-edge); border-radius: 10px; box-shadow: 0 3px 0 var(--cap-edge); line-height: 1; }
+.ti-kc small { font-size: 16px; font-weight: 700; color: var(--ink-2); margin-bottom: 2px; }
+.ti-kc b { font-family: var(--f-num); font-size: 22px; font-weight: 600; }
+.ti-kc.wide { min-width: 64px; }
+.ti-kc.wide b { font-size: 16px; font-family: var(--f-ui); font-weight: 700; }
+
+/* ============ 設定 ============ */
+.ti-setup { display: grid; grid-template-columns: minmax(0,1fr) 420px; gap: 28px; padding: 20px 32px 22px 36px; }
+.ti-setup-main { display: flex; flex-direction: column; min-height: 0; }
+.ti-title { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; }
+.ti-title h1 { font-size: 40px; font-weight: 900; }
+.ti-title p { color: var(--ink-3); font-size: 17px; }
+.ti-setup-rows { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.ti-row { display: grid; grid-template-columns: 112px 1fr; align-items: center; padding: 8px 0; border-top: 3px dotted var(--kraft-2); flex: 1; }
+.ti-row > .label { font-size: 20px; font-weight: 900; color: var(--ink-2); letter-spacing: .1em; }
+.ti-opts { display: flex; gap: 12px; }
+.ti-opt { flex: 1; min-height: 66px; padding: 6px 12px; border-radius: 18px 22px 16px 22px / 20px 16px 22px 18px; background: var(--card) !important; border: 2px solid var(--kraft-2) !important; box-shadow: 0 3px 0 var(--kraft-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 24px !important; font-weight: 700; position: relative; transition: background .15s, transform .1s; }
+.ti-opt small { font-size: 16px; font-weight: 500; color: var(--ink-3); }
+.ti-opt:hover { background: var(--butter-soft) !important; }
+.ti-opt:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--kraft-2); }
+.ti-opt[aria-pressed=true] { border-color: var(--peach-dk) !important; background: var(--peach-soft) !important; box-shadow: 0 3px 0 var(--peach-dk); }
+.ti-opt[aria-pressed=true]::after { content: "✓"; position: absolute; top: -9px; right: -6px; width: 28px; height: 28px; border-radius: 50%; background: var(--peach-dk); color: #fff; font: 700 17px/28px var(--f-ui); text-align: center; }
+.ti-lock { display: flex; align-items: center; gap: 14px; min-height: 66px; padding: 6px 18px; border-radius: 18px; border: 2px dashed var(--kraft-2); background: var(--card-2); }
+.ti-lock b { font-size: 21px; }
+.ti-lock span { color: var(--ink-2); font-size: 16px; }
+.ti-switch { display: flex; align-items: center; gap: 16px; }
+.ti-sw { width: 88px; height: 48px; border-radius: 24px; background: var(--kraft) !important; border: 2px solid var(--kraft-2) !important; position: relative; flex: none; }
+.ti-sw::after { content: ""; position: absolute; top: 4px; left: 4px; width: 36px; height: 36px; border-radius: 50%; background: #fff; box-shadow: 0 2px 0 var(--kraft-2); transition: transform .18s; }
+.ti-sw[aria-checked=true] { background: var(--leaf) !important; border-color: var(--leaf-dk) !important; }
+.ti-sw[aria-checked=true]::after { transform: translateX(40px); }
+.ti-switch span { font-size: 18px; color: var(--ink-2); }
+.ti-setup-side { display: flex; flex-direction: column; gap: 20px; min-height: 0; }
+.ti-goal { padding: 22px 24px 12px; flex: 1; display: flex; flex-direction: column; background: var(--butter-soft); border-color: var(--butter); transform: rotate(.6deg); }
+.ti-goal h2 { font-size: 18px; font-weight: 900; letter-spacing: .12em; }
+.ti-goal-list { display: flex; flex-direction: column; flex: 1; justify-content: space-around; }
+.ti-goal .g { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-top: 3px dotted var(--kraft-2); }
+.ti-goal .g .big { font-size: 46px; font-weight: 600; line-height: 1; min-width: 100px; color: var(--sky-dk); }
+.ti-goal .g .big small { font-size: 22px; }
+.ti-goal .g span { font-size: 19px; line-height: 1.35; }
+.ti-goal .g span small { font-size: 16px; color: var(--ink-2); }
+.ti-start { height: 96px; border-radius: 30px 36px 28px 38px / 34px 28px 38px 30px; background: var(--peach) !important; border: 2px solid var(--peach-dk) !important; box-shadow: 0 6px 0 var(--peach-dk), 0 12px 18px -6px rgba(150,100,50,.4); font-size: 38px !important; font-weight: 900; letter-spacing: .12em; margin-bottom: 6px; }
+.ti-start small { display: block; font-size: 16px; font-weight: 700; letter-spacing: .04em; }
+.ti-start:hover { background: #FFAE90 !important; }
+.ti-start:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--peach-dk); }
+
+/* ============ 遊戲中 ============ */
+.ti-play { display: grid; grid-template-rows: 54px minmax(0,1fr) auto 112px; gap: 10px; padding: 12px 14px; }
+.ti-hud { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 16px; }
+.ti-hud .l, .ti-hud .r { display: flex; align-items: center; gap: 12px; }
+.ti-hud .r { justify-content: flex-end; gap: 18px; }
+.ti-route { display: flex; gap: 6px; align-items: center; }
+.ti-route i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--kraft-2); background: var(--card); }
+.ti-route i.done { background: var(--leaf); border-color: var(--leaf-dk); }
+.ti-route i.now { background: var(--peach); border-color: var(--peach-dk); width: 20px; height: 20px; }
+.ti-roundno b { font-size: 26px; }
+.ti-time { display: flex; align-items: center; gap: 10px; padding: 0 20px 0 14px; background: var(--butter-soft); border: 2px solid var(--butter); border-radius: 22px; }
+.ti-time .v { font-size: 36px; font-weight: 600; line-height: 1.15; }
+.ti-lives { display: flex; gap: 2px; }
+.ti-hud .stat { display: flex; align-items: baseline; gap: 6px; }
+.ti-hud .stat .v { font-size: 28px; font-weight: 600; line-height: 1; }
+.ti-hud .stat .v small { font-size: 18px; }
+.ti-combo { color: var(--sky-dk); }
+.ti-pausebtn { width: 40px; height: 40px; border-radius: 50%; background: var(--card-2) !important; border: 2px solid var(--kraft-2) !important; font-size: 18px !important; }
+.ti-field { overflow: hidden; border-color: #fff; border-width: 3px; }
+
+.ti-poembox { padding: 6px 22px 8px; display: flex; flex-direction: column; gap: 2px; }
+.ti-poemcap { display: flex; justify-content: space-between; align-items: baseline; font-size: 16px; color: var(--ink-3); }
+.ti-poemcap b { color: var(--ink-1); }
+.ti-poemcap .ok { color: var(--leaf-dk); font-weight: 700; }
+.ti-poemcap .ng { color: var(--berry-dk); font-weight: 700; }
+.ti-poemrow { display: flex; align-items: center; gap: 18px; }
+.ti-poem { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; font-family: var(--f-zh); font-size: 54px; line-height: 1.2; white-space: nowrap; overflow: hidden; }
+.ti-app[data-lang=en] .ti-poem { font-family: Consolas, 'Courier New', monospace; font-size: 44px; }
+.ti-poem .c { display: inline-block; position: relative; padding: 2px 4px; border: 3px solid transparent; border-radius: 18px 14px 20px 14px / 14px 20px 14px 18px; color: var(--ink-1); }
+.ti-poem .c.done { color: var(--ink-4); background: rgba(124,203,111,.28); }
+.ti-poem .c.p { padding: 2px 0; color: var(--ink-3); width: .9em; text-align: center; }
+.ti-app[data-lang=en] .ti-poem .c { padding: 2px 1px; }
+.ti-poem .c.cur { border-color: var(--sky-dk); background: var(--sky-soft); box-shadow: 0 3px 0 rgba(31,107,156,.35); }
+.ti-poem .c.cur.wrong { border-color: var(--berry-dk); background: var(--berry-soft); box-shadow: 0 3px 0 rgba(179,38,43,.35); animation: ti-flash .5s ease-out 2; }
+.ti-poem .c.cur.wrong::after { content: "✗"; position: absolute; right: -9px; top: -11px; width: 22px; height: 22px; border-radius: 50%; background: var(--berry-dk); color: #fff; font: 700 15px/22px var(--f-ui); text-align: center; }
+@keyframes ti-flash { 50% { background: #FFB3AD; } }
+.ti-input { width: 230px; height: 58px; flex: none; border-radius: 16px; border: 3px solid var(--sky-dk); background: #fff; font: 700 30px var(--f-ui); padding: 0 14px; color: var(--ink-1); }
+.ti-input::placeholder { color: var(--ink-3); font-size: 20px; font-weight: 500; }
+.ti-entype { flex: none; font-size: 18px; color: var(--ink-2); padding: 8px 14px; border: 2px dashed var(--kraft-2); border-radius: 14px; }
+
+.ti-ladder { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; padding: 10px 16px; align-items: stretch; }
+.ti-step { display: grid; grid-template-columns: 32px minmax(0,1fr); grid-template-rows: auto 1fr; column-gap: 10px; align-items: center; color: var(--ink-3); font-size: 17px; padding: 4px 8px; border-radius: 14px; }
+.ti-step .n { grid-row: 1 / 3; width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--kraft-2); display: grid; place-items: center; font-weight: 600; font-size: 16px; background: var(--card); }
+.ti-step .body { display: flex; align-items: center; gap: 8px; min-height: 48px; }
+.ti-step.used { color: var(--ink-2); }
+.ti-step.used .n { background: var(--kraft); color: var(--ink-1); }
+.ti-step.now { color: var(--ink-1); font-weight: 700; background: var(--sky-soft); }
+.ti-step.now .n { background: var(--sky-dk); border-color: var(--sky-dk); color: #fff; }
+.ti-step .note { font-size: 16px; color: var(--ink-3); font-weight: 400; }
+.ti-step .mini { font-size: 30px; border: 3px solid var(--berry-dk); background: var(--berry-soft); border-radius: 12px; padding: 0 6px; line-height: 1.1; color: var(--ink-1); }
+.ti-step .ti-kc { height: 40px; }
+.ti-go { height: 40px; padding: 0 16px; border-radius: 20px; border: 2px solid var(--sky-dk) !important; background: var(--sky-soft) !important; font-size: 17px !important; font-weight: 700; }
+.ti-go:hover { background: var(--sky) !important; }
+
+/* 第 3 層：暫停並蓋上大鍵盤（每格 62×50、標籤 ≥16px） */
+.ti-l3 { position: absolute; inset: 0; z-index: 20; }
+.ti-l3::before { content: ""; position: absolute; inset: 0; background: rgba(247,232,203,.72); }
+.ti-l3box { position: absolute; left: 14px; right: 14px; bottom: 12px; padding: 12px 20px 14px; border: 3px solid var(--sky-dk); display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 14px 30px -8px rgba(80,50,20,.45); }
+.l3head { width: 100%; display: flex; align-items: center; gap: 18px; min-height: 70px; }
+.l3head .pause { padding: 6px 16px; border-radius: 22px; background: var(--butter-soft); border: 2px solid var(--butter); font-size: 20px; font-weight: 900; }
+.l3head .tgt { display: flex; align-items: center; gap: 14px; margin: 0 auto; font-size: 20px; font-weight: 700; }
+.l3head .tgt .zh { font-size: 64px; line-height: 1.1; border: 3px solid var(--berry-dk); background: var(--berry-soft); border-radius: 16px; padding: 0 10px; }
+.ti-app[data-lang=en] .l3head .tgt .zh { font-family: Consolas, monospace; min-width: 70px; text-align: center; }
+.l3head .ti-kc { min-width: 48px; height: 56px; }
+.l3head .ti-kc b { font-size: 26px; }
+.l3head .ti-btn1 { height: 56px; font-size: 22px !important; }
+.ti-kb { display: flex; flex-direction: column; gap: 4px; }
+.ti-kbrow { display: flex; gap: 4px; }
+.ti-k { position: relative; height: 50px; border-radius: 9px; background: var(--card-2); border: 1.5px solid var(--kraft-2); flex: none; }
+.ti-k.hand-L { background: #FDF1D8; }
+.ti-k.hand-R { background: #F3EBDD; }
+.ti-k .en { position: absolute; left: 7px; top: 3px; font-family: var(--f-num); font-size: 16px; font-weight: 600; line-height: 1.2; color: var(--ink-2); }
+.ti-k .zy { position: absolute; right: 7px; bottom: 2px; font-size: 18px; font-weight: 700; line-height: 1.3; color: var(--ink-1); }
+.ti-k.mod { background: var(--kraft); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 500; color: var(--ink-1); }
+.ti-k.bump::after { content: ""; position: absolute; left: 12px; bottom: 6px; width: 16px; height: 4px; border-radius: 2px; background: var(--ink-2); }
+.ti-k.hit { background: var(--sky); border-color: var(--sky-dk); border-width: 3px; box-shadow: 0 0 0 3px rgba(31,107,156,.45); z-index: 1; }
+.ti-k .ord { position: absolute; right: -9px; top: -12px; width: 26px; height: 26px; border-radius: 50%; background: var(--ink-1); color: #fff; font: 600 16px/26px var(--f-num); text-align: center; z-index: 2; }
+
+.ti-paused { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(247,232,203,.8); }
+.ti-paused .ti-panel { padding: 30px 40px; text-align: center; display: flex; flex-direction: column; gap: 14px; }
+.ti-paused h2 { font-size: 36px; }
+.ti-paused .btns { display: flex; gap: 14px; justify-content: center; }
+
+/* ============ 休息一下 ============ */
+.ti-rest { display: grid; place-items: center; padding: 18px 40px; }
+.ti-restbox { width: 1060px; max-width: 100%; padding: 24px 36px; display: grid; grid-template-columns: 230px minmax(0,1fr); grid-template-rows: auto 1fr auto auto; gap: 14px 34px; }
+.ti-restbox h1 { grid-column: 1/-1; font-size: 44px; font-weight: 900; display: flex; align-items: baseline; gap: 16px; }
+.ti-restbox h1 small { font-size: 20px; font-weight: 500; color: var(--ink-3); }
+.ti-ring { position: relative; width: 210px; height: 210px; align-self: center; }
+.ti-ring svg { position: absolute; inset: 0; }
+.ti-ring circle.fg { transition: stroke-dashoffset 1s linear; }
+.ti-ring .t { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--f-num); font-size: 86px; font-weight: 600; line-height: 1; color: var(--sky-dk); }
+.ti-ring .t small { font-family: var(--f-ui); font-size: 18px; font-weight: 700; color: var(--ink-2); margin-top: 4px; }
+.rsteps { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; align-self: center; }
+.rs { background: var(--card-2); border: 2px solid var(--kraft); border-radius: 18px 22px 16px 22px; padding: 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.rs b { font-size: 26px; font-weight: 900; }
+.rs span { font-size: 18px; color: var(--ink-2); line-height: 1.4; }
+.rs .no { font-size: 18px; font-weight: 600; color: #fff; background: var(--sky-dk); border-radius: 50%; width: 30px; height: 30px; line-height: 30px; }
+.ti-rest-msg { grid-column: 1/-1; font-size: 18px; color: var(--ink-2); }
+.ti-restbox .btns { grid-column: 1/-1; display: flex; justify-content: flex-end; gap: 16px; }
+
+/* ============ 結算回顧 ============ */
+.ti-review { display: grid; grid-template-columns: 400px minmax(0,1fr) 380px; grid-template-rows: 48px minmax(0,1fr); gap: 16px 18px; padding: 12px 28px 18px; }
+.ti-review .head { grid-column: 1/-1; display: flex; align-items: center; }
+.ti-review .head h1 { font-size: 34px; font-weight: 900; }
+.ti-review .col { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+.ti-hero { padding: 18px 22px; display: flex; flex-direction: column; flex: 1; }
+.ti-hero .wpm { display: flex; align-items: flex-end; gap: 12px; }
+.ti-hero .wpm .v { font-size: 120px; font-weight: 600; line-height: .95; color: var(--sky-dk); }
+.ti-hero .wpm .u { font-size: 24px; font-weight: 900; color: var(--ink-2); padding-bottom: 10px; }
+.delta { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-num); font-size: 20px; font-weight: 600; }
+.delta.up { color: var(--leaf-dk); }
+.delta.down { color: var(--ink-2); }
+.delta.first { color: var(--ink-3); font-family: var(--f-ui); font-size: 16px; }
+.delta small { font-family: var(--f-ui); font-size: 16px; font-weight: 500; color: var(--ink-3); }
+.ti-hero .acc { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px 14px; margin-top: auto; padding-top: 12px; border-top: 3px dotted var(--kraft-2); }
+.ti-hero .acc .v { font-size: 56px; font-weight: 600; line-height: 1; }
+.ti-hero .acc .v small { font-size: 28px; }
+.ti-goalchk { padding: 12px 18px; display: flex; flex-direction: column; gap: 6px; }
+.ti-goalchk h2, .ti-worst h2, .ti-gloss h2 { font-size: 16px; font-weight: 900; letter-spacing: .12em; color: var(--ink-2); margin-bottom: 4px; }
+.ti-goalchk .g { display: flex; align-items: center; gap: 10px; font-size: 18px; }
+.ti-goalchk .g b { margin-left: auto; font-size: 20px; font-weight: 600; }
+.tick { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--leaf-dk); border: 2px solid var(--leaf-dk); display: grid; place-items: center; }
+.tick.no { background: var(--card); border-color: var(--kraft-2); }
+.ti-worst { padding: 14px 20px; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.wrow { display: grid; grid-template-columns: 30px 82px minmax(0,1fr) 90px; align-items: center; gap: 8px; height: 76px; border-top: 3px dotted var(--kraft); }
+.wrow .rk { font-size: 22px; font-weight: 600; color: var(--ink-3); text-align: center; }
+.wrow .zh { font-size: 48px; line-height: 1; }
+.ti-app[data-lang=en] .wrow .zh { font-family: Consolas, monospace; }
+.wrow .cnt { font-size: 18px; color: var(--ink-2); text-align: right; }
+.wrow .cnt b { font-size: 26px; color: var(--berry-dk); font-family: var(--f-num); font-weight: 600; }
+.ti-none { font-size: 22px; color: var(--leaf-dk); font-weight: 700; padding: 20px 0; }
+.ti-gloss { padding: 18px 22px; flex: 1; display: flex; flex-direction: column; background: var(--butter-soft); border-color: var(--butter); transform: rotate(-.6deg); }
+.ti-gloss .ttl { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 3px dotted var(--kraft-2); }
+.ti-gloss .ttl b { font-size: 28px; font-weight: 900; }
+.ti-gloss .ttl span { color: var(--ink-3); font-size: 17px; }
+.ti-gloss .say { font-size: 24px; line-height: 1.55; font-weight: 500; }
+.ti-cheer { padding: 10px 14px; border-radius: 20px 18px 22px 16px; background: #DDF2D1; border: 2px solid var(--leaf); font-size: 20px; font-weight: 700; line-height: 1.35; box-shadow: var(--sh); }
+.ti-review .btns { display: flex; flex-direction: column; gap: 10px; }
+
+/* ============ 獎狀 ============ */
+.ti-cert { display: grid; grid-template-columns: minmax(0,1fr) 290px; gap: 24px; padding: 16px 26px 20px; }
+.ti-certcard { height: 100%; padding: 12px; background: var(--card); border-radius: 20px 24px 18px 26px / 24px 18px 26px 20px; box-shadow: var(--sh); border: 1.5px solid var(--kraft); min-height: 0; }
+.ti-certcard .frame { height: 100%; position: relative; border: 5px solid #F2B24E; border-radius: 14px; padding: 16px 36px 14px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: radial-gradient(var(--butter-soft) 3px, transparent 3.5px) 0 0/34px 34px, var(--card); }
+.ti-certcard .frame::before { content: ""; position: absolute; inset: 7px; border: 3px dashed var(--peach); border-radius: 9px; pointer-events: none; }
+.ti-certcard .ribbon { position: relative; padding: 8px 70px; background: var(--butter); border: 3px solid #D9A21E; border-radius: 10px; font-size: 48px; font-weight: 900; letter-spacing: .3em; box-shadow: 0 4px 0 #D9A21E; }
+.ti-certcard .to { display: flex; align-items: baseline; gap: 12px; position: relative; }
+.ti-certcard .nm { font-size: 60px; font-weight: 900; line-height: 1.1; padding: 0 26px; min-width: 240px; text-align: center; border-bottom: 5px dotted var(--peach-dk); letter-spacing: .14em; }
+.ti-certcard .to .s { font-size: 26px; font-weight: 700; color: var(--ink-2); }
+.ti-certcard .say { font-size: 26px; line-height: 1.7; text-align: center; max-width: 820px; font-weight: 500; position: relative; }
+.ti-certcard .say b { font-family: var(--f-num); font-weight: 600; color: var(--sky-dk); font-size: 30px; }
+.ti-certcard .rank { display: flex; align-items: center; gap: 16px; position: relative; }
+.ti-certcard .stars { display: flex; gap: 6px; font-size: 48px; line-height: 1; }
+.ti-certcard .star { color: var(--kraft); -webkit-text-stroke: 2px var(--kraft-2); }
+.ti-certcard .star.on { color: var(--butter); -webkit-text-stroke: 2px #B07A10; }
+.ti-certcard .rank .ttl { padding: 4px 26px; border-radius: 30px; background: var(--peach); border: 3px solid var(--peach-dk); box-shadow: 0 4px 0 var(--peach-dk); font-size: 32px; font-weight: 900; letter-spacing: .12em; }
+.ti-certcard .foot { width: 100%; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10px; position: relative; }
+.ti-certcard .who { font-size: 18px; color: var(--ink-2); line-height: 1.6; }
+.ti-certcard .who b { font-size: 22px; color: var(--ink-1); }
+.ti-certcard .date { font-size: 26px; font-weight: 900; letter-spacing: .08em; padding-bottom: 6px; }
+.ti-certcard .seal { width: 104px; height: 104px; display: grid; place-items: center; text-align: center; color: #fff; background: #C8322B; border: 4px double #fff; outline: 3px solid #C8322B; border-radius: 12px; transform: rotate(-8deg); font-size: 30px; font-weight: 900; line-height: 1.05; letter-spacing: .05em; }
+.ti-cert-side { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.ti-cert-side .ti-panel { padding: 10px 14px; }
+.ti-cert-side .hello { font-size: 22px; font-weight: 900; line-height: 1.3; }
+.ti-cert-side label { font-size: 16px; font-weight: 900; color: var(--ink-2); letter-spacing: .1em; display: block; margin-bottom: 6px; }
+.ti-cert-side input { width: 100%; height: 46px; border-radius: 14px; border: 2px solid var(--kraft-2); background: var(--card-2); font: 700 24px var(--f-ui); padding: 0 14px; color: var(--ink-1); }
+.ti-cert-side .hint { font-size: 16px; color: var(--ink-3); margin-top: 6px; line-height: 1.4; }
+.ti-ranks { display: flex; flex-direction: column; gap: 4px; font-size: 17px; margin-top: 4px; }
+.ti-ranks div { display: flex; align-items: center; gap: 8px; padding: 3px 8px; border-radius: 10px; color: var(--ink-2); border: 2px solid transparent; }
+.ti-ranks div.now { background: var(--butter-soft); border-color: var(--butter); color: var(--ink-1); font-weight: 900; }
+.ti-ranks .st { width: 58px; flex: none; color: #B07A10; letter-spacing: 1px; }
+.ti-cert-side .ti-btn1 { height: 58px; font-size: 26px !important; }
+.ti-cert-side .ti-btn2 { height: 48px; font-size: 20px !important; }
+
+@media print {
+  @page { size: A4 landscape; margin: 8mm; }
+  html, body { height: auto; overflow: visible; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .ti-app section:not(.ti-cert), .ti-cert-side { display: none !important; }
+  .ti-cert { display: block !important; height: auto; padding: 0; }
+  .ti-certcard { box-shadow: none; border: 0; height: 186mm; padding: 0; background: #fff; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ti-app *, .ti-app *::before, .ti-app *::after { animation: none !important; transition: none !important; }
+}

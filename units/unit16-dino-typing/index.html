@@ -1,1086 +1,1591 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>恐龍打字大冒險 3.0 - 兒童橫向跑酷指引樂園</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Playful Rounded Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
-    <!-- FontAwesome for Cute Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        body {
-            font-family: 'Quicksand', 'Microsoft JhengHei', sans-serif;
-            background: linear-gradient(135deg, #111827 0%, #311042 100%);
-            overflow-x: hidden;
-        }
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>恐龍打字大冒險 - 打字島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Fredoka:wght@500;600&display=swap">
+  <link rel="stylesheet" href="../../assets/css/typing-island.css">
+  <style>
+    /* 只放場景樣式，所有 class 一律以 sc- 開頭，不動 .ti- 樣式 */
+    .sc-stage {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      user-select: none;
+      background: linear-gradient(180deg, var(--sky-soft) 0%, #EAF6FC 64%, #D9EFC9 64%, #C1E3AE 100%);
+      font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+      color: var(--ink-1);
+    }
 
-        /* 跑酷舞台背景滾動動畫 */
-        .scrolling-bg {
-            background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80');
-            background-size: cover;
-            background-position: bottom;
-            animation: scrollBg 25s linear infinite;
-        }
-        @keyframes scrollBg {
-            0% { background-position-x: 0px; }
-            100% { background-position-x: -1200px; }
-        }
+    /* 細微紙張顆粒紋理，增添繪本剪紙觸感（非純白、不刺眼） */
+    .sc-paper-grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.22;
+      background-image: radial-gradient(rgba(94, 72, 56, 0.16) 1px, transparent 1px);
+      background-size: 16px 16px;
+      z-index: 1;
+    }
 
-        /* 恐龍動畫 */
-        .dino-run {
-            animation: dinoBob 0.4s infinite alternate;
-        }
-        @keyframes dinoBob {
-            0% { transform: translateY(0px) rotate(0deg); }
-            100% { transform: translateY(-6px) rotate(2deg); }
-        }
-        .dino-jump {
-            animation: dinoJump 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-        }
-        @keyframes dinoJump {
-            0% { transform: translateY(0px) scaleY(0.9); }
-            40% { transform: translateY(-110px) rotate(-10deg) scaleY(1.1); }
-            70% { transform: translateY(-110px) rotate(-5deg); }
-            100% { transform: translateY(0px) scaleY(1); }
-        }
-        .dino-hurt {
-            animation: dinoHurt 0.5s ease-out;
-        }
-        @keyframes dinoHurt {
-            0% { transform: translateX(0px) rotate(0deg); filter: cubic-bezier(0.1, 0.8, 0.3, 1) invert(30%) sepia(80%) saturate(500%) hue-rotate(350deg); }
-            20% { transform: translateX(-20px) rotate(-15deg); }
-            40% { transform: translateX(10px) rotate(10deg); }
-            60% { transform: translateX(-10px) rotate(-5deg); }
-            100% { transform: translateX(0px) rotate(0deg); filter: none; }
-        }
+    /* 視差背景三層：雲、遠山、矮樹（移動由 rAF 控制，暫停時完全靜止） */
+    .sc-parallax-layer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .sc-layer-clouds {
+      top: 0;
+      height: 58%;
+      z-index: 2;
+    }
+    .sc-layer-hills {
+      bottom: 24%;
+      height: 46%;
+      z-index: 3;
+    }
+    .sc-layer-bushes {
+      bottom: 18%;
+      height: 28%;
+      z-index: 4;
+    }
+    .sc-parallax-track {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      display: flex;
+      will-change: transform;
+    }
+    .sc-parallax-tile {
+      flex: 0 0 900px;
+      width: 900px;
+      height: 100%;
+      display: block;
+    }
 
-        /* 彩虹無敵狀態狂暴效果 */
-        .rainbow-fever {
-            animation: feverRainbow 0.5s linear infinite alternate, dinoBob 0.2s infinite alternate;
-            filter: drop-shadow(0 0 15px #f43f5e) drop-shadow(0 0 25px #eab308);
-        }
-        @keyframes feverRainbow {
-            0% { border-color: #f43f5e; }
-            50% { border-color: #eab308; }
-            100% { border-color: #3b82f6; }
-        }
+    /* 剪紙草原與泥土小路 */
+    .sc-ground {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 24%;
+      min-height: 54px;
+      background: #B8DF9E;
+      border-top: 3px solid #96C67A;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .sc-road {
+      position: absolute;
+      left: -12px;
+      right: -12px;
+      top: 16%;
+      bottom: 14%;
+      background: var(--paper);
+      border-top: 3px solid var(--kraft);
+      border-bottom: 4px solid var(--kraft-2);
+      border-radius: 14px 10px 16px 8px;
+      box-shadow: inset 0 4px 0 rgba(255, 248, 230, 0.7), 0 3px 0 rgba(59, 42, 32, 0.08);
+    }
+    .sc-road-dashes {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 48%;
+      height: 4px;
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(201, 166, 107, 0.55) 0 18px,
+        transparent 18px 42px
+      );
+    }
 
-        /* 火球法術軌跡 */
-        .fireball {
-            animation: spin 0.3s linear infinite;
-        }
-        @keyframes spin {
-            100% { transform: rotate(360deg); }
-        }
+    /* 恐龍面前的防線標記（怪獸撞到會扣愛心） */
+    .sc-guard-line {
+      position: absolute;
+      bottom: 8%;
+      height: 44%;
+      width: 0;
+      border-left: 3px dashed var(--peach-dk);
+      opacity: 0.65;
+      z-index: 6;
+      pointer-events: none;
+    }
+    .sc-guard-post {
+      position: absolute;
+      left: -8px;
+      bottom: -4px;
+      width: 14px;
+      height: 24px;
+      background: var(--kraft-2);
+      border: 2px solid var(--ink-2);
+      border-radius: 5px 5px 3px 3px;
+      box-shadow: 0 2px 0 rgba(59, 42, 32, 0.16);
+    }
 
-        /* 鍵盤指法色彩 */
-        .finger-l-pinky { background-color: #ffe4e6; border-color: #fda4af; color: #9f1239; }
-        .finger-l-ring { background-color: #ffedd5; border-color: #fed7aa; color: #9a3412; }
-        .finger-l-middle { background-color: #fef9c3; border-color: #fef08a; color: #854d0e; }
-        .finger-l-index { background-color: #dcfce7; border-color: #bbf7d0; color: #166534; }
-        .finger-r-index { background-color: #e0f2fe; border-color: #bae6fd; color: #075985; }
-        .finger-r-middle { background-color: #e0e7ff; border-color: #c7d2fe; color: #3730a3; }
-        .finger-r-ring { background-color: #f3e8ff; border-color: #e9d5ff; color: #6b21a8; }
-        .finger-r-pinky { background-color: #fae8ff; border-color: #f5d0fe; color: #86198f; }
-        .finger-thumb { background-color: #f1f5f9; border-color: #e2e8f0; color: #475569; }
+    /* 上方冒險進度路線圖 */
+    .sc-roadmap {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(94%, 760px);
+      height: 36px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--card);
+      border: 2px solid var(--kraft);
+      border-radius: 12px 16px 10px 14px;
+      box-shadow: 0 3px 0 var(--kraft), 0 5px 10px rgba(59, 42, 32, 0.09);
+      z-index: 20;
+      pointer-events: none;
+    }
+    .sc-rm-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-2);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .sc-rm-track {
+      position: relative;
+      flex: 1;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6px;
+    }
+    .sc-rm-rail {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      top: 50%;
+      height: 4px;
+      margin-top: -2px;
+      background: var(--kraft);
+      border-radius: 4px;
+    }
+    .sc-rm-rail-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: var(--leaf);
+      border-radius: 4px;
+    }
+    .sc-rm-dot {
+      position: relative;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--card-2);
+      border: 2px solid var(--kraft-2);
+      z-index: 2;
+    }
+    .sc-rm-dot.sc-passed {
+      background: var(--leaf);
+      border-color: var(--leaf-dk);
+    }
+    .sc-rm-dot.sc-station {
+      width: 14px;
+      height: 14px;
+      background: var(--butter);
+      border: 2px solid var(--peach-dk);
+    }
+    .sc-rm-mini-dino {
+      position: absolute;
+      top: 50%;
+      left: 0%;
+      width: 24px;
+      height: 22px;
+      margin-left: -12px;
+      margin-top: -13px;
+      z-index: 4;
+      will-change: left;
+    }
+    .sc-rm-stats {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink-1);
+      font-variant-numeric: tabular-nums;
+    }
+    .sc-rm-flag-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 7px;
+      background: var(--butter-soft);
+      border: 1.5px solid var(--kraft-2);
+      border-radius: 8px 10px 8px 10px;
+      color: var(--ink-1);
+    }
+    .sc-rm-toast {
+      position: absolute;
+      top: 42px;
+      right: 12px;
+      padding: 3px 10px;
+      background: var(--leaf);
+      color: var(--card);
+      border: 2px solid var(--leaf-dk);
+      border-radius: 10px 14px 10px 12px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 3px 0 rgba(45, 122, 56, 0.25);
+      opacity: 0;
+      pointer-events: none;
+    }
 
-        /* 提示按鍵發光 */
-        .key-active-highlight {
-            animation: keyGlow 0.6s infinite alternate;
-            background-color: #fbbf24 !important;
-            border-color: #f59e0b !important;
-            color: #ffffff !important;
-            box-shadow: 0 0 20px #fbbf24, inset 0 0 10px #f59e0b;
-            transform: scale(1.15) translateY(-3px);
-            z-index: 40;
-        }
-        @keyframes keyGlow {
-            0% { box-shadow: 0 0 8px #fbbf24; }
-            100% { box-shadow: 0 0 25px #fbbf24, 0 0 35px #f59e0b; }
-        }
+    /* 主角：左邊的小恐龍 */
+    .sc-dino-wrap {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 124px;
+      height: 108px;
+      z-index: 12;
+      pointer-events: none;
+      will-change: transform;
+    }
+    .sc-dino-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      filter: drop-shadow(0 4px 0 rgba(59, 42, 32, 0.14));
+    }
+    .sc-dino-face { display: none; }
+    .sc-dino-wrap.sc-mood-normal .sc-face-normal { display: block; }
+    .sc-dino-wrap.sc-mood-happy .sc-face-happy { display: block; }
+    .sc-dino-wrap.sc-mood-hurt .sc-face-hurt { display: block; }
+    .sc-tail-swoosh {
+      opacity: 0;
+    }
 
-        /* 手指發光 */
-        .finger-glow {
-            fill: #fbbf24 !important;
-            stroke: #f59e0b !important;
-            filter: drop-shadow(0px 0px 10px #fbbf24);
-        }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col justify-between select-none text-white transition-all duration-1000">
-<a href="../../index.html" class="kogao-home-btn" style="position:fixed;top:10px;left:10px;z-index:99999;background:rgba(255,255,255,.92);border:2px solid #f59e0b;color:#b45309;font-family:'Noto Sans TC',sans-serif;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.15)">🏠 首頁</a>
+    /* 怪獸容器層、小花層、特效粒子層 */
+    .sc-flowers-layer,
+    .sc-monsters-layer,
+    .sc-fx-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .sc-flowers-layer { z-index: 8; }
+    .sc-monsters-layer { z-index: 11; }
+    .sc-fx-layer { z-index: 16; }
 
-    <header class="p-4 flex flex-wrap justify-between items-center bg-slate-900/90 backdrop-blur-md shadow-lg border-b-4 border-emerald-500 z-50" style="padding-left:6.5rem">
-        <div class="flex items-center space-x-3">
-            <span class="text-4xl animate-bounce">🦖</span>
-            <div>
-                <h1 class="text-2xl md:text-3xl font-extrabold text-emerald-400 tracking-wider font-['Fredoka_One']">恐龍打字大冒險 3.0</h1>
-                <p class="text-[11px] text-slate-400">專為一、二年級打造的橫向跑酷拼字樂園</p>
-            </div>
-        </div>
-        
-        <!-- 頂部即時數據 -->
-        <div class="flex flex-wrap items-center gap-3 mt-2 md:mt-0">
-            <!-- 金幣/積分 -->
-            <div class="bg-amber-950/80 px-3 py-1.5 rounded-full border-2 border-amber-400 flex items-center space-x-2 shadow-lg">
-                <span class="text-lg">💰</span>
-                <span id="score" class="text-lg font-bold text-amber-300">0</span>
-            </div>
-            <!-- 連擊熱度 -->
-            <div id="combo-container" class="hidden bg-rose-950/80 px-3 py-1.5 rounded-full border-2 border-rose-500 flex items-center space-x-2 animate-pulse">
-                <span class="text-sm font-bold text-rose-300">連擊 🔥</span>
-                <span id="combo" class="text-lg font-black text-rose-200">0</span>
-            </div>
-            <!-- 護盾/生命 -->
-            <div class="bg-teal-950/80 px-3 py-1.5 rounded-full border-2 border-teal-400 flex items-center space-x-1">
-                <span class="text-sm text-teal-300">護盾:</span>
-                <span id="heart-container" class="text-rose-400 flex space-x-1">❤️ ❤️ ❤️</span>
-            </div>
-            <!-- 設定與主題 -->
-            <div class="flex items-center space-x-2">
-                <button id="btn-sound" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-full border border-slate-600 transition" title="切換語音/音效">🔊</button>
-                <select id="select-lang" onchange="changeLanguage(this.value)" class="bg-slate-800 text-white border border-slate-600 rounded-full px-3 py-1.5 text-xs focus:outline-none cursor-pointer font-bold">
-                    <option value="ZH">繁體注音 ㄅㄆㄇ</option>
-                    <option value="EN">英文 A - Z</option>
-                </select>
-            </div>
-        </div>
-    </header>
+    /* 單隻石頭怪與頭上舉的字卡 */
+    .sc-monster {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 96px;
+      height: 144px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      will-change: transform, opacity;
+    }
 
-    <main class="flex-grow flex flex-col items-center justify-center relative p-4 overflow-hidden">
-        
-        <!-- 大廳與選單 -->
-        <div id="lobby" class="w-full max-w-4xl bg-slate-950/95 p-6 md:p-8 rounded-3xl shadow-2xl border-4 border-emerald-500 text-center space-y-6 z-10">
-            <div>
-                <h2 class="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-sky-400 font-['Fredoka_One']">
-                    跑啊！打字恐龍！🦖
-                </h2>
-                <p class="text-slate-300 text-sm mt-2">打對字，小恐龍就會「飛天跳躍」、「噴火球」和「吃草莓」！快來解鎖炫酷新皮膚！</p>
-            </div>
+    /* 最前面那隻石頭怪的天藍虛線瞄準圈與指示標籤 */
+    .sc-aim-ring {
+      position: absolute;
+      left: 50%;
+      bottom: 2px;
+      width: 108px;
+      height: 152px;
+      margin-left: -54px;
+      border-radius: 26px 30px 24px 28px;
+      border: 3.5px dashed var(--sky-dk);
+      background: rgba(214, 238, 251, 0.24);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .sc-monster.sc-lead .sc-aim-ring {
+      opacity: 1;
+    }
+    .sc-aim-tag {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 10px solid var(--sky-dk);
+      opacity: 0;
+    }
+    .sc-monster.sc-lead .sc-aim-tag {
+      opacity: 1;
+    }
 
-            <!-- 皮膚解鎖商城 -->
-            <div class="bg-slate-900/80 p-4 rounded-2xl border-2 border-slate-700">
-                <p class="text-amber-400 font-bold text-sm mb-3">🦕 選擇你的冒險恐龍 (Skin Shop)</p>
-                <div class="grid grid-cols-3 gap-3">
-                    <button id="skin-trex" onclick="selectSkin('trex')" class="p-3 bg-emerald-900/60 border-2 border-emerald-400 rounded-xl flex flex-col items-center transition transform scale-105">
-                        <span class="text-5xl">🦖</span>
-                        <span class="text-xs mt-1 font-bold">霸王綠龍</span>
-                        <span class="text-[10px] text-emerald-300">預設角色</span>
-                    </button>
-                    <button id="skin-tricera" onclick="selectSkin('tricera')" class="p-3 bg-slate-800 border-2 border-transparent rounded-xl flex flex-col items-center opacity-70 transition hover:opacity-100">
-                        <span class="text-5xl">🦕</span>
-                        <span class="text-xs mt-1 font-bold">粉紅三角龍</span>
-                        <span class="text-[10px] text-amber-400"><i class="fa-solid fa-coins"></i> 30 幣解鎖</span>
-                    </button>
-                    <button id="skin-stego" onclick="selectSkin('stego')" class="p-3 bg-slate-800 border-2 border-transparent rounded-xl flex flex-col items-center opacity-70 transition hover:opacity-100">
-                        <span class="text-5xl">🐉</span>
-                        <span class="text-xs mt-1 font-bold">星際機械龍</span>
-                        <span class="text-[10px] text-amber-400"><i class="fa-solid fa-coins"></i> 80 幣解鎖</span>
-                    </button>
-                </div>
-            </div>
+    /* 石頭怪頭上舉著的字卡（深色字配淺色底，對比度 > 11:1） */
+    .sc-card {
+      position: relative;
+      min-width: 66px;
+      height: 64px;
+      padding: 0 8px;
+      margin-bottom: -8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--card);
+      color: var(--ink-1);
+      border: 3px solid var(--kraft-2);
+      border-radius: 10px 14px 12px 10px;
+      box-shadow: 0 4px 0 var(--kraft), 0 6px 10px rgba(59, 42, 32, 0.14);
+      font-family: var(--f-zh);
+      font-size: 44px;
+      font-weight: 700;
+      line-height: 1;
+      z-index: 3;
+      box-sizing: border-box;
+    }
+    /* 英打模式：Fredoka / Consolas 等寬，至少 44px，不轉換大小寫 */
+    .sc-stage.sc-lang-en .sc-card {
+      font-family: 'Fredoka', Consolas, monospace;
+      font-size: 46px;
+      font-weight: 600;
+    }
+    .sc-card.sc-space-char {
+      color: var(--sky-dk);
+    }
+    .sc-monster.sc-lead .sc-card {
+      background: var(--sky-soft);
+      border: 3.5px solid var(--sky-dk);
+      box-shadow: 0 4px 0 rgba(31, 107, 156, 0.35), 0 6px 12px rgba(31, 107, 156, 0.18);
+    }
+    .sc-monster.sc-queue .sc-card {
+      background: var(--card-2);
+      border-color: var(--kraft-2);
+    }
 
-            <!-- 難度選擇 -->
-            <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-700 flex flex-wrap justify-around items-center gap-4">
-                <div class="text-left">
-                    <span class="text-xs text-emerald-400 font-bold block mb-1">🎮 挑戰難度：</span>
-                    <div class="flex space-x-2">
-                        <button id="diff-easy" onclick="setDifficulty('easy')" class="px-4 py-2 bg-emerald-600 border border-emerald-400 text-white font-bold rounded-xl text-xs transition">簡單 (慢速/單字)</button>
-                        <button id="diff-medium" onclick="setDifficulty('medium')" class="px-4 py-2 bg-slate-700 text-slate-400 rounded-xl text-xs transition">普通 (中速)</button>
-                        <button id="diff-hard" onclick="setDifficulty('hard')" class="px-4 py-2 bg-slate-700 text-slate-400 rounded-xl text-xs transition">困難 (瘋狂速度)</button>
-                    </div>
-                </div>
-                
-                <!-- 手指發光開關 -->
-                <div class="flex items-center space-x-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                    <span class="text-xs font-bold text-slate-300">手指指引提示</span>
-                    <input type="checkbox" id="toggle-finger-guide" checked class="w-10 h-5 bg-slate-600 rounded-full appearance-none checked:bg-emerald-500 relative cursor-pointer before:content-[''] before:absolute before:w-5 before:h-5 before:rounded-full before:bg-white before:transition-all checked:before:translate-x-5 shadow-inner">
-                </div>
-            </div>
+    /* 石頭怪身體 SVG */
+    .sc-rock-svg {
+      width: 82px;
+      height: 78px;
+      overflow: visible;
+      z-index: 2;
+      filter: drop-shadow(0 3px 0 rgba(59, 42, 32, 0.15));
+    }
+    .sc-rock-face-tease { display: none; }
+    .sc-monster.sc-teasing .sc-rock-face-normal { display: none; }
+    .sc-monster.sc-teasing .sc-rock-face-tease { display: block; }
 
-            <button onclick="startAdventure()" class="w-full md:w-2/3 py-5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-extrabold text-2xl rounded-2xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-400/40 transform hover:-translate-y-1 transition duration-200">
-                <i class="fa-solid fa-play mr-2"></i> 開始冒險！
-            </button>
-        </div>
+    /* 打錯時的可愛小提示氣泡（不閃紅全畫面） */
+    .sc-miss-bubble {
+      position: absolute;
+      right: -24px;
+      top: 46px;
+      padding: 2px 7px;
+      background: #FFD9D6;
+      color: var(--berry-dk);
+      border: 2px solid var(--berry);
+      border-radius: 10px 12px 10px 4px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      opacity: 0;
+      z-index: 5;
+      box-shadow: 0 2px 0 rgba(179, 38, 43, 0.2);
+    }
+    .sc-monster.sc-teasing .sc-miss-bubble {
+      opacity: 1;
+    }
 
-        <!-- 跑酷冒險主舞台 -->
-        <div id="adventure-stage" class="hidden w-full max-w-4xl h-[45vh] md:h-[50vh] rounded-3xl relative overflow-hidden border-4 border-emerald-500 bg-slate-950 shadow-inner">
-            <!-- 滾動背景 -->
-            <div class="scrolling-bg absolute inset-0 opacity-40"></div>
-            
-            <!-- 舞台軌道與地面線 -->
-            <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-emerald-950 to-emerald-900 border-t-4 border-emerald-400"></div>
+    /* 彈飛小石子、落地小花、打對飄字與星星 */
+    .sc-pebble {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 16px;
+      height: 14px;
+      margin-left: -8px;
+      margin-top: -7px;
+      will-change: transform, opacity;
+    }
+    .sc-flower {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 28px;
+      height: 30px;
+      margin-left: -14px;
+      margin-top: -26px;
+      will-change: transform, opacity;
+    }
+    .sc-pop {
+      position: absolute;
+      left: 0;
+      top: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 10px 12px 10px 12px;
+      font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      white-space: nowrap;
+      will-change: transform, opacity;
+    }
+    .sc-pop-hit {
+      background: var(--card);
+      color: var(--leaf-dk);
+      border: 2px solid var(--leaf);
+      box-shadow: 0 3px 0 rgba(45, 122, 56, 0.2);
+    }
+    .sc-pop-bonk {
+      background: var(--peach-soft);
+      color: var(--berry-dk);
+      border: 2px solid var(--berry);
+      box-shadow: 0 3px 0 rgba(179, 38, 43, 0.2);
+    }
 
-            <!-- 小恐龍容器 -->
-            <div id="dino-container" class="absolute bottom-16 left-12 w-24 h-24 flex items-center justify-center z-20 transition-all duration-75">
-                <span id="dino-character" class="text-7xl md:text-8xl dino-run select-none drop-shadow-lg">🦖</span>
-                <!-- 護盾發光特效 -->
-                <div id="dino-shield" class="absolute inset-0 border-4 border-cyan-400 rounded-full animate-ping opacity-0"></div>
-                <!-- 發射火球的發光口 -->
-                <div id="fire-nozzle" class="absolute -right-2 top-10 w-2 h-2 bg-red-500 rounded-full opacity-0"></div>
-            </div>
+    /* 減少動態偏好：確保完全無多餘過渡與晃動 */
+    @media (prefers-reduced-motion: reduce) {
+      .sc-stage * {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/typing/passages.js"></script>
+  <script src="../../assets/typing/en-items.js"></script>
+  <script src="../../assets/js/typing-core.js"></script>
+  <script src="../../assets/js/typing-ui.js"></script>
+  <script>
+    /* =========================================================================
+       場景具名設定常數 SCENE_CONFIG（集中管理速度、數量、顏色、物理與動畫秒數）
+       ========================================================================= */
+    var SCENE_CONFIG = {
+      // 同時顯示在畫面上的石頭怪數量（初階 3、進階 4、高階 5）
+      TARGET_COUNT: { t1: 3, t2: 4, t3: 5 },
 
-            <!-- 障礙物與食物容納盒 -->
-            <div id="stage-items" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+      // 最前面石頭怪從隊伍前端（進度 1/3）走到恐龍面前（進度 1）的秒數
+      // 對應全程（0 -> 1）為 18 / 12 / 9 秒，符合「初階 >= 14 秒、進階 >= 10 秒、高階 >= 7 秒」
+      // 且從隊伍前端開走剛好是本關設定的 12 / 8 / 6 秒
+      LEAD_TRAVEL_SEC: { t1: 12, t2: 8, t3: 6 },
 
-            <!-- 炫酷彈幕反饋層 (火球、碎屑、愛心、狂暴提示) -->
-            <div id="fx-layer" class="absolute inset-0 pointer-events-none"></div>
+      // 隊伍前端起點（占全程 1/3，排隊中的怪獸最多只能前進到這裡以前，保留 >= 2/3 時間）
+      QUEUE_FRONT_PROGRESS: 1 / 3,
 
-            <!-- 狂暴模式 Fever 發光邊框與進度條 -->
-            <div id="fever-banner" class="hidden absolute top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-rose-500 via-amber-400 to-indigo-500 text-slate-950 px-6 py-2 rounded-full font-black text-xl shadow-lg animate-bounce z-30">
-                🔥 狂暴彩虹模式 Fever Time !! 🔥
-            </div>
-            
-            <div class="absolute top-4 left-4 bg-slate-900/80 px-4 py-1.5 rounded-full border border-slate-700 z-30 flex items-center space-x-2">
-                <span class="text-xs font-bold text-rose-400">狂暴蓄力：</span>
-                <div class="w-24 bg-slate-800 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-700">
-                    <div id="fever-gauge" class="bg-gradient-to-r from-amber-400 to-rose-500 h-full rounded-full transition-all duration-200" style="width: 0%"></div>
-                </div>
-            </div>
-        </div>
+      // 還沒輪到的石頭怪跟隨速度倍率（約目前目標的 1/3）
+      QUEUE_SPEED_RATIO: 1 / 3,
 
-        <!-- 返回大廳按鈕 -->
-        <button id="btn-back" class="hidden mt-4 px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 font-bold rounded-full shadow-lg transition z-10 flex items-center space-x-2" onclick="backToLobby()">
-            <i class="fa-solid fa-house"></i> <span>返回大廳</span>
-        </button>
+      // rAF 時間差上限（毫秒），避免切回分頁瞬間暴衝
+      MAX_DT_MS: 100,
 
-    </main>
+      // 三層剪紙背景視差捲動速度（每秒像素）
+      PARALLAX_SPEED: {
+        clouds: 9,
+        hills: 20,
+        bushes: 36
+      },
+      PARALLAX_TILE_W: 900,
 
-    <footer class="p-4 bg-slate-950 border-t-8 border-slate-900 shadow-2xl relative">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-            
-            <!-- 左手指引圖 (SVG) -->
-            <div id="left-hand-panel" class="w-24 h-24 hidden md:block">
-                <p class="text-[9px] text-center text-slate-500 mb-1">👈 左手提示</p>
-                <svg viewBox="0 0 100 100" class="w-full h-full opacity-80">
-                    <path d="M 15,80 C 15,60 25,50 35,50 C 45,50 55,55 55,75 C 55,85 50,95 30,95 C 10,95 15,90 15,80 Z" fill="#475569" stroke="#64748b" stroke-width="2"/>
-                    <path id="finger-l-thumb" d="M 50,75 C 55,65 65,65 72,68 C 75,70 70,80 55,82" fill="#475569" stroke="#64748b" stroke-width="2"/>
-                    <path id="finger-l-index" d="M 45,52 C 45,30 52,28 53,48" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
-                    <path id="finger-l-middle" d="M 36,50 C 35,25 41,23 42,48" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
-                    <path id="finger-l-ring" d="M 27,51 C 23,28 30,26 31,49" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
-                    <path id="finger-l-pinky" d="M 19,56 C 12,35 18,33 21,54" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-            </div>
+      // 冒險進度路線圖：每幾字到達一個休息站並插旗
+      STATION_STEPS: 15,
 
-            <!-- 中央主鍵盤 -->
-            <div class="flex-grow max-w-4xl space-y-1.5 w-full">
-                <!-- 第一排 -->
-                <div class="flex justify-center space-x-1" id="keyboard-row-1"></div>
-                <!-- 第二排 -->
-                <div class="flex justify-center space-x-1" id="keyboard-row-2"></div>
-                <!-- 第三排 -->
-                <div class="flex justify-center space-x-1" id="keyboard-row-3"></div>
-                <!-- 第四排 -->
-                <div class="flex justify-center space-x-1" id="keyboard-row-4"></div>
-                <!-- 空白鍵 -->
-                <div class="flex justify-center">
-                    <div class="key finger-thumb w-48 md:w-64 h-9 md:h-10 rounded-lg flex items-center justify-center font-black text-xs border-2 shadow-md cursor-pointer transition-all" id="key-space">SPACE</div>
-                </div>
-            </div>
+      // 各回饋動畫持續時間（秒）
+      DINO_WHIP_SEC: 0.42,
+      DINO_HURT_SEC: 0.65,
+      MONSTER_TEASE_SEC: 0.78,
+      FLAG_TOAST_SEC: 1.8,
+      POP_LIFE_SEC: 0.85,
+      FLOWER_STAY_SEC: 2.4,
+      FLOWER_FADE_SEC: 0.45,
+      REDUCED_FADE_SEC: 0.25,
 
-            <!-- 右手指引圖 (SVG) -->
-            <div id="right-hand-panel" class="w-24 h-24 hidden md:block">
-                <p class="text-[9px] text-center text-slate-500 mb-1">👉 右手提示</p>
-                <svg viewBox="0 0 100 100" class="w-full h-full opacity-88">
-                    <path d="M 85,80 C 85,60 75,50 65,50 C 55,50 45,55 45,75 C 45,85 50,95 70,95 C 90,95 85,90 85,80 Z" fill="#475569" stroke="#64748b" stroke-width="2"/>
-                    <path id="finger-r-thumb" d="M 50,75 C 45,65 35,65 28,68 C 25,70 30,80 45,82" fill="#475569" stroke="#64748b" stroke-width="2"/>
-                    <path id="finger-r-index" d="M 55,52 C 55,30 48,28 47,48" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
-                    <path id="finger-r-middle" d="M 64,50 C 65,25 59,23 58,48" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
-                    <path id="finger-r-ring" d="M 73,51 C 77,28 70,26 69,49" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
-                    <path id="finger-r-pinky" d="M 81,56 C 88,35 82,33 79,54" fill="#475569" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-            </div>
+      // 小石子彈飛與落地變小花參數
+      PEBBLE_COUNT: 4,
+      PEBBLE_GRAVITY: 760,
+      MAX_FLOWERS: 14,
 
-        </div>
-    </footer>
+      // 小花色票（完全取自設計規範 system.md）
+      FLOWER_COLORS: [
+        { petal: '#FF9E7A', center: '#FFD966', stroke: '#D9531F' },
+        { petal: '#FFD966', center: '#FF9E7A', stroke: '#C9A66B' },
+        { petal: '#D6EEFB', center: '#FFD966', stroke: '#1F6B9C' },
+        { petal: '#FFF8E6', center: '#FF9E7A', stroke: '#7CCB6F' }
+      ]
+    };
 
-    <script>
-        // 音效系統 (Web Audio API)
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let soundEnabled = true;
+    TypingIsland.mount({
+      unit: 16,
+      title: '恐龍打字大冒險',
+      subtitle: '怪獸對打・英打',
+      langs: ['en'],
+      homeUrl: '../../index.html',
+      scene: function (api) {
+        var field = api.field;
 
-        function playSound(freq, type, duration, volume = 0.15) {
-            if (!soundEnabled) return;
-            try {
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(volume, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-                
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
-            } catch (err) {
-                console.log("Audio feedback pending user action.", err);
-            }
-        }
+        // 執行狀態（所有動畫與計時皆由單一 rAF 驅動，pause 時 100% 靜止）
+        var mounted = false;
+        var running = false;
+        var rafId = 0;
+        var lastTime = 0;
+        var elapsed = 0;
 
-        const audioBank = {
-            jump: () => { playSound(220, 'sine', 0.1); setTimeout(() => playSound(440, 'sine', 0.2), 60); },
-            shoot: () => { playSound(680, 'triangle', 0.15); playSound(380, 'sawtooth', 0.1, 0.08); },
-            eat: () => { playSound(800, 'sine', 0.08); setTimeout(() => playSound(1200, 'sine', 0.1), 50); },
-            hit: () => { playSound(150, 'sawtooth', 0.3, 0.2); },
-            fever: () => { 
-                playSound(523, 'triangle', 0.2);
-                setTimeout(() => playSound(659, 'triangle', 0.2), 150);
-                setTimeout(() => playSound(784, 'triangle', 0.4), 300);
-            }
+        // 系統「減少動態效果」偏好
+        var motionMQ = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+        var reducedMotion = motionMQ ? motionMQ.matches : false;
+
+        // 畫面幾何資訊（每次量測 field.clientWidth / clientHeight，絕不寫死）
+        var metrics = {
+          w: 1330,
+          h: 300,
+          groundY: 256,
+          dinoX: 110,
+          hitX: 220,
+          rightX: 1250,
+          trackSpan: 1030,
+          scale: 1
         };
 
-        function speakText(text, lang = 'zh-TW') {
-            if (!soundEnabled) return;
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = lang;
-                utterance.rate = 1.0;
-                window.speechSynthesis.speak(utterance);
-            }
-        }
+        // DOM 參照
+        var stageEl = null;
+        var cloudTrackEl = null;
+        var hillTrackEl = null;
+        var bushTrackEl = null;
+        var guardLineEl = null;
+        var dinoWrapEl = null;
+        var dinoTailEl = null;
+        var tailSwooshEl = null;
+        var flowersLayerEl = null;
+        var monstersLayerEl = null;
+        var fxLayerEl = null;
 
-        // 鍵盤佈局定義與分區數據
-        const keyboardData = [
-            [
-                { key: '1', zh: 'ㄅ', finger: 'finger-l-pinky', hand: 'finger-l-pinky' },
-                { key: '2', zh: 'ㄉ', finger: 'finger-l-ring', hand: 'finger-l-ring' },
-                { key: '3', zh: 'ˇ', finger: 'finger-l-middle', hand: 'finger-l-middle' },
-                { key: '4', zh: 'ˋ', finger: 'finger-l-index', hand: 'finger-l-index' },
-                { key: '5', zh: 'ㄓ', finger: 'finger-l-index', hand: 'finger-l-index' },
-                { key: '6', zh: 'ˊ', finger: 'finger-r-index', hand: 'finger-r-index' },
-                { key: '7', zh: '˙', finger: 'finger-r-index', hand: 'finger-r-index' },
-                { key: '8', zh: 'ㄚ', finger: 'finger-r-middle', hand: 'finger-r-middle' },
-                { key: '9', zh: 'ㄞ', finger: 'finger-r-ring', hand: 'finger-r-ring' },
-                { key: '0', zh: 'ㄢ', finger: 'finger-r-pinky', hand: 'finger-r-pinky' },
-                { key: '-', zh: 'ㄦ', finger: 'finger-r-pinky', hand: 'finger-r-pinky' }
-            ],
-            [
-                { key: 'Q', zh: 'ㄆ', finger: 'finger-l-pinky', hand: 'finger-l-pinky' },
-                { key: 'W', zh: 'ㄊ', finger: 'finger-l-ring', hand: 'finger-l-ring' },
-                { key: 'E', zh: 'ㄍ', finger: 'finger-l-middle', hand: 'finger-l-middle' },
-                { key: 'R', zh: 'ㄐ', finger: 'finger-l-index', hand: 'finger-l-index' },
-                { key: 'T', zh: 'ㄔ', finger: 'finger-l-index', hand: 'finger-l-index' },
-                { key: 'Y', zh: 'ㄗ', finger: 'finger-r-index', hand: 'finger-r-index' },
-                { key: 'U', zh: 'ㄧ', finger: 'finger-r-index', hand: 'finger-r-index' },
-                { key: 'I', zh: 'ㄛ', finger: 'finger-r-middle', hand: 'finger-r-middle' },
-                { key: 'O', zh: 'ㄟ', finger: 'finger-r-ring', hand: 'finger-r-ring' },
-                { key: 'P', zh: 'ㄣ', finger: 'finger-r-pinky', hand: 'finger-r-pinky' }
-            ],
-            [
-                { key: 'A', zh: 'ㄇ', finger: 'finger-l-pinky', hand: 'finger-l-pinky' },
-                { key: 'S', zh: 'ㄋ', finger: 'finger-l-ring', hand: 'finger-l-ring' },
-                { key: 'D', zh: 'ㄎ', finger: 'finger-l-middle', hand: 'finger-l-middle' },
-                { key: 'F', zh: 'ㄑ', finger: 'finger-l-index', hand: 'finger-l-index' },
-                { key: 'G', zh: 'ㄕ', finger: 'finger-l-index', hand: 'finger-l-index' },
-                { key: 'H', zh: 'ㄘ', finger: 'finger-r-index', hand: 'finger-r-index' },
-                { key: 'J', zh: 'ㄨ', finger: 'finger-r-index', hand: 'finger-r-index' },
-                { key: 'K', zh: 'ㄜ', finger: 'finger-r-middle', hand: 'finger-r-middle' },
-                { key: 'L', zh: 'ㄠ', finger: 'finger-r-ring', hand: 'finger-r-ring' },
-                { key: ';', zh: 'ㄤ', finger: 'finger-r-pinky', hand: 'finger-r-pinky' }
-            ],
-            [
-                { key: 'Z', zh: 'ㄈ', finger: 'finger-l-pinky', hand: 'finger-l-pinky' },
-                { key: 'X', zh: 'ㄌ', finger: 'finger-l-ring', hand: 'finger-l-ring' },
-                { key: 'C', zh: 'ㄏ', finger: 'finger-l-middle', hand: 'finger-l-middle' },
-                { key: 'V', zh: 'ㄒ', finger: 'finger-l-index', hand: 'finger-l-index' },
-                { key: 'B', zh: 'ㄖ', finger: 'finger-l-index', hand: 'finger-l-index' },
-                { key: 'N', zh: 'ㄙ', finger: 'finger-r-index', hand: 'finger-r-index' },
-                { key: 'M', zh: 'ㄩ', finger: 'finger-r-index', hand: 'finger-r-index' },
-                { key: ',', zh: 'ㄝ', finger: 'finger-r-middle', hand: 'finger-r-middle' },
-                { key: '.', zh: 'ㄡ', finger: 'finger-r-ring', hand: 'finger-r-ring' },
-                { key: '/', zh: 'ㄥ', finger: 'finger-r-pinky', hand: 'finger-r-pinky' }
-            ]
-        ];
+        // 冒險進度 DOM 與狀態
+        var rmFillEl = null;
+        var rmMiniDinoEl = null;
+        var rmStepTextEl = null;
+        var rmFlagCountEl = null;
+        var rmToastEl = null;
+        var rmDots = [];
+        var totalHits = 0;
+        var flagCount = 0;
+        var flagToastTimer = 0;
 
-        const keyMapDict = {};
-        const zhuyinToEngDict = {};
+        // 視差偏移量
+        var parallax = { clouds: 0, hills: 0, bushes: 0 };
 
-        // 渲染底下的發光虛擬鍵盤
-        function renderKeyboard() {
-            for (let r = 0; r < 4; r++) {
-                const rowEl = document.getElementById(`keyboard-row-${r + 1}`);
-                rowEl.innerHTML = '';
-                keyboardData[r].forEach(btn => {
-                    const keyDiv = document.createElement('div');
-                    keyDiv.id = `key-dom-${btn.key}`;
-                    keyDiv.className = `key ${btn.finger} w-8 h-9 md:w-11 md:h-10 rounded-lg flex flex-col items-center justify-center font-bold border-2 shadow-md transition-all duration-150 cursor-pointer text-xs`;
-                    
-                    rowEl.appendChild(keyDiv);
-                    keyMapDict[btn.key] = keyDiv;
-                    zhuyinToEngDict[btn.zh] = btn.key;
-                });
-            }
-            updateKeyboardLabels();
-        }
-
-        let appConfig = {
-            lang: 'ZH', 
-            difficulty: 'easy',
-            unlockedSkins: ['trex'],
-            currentSkin: 'trex'
+        // 恐龍動作狀態
+        var dinoState = {
+          whipTimer: 0,
+          hurtTimer: 0
         };
 
-        const skins = {
-            trex: { emoji: '🦖', name: '霸王綠龍', cost: 0 },
-            tricera: { emoji: '🦕', name: '粉紅三角龍', cost: 30 },
-            stego: { emoji: '🐉', name: '星際機械龍', cost: 80 }
-        };
+        // 場上實體陣列
+        var monsters = [];
+        var pebbles = [];
+        var flowers = [];
+        var pops = [];
+        var fadingMonsters = [];
 
-        let gameState = {
-            score: 0,
-            combo: 0,
-            shields: 3,
-            isActive: false,
-            feverVal: 0,      // 0 到 100
-            isFever: false,
-            feverTimer: null,
-            spawnTimer: null,
-            animationFrameId: null,
-            items: [],        // 當前舞台的所有元素
-            gameSpeed: 4,     // 跑酷橫向速度
-            lastSpawnTime: 0
-        };
-
-        // 依語言與鍵盤配置更新鍵盤貼紙
-        function updateKeyboardLabels() {
-            for (let r = 0; r < 4; r++) {
-                keyboardData[r].forEach(btn => {
-                    const el = keyMapDict[btn.key];
-                    if (el) {
-                        if (appConfig.lang === 'ZH') {
-                            el.innerHTML = `
-                                <span class="text-slate-400 text-[8px] leading-none">${btn.key}</span>
-                                <span class="text-base font-black leading-none mt-0.5">${btn.zh}</span>
-                            `;
-                        } else {
-                            el.innerHTML = `
-                                <span class="text-base font-black leading-none">${btn.key}</span>
-                                <span class="text-slate-400 text-[8px] leading-none mt-0.5">${btn.zh}</span>
-                            `;
-                        }
-                    }
-                });
-            }
+        /* ---------------------------------------------------------------------
+           工具函式
+           --------------------------------------------------------------------- */
+        function getTier() {
+          var t = api.settings && api.settings.tier;
+          return SCENE_CONFIG.TARGET_COUNT[t] ? t : 't1';
         }
 
-        function changeLanguage(lang) {
-            appConfig.lang = lang;
-            updateKeyboardLabels();
-            clearFingerGuides();
-            updateTargetGuide();
+        function getTargetCount() {
+          return SCENE_CONFIG.TARGET_COUNT[getTier()];
         }
 
-        function setDifficulty(diff) {
-            appConfig.difficulty = diff;
-            ['easy', 'medium', 'hard'].forEach(d => {
-                document.getElementById(`diff-${d}`).className = d === diff ? 
-                    'px-4 py-2 bg-emerald-600 border border-emerald-400 text-white font-bold rounded-xl text-xs transition' : 
-                    'px-4 py-2 bg-slate-700 text-slate-400 rounded-xl text-xs transition';
+        // 顯示字元：一律取 display（保留破音字選擇器），空白顯示成 ␣，不轉換大小寫
+        function formatDisplay(item) {
+          var raw = (item && item.display != null) ? String(item.display) : '';
+          return raw === ' ' ? '␣' : raw;
+        }
+
+        function makeKey(item) {
+          return item.passageIndex + ':' + item.index + ':' + item.display;
+        }
+
+        // 計算排隊怪獸間的最小進度間隔，避免卡片重疊
+        function getMinGapProgress() {
+          var count = getTargetCount();
+          var waitingCount = Math.max(1, count - 1);
+          // 理想卡片間距至少 76px，但也確保全部排隊怪獸落在 0 ~ QUEUE_FRONT_PROGRESS 範圍內
+          var idealGapP = 82 / Math.max(240, metrics.trackSpan);
+          var maxAllowedGapP = (SCENE_CONFIG.QUEUE_FRONT_PROGRESS - 0.01) / waitingCount;
+          return Math.min(idealGapP, maxAllowedGapP);
+        }
+
+        // 第 idx 隻排隊怪獸（idx >= 1）最多可前進到的進度上限（絕不超過 1/3）
+        function getSlotCapProgress(idx) {
+          if (idx <= 0) return 1;
+          var gapP = getMinGapProgress();
+          return Math.max(0, SCENE_CONFIG.QUEUE_FRONT_PROGRESS - idx * gapP);
+        }
+
+        // 將正規化進度 p（0 = 右側隊尾起點，1 = 恐龍面前防線）換算為畫面 X 座標
+        function progressToX(p) {
+          return metrics.rightX - p * metrics.trackSpan;
+        }
+
+        // 動態量測 api.field 大小（不寫死寬高）
+        function measureField() {
+          var w = field.clientWidth || 960;
+          var h = field.clientHeight || 300;
+          var scale = Math.max(0.76, Math.min(1, h / 285));
+          var dinoW = 124 * scale;
+          var dinoX = Math.max(24, Math.min(w * 0.075, 110));
+          var hitX = dinoX + dinoW + Math.max(16, w * 0.025);
+          var rightX = Math.max(hitX + 260, w - Math.max(54, 58 * scale));
+          var groundY = h - Math.max(22, Math.round(h * 0.13));
+
+          metrics.w = w;
+          metrics.h = h;
+          metrics.scale = scale;
+          metrics.dinoX = dinoX;
+          metrics.hitX = hitX;
+          metrics.rightX = rightX;
+          metrics.trackSpan = Math.max(240, rightX - hitX);
+          metrics.groundY = groundY;
+
+          if (guardLineEl) {
+            guardLineEl.style.left = Math.round(hitX - 36 * scale) + 'px';
+          }
+          if (stageEl) {
+            stageEl.classList.toggle('sc-lang-en', !!(api.settings && api.settings.lang === 'en'));
+          }
+        }
+
+        /* ---------------------------------------------------------------------
+           SVG 繪本剪紙美術產生器（無外部圖片）
+           --------------------------------------------------------------------- */
+        function createCloudsSVG() {
+          return (
+            '<svg class="sc-parallax-tile" viewBox="0 0 900 170" preserveAspectRatio="none" aria-hidden="true">' +
+              '<g fill="#FFF8E6" stroke="#E4CC9C" stroke-width="2.5">' +
+                '<path d="M58 92 C40 92 32 76 46 66 C48 48 74 42 88 54 C102 42 132 48 134 68 C150 70 152 92 134 92 Z"/>' +
+                '<path d="M290 68 C274 68 268 54 280 46 C284 30 306 28 318 38 C332 28 356 36 356 52 C370 54 370 68 354 68 Z"/>' +
+                '<path d="M525 104 C506 104 498 86 514 76 C518 56 546 50 564 62 C580 50 612 58 614 78 C632 82 630 104 610 104 Z"/>' +
+                '<path d="M750 74 C736 74 730 60 742 52 C746 38 768 34 780 44 C794 34 818 42 818 58 C832 60 830 74 816 74 Z"/>' +
+              '</g>' +
+            '</svg>'
+          );
+        }
+
+        function createHillsSVG() {
+          return (
+            '<svg class="sc-parallax-tile" viewBox="0 0 900 140" preserveAspectRatio="none" aria-hidden="true">' +
+              // 遠處淺丘陵
+              '<path d="M0 140 L0 88 Q110 26 235 82 T490 74 T745 86 T900 88 L900 140 Z" fill="#C9E7BC" stroke="#A7D296" stroke-width="2.5"/>' +
+              // 近處中丘陵
+              '<path d="M0 140 L0 106 Q140 52 300 102 T620 96 T900 106 L900 140 Z" fill="#B2DD9E" stroke="#8EC278" stroke-width="2.5"/>' +
+            '</svg>'
+          );
+        }
+
+        function createBushesSVG() {
+          return (
+            '<svg class="sc-parallax-tile" viewBox="0 0 900 90" preserveAspectRatio="none" aria-hidden="true">' +
+              // 剪紙小矮樹與灌木叢
+              '<g>' +
+                '<rect x="92" y="54" width="12" height="30" rx="4" fill="#C9A66B" stroke="#74604E" stroke-width="2"/>' +
+                '<circle cx="98" cy="40" r="22" fill="#7CCB6F" stroke="#2D7A38" stroke-width="2.5"/>' +
+                '<circle cx="84" cy="46" r="14" fill="#8CD57F" stroke="#2D7A38" stroke-width="2"/>' +
+
+                '<path d="M232 86 C228 66 246 54 260 64 C272 52 296 58 298 74 C310 74 312 86 302 86 Z" fill="#7CCB6F" stroke="#2D7A38" stroke-width="2.5"/>' +
+                '<circle cx="268" cy="70" r="3.5" fill="#FFD966"/>' +
+                '<circle cx="284" cy="75" r="3" fill="#FF9E7A"/>' +
+
+                '<rect x="444" y="48" width="14" height="36" rx="4" fill="#C9A66B" stroke="#74604E" stroke-width="2"/>' +
+                '<circle cx="451" cy="34" r="24" fill="#7CCB6F" stroke="#2D7A38" stroke-width="2.5"/>' +
+                '<circle cx="468" cy="44" r="15" fill="#8CD57F" stroke="#2D7A38" stroke-width="2"/>' +
+
+                '<path d="M635 86 C632 68 648 58 662 66 C674 56 694 62 696 76 C706 76 708 86 698 86 Z" fill="#8CD57F" stroke="#2D7A38" stroke-width="2.5"/>' +
+                '<circle cx="662" cy="74" r="3.2" fill="#FFF8E6"/>' +
+
+                '<rect x="798" y="56" width="12" height="28" rx="4" fill="#C9A66B" stroke="#74604E" stroke-width="2"/>' +
+                '<circle cx="804" cy="42" r="20" fill="#7CCB6F" stroke="#2D7A38" stroke-width="2.5"/>' +
+              '</g>' +
+            '</svg>'
+          );
+        }
+
+        function createDinoSVG() {
+          return (
+            '<svg class="sc-dino-svg" viewBox="0 0 130 112" aria-hidden="true">' +
+              // 尾巴甩擊氣流（平時隱藏，打對甩尾時顯現）
+              '<g class="sc-tail-swoosh">' +
+                '<path d="M98 22 C122 34 128 62 114 86" fill="none" stroke="#FFF8E6" stroke-width="8" stroke-linecap="round"/>' +
+                '<path d="M98 22 C122 34 128 62 114 86" fill="none" stroke="#7CCB6F" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 8"/>' +
+                '<path d="M112 18 L116 28 L126 24 L118 33 L124 41 L114 37 L109 46 L109 35 L99 32 L109 28 Z" fill="#FFD966" stroke="#D9531F" stroke-width="1.5"/>' +
+              '</g>' +
+
+              // 尾巴群組（以尾根為軸心旋轉甩動）
+              '<g class="sc-dino-tail">' +
+                '<path d="M48 76 C26 78 10 66 8 50 C16 56 28 58 46 60 Z" fill="#FFF8E6" stroke="#FFF8E6" stroke-width="7" stroke-linejoin="round"/>' +
+                '<path d="M48 76 C26 78 10 66 8 50 C16 56 28 58 46 60 Z" fill="#7CCB6F" stroke="#2D7A38" stroke-width="3" stroke-linejoin="round"/>' +
+                '<path d="M22 57 L18 47 L29 53 Z" fill="#FFD966" stroke="#2D7A38" stroke-width="2" stroke-linejoin="round"/>' +
+              '</g>' +
+
+              // 後腳
+              '<rect x="44" y="84" width="16" height="20" rx="8" fill="#5CB654" stroke="#2D7A38" stroke-width="3"/>' +
+
+              // 身體白紙邊＋主體
+              '<path d="M38 74 C36 52 54 44 74 48 C90 52 94 68 88 84 C82 94 46 96 38 74 Z" fill="#FFF8E6" stroke="#FFF8E6" stroke-width="8"/>' +
+              '<path d="M38 74 C36 52 54 44 74 48 C90 52 94 68 88 84 C82 94 46 96 38 74 Z" fill="#7CCB6F" stroke="#2D7A38" stroke-width="3"/>' +
+
+              // 奶油色圓肚皮
+              '<path d="M62 56 C78 56 88 66 84 82 C76 89 62 88 58 76 C56 68 58 60 62 56 Z" fill="#FFF1B8"/>' +
+
+              // 前腳
+              '<rect x="68" y="84" width="17" height="20" rx="8" fill="#7CCB6F" stroke="#2D7A38" stroke-width="3"/>' +
+
+              // 可愛小短手
+              '<path d="M82 64 C92 62 96 68 91 74 C86 76 80 73 79 68 Z" fill="#7CCB6F" stroke="#2D7A38" stroke-width="2.8"/>' +
+
+              // 背部小背棘
+              '<path d="M44 48 L36 39 L49 41 Z" fill="#FFD966" stroke="#2D7A38" stroke-width="2" stroke-linejoin="round"/>' +
+              '<path d="M52 34 L45 24 L59 27 Z" fill="#FFD966" stroke="#2D7A38" stroke-width="2" stroke-linejoin="round"/>' +
+              '<path d="M64 23 L60 12 L73 19 Z" fill="#FFD966" stroke="#2D7A38" stroke-width="2" stroke-linejoin="round"/>' +
+
+              // Q 版大恐龍頭（面向右邊）
+              '<path d="M52 38 C52 18 72 12 92 16 C110 20 118 32 114 45 C110 56 96 60 76 58 C60 56 52 48 52 38 Z" fill="#FFF8E6" stroke="#FFF8E6" stroke-width="8"/>' +
+              '<path d="M52 38 C52 18 72 12 92 16 C110 20 118 32 114 45 C110 56 96 60 76 58 C60 56 52 48 52 38 Z" fill="#7CCB6F" stroke="#2D7A38" stroke-width="3"/>' +
+
+              // 小鼻孔與暖橘腮紅
+              '<circle cx="105" cy="31" r="2.2" fill="#2D7A38"/>' +
+              '<ellipse cx="82" cy="46" rx="6.5" ry="4" fill="#FF9E7A" opacity="0.72"/>' +
+
+              // 表情 1：平常可愛笑臉
+              '<g class="sc-dino-face sc-face-normal">' +
+                '<circle cx="88" cy="34" r="6" fill="#3B2A20"/>' +
+                '<circle cx="90" cy="32" r="2.2" fill="#FFF8E6"/>' +
+                '<path d="M90 46 Q99 52 108 45" fill="none" stroke="#3B2A20" stroke-width="2.6" stroke-linecap="round"/>' +
+              '</g>' +
+
+              // 表情 2：打對開心笑眼
+              '<g class="sc-dino-face sc-face-happy">' +
+                '<path d="M82 35 Q88 27 95 35" fill="none" stroke="#3B2A20" stroke-width="3" stroke-linecap="round"/>' +
+                '<path d="M90 44 Q100 54 109 44" fill="#FF9E7A" stroke="#3B2A20" stroke-width="2.4" stroke-linecap="round"/>' +
+              '</g>' +
+
+              // 表情 3：被怪獸撞到（眼睛變 > <）
+              '<g class="sc-dino-face sc-face-hurt">' +
+                '<path d="M74 30 L82 35 L74 40" fill="none" stroke="#3B2A20" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+                '<path d="M96 30 L88 35 L96 40" fill="none" stroke="#3B2A20" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+                '<path d="M88 49 Q94 45 99 49 Q104 52 108 48" fill="none" stroke="#3B2A20" stroke-width="2.5" stroke-linecap="round"/>' +
+                '<path d="M64 25 C61 30 61 34 64 34 C67 34 67 30 64 25 Z" fill="#D6EEFB" stroke="#1F6B9C" stroke-width="1.6"/>' +
+              '</g>' +
+            '</svg>'
+          );
+        }
+
+        function createMiniDinoSVG() {
+          return (
+            '<svg viewBox="0 0 28 24" width="24" height="22" aria-hidden="true">' +
+              '<path d="M5 17 C2 16 2 12 6 13 L10 13 C10 7 15 4 21 6 C25 7 26 12 24 15 C22 18 18 19 14 19 L14 22 L11 22 L11 19 L8 19 L8 22 L5 22 Z" fill="#7CCB6F" stroke="#2D7A38" stroke-width="2" stroke-linejoin="round"/>' +
+              '<circle cx="20" cy="10" r="1.6" fill="#3B2A20"/>' +
+            '</svg>'
+          );
+        }
+
+        function createRockMonsterSVG() {
+          return (
+            '<svg class="sc-rock-svg" viewBox="0 0 92 86" aria-hidden="true">' +
+              // 舉高托住字卡的雙手
+              '<path d="M22 36 C12 28 12 14 20 8 C26 6 30 14 28 24" fill="#C9B49B" stroke="#5E4838" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+              '<path d="M70 36 C80 28 80 14 72 8 C66 6 62 14 64 24" fill="#C9B49B" stroke="#5E4838" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+
+              // 兩隻交替走路的小石頭腳
+              '<ellipse class="sc-rock-foot-l" cx="34" cy="76" rx="10" ry="7" fill="#A99278" stroke="#5E4838" stroke-width="2.8"/>' +
+              '<ellipse class="sc-rock-foot-r" cx="58" cy="76" rx="10" ry="7" fill="#A99278" stroke="#5E4838" stroke-width="2.8"/>' +
+
+              // 圓滾滾石頭身體（外加淡米紙邊）
+              '<path d="M18 52 C16 32 30 18 48 18 C66 18 76 32 74 52 C72 68 62 74 46 74 C28 74 20 68 18 52 Z" fill="#FFF8E6" stroke="#FFF8E6" stroke-width="7"/>' +
+              '<path d="M18 52 C16 32 30 18 48 18 C66 18 76 32 74 52 C72 68 62 74 46 74 C28 74 20 68 18 52 Z" fill="#C9B49B" stroke="#5E4838" stroke-width="3"/>' +
+
+              // 剪紙岩石層次斑紋
+              '<path d="M27 32 C34 25 46 24 54 28 C44 30 35 35 28 42 Z" fill="#E4D4BE" opacity="0.85"/>' +
+              '<circle cx="62" cy="56" r="5" fill="#B39C82" opacity="0.7"/>' +
+
+              // 頭頂可愛小嫩葉
+              '<path d="M46 18 C44 10 38 9 36 13 C40 16 43 17 46 18 Z" fill="#7CCB6F" stroke="#2D7A38" stroke-width="1.8"/>' +
+              '<path d="M46 18 C49 10 56 10 57 14 C53 16 49 17 46 18 Z" fill="#7CCB6F" stroke="#2D7A38" stroke-width="1.8"/>' +
+
+              // 平常表情（看向左邊小恐龍）
+              '<g class="sc-rock-face-normal">' +
+                '<circle cx="34" cy="45" r="5.5" fill="#FFF8E6" stroke="#3B2A20" stroke-width="2"/>' +
+                '<circle cx="32.5" cy="45" r="2.7" fill="#3B2A20"/>' +
+                '<circle cx="54" cy="45" r="5.5" fill="#FFF8E6" stroke="#3B2A20" stroke-width="2"/>' +
+                '<circle cx="52.5" cy="45" r="2.7" fill="#3B2A20"/>' +
+                '<path d="M38 58 Q44 55 50 58" fill="none" stroke="#3B2A20" stroke-width="2.6" stroke-linecap="round"/>' +
+              '</g>' +
+
+              // 打錯時：鬼臉吐舌頭
+              '<g class="sc-rock-face-tease">' +
+                '<path d="M28 41 L38 46 L28 49" fill="none" stroke="#3B2A20" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+                '<circle cx="54" cy="44" r="6" fill="#FFF8E6" stroke="#3B2A20" stroke-width="2.2"/>' +
+                '<circle cx="52" cy="43" r="2.5" fill="#3B2A20"/>' +
+                '<path d="M34 56 Q44 61 54 55" fill="none" stroke="#3B2A20" stroke-width="2.8" stroke-linecap="round"/>' +
+                '<path d="M40 58 C40 68 50 68 50 58 Z" fill="#E5484D" stroke="#B3262B" stroke-width="2"/>' +
+                '<line x1="45" y1="59" x2="45" y2="64" stroke="#FFD9D6" stroke-width="1.6" stroke-linecap="round"/>' +
+              '</g>' +
+            '</svg>'
+          );
+        }
+
+        function createFlowerSVG(palette) {
+          return (
+            '<svg viewBox="0 0 32 34" width="28" height="30" aria-hidden="true">' +
+              '<path d="M16 17 L16 32" stroke="#2D7A38" stroke-width="3" stroke-linecap="round"/>' +
+              '<path d="M16 26 C10 24 8 20 12 19 C14 19 15 22 16 25 Z" fill="#7CCB6F" stroke="#2D7A38" stroke-width="1.5"/>' +
+              '<path d="M16 27 C22 25 24 21 20 20 C18 20 17 23 16 26 Z" fill="#7CCB6F" stroke="#2D7A38" stroke-width="1.5"/>' +
+              '<g fill="' + palette.petal + '" stroke="' + palette.stroke + '" stroke-width="1.6">' +
+                '<circle cx="16" cy="7" r="5"/>' +
+                '<circle cx="22" cy="11" r="5"/>' +
+                '<circle cx="20" cy="18" r="5"/>' +
+                '<circle cx="12" cy="18" r="5"/>' +
+                '<circle cx="10" cy="11" r="5"/>' +
+              '</g>' +
+              '<circle cx="16" cy="13" r="4.2" fill="' + palette.center + '" stroke="' + palette.stroke + '" stroke-width="1.5"/>' +
+            '</svg>'
+          );
+        }
+
+        function createPebbleSVG() {
+          return (
+            '<svg viewBox="0 0 18 16" width="16" height="14" aria-hidden="true">' +
+              '<path d="M3 10 C2 5 6 2 11 3 C16 4 17 9 14 13 C11 15 4 14 3 10 Z" fill="#C9B49B" stroke="#5E4838" stroke-width="2"/>' +
+            '</svg>'
+          );
+        }
+
+        /* ---------------------------------------------------------------------
+           建立場景骨架（僅於 start() 執行一次）
+           --------------------------------------------------------------------- */
+        function buildSceneDOM() {
+          if (mounted) return;
+          mounted = true;
+
+          field.innerHTML = '';
+
+          stageEl = document.createElement('div');
+          stageEl.className = 'sc-stage';
+
+          // 紙張質感
+          var grain = document.createElement('div');
+          grain.className = 'sc-paper-grain';
+          stageEl.appendChild(grain);
+
+          // 三層視差背景（每層 3 張 900px 拼接，寬螢幕也無接縫）
+          function makeParallaxLayer(cls, svgHtml) {
+            var layer = document.createElement('div');
+            layer.className = 'sc-parallax-layer ' + cls;
+            var track = document.createElement('div');
+            track.className = 'sc-parallax-track';
+            track.innerHTML = svgHtml + svgHtml + svgHtml;
+            layer.appendChild(track);
+            stageEl.appendChild(layer);
+            return track;
+          }
+          cloudTrackEl = makeParallaxLayer('sc-layer-clouds', createCloudsSVG());
+          hillTrackEl = makeParallaxLayer('sc-layer-hills', createHillsSVG());
+          bushTrackEl = makeParallaxLayer('sc-layer-bushes', createBushesSVG());
+
+          // 草原與小路
+          var ground = document.createElement('div');
+          ground.className = 'sc-ground';
+          ground.innerHTML = '<div class="sc-road"><div class="sc-road-dashes"></div></div>';
+          stageEl.appendChild(ground);
+
+          // 恐龍防線
+          guardLineEl = document.createElement('div');
+          guardLineEl.className = 'sc-guard-line';
+          guardLineEl.innerHTML = '<div class="sc-guard-post"></div>';
+          stageEl.appendChild(guardLineEl);
+
+          // 落地小花層、石頭怪層、小恐龍、粒子飄字層
+          flowersLayerEl = document.createElement('div');
+          flowersLayerEl.className = 'sc-flowers-layer';
+          stageEl.appendChild(flowersLayerEl);
+
+          monstersLayerEl = document.createElement('div');
+          monstersLayerEl.className = 'sc-monsters-layer';
+          stageEl.appendChild(monstersLayerEl);
+
+          dinoWrapEl = document.createElement('div');
+          dinoWrapEl.className = 'sc-dino-wrap sc-mood-normal';
+          dinoWrapEl.innerHTML = createDinoSVG();
+          dinoTailEl = dinoWrapEl.querySelector('.sc-dino-tail');
+          tailSwooshEl = dinoWrapEl.querySelector('.sc-tail-swoosh');
+          stageEl.appendChild(dinoWrapEl);
+
+          fxLayerEl = document.createElement('div');
+          fxLayerEl.className = 'sc-fx-layer';
+          stageEl.appendChild(fxLayerEl);
+
+          // 上方冒險進度路線圖
+          var roadmap = document.createElement('div');
+          roadmap.className = 'sc-roadmap';
+
+          var rmTitle = document.createElement('div');
+          rmTitle.className = 'sc-rm-title';
+          rmTitle.textContent = '冒險路線';
+          roadmap.appendChild(rmTitle);
+
+          var rmTrack = document.createElement('div');
+          rmTrack.className = 'sc-rm-track';
+
+          var rmRail = document.createElement('div');
+          rmRail.className = 'sc-rm-rail';
+          rmFillEl = document.createElement('div');
+          rmFillEl.className = 'sc-rm-rail-fill';
+          rmRail.appendChild(rmFillEl);
+          rmTrack.appendChild(rmRail);
+
+          rmDots = [];
+          for (var s = 0; s <= SCENE_CONFIG.STATION_STEPS; s++) {
+            var dot = document.createElement('div');
+            dot.className = 'sc-rm-dot' + (s === SCENE_CONFIG.STATION_STEPS ? ' sc-station' : '');
+            rmTrack.appendChild(dot);
+            rmDots.push(dot);
+          }
+
+          rmMiniDinoEl = document.createElement('div');
+          rmMiniDinoEl.className = 'sc-rm-mini-dino';
+          rmMiniDinoEl.innerHTML = createMiniDinoSVG();
+          rmTrack.appendChild(rmMiniDinoEl);
+          roadmap.appendChild(rmTrack);
+
+          var rmStats = document.createElement('div');
+          rmStats.className = 'sc-rm-stats';
+          rmStepTextEl = document.createElement('span');
+          rmStepTextEl.textContent = '0/' + SCENE_CONFIG.STATION_STEPS;
+
+          var flagBadge = document.createElement('span');
+          flagBadge.className = 'sc-rm-flag-badge';
+          flagBadge.innerHTML =
+            '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">' +
+              '<line x1="3" y1="2" x2="3" y2="15" stroke="#5E4838" stroke-width="2" stroke-linecap="round"/>' +
+              '<path d="M4 3 L14 6 L4 10 Z" fill="#FF9E7A" stroke="#D9531F" stroke-width="1.3" stroke-linejoin="round"/>' +
+            '</svg>';
+          rmFlagCountEl = document.createElement('span');
+          rmFlagCountEl.textContent = '0';
+          flagBadge.appendChild(rmFlagCountEl);
+
+          rmStats.appendChild(rmStepTextEl);
+          rmStats.appendChild(flagBadge);
+          roadmap.appendChild(rmStats);
+
+          rmToastEl = document.createElement('div');
+          rmToastEl.className = 'sc-rm-toast';
+          rmToastEl.textContent = '到達休息站・插旗！';
+          roadmap.appendChild(rmToastEl);
+
+          stageEl.appendChild(roadmap);
+          field.appendChild(stageEl);
+
+          // 監聽 prefers-reduced-motion 即時變化
+          if (motionMQ && motionMQ.addEventListener) {
+            motionMQ.addEventListener('change', function (e) {
+              reducedMotion = e.matches;
+              renderAll();
             });
+          }
         }
 
-        // 皮膚商城交互
-        function selectSkin(skinId) {
-            if (skinId === 'tricera' && !appConfig.unlockedSkins.includes('tricera')) {
-                if (gameState.score >= 30) {
-                    gameState.score -= 30;
-                    appConfig.unlockedSkins.push('tricera');
-                    document.getElementById('score').innerText = gameState.score;
-                    document.getElementById('skin-tricera').querySelector('span:last-child').innerHTML = '<span class="text-emerald-400">已擁有</span>';
-                    document.getElementById('skin-tricera').classList.remove('opacity-70');
-                } else {
-                    alert("不夠金幣解鎖粉紅三角龍喔！快去冒險跑酷賺取吧！✨");
-                    return;
-                }
-            }
-            if (skinId === 'stego' && !appConfig.unlockedSkins.includes('stego')) {
-                if (gameState.score >= 80) {
-                    gameState.score -= 80;
-                    appConfig.unlockedSkins.push('stego');
-                    document.getElementById('score').innerText = gameState.score;
-                    document.getElementById('skin-stego').querySelector('span:last-child').innerHTML = '<span class="text-emerald-400">已擁有</span>';
-                    document.getElementById('skin-stego').classList.remove('opacity-70');
-                } else {
-                    alert("不夠金幣解鎖星際機械龍喔！快去挑戰狂暴模式吧！✨");
-                    return;
-                }
+        /* ---------------------------------------------------------------------
+           冒險進度路線圖更新
+           --------------------------------------------------------------------- */
+        function updateRoadmapUI() {
+          if (!rmFillEl) return;
+          var steps = SCENE_CONFIG.STATION_STEPS;
+          var rem = totalHits % steps;
+          var stepInLeg = totalHits === 0 ? 0 : (rem === 0 ? steps : rem);
+          var pct = (stepInLeg / steps) * 100;
+
+          rmFillEl.style.width = pct + '%';
+          rmMiniDinoEl.style.left = pct + '%';
+          rmStepTextEl.textContent = stepInLeg + '/' + steps;
+          rmFlagCountEl.textContent = String(flagCount);
+
+          for (var i = 0; i < rmDots.length; i++) {
+            rmDots[i].classList.toggle('sc-passed', i > 0 && i <= stepInLeg);
+          }
+        }
+
+        /* ---------------------------------------------------------------------
+           石頭怪建立與同步（與 api.upcoming 嚴格對齊）
+           --------------------------------------------------------------------- */
+        function createMonsterEntity(item, initialP) {
+          var el = document.createElement('div');
+          el.className = 'sc-monster';
+
+          var ring = document.createElement('div');
+          ring.className = 'sc-aim-ring';
+          el.appendChild(ring);
+
+          var tag = document.createElement('div');
+          tag.className = 'sc-aim-tag';
+          el.appendChild(tag);
+
+          var card = document.createElement('div');
+          card.className = 'sc-card';
+          var text = formatDisplay(item);
+          card.textContent = text;
+          if (text === '␣') card.classList.add('sc-space-char');
+          el.appendChild(card);
+
+          var bubble = document.createElement('div');
+          bubble.className = 'sc-miss-bubble';
+          bubble.textContent = '✗ 略略~';
+          el.appendChild(bubble);
+
+          var rockWrap = document.createElement('div');
+          rockWrap.innerHTML = createRockMonsterSVG();
+          var rockSvg = rockWrap.firstChild;
+          el.appendChild(rockSvg);
+
+          monstersLayerEl.appendChild(el);
+
+          return {
+            key: makeKey(item),
+            el: el,
+            cardEl: card,
+            footLEl: rockSvg.querySelector('.sc-rock-foot-l'),
+            footREl: rockSvg.querySelector('.sc-rock-foot-r'),
+            p: initialP,
+            phase: Math.random() * Math.PI * 2,
+            teaseTimer: 0,
+            fadeIn: reducedMotion ? 0 : 1
+          };
+        }
+
+        function syncMonsters() {
+          var want = api.upcoming(getTargetCount()) || [];
+
+          // 刪掉多出來的怪獸
+          while (monsters.length > want.length) {
+            var extra = monsters.pop();
+            extra.el.remove();
+          }
+
+          for (var i = 0; i < want.length; i++) {
+            var u = want[i];
+            var expectedKey = makeKey(u);
+            var m = monsters[i];
+
+            if (!m || m.key !== expectedKey) {
+              if (m) m.el.remove();
+              // 第 0 隻從隊伍前端起點（1/3）出發，後面排隊的怪獸依序排在後方
+              var spawnP;
+              if (i === 0) {
+                spawnP = SCENE_CONFIG.QUEUE_FRONT_PROGRESS;
+              } else {
+                var cap = getSlotCapProgress(i);
+                var prevP = monsters[i - 1] ? monsters[i - 1].p : SCENE_CONFIG.QUEUE_FRONT_PROGRESS;
+                spawnP = Math.max(0, Math.min(cap, prevP - getMinGapProgress()));
+              }
+              m = createMonsterEntity(u, spawnP);
+              monsters[i] = m;
             }
 
-            appConfig.currentSkin = skinId;
-            document.getElementById('dino-character').innerText = skins[skinId].emoji;
+            // 標記目前目標（天藍虛線圈）與排隊怪獸（樸素風格）
+            m.el.classList.toggle('sc-lead', i === 0);
+            m.el.classList.toggle('sc-queue', i > 0);
+          }
 
-            // 切換邊框高亮
-            ['trex', 'tricera', 'stego'].forEach(s => {
-                const btn = document.getElementById(`skin-${s}`);
-                if (s === skinId) {
-                    btn.classList.add('border-emerald-400', 'scale-105', 'bg-emerald-900/60');
-                } else {
-                    btn.classList.remove('border-emerald-400', 'scale-105', 'bg-emerald-900/60');
-                    btn.classList.add('border-transparent');
-                }
+          renderMonsters();
+        }
+
+        /* ---------------------------------------------------------------------
+           特效生成（小石子彈飛、落地變小花、+1 星星飄字、被撞提示）
+           --------------------------------------------------------------------- */
+        function spawnFlower(x, y) {
+          // 限制場上同時最多花朵數，避免久玩 DOM 累積
+          while (flowers.length >= SCENE_CONFIG.MAX_FLOWERS) {
+            var oldest = flowers.shift();
+            oldest.el.remove();
+          }
+          var palette = SCENE_CONFIG.FLOWER_COLORS[Math.floor(Math.random() * SCENE_CONFIG.FLOWER_COLORS.length)];
+          var el = document.createElement('div');
+          el.className = 'sc-flower';
+          el.innerHTML = createFlowerSVG(palette);
+          flowersLayerEl.appendChild(el);
+
+          flowers.push({
+            el: el,
+            x: x,
+            y: y,
+            age: 0,
+            totalLife: SCENE_CONFIG.FLOWER_STAY_SEC + SCENE_CONFIG.FLOWER_FADE_SEC
+          });
+        }
+
+        function spawnDefeatEffect(x, y) {
+          if (reducedMotion) {
+            // 減少動態模式：原地柔和淡入一朵小花，不彈飛粒子
+            spawnFlower(x, metrics.groundY + 4);
+            return;
+          }
+
+          // 石頭怪化成數顆小石子彈飛，落地後變成小花
+          for (var i = 0; i < SCENE_CONFIG.PEBBLE_COUNT; i++) {
+            var el = document.createElement('div');
+            el.className = 'sc-pebble';
+            el.innerHTML = createPebbleSVG();
+            fxLayerEl.appendChild(el);
+
+            var spread = (i - (SCENE_CONFIG.PEBBLE_COUNT - 1) / 2);
+            pebbles.push({
+              el: el,
+              x: x + spread * 8,
+              y: y - 34,
+              vx: 95 + spread * 55 + (Math.random() * 30 - 15),
+              vy: -(210 + Math.random() * 110),
+              rot: Math.random() * 360,
+              vrot: (Math.random() > 0.5 ? 1 : -1) * (240 + Math.random() * 200),
+              landY: metrics.groundY + (Math.random() * 10 - 3)
             });
+          }
         }
 
-        function clearFingerGuides() {
-            Object.values(keyMapDict).forEach(el => el.classList.remove('key-active-highlight'));
-            document.getElementById('key-space').classList.remove('key-active-highlight');
-            document.querySelectorAll('svg path').forEach(path => path.classList.remove('finger-glow'));
+        function spawnPop(text, x, y, type) {
+          var el = document.createElement('div');
+          el.className = 'sc-pop ' + (type === 'bonk' ? 'sc-pop-bonk' : 'sc-pop-hit');
+          el.textContent = text;
+          fxLayerEl.appendChild(el);
+
+          pops.push({
+            el: el,
+            x: x,
+            y: y,
+            age: 0,
+            life: SCENE_CONFIG.POP_LIFE_SEC
+          });
         }
 
-        // 高亮提示下一個打擊按鍵與手指
-        function highlightFinger(char) {
-            clearFingerGuides();
-            if (!char) return;
+        function clearAllDynamicEntities() {
+          monsters.forEach(function (m) { m.el.remove(); });
+          monsters = [];
 
-            let physicalKey = char.toUpperCase();
-            if (appConfig.lang === 'ZH' && zhuyinToEngDict[char]) {
-                physicalKey = zhuyinToEngDict[char];
+          fadingMonsters.forEach(function (fm) { fm.el.remove(); });
+          fadingMonsters = [];
+
+          pebbles.forEach(function (p) { p.el.remove(); });
+          pebbles = [];
+
+          flowers.forEach(function (f) { f.el.remove(); });
+          flowers = [];
+
+          pops.forEach(function (p) { p.el.remove(); });
+          pops = [];
+
+          dinoState.whipTimer = 0;
+          dinoState.hurtTimer = 0;
+          flagToastTimer = 0;
+          if (rmToastEl) rmToastEl.style.opacity = '0';
+        }
+
+        /* ---------------------------------------------------------------------
+           畫面渲染（恐龍、怪獸、視差、特效）
+           --------------------------------------------------------------------- */
+        function renderParallax() {
+          if (!cloudTrackEl) return;
+          cloudTrackEl.style.transform = 'translate3d(' + (-parallax.clouds).toFixed(1) + 'px, 0, 0)';
+          hillTrackEl.style.transform = 'translate3d(' + (-parallax.hills).toFixed(1) + 'px, 0, 0)';
+          bushTrackEl.style.transform = 'translate3d(' + (-parallax.bushes).toFixed(1) + 'px, 0, 0)';
+        }
+
+        function renderDino() {
+          if (!dinoWrapEl) return;
+          var s = metrics.scale;
+          var baseX = metrics.dinoX;
+          var baseY = metrics.groundY - 98 * s;
+
+          var offsetX = 0;
+          var offsetY = 0;
+          var tailDeg = 0;
+          var swooshOpacity = 0;
+          var mood = 'sc-mood-normal';
+
+          if (dinoState.hurtTimer > 0) {
+            mood = 'sc-mood-hurt';
+            if (!reducedMotion) {
+              var hp = dinoState.hurtTimer / SCENE_CONFIG.DINO_HURT_SEC;
+              // 輕微後退與低頻輕晃（不超過 3 次/秒）
+              offsetX = -10 * Math.sin(hp * Math.PI);
+              offsetY = Math.sin(hp * Math.PI * 2) * 3;
+            }
+          } else if (dinoState.whipTimer > 0) {
+            mood = 'sc-mood-happy';
+            if (!reducedMotion) {
+              var wp = 1 - dinoState.whipTimer / SCENE_CONFIG.DINO_WHIP_SEC;
+              // 開心跳一下＋大力甩尾
+              offsetY = -Math.sin(wp * Math.PI) * 16;
+              offsetX = Math.sin(wp * Math.PI) * 8;
+              tailDeg = Math.sin(wp * Math.PI * 2) * 38;
+              swooshOpacity = wp < 0.75 ? Math.sin((wp / 0.75) * Math.PI) : 0;
+            }
+          } else if (!reducedMotion) {
+            // 柔和待機呼吸與尾巴慢擺
+            offsetY = Math.sin(elapsed * 3.0) * 2.5;
+            tailDeg = Math.sin(elapsed * 2.6) * 7;
+          }
+
+          dinoWrapEl.className = 'sc-dino-wrap ' + mood;
+          dinoWrapEl.style.transform =
+            'translate3d(' + (baseX + offsetX).toFixed(1) + 'px, ' + (baseY + offsetY).toFixed(1) + 'px, 0) scale(' + s.toFixed(3) + ')';
+          dinoWrapEl.style.transformOrigin = 'left top';
+
+          if (dinoTailEl) {
+            dinoTailEl.setAttribute('transform', 'rotate(' + tailDeg.toFixed(1) + ' 44 72)');
+          }
+          if (tailSwooshEl) {
+            tailSwooshEl.style.opacity = swooshOpacity.toFixed(2);
+          }
+        }
+
+        function renderMonsters() {
+          var s = metrics.scale;
+          for (var i = 0; i < monsters.length; i++) {
+            var m = monsters[i];
+            var x = progressToX(m.p);
+            var itemScale = (i === 0 ? 1 : 0.92) * s;
+            var y = metrics.groundY - 138 * itemScale;
+
+            var bobY = 0;
+            var shakeX = 0;
+            var tiltDeg = 0;
+
+            if (!reducedMotion) {
+              var walkSpeed = i === 0 ? 6.5 : 3.2;
+              var walkWave = Math.sin(elapsed * walkSpeed + m.phase);
+              bobY = -Math.abs(walkWave) * (i === 0 ? 5.5 : 2.5);
+              tiltDeg = walkWave * (i === 0 ? 3.2 : 1.5);
+
+              if (m.teaseTimer > 0) {
+                // 打錯時輕輕搖頭晃動（頻率約 2.5Hz <= 3次/秒）
+                var tp = m.teaseTimer / SCENE_CONFIG.MONSTER_TEASE_SEC;
+                shakeX = Math.sin(tp * Math.PI * 4) * 5;
+              }
+
+              // 小腳交替步伐
+              var footShift = walkWave * 3.5;
+              if (m.footLEl) m.footLEl.setAttribute('transform', 'translate(' + footShift.toFixed(1) + ' 0)');
+              if (m.footREl) m.footREl.setAttribute('transform', 'translate(' + (-footShift).toFixed(1) + ' 0)');
             }
 
-            const keyDom = keyMapDict[physicalKey];
-            if (keyDom) {
-                keyDom.classList.add('key-active-highlight');
-                
-                if (document.getElementById('toggle-finger-guide').checked) {
-                    // 尋找關聯手指
-                    let fingerId = null;
-                    for (let r = 0; r < 4; r++) {
-                        const match = keyboardData[r].find(btn => btn.key === physicalKey);
-                        if (match) {
-                            fingerId = match.hand;
-                            break;
-                        }
-                    }
-                    if (fingerId) {
-                        const path = document.getElementById(fingerId);
-                        if (path) path.classList.add('finger-glow');
-                    }
-                }
+            m.el.classList.toggle('sc-teasing', m.teaseTimer > 0);
+            m.el.style.zIndex = String(20 - i);
+            m.el.style.opacity = m.fadeIn.toFixed(2);
+            m.el.style.transform =
+              'translate3d(' + (x - 48 * itemScale + shakeX).toFixed(1) + 'px, ' + (y + bobY).toFixed(1) + 'px, 0) ' +
+              'scale(' + itemScale.toFixed(3) + ') rotate(' + tiltDeg.toFixed(1) + 'deg)';
+            m.el.style.transformOrigin = 'center bottom';
+          }
+        }
+
+        function renderFX() {
+          for (var i = 0; i < pebbles.length; i++) {
+            var p = pebbles[i];
+            p.el.style.transform =
+              'translate3d(' + p.x.toFixed(1) + 'px, ' + p.y.toFixed(1) + 'px, 0) rotate(' + p.rot.toFixed(1) + 'deg)';
+          }
+
+          for (var j = 0; j < flowers.length; j++) {
+            var f = flowers[j];
+            var bloom = reducedMotion ? Math.min(1, f.age / 0.25) : Math.min(1, f.age / 0.22);
+            var scale = reducedMotion ? 1 : (0.3 + 0.7 * bloom);
+            var alpha = 1;
+            if (reducedMotion && f.age < 0.25) {
+              alpha = f.age / 0.25;
+            } else if (f.age > SCENE_CONFIG.FLOWER_STAY_SEC) {
+              alpha = Math.max(0, 1 - (f.age - SCENE_CONFIG.FLOWER_STAY_SEC) / SCENE_CONFIG.FLOWER_FADE_SEC);
             }
-        }
+            f.el.style.opacity = alpha.toFixed(2);
+            f.el.style.transform =
+              'translate3d(' + f.x.toFixed(1) + 'px, ' + f.y.toFixed(1) + 'px, 0) scale(' + scale.toFixed(2) + ')';
+          }
 
-        function startAdventure() {
-            document.getElementById('lobby').classList.add('hidden');
-            document.getElementById('adventure-stage').classList.remove('hidden');
-            document.getElementById('btn-back').classList.remove('hidden');
+          for (var k = 0; k < pops.length; k++) {
+            var pop = pops[k];
+            var ratio = pop.age / pop.life;
+            var dy = reducedMotion ? 0 : (-34 * ratio);
+            var opacity = ratio < 0.2 ? (ratio / 0.2) : Math.max(0, 1 - (ratio - 0.2) / 0.8);
+            pop.el.style.opacity = opacity.toFixed(2);
+            pop.el.style.transform =
+              'translate3d(' + (pop.x - 28).toFixed(1) + 'px, ' + (pop.y + dy).toFixed(1) + 'px, 0)';
+          }
 
-            gameState.isActive = true;
-            gameState.shields = 3;
-            gameState.feverVal = 0;
-            gameState.isFever = false;
-            gameState.items = [];
-            gameState.combo = 0;
-            
-            // 根據難度設定初始速度
-            gameState.gameSpeed = appConfig.difficulty === 'easy' ? 3.5 : appConfig.difficulty === 'medium' ? 5.5 : 7.5;
-            
-            updateShieldDisplay();
-            updateScoreUI();
-            
-            document.getElementById('dino-character').innerText = skins[appConfig.currentSkin].emoji;
-            document.getElementById('dino-character').className = "text-7xl md:text-8xl dino-run select-none drop-shadow-lg";
+          for (var m = 0; m < fadingMonsters.length; m++) {
+            var fm = fadingMonsters[m];
+            var fa = Math.max(0, 1 - fm.age / SCENE_CONFIG.REDUCED_FADE_SEC);
+            fm.el.style.opacity = fa.toFixed(2);
+          }
 
-            // 清除舞台
-            document.getElementById('stage-items').innerHTML = '';
-            document.getElementById('fx-layer').innerHTML = '';
-
-            // 開始定時生成怪物/障礙與水果金幣
-            gameState.lastSpawnTime = Date.now();
-            
-            // 執行主遊戲動畫幀
-            if (gameState.animationFrameId) cancelAnimationFrame(gameState.animationFrameId);
-            gameLoop();
-        }
-
-        function updateShieldDisplay() {
-            let hStr = '';
-            for (let i = 0; i < gameState.shields; i++) {
-                hStr += '❤️ ';
-            }
-            if (gameState.shields === 0) hStr = '💀 虛弱';
-            document.getElementById('heart-container').innerText = hStr;
-        }
-
-        function updateScoreUI() {
-            document.getElementById('score').innerText = gameState.score;
-            { const _p = parseInt(localStorage.getItem('edtech-unit16-score')||'0',10); if (gameState.score > _p) localStorage.setItem('edtech-unit16-score', gameState.score); }
-            document.getElementById('fever-gauge').style.width = `${gameState.feverVal}%`;
-
-            if (gameState.combo > 2) {
-                document.getElementById('combo-container').classList.remove('hidden');
-                document.getElementById('combo').innerText = gameState.combo;
+          if (rmToastEl) {
+            if (flagToastTimer > 0) {
+              var ta = flagToastTimer < 0.3 ? flagToastTimer / 0.3 : 1;
+              rmToastEl.style.opacity = ta.toFixed(2);
             } else {
-                document.getElementById('combo-container').classList.add('hidden');
+              rmToastEl.style.opacity = '0';
             }
+          }
         }
 
-        // 隨機選字
-        function getRandomTargetChar() {
-            if (appConfig.lang === 'ZH') {
-                const list = 'ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙㄧㄨㄩㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦ';
-                return list[Math.floor(Math.random() * list.length)];
+        function renderAll() {
+          renderParallax();
+          renderDino();
+          renderMonsters();
+          renderFX();
+        }
+
+        /* ---------------------------------------------------------------------
+           單一物理與動畫更新核心（嚴格使用時間差 dt）
+           --------------------------------------------------------------------- */
+        function tick(dt) {
+          elapsed += dt;
+
+          // 1. 三層紙片背景緩慢視差捲動（reduced-motion 靜止）
+          if (!reducedMotion) {
+            var tileW = SCENE_CONFIG.PARALLAX_TILE_W;
+            parallax.clouds = (parallax.clouds + SCENE_CONFIG.PARALLAX_SPEED.clouds * dt) % tileW;
+            parallax.hills = (parallax.hills + SCENE_CONFIG.PARALLAX_SPEED.hills * dt) % tileW;
+            parallax.bushes = (parallax.bushes + SCENE_CONFIG.PARALLAX_SPEED.bushes * dt) % tileW;
+          }
+
+          // 2. 更新角色與提示倒數計時器
+          if (dinoState.whipTimer > 0) dinoState.whipTimer = Math.max(0, dinoState.whipTimer - dt);
+          if (dinoState.hurtTimer > 0) dinoState.hurtTimer = Math.max(0, dinoState.hurtTimer - dt);
+          if (flagToastTimer > 0) flagToastTimer = Math.max(0, flagToastTimer - dt);
+
+          // 3. 更新石頭怪前進速度（遵守第 6、9 條與本關規則）
+          var leadTravelSec = SCENE_CONFIG.LEAD_TRAVEL_SEC[getTier()];
+          var leadDistance = 1 - SCENE_CONFIG.QUEUE_FRONT_PROGRESS; // 2/3 全程
+          var leadSpeed = leadDistance / leadTravelSec;             // 每秒進度增量
+          var queueSpeed = leadSpeed * SCENE_CONFIG.QUEUE_SPEED_RATIO;
+          var minGapP = getMinGapProgress();
+
+          for (var i = 0; i < monsters.length; i++) {
+            var m = monsters[i];
+
+            if (m.fadeIn < 1) {
+              m.fadeIn = Math.min(1, m.fadeIn + dt / SCENE_CONFIG.REDUCED_FADE_SEC);
+            }
+            if (m.teaseTimer > 0) {
+              m.teaseTimer = Math.max(0, m.teaseTimer - dt);
+            }
+
+            if (i === 0) {
+              // 最前面那隻朝小恐龍前進
+              m.p += leadSpeed * dt;
+
+              // 走到恐龍面前：撞恐龍一下（> < 眼）、扣愛心、退回隊伍最前面起點重走（字不變）
+              if (m.p >= 1) {
+                dinoState.hurtTimer = SCENE_CONFIG.DINO_HURT_SEC;
+                spawnPop('碰！', metrics.hitX - 10, metrics.groundY - 105 * metrics.scale, 'bonk');
+                m.p = SCENE_CONFIG.QUEUE_FRONT_PROGRESS;
+                m.teaseTimer = 0;
+                api.loseLife();
+              }
             } else {
-                const list = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                return list[Math.floor(Math.random() * list.length)];
+              // 排隊中的石頭怪慢慢跟，最多只前進到各自排隊上限（不超過全程 1/3）
+              var cap = getSlotCapProgress(i);
+              var behindPrevCap = monsters[i - 1].p - minGapP;
+              var limit = Math.min(cap, behindPrevCap);
+              if (m.p < limit) {
+                m.p = Math.min(limit, m.p + queueSpeed * dt);
+              }
             }
-        }
+          }
 
-        const OBSTACLE_EMOJIS = ['🌵', '🌋', '👾', '🕷️', '🦇'];
-        const FOOD_EMOJIS = ['🍓', '🍏', '🍌', '🍒', '🌟', '🍩'];
+          // 4. 更新彈飛小石子，落地時綻放成小花
+          for (var pIdx = pebbles.length - 1; pIdx >= 0; pIdx--) {
+            var pb = pebbles[pIdx];
+            pb.vy += SCENE_CONFIG.PEBBLE_GRAVITY * dt;
+            pb.x += pb.vx * dt;
+            pb.y += pb.vy * dt;
+            pb.rot += pb.vrot * dt;
 
-        function spawnItem() {
-            if (!gameState.isActive) return;
-            
-            const isObstacle = Math.random() < 0.6; // 60% 機率是怪獸/障礙物，40% 是好吃的食物
-            const char = getRandomTargetChar();
-            const emoji = isObstacle ? OBSTACLE_EMOJIS[Math.floor(Math.random() * OBSTACLE_EMOJIS.length)] : FOOD_EMOJIS[Math.floor(Math.random() * FOOD_EMOJIS.length)];
-
-            // 隨機高度：地面(跳躍避開) 或 空中(噴火球/高跳)
-            const isAir = isObstacle ? (Math.random() < 0.5) : (Math.random() < 0.7);
-            const bottomVal = isAir ? (90 + Math.random() * 50) : 64; // 像素單位
-
-            const itemObj = {
-                id: 'item-' + Date.now() + Math.floor(Math.random()*100),
-                char: char,
-                emoji: emoji,
-                isObstacle: isObstacle,
-                isAir: isAir,
-                x: 900, // 初始位於舞台最右側
-                bottom: bottomVal,
-                dom: null,
-                cleared: false
-            };
-
-            // 建立 DOM
-            const div = document.createElement('div');
-            div.id = itemObj.id;
-            div.className = "absolute flex flex-col items-center justify-center transition-transform pointer-events-none";
-            div.style.bottom = `${itemObj.bottom}px`;
-            div.style.left = `${itemObj.x}px`;
-
-            // 超亮眼圓泡泡文字標籤，讓一二年級小朋友一眼看清
-            const labelBorder = isObstacle ? 'border-red-500 bg-red-950/90 text-red-200' : 'border-amber-400 bg-amber-950/90 text-amber-200';
-            div.innerHTML = `
-                <div class="relative flex items-center justify-center mb-1">
-                    <span class="text-4xl md:text-5xl select-none filter drop-shadow-md">${emoji}</span>
-                </div>
-                <div class="px-2.5 py-0.5 rounded-full border-2 ${labelBorder} text-lg font-black font-['Fredoka_One'] shadow-lg tracking-wider animate-pulse">
-                    ${char}
-                </div>
-            `;
-
-            document.getElementById('stage-items').appendChild(div);
-            itemObj.dom = div;
-            gameState.items.push(itemObj);
-
-            // 當生成新元素時，若當前需要指引，立即引導
-            updateTargetGuide();
-        }
-
-        function gameLoop() {
-            if (!gameState.isActive) return;
-
-            const now = Date.now();
-            // 每隔特定時間生成一隻，難度越高、生得越頻繁
-            const spawnInterval = appConfig.difficulty === 'easy' ? 3200 : appConfig.difficulty === 'medium' ? 2400 : 1600;
-            if (now - gameState.lastSpawnTime > spawnInterval) {
-                spawnItem();
-                gameState.lastSpawnTime = now;
+            if (pb.y >= pb.landY) {
+              var flowerX = Math.max(metrics.hitX + 20, Math.min(metrics.w - 24, pb.x));
+              spawnFlower(flowerX, pb.landY);
+              pb.el.remove();
+              pebbles.splice(pIdx, 1);
             }
+          }
 
-            const dinoEl = document.getElementById('dino-container');
-            const dinoWidth = dinoEl.offsetWidth;
-            const dinoX = 48; // 固定在左邊
-            
-            // 逐一更新物件位置
-            for (let i = gameState.items.length - 1; i >= 0; i--) {
-                const item = gameState.items[i];
-                item.x -= gameState.gameSpeed;
-                
-                if (item.dom) {
-                    item.dom.style.left = `${item.x}px`;
-                }
-
-                // 碰撞判定 (當物體滾動到恐龍的身前 48px ~ 130px 範圍時)
-                if (!item.cleared && item.x < (dinoX + 60) && item.x > dinoX) {
-                    // 若是障礙物且恐龍沒有在跳躍(地面的障礙) or 恐龍來不及消滅空中的
-                    let hit = false;
-                    
-                    if (item.isObstacle) {
-                        if (!item.isAir) {
-                            // 地面障礙：如果恐龍此時沒有進行 jump 動畫，則被撞擊
-                            const characterEl = document.getElementById('dino-character');
-                            if (!characterEl.classList.contains('dino-jump')) {
-                                hit = true;
-                            }
-                        } else {
-                            // 空中怪物沒被打掉直接撞擊
-                            hit = true;
-                        }
-                    }
-
-                    if (hit) {
-                        triggerDinoHurt();
-                        item.cleared = true;
-                        removeStageItem(item);
-                    }
-                }
-
-                // 超出左邊界 (沒打到而成功跳過，或食物沒吃到)
-                if (item.x < -100) {
-                    if (item.isObstacle && !item.cleared) {
-                        // 成功避開障礙物：微幅加分
-                        gameState.score += 5;
-                        updateScoreUI();
-                    }
-                    removeStageItem(item);
-                    gameState.items.splice(i, 1);
-                    updateTargetGuide();
-                }
+          // 5. 更新路邊小花壽命
+          for (var fIdx = flowers.length - 1; fIdx >= 0; fIdx--) {
+            var fl = flowers[fIdx];
+            fl.age += dt;
+            if (fl.age >= fl.totalLife) {
+              fl.el.remove();
+              flowers.splice(fIdx, 1);
             }
+          }
 
-            gameState.animationFrameId = requestAnimationFrame(gameLoop);
-        }
-
-        function removeStageItem(item) {
-            if (item.dom && item.dom.parentNode) {
-                item.dom.parentNode.removeChild(item.dom);
+          // 6. 更新飄浮文字與星星
+          for (var popIdx = pops.length - 1; popIdx >= 0; popIdx--) {
+            var pop = pops[popIdx];
+            pop.age += dt;
+            if (pop.age >= pop.life) {
+              pop.el.remove();
+              pops.splice(popIdx, 1);
             }
-        }
+          }
 
-        // 當恐龍撞到障礙物受傷
-        function triggerDinoHurt() {
-            if (gameState.isFever) return; // 狂暴模式下無敵
-
-            audioBank.hit();
-            gameState.shields--;
-            gameState.combo = 0;
-            updateShieldDisplay();
-            updateScoreUI();
-
-            const characterEl = document.getElementById('dino-character');
-            characterEl.className = "text-7xl md:text-8xl dino-hurt select-none";
-            
-            // 閃爍護盾提示受傷
-            const shieldEl = document.getElementById('dino-shield');
-            shieldEl.className = "absolute inset-0 border-4 border-red-500 rounded-full animate-ping opacity-100";
-
-            setTimeout(() => {
-                if (gameState.isActive) {
-                    characterEl.className = "text-7xl md:text-8xl dino-run select-none";
-                    shieldEl.className = "absolute inset-0 border-4 border-cyan-400 rounded-full animate-ping opacity-0";
-                }
-            }, 600);
-
-            // 若護盾扣完，不執行 Game Over 以免打擊低年級孩子，改為彈出可愛的「補給愛心」並稍微降低積分
-            if (gameState.shields <= 0) {
-                gameState.shields = 3;
-                gameState.score = Math.max(0, gameState.score - 10);
-                updateShieldDisplay();
-                updateScoreUI();
-                createNotification("💡 沒關係！恐龍護盾已重新裝填！加油！", "rgba(14, 165, 233, 0.95)");
+          // 7. 更新 reduced-motion 淡出中的怪獸
+          for (var fmIdx = fadingMonsters.length - 1; fmIdx >= 0; fmIdx--) {
+            var fm = fadingMonsters[fmIdx];
+            fm.age += dt;
+            if (fm.age >= SCENE_CONFIG.REDUCED_FADE_SEC) {
+              fm.el.remove();
+              fadingMonsters.splice(fmIdx, 1);
             }
+          }
+
+          renderAll();
         }
 
-        // 取得距離恐龍最近且未被清除的物體作為當前主要輸入目標
-        function updateTargetGuide() {
-            const activeItems = gameState.items.filter(item => !item.cleared);
-            if (activeItems.length > 0) {
-                // 最左邊(最近)的為第一目標
-                const target = activeItems[0];
-                highlightFinger(target.char);
-            } else {
-                clearFingerGuides();
+        function frame(now) {
+          if (!running) return;
+          var dt = Math.min(Math.max(now - lastTime, 0), SCENE_CONFIG.MAX_DT_MS) / 1000;
+          lastTime = now;
+          tick(dt);
+          if (running) {
+            rafId = requestAnimationFrame(frame);
+          }
+        }
+
+        function stopLoop() {
+          running = false;
+          if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = 0;
+          }
+        }
+
+        /* ---------------------------------------------------------------------
+           回傳給共用核心的場景控制物件
+           --------------------------------------------------------------------- */
+        return {
+          start: function () {
+            buildSceneDOM();
+            measureField();
+            updateRoadmapUI();
+            renderAll();
+          },
+
+          roundStart: function (roundNo) {
+            if (!mounted) buildSceneDOM();
+            measureField();
+            clearAllDynamicEntities();
+
+            // 第 1 回合開局時歸零冒險進度，後續回合累計插旗更有成就感
+            if (!roundNo || roundNo <= 1) {
+              totalHits = 0;
+              flagCount = 0;
             }
-        }
+            updateRoadmapUI();
+            syncMonsters();
+            renderAll();
+          },
 
-        // 訊息氣泡通知
-        function createNotification(msg, bgColor = "rgba(16, 185, 129, 0.95)") {
-            const stage = document.getElementById('fx-layer');
-            const alertBox = document.createElement('div');
-            alertBox.className = "absolute top-16 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-xl text-sm font-bold text-white z-40 shadow-xl transition-all duration-300";
-            alertBox.style.backgroundColor = bgColor;
-            alertBox.innerText = msg;
-            stage.appendChild(alertBox);
-            
-            setTimeout(() => {
-                alertBox.style.opacity = '0';
-                setTimeout(() => alertBox.remove(), 400);
-            }, 2000);
-        }
+          resume: function () {
+            if (running) return;
+            running = true;
+            lastTime = performance.now();
+            rafId = requestAnimationFrame(frame);
+          },
 
-        // 當打對按鍵時的超級反饋！
-        function triggerActionOnSuccess(item) {
-            item.cleared = true;
-            gameState.score += 10;
-            gameState.combo++;
-            
-            // 累積狂暴能量
-            if (!gameState.isFever) {
-                gameState.feverVal = Math.min(100, gameState.feverVal + 10);
-                if (gameState.feverVal >= 100) {
-                    triggerFeverMode();
-                }
+          pause: function () {
+            // 停掉 rAF；場內無任何 setTimeout / setInterval / CSS 動畫，達成完全靜止
+            stopLoop();
+          },
+
+          stop: function () {
+            stopLoop();
+          },
+
+          hit: function (res) {
+            var count = (res && res.correct > 0) ? res.correct : 1;
+            var combo = (res && res.combo) ? res.combo : api.combo();
+
+            // 小恐龍開心甩尾
+            dinoState.hurtTimer = 0;
+            dinoState.whipTimer = SCENE_CONFIG.DINO_WHIP_SEC;
+
+            // 移除前面打對的石頭怪，化成小石子彈飛並落地變小花
+            for (var i = 0; i < count && monsters.length > 0; i++) {
+              var defeated = monsters.shift();
+              var mx = progressToX(defeated.p);
+              var my = metrics.groundY;
+
+              if (reducedMotion) {
+                // 減少動態模式：原本怪獸柔和淡出，再長小花
+                defeated.el.classList.remove('sc-lead');
+                fadingMonsters.push({ el: defeated.el, age: 0 });
+              } else {
+                defeated.el.remove();
+              }
+
+              spawnDefeatEffect(mx, my);
+
+              if (i === 0) {
+                var popText = combo >= 3 ? ('★ ✓ +' + count + ' 連擊 ' + combo) : ('★ ✓ +' + count);
+                // 顯示在略高處，不擋住下一隻要打的字卡
+                spawnPop(popText, mx, Math.max(52, my - 154 * metrics.scale), 'hit');
+              }
             }
 
-            updateScoreUI();
-            
-            // 播放該字發音 (中文或英文)
-            speakText(item.char, appConfig.lang === 'ZH' ? 'zh-TW' : 'en-US');
-
-            const dinoEl = document.getElementById('dino-container');
-            const charEl = document.getElementById('dino-character');
-
-            if (item.isObstacle) {
-                if (!item.isAir) {
-                    // 1. 地面障礙：恐龍華麗一躍！
-                    audioBank.jump();
-                    charEl.className = "text-7xl md:text-8xl dino-jump select-none";
-                    createJumpCloud(dinoEl.offsetLeft + 40, dinoEl.offsetTop + 80);
-                    
-                    setTimeout(() => {
-                        if (gameState.isActive && !gameState.isFever) {
-                            charEl.className = "text-7xl md:text-8xl dino-run select-none";
-                        }
-                    }, 600);
-                } else {
-                    // 2. 空中怪獸：恐龍吐大火球射擊！
-                    audioBank.shoot();
-                    createFireballEffect(dinoEl.offsetLeft + 80, dinoEl.offsetTop + 40, item.x, item.bottom);
-                }
-
-                // 怪物爆炸特效
-                setTimeout(() => {
-                    createExplosion(item.x + 30, item.bottom + 30, "💥");
-                    removeStageItem(item);
-                }, item.isAir ? 250 : 0);
-
-            } else {
-                // 3. 吃到美味水果食物：舌頭特效與吞嚥
-                audioBank.eat();
-                createExplosion(item.x + 30, item.bottom + 30, "✨");
-                createFloatingScore(item.x, item.bottom, "Yum! +10 💰");
-                removeStageItem(item);
+            // 更新上方冒險進度：每打對 1 字前進 1 格，每 15 字到休息站插旗
+            var prevFlags = Math.floor(totalHits / SCENE_CONFIG.STATION_STEPS);
+            totalHits += count;
+            var newFlags = Math.floor(totalHits / SCENE_CONFIG.STATION_STEPS);
+            if (newFlags > prevFlags) {
+              flagCount = newFlags;
+              flagToastTimer = SCENE_CONFIG.FLAG_TOAST_SEC;
+              if (rmToastEl) {
+                rmToastEl.textContent = '第 ' + flagCount + ' 座休息站插旗！';
+              }
             }
+            updateRoadmapUI();
 
-            // 更新下一個導引
-            setTimeout(updateTargetGuide, 50);
-        }
+            // 依 api.upcoming 補上新的石頭怪並立刻重繪
+            syncMonsters();
+            renderAll();
+          },
 
-        // 浮動文字特效
-        function createFloatingScore(x, bottom, text) {
-            const stage = document.getElementById('fx-layer');
-            const el = document.createElement('div');
-            el.className = "absolute font-black text-amber-300 text-lg drop-shadow-md transition-all pointer-events-none";
-            el.style.left = `${x}px`;
-            el.style.bottom = `${bottom + 40}px`;
-            el.innerText = text;
-            stage.appendChild(el);
-
-            el.animate([
-                { transform: 'translateY(0px)', opacity: 1 },
-                { transform: 'translateY(-60px)', opacity: 0 }
-            ], { duration: 800, easing: 'ease-out' }).onfinish = () => el.remove();
-        }
-
-        // 跳躍落塵雲煙
-        function createJumpCloud(x, top) {
-            const stage = document.getElementById('fx-layer');
-            for (let i = 0; i < 4; i++) {
-                const cloud = document.createElement('div');
-                cloud.className = "absolute bg-slate-100/40 rounded-full w-4 h-4 pointer-events-none";
-                cloud.style.left = `${x + (i - 1.5) * 15}px`;
-                cloud.style.top = `${top}px`;
-                stage.appendChild(cloud);
-
-                cloud.animate([
-                    { transform: 'scale(0.8)', opacity: 0.8 },
-                    { transform: 'scale(2.5) translateY(10px)', opacity: 0 }
-                ], { duration: 500 }).onfinish = () => cloud.remove();
+          miss: function () {
+            // 最前面的石頭怪做鬼臉吐舌頭，不扣血、不閃紅全畫面
+            if (monsters[0]) {
+              monsters[0].teaseTimer = SCENE_CONFIG.MONSTER_TEASE_SEC;
+              renderMonsters();
             }
-        }
+          },
 
-        // 火球射擊動畫
-        function createFireballEffect(startX, startY, endX, endBottom) {
-            const stage = document.getElementById('fx-layer');
-            const ball = document.createElement('div');
-            ball.className = "absolute text-3xl fireball pointer-events-none select-none z-30";
-            ball.innerText = "🔥";
-            ball.style.left = `${startX}px`;
-            ball.style.top = `${startY}px`;
-            stage.appendChild(ball);
-
-            // 計算目標高度
-            const stageHeight = document.getElementById('adventure-stage').offsetHeight;
-            const targetTop = stageHeight - endBottom - 48;
-
-            ball.animate([
-                { left: `${startX}px`, top: `${startY}px` },
-                { left: `${endX}px`, top: `${targetTop}px` }
-            ], { duration: 250, easing: 'linear' }).onfinish = () => ball.remove();
-        }
-
-        // 爆炸粒子
-        function createExplosion(x, bottom, emoji) {
-            const stage = document.getElementById('fx-layer');
-            const stageHeight = document.getElementById('adventure-stage').offsetHeight;
-            const targetTop = stageHeight - bottom - 40;
-
-            for (let i = 0; i < 8; i++) {
-                const star = document.createElement('div');
-                star.className = "absolute text-xl pointer-events-none select-none";
-                star.innerText = emoji === "💥" ? "🔥" : "⭐";
-                star.style.left = `${x}px`;
-                star.style.top = `${targetTop}px`;
-                stage.appendChild(star);
-
-                const angle = Math.random() * Math.PI * 2;
-                const dist = Math.random() * 80 + 20;
-
-                star.animate([
-                    { transform: 'translate(0, 0) scale(1.2)', opacity: 1 },
-                    { transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px) scale(0)`, opacity: 0 }
-                ], { duration: 500, easing: 'ease-out' }).onfinish = () => star.remove();
-            }
-        }
-
-        // 進入狂暴彩虹狂歡模式！
-        function triggerFeverMode() {
-            if (gameState.isFever) return;
-            gameState.isFever = true;
-            audioBank.fever();
-
-            document.getElementById('fever-banner').classList.remove('hidden');
-            const characterEl = document.getElementById('dino-character');
-            characterEl.className = "text-8xl dino-run rainbow-fever select-none";
-
-            createNotification("🌈 進入狂暴彩虹時間！小恐龍無敵啦！", "rgba(244, 63, 94, 0.95)");
-
-            // 速度提升，召喚大量滿地金幣
-            gameState.gameSpeed *= 1.8;
-
-            let coinSpawnCounter = 0;
-            const intervalId = setInterval(() => {
-                if (!gameState.isActive || !gameState.isFever) {
-                    clearInterval(intervalId);
-                    return;
-                }
-                // 生成金幣食物
-                const char = getRandomTargetChar();
-                const itemObj = {
-                    id: 'fever-coin-' + Date.now(),
-                    char: char,
-                    emoji: "💰",
-                    isObstacle: false,
-                    isAir: Math.random() < 0.5,
-                    x: 900,
-                    bottom: 80 + Math.random() * 80,
-                    dom: null,
-                    cleared: false
-                };
-
-                const div = document.createElement('div');
-                div.className = "absolute flex flex-col items-center justify-center pointer-events-none z-30";
-                div.style.bottom = `${itemObj.bottom}px`;
-                div.style.left = `${itemObj.x}px`;
-                div.innerHTML = `
-                    <span class="text-4xl animate-bounce select-none">💰</span>
-                    <div class="px-2 py-0.5 rounded-full border-2 border-yellow-400 bg-yellow-950/90 text-yellow-300 text-xs font-black">${char}</div>
-                `;
-                document.getElementById('stage-items').appendChild(div);
-                itemObj.dom = div;
-                gameState.items.push(itemObj);
-
-                updateTargetGuide();
-                coinSpawnCounter++;
-                if (coinSpawnCounter > 12) clearInterval(intervalId);
-            }, 400);
-
-            // 8 秒後解除狂暴
-            setTimeout(() => {
-                gameState.isFever = false;
-                gameState.feverVal = 0;
-                gameState.gameSpeed /= 1.8;
-                document.getElementById('fever-banner').classList.add('hidden');
-                if (gameState.isActive) {
-                    characterEl.className = "text-7xl md:text-8xl dino-run select-none";
-                }
-                updateScoreUI();
-                updateTargetGuide();
-            }, 8000);
-        }
-
-        // 實體鍵盤事件攔截
-        window.addEventListener('keydown', (e) => {
-            if (!gameState.isActive) return;
-            
-            let pressedKey = e.key.toUpperCase();
-            if (e.key.length !== 1) return; // 略過 Shift/Control 等
-
-            let targetChar = pressedKey;
-            
-            // 注音佈局轉譯判定
-            if (appConfig.lang === 'ZH') {
-                const physicalObj = keyboardData.flat().find(btn => btn.key.toUpperCase() === pressedKey);
-                if (physicalObj) {
-                    targetChar = physicalObj.zh; // 例如把 Q 對應到 ㄆ
-                }
-            }
-
-            // 視覺鍵盤高亮效果
-            const keyDom = keyMapDict[pressedKey];
-            if (keyDom) {
-                keyDom.classList.add('scale-90', 'brightness-125');
-                setTimeout(() => keyDom.classList.remove('scale-90', 'brightness-125'), 100);
-            }
-
-            // 比對是否擊中距離最近的項目
-            const activeItems = gameState.items.filter(item => !item.cleared);
-            if (activeItems.length > 0) {
-                const target = activeItems[0];
-                if (target.char.toUpperCase() === targetChar.toUpperCase()) {
-                    triggerActionOnSuccess(target);
-                } else {
-                    // 打錯字
-                    audioBank.hit();
-                    gameState.combo = 0;
-                    updateScoreUI();
-                }
-            }
-        });
-
-        // 返回大廳
-        function backToLobby() {
-            gameState.isActive = false;
-            if (gameState.animationFrameId) cancelAnimationFrame(gameState.animationFrameId);
-            
-            document.getElementById('adventure-stage').classList.add('hidden');
-            document.getElementById('btn-back').classList.add('hidden');
-            document.getElementById('lobby').classList.remove('hidden');
-            document.getElementById('combo-container').classList.add('hidden');
-            
-            clearFingerGuides();
-        }
-
-        // 初始化
-        window.onload = function() {
-            renderKeyboard();
-            // 音訊交互保護解除
-            document.body.addEventListener('click', () => {
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-            }, { once: true });
+          resize: function () {
+            if (!mounted) return;
+            measureField();
+            renderAll();
+          }
         };
-    </script>
-<script defer src="../../assets/js/beacon.js"></script>
-</body>
-</html>
+      }
+    });
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>
