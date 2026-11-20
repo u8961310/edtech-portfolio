@@ -1,965 +1,1426 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>太空打字防衛戰 - 英文打字</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
-<style>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; }
-    body {
-        font-family: 'Noto Sans TC', sans-serif;
-        user-select: none;
-        -webkit-user-select: none;
-        background: #000;
-        color: #fff;
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>太空打字防衛戰 - 打字島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Fredoka:wght@500;600&display=swap">
+  <link rel="stylesheet" href="../../assets/css/typing-island.css">
+  <style>
+    /* 太空打字防衛戰：黃昏紙劇場剪紙風格（所有 class 一律以 sc- 開頭） */
+    .sc-stage {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      /* 黃昏紙劇場：淡薰衣草紫過渡到淡桃米色紙張底（護眼不刺眼、不用暗底） */
+      background:
+        radial-gradient(circle at 18% 20%, rgba(255, 248, 230, 0.55) 0%, rgba(255, 248, 230, 0) 42%),
+        radial-gradient(circle at 82% 24%, rgba(255, 241, 184, 0.42) 0%, rgba(255, 241, 184, 0) 40%),
+        linear-gradient(180deg, #E5DCF2 0%, #EFE0EC 42%, #FDE5D2 78%, var(--paper, #F7E8CB) 100%);
+      font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
     }
 
-    /* ===== Starry Background ===== */
-    #app {
-        position: relative;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        background: radial-gradient(ellipse at center bottom, #1e1b4b 0%, #0c0a4a 30%, #000 100%);
-    }
-    .stars {
-        position: absolute;
-        inset: 0;
-        background-image:
-            radial-gradient(1px 1px at 20% 30%, white, transparent),
-            radial-gradient(1px 1px at 60% 70%, white, transparent),
-            radial-gradient(1px 1px at 80% 10%, white, transparent),
-            radial-gradient(2px 2px at 30% 60%, white, transparent),
-            radial-gradient(1px 1px at 90% 80%, white, transparent),
-            radial-gradient(1px 1px at 50% 50%, white, transparent),
-            radial-gradient(2px 2px at 70% 20%, #93c5fd, transparent),
-            radial-gradient(1px 1px at 10% 90%, white, transparent),
-            radial-gradient(1px 1px at 40% 20%, #fde047, transparent),
-            radial-gradient(2px 2px at 85% 45%, white, transparent);
-        background-size: 100% 100%;
-        animation: stars-drift 60s linear infinite;
-        opacity: 0.8;
-    }
-    @keyframes stars-drift {
-        from { transform: translateY(0); }
-        to { transform: translateY(-50px); }
+    /* 細緻的紙纖維紋理層 */
+    .sc-paper-grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.28;
+      background-image:
+        radial-gradient(rgba(116, 96, 78, 0.14) 1px, transparent 1px),
+        radial-gradient(rgba(255, 248, 230, 0.45) 1px, transparent 1px);
+      background-size: 22px 22px, 15px 15px;
+      background-position: 0 0, 7px 9px;
     }
 
-    /* ===== Screen Layout ===== */
-    .screen {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        z-index: 50;
-    }
-    .hidden { display: none !important; }
-
-    /* ===== Title ===== */
-    .title-emoji {
-        font-size: clamp(70px, 14vw, 140px);
-        animation: float 3s ease-in-out infinite;
-        text-shadow: 0 0 30px rgba(96,165,250,0.6);
-    }
-    @keyframes float {
-        0%, 100% { transform: translateY(0) rotate(-3deg); }
-        50% { transform: translateY(-15px) rotate(3deg); }
-    }
-    .title-text {
-        font-size: clamp(36px, 6vw, 60px);
-        font-weight: 900;
-        color: #fde047;
-        text-shadow: 0 0 20px rgba(253,224,71,0.5), 4px 4px 0 #1e3a8a;
-        margin: 12px 0 4px;
-        text-align: center;
-    }
-    .subtitle {
-        font-size: clamp(16px, 2vw, 22px);
-        color: #93c5fd;
-        font-weight: 700;
-        margin-bottom: 28px;
-        text-align: center;
+    /* 背景裝飾圖層（剪紙星球、靜態星星貼紙、雲層） */
+    .sc-bg-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
     }
 
-    /* ===== Big Button ===== */
-    .big-btn {
-        font-family: 'Noto Sans TC', sans-serif;
-        font-size: clamp(22px, 3vw, 32px);
-        font-weight: 900;
-        padding: 18px 48px;
-        background: linear-gradient(180deg, #60a5fa, #2563eb);
-        color: white;
-        border: 3px solid #93c5fd;
-        border-radius: 999px;
-        box-shadow: 0 6px 0 #1d4ed8, 0 0 30px rgba(96,165,250,0.4);
-        cursor: pointer;
-        transition: transform 0.1s, box-shadow 0.1s;
-        text-shadow: 2px 2px 0 #1e40af;
-        margin: 8px;
-    }
-    .big-btn:hover { transform: translateY(-2px); }
-    .big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #1d4ed8, 0 0 20px rgba(96,165,250,0.4); }
-    .big-btn.gold {
-        background: linear-gradient(180deg, #fbbf24, #f59e0b);
-        border-color: #fde047;
-        box-shadow: 0 6px 0 #b45309, 0 0 30px rgba(251,191,36,0.4);
-        text-shadow: 2px 2px 0 #92400e;
-    }
-    .big-btn.gold:active { box-shadow: 0 2px 0 #b45309; }
-
-    /* ===== Skill Tags on Start Screen ===== */
-    .skill-row {
-        display: flex;
-        gap: 14px;
-        flex-wrap: wrap;
-        justify-content: center;
-        margin-top: 28px;
-    }
-    .skill-chip {
-        background: rgba(96,165,250,0.18);
-        border: 2px solid #60a5fa;
-        padding: 10px 18px;
-        border-radius: 999px;
-        font-weight: 700;
-        font-size: 16px;
-        color: #dbeafe;
-        text-align: center;
-        min-width: 130px;
+    .sc-planet-saturn {
+      position: absolute;
+      left: 5%;
+      top: 7%;
+      width: 118px;
+      height: 76px;
+      filter: drop-shadow(2px 4px 0 rgba(59, 42, 32, 0.1));
     }
 
-    /* ===== HUD ===== */
-    #hud {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        padding: 14px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: clamp(18px, 2.2vw, 24px);
-        font-weight: 900;
-        z-index: 40;
-        pointer-events: none;
-    }
-    .hud-box {
-        background: rgba(30,58,138,0.6);
-        border: 2px solid #60a5fa;
-        padding: 6px 16px;
-        border-radius: 999px;
-        backdrop-filter: blur(6px);
-        color: #fef3c7;
-        text-shadow: 1px 1px 0 #000;
-    }
-    .hud-box.warning {
-        background: rgba(220,38,38,0.6);
-        border-color: #fca5a5;
-        animation: pulse 0.6s ease-in-out infinite;
-    }
-    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-
-    /* ===== Game Area ===== */
-    #game-area {
-        position: absolute;
-        inset: 0;
-        overflow: hidden;
+    .sc-planet-mini {
+      position: absolute;
+      right: 7%;
+      top: 9%;
+      width: 68px;
+      height: 68px;
+      filter: drop-shadow(2px 4px 0 rgba(59, 42, 32, 0.1));
     }
 
-    /* ===== Earth (bottom defender) ===== */
-    .earth {
-        position: absolute;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: clamp(80px, 14vw, 140px);
-        z-index: 5;
-        filter: drop-shadow(0 -4px 12px rgba(96,165,250,0.4));
-        animation: earth-rotate 30s linear infinite;
-    }
-    @keyframes earth-rotate {
-        0%, 100% { transform: translateX(-50%) rotate(-3deg); }
-        50% { transform: translateX(-50%) rotate(3deg); }
-    }
-    .earth.hit { animation: earth-shake 0.4s ease-in-out; }
-    @keyframes earth-shake {
-        0%, 100% { transform: translateX(-50%) translateY(0); }
-        25% { transform: translateX(-50%) translateY(-15px) rotate(-8deg); }
-        75% { transform: translateX(-50%) translateY(-5px) rotate(8deg); }
+    .sc-planet-tiny {
+      position: absolute;
+      left: 36%;
+      top: 11%;
+      width: 34px;
+      height: 34px;
+      opacity: 0.88;
+      filter: drop-shadow(1px 3px 0 rgba(59, 42, 32, 0.08));
     }
 
-    /* Cannon turret above earth */
-    .turret {
-        position: absolute;
-        bottom: clamp(60px, 11vw, 120px);
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: clamp(36px, 5vw, 56px);
-        z-index: 6;
+    /* 靜態小星星貼紙（不閃爍，維持護眼紙貼質感） */
+    .sc-sticker-star {
+      position: absolute;
+      pointer-events: none;
+      filter: drop-shadow(1px 2px 0 rgba(59, 42, 32, 0.12));
     }
 
-    /* ===== Alien ===== */
-    .alien {
-        position: absolute;
-        transform: translate(-50%, -50%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        z-index: 10;
-        transition: filter 0.15s;
-        will-change: top;
-    }
-    .alien-body {
-        font-size: clamp(50px, 8vw, 72px);
-        filter: drop-shadow(0 0 12px rgba(167,139,250,0.6));
-        animation: alien-bob 1.5s ease-in-out infinite;
-    }
-    @keyframes alien-bob {
-        0%, 100% { transform: translateY(0) rotate(-3deg); }
-        50% { transform: translateY(-4px) rotate(3deg); }
-    }
-    .alien-word {
-        font-family: 'Press Start 2P', monospace;
-        background: rgba(0,0,0,0.7);
-        border: 3px solid #60a5fa;
-        border-radius: 8px;
-        padding: 8px 14px;
-        margin-top: 6px;
-        font-size: clamp(20px, 3vw, 32px);
-        font-weight: 900;
-        letter-spacing: 4px;
-        color: #fff;
-        text-shadow: 2px 2px 0 #000;
-        white-space: nowrap;
-        box-shadow: 0 4px 0 #1d4ed8;
-    }
-    .alien.active .alien-word {
-        border-color: #fde047;
-        box-shadow: 0 0 20px #fde047, 0 4px 0 #ca8a04;
-        animation: lock-pulse 0.8s ease-in-out infinite;
-    }
-    .alien.active .alien-body {
-        filter: drop-shadow(0 0 18px #fde047);
-    }
-    @keyframes lock-pulse {
-        0%, 100% { box-shadow: 0 0 20px #fde047, 0 4px 0 #ca8a04; }
-        50% { box-shadow: 0 0 35px #fde047, 0 4px 0 #ca8a04; }
-    }
-    .alien-word .typed {
-        color: #4ade80;
-        text-shadow: 0 0 8px #22c55e, 2px 2px 0 #000;
-    }
-    .alien-word .pending {
-        color: #fff;
-    }
-    .alien-word .next {
-        color: #fde047;
-        animation: next-blink 0.6s ease-in-out infinite;
-    }
-    @keyframes next-blink {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.4; }
+    /* 底部剪紙月球表面 */
+    .sc-moon-layer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 25%;
+      min-height: 64px;
+      pointer-events: none;
+      z-index: 2;
     }
 
-    .alien.dying {
-        animation: alien-die 0.5s ease-out forwards;
-        pointer-events: none;
-    }
-    @keyframes alien-die {
-        0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        50% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; filter: brightness(3); }
-        100% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+    .sc-moon-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
-    /* ===== Laser Beam ===== */
-    .laser {
-        position: absolute;
-        width: 6px;
-        background: linear-gradient(180deg, transparent, #fde047 20%, #fbbf24 50%, #fde047 80%, transparent);
-        transform-origin: bottom center;
-        z-index: 8;
-        filter: drop-shadow(0 0 8px #fde047);
-        pointer-events: none;
-        animation: laser-flash 0.18s ease-out forwards;
-    }
-    @keyframes laser-flash {
-        0% { opacity: 1; transform: translateX(-50%) scaleY(0); transform-origin: bottom; }
-        50% { opacity: 1; }
-        100% { opacity: 0; }
+    /* 月球防線（流星碰到底線扣一顆愛心） */
+    .sc-defense-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      border-top: 2.5px dashed rgba(179, 38, 43, 0.65);
+      pointer-events: none;
+      z-index: 3;
     }
 
-    /* ===== Particles ===== */
-    .particle {
-        position: absolute;
-        font-size: 22px;
-        pointer-events: none;
-        animation: particle-pop 0.8s ease-out forwards;
-        z-index: 15;
-    }
-    @keyframes particle-pop {
-        0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        100% { transform: translate(-50%, -50%) scale(0.3) translate(var(--dx), var(--dy)); opacity: 0; }
-    }
-
-    .score-popup {
-        position: absolute;
-        font-size: clamp(24px, 3vw, 36px);
-        font-weight: 900;
-        color: #fde047;
-        text-shadow: 3px 3px 0 #b45309, 0 0 10px rgba(0,0,0,0.5);
-        pointer-events: none;
-        animation: score-rise 0.9s ease-out forwards;
-        z-index: 20;
-        transform: translate(-50%, -50%);
-        font-family: 'Press Start 2P', monospace;
-    }
-    @keyframes score-rise {
-        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-        20% { transform: translate(-50%, -80%) scale(1.2); opacity: 1; }
-        100% { transform: translate(-50%, -180%) scale(1); opacity: 0; }
+    .sc-defense-tag {
+      position: absolute;
+      left: 12px;
+      top: -26px;
+      padding: 2px 10px;
+      border-radius: 8px 10px 8px 6px;
+      background: var(--card, #FFF8E6);
+      border: 2px solid var(--kraft-2, #C9A66B);
+      color: var(--berry-dk, #B3262B);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.3;
+      box-shadow: 0 2px 0 rgba(59, 42, 32, 0.1);
     }
 
-    /* ===== Hint ===== */
-    .hint-banner {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(30,58,138,0.95);
-        border: 4px solid #60a5fa;
-        padding: 32px 48px;
-        border-radius: 24px;
-        box-shadow: 0 0 40px rgba(96,165,250,0.5);
-        text-align: center;
-        z-index: 60;
-        animation: hint-pop 0.4s ease-out;
-    }
-    @keyframes hint-pop {
-        from { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
-        to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    }
-    .hint-emoji { font-size: clamp(50px, 8vw, 80px); margin-bottom: 8px; }
-    .hint-text { font-size: clamp(24px, 3.5vw, 36px); font-weight: 900; color: #fde047; }
-    .hint-sub { font-size: clamp(14px, 1.8vw, 18px); color: #dbeafe; margin-top: 6px; }
-
-    /* ===== Level Title ===== */
-    .level-title {
-        position: absolute;
-        top: 40%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: clamp(40px, 7vw, 72px);
-        font-weight: 900;
-        color: #fde047;
-        text-shadow: 4px 4px 0 #b45309, 0 0 30px rgba(253,224,71,0.6);
-        z-index: 70;
-        pointer-events: none;
-        animation: level-title-anim 2.2s ease-out forwards;
-        text-align: center;
-        white-space: nowrap;
-    }
-    @keyframes level-title-anim {
-        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
-        25% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
+    /* 隕石坑與小煙層 */
+    .sc-crater-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 3;
     }
 
-    .level-sub {
-        position: absolute;
-        top: 52%;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: clamp(18px, 2.5vw, 26px);
-        font-weight: 700;
-        color: #93c5fd;
-        z-index: 70;
-        pointer-events: none;
-        animation: level-title-anim 2.2s ease-out forwards;
-        text-align: center;
+    .sc-crater {
+      position: absolute;
+      width: 44px;
+      height: 16px;
+      margin-left: -22px;
+      margin-top: -8px;
+      border-radius: 50%;
+      background: #D8BE93;
+      border: 2px solid var(--kraft-2, #C9A66B);
+      box-shadow: inset 0 4px 0 rgba(94, 72, 56, 0.24), 0 1px 0 rgba(255, 248, 230, 0.7);
     }
 
-    /* ===== Earth damaged flash ===== */
-    .danger-overlay {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        background: radial-gradient(circle at bottom center, rgba(239,68,68,0.4) 0%, transparent 50%);
-        opacity: 0;
-        transition: opacity 0.2s;
-        z-index: 4;
-    }
-    .danger-overlay.flash { animation: danger-flash 0.5s ease-out; }
-    @keyframes danger-flash {
-        0% { opacity: 0; }
-        50% { opacity: 1; }
-        100% { opacity: 0; }
+    /* 光束 SVG 畫布（彩色紙帶光束） */
+    .sc-beam-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 4;
     }
 
-    /* ===== Certificate ===== */
-    .certificate {
-        background: linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%);
-        border: 6px solid #fbbf24;
-        border-radius: 24px;
-        padding: 32px 48px;
-        max-width: 600px;
-        text-align: center;
-        box-shadow: 0 0 60px rgba(251,191,36,0.4);
-        position: relative;
-        color: #fef3c7;
-    }
-    .cert-corner { position: absolute; font-size: 40px; }
-    .cert-corner.tl { top: 8px; left: 12px; }
-    .cert-corner.tr { top: 8px; right: 12px; }
-    .cert-corner.bl { bottom: 8px; left: 12px; }
-    .cert-corner.br { bottom: 8px; right: 12px; }
-    .cert-title { font-size: clamp(28px, 4vw, 40px); font-weight: 900; color: #fde047; margin-bottom: 8px; text-shadow: 3px 3px 0 #1e3a8a; }
-    .cert-body { font-size: clamp(18px, 2vw, 22px); color: #dbeafe; line-height: 1.8; margin: 16px 0; }
-    .cert-stat { font-size: clamp(24px, 3vw, 32px); font-weight: 900; color: #fbbf24; margin: 8px 0; }
-    .cert-stat-sub { font-size: clamp(16px, 2vw, 20px); color: #93c5fd; }
-    .cert-rank { font-size: clamp(20px, 2.5vw, 28px); font-weight: 900; color: #fde047; margin-top: 16px; }
-
-    @media print {
-        body * { visibility: hidden; }
-        body { background: white; }
-        #end-screen .certificate, #end-screen .certificate * { visibility: visible; }
-        #end-screen .certificate {
-            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            background: white; color: #1e3a8a; border-color: #1e3a8a;
-        }
-        #end-screen .cert-title, #end-screen .cert-rank { color: #b45309; text-shadow: none; }
-        #end-screen .cert-body, #end-screen .cert-stat, #end-screen .cert-stat-sub { color: #1e3a8a; }
-    }
-</style>
-</head>
-<body>
-<a href="../../index.html" class="kogao-home-btn" style="position:fixed;top:10px;left:10px;z-index:99999;background:rgba(255,255,255,.92);border:2px solid #f59e0b;color:#b45309;font-family:'Noto Sans TC',sans-serif;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.15)">🏠 首頁</a>
-
-<div id="app">
-    <div class="stars"></div>
-    <div class="danger-overlay" id="danger-overlay"></div>
-
-    <!-- ===== Start Screen ===== -->
-    <div id="start-screen" class="screen">
-        <div class="title-emoji">🛸🌍</div>
-        <h1 class="title-text">太空打字防衛戰</h1>
-        <p class="subtitle">外星人來了！用英文鍵盤保衛地球！</p>
-        <button class="big-btn gold" onclick="startGame()">🚀 開始任務</button>
-        <div class="skill-row">
-            <div class="skill-chip">🔤 第 1 關<br>單一字母</div>
-            <div class="skill-chip">🔡 第 2 關<br>2 字母短詞</div>
-            <div class="skill-chip">📖 第 3 關<br>3 字母單字</div>
-        </div>
-    </div>
-
-    <!-- ===== Game Screen ===== -->
-    <div id="game-screen" class="hidden">
-        <div id="hud">
-            <div class="hud-box" id="hud-lives">❤️❤️❤️</div>
-            <div class="hud-box" id="hud-level">第 1 關</div>
-            <div class="hud-box" id="hud-score">⭐ 0</div>
-        </div>
-        <div id="game-area">
-            <div class="turret" id="turret">🔫</div>
-            <div class="earth" id="earth">🌍</div>
-        </div>
-    </div>
-
-    <!-- ===== End Screen ===== -->
-    <div id="end-screen" class="screen hidden" style="overflow-y: auto;">
-        <div class="certificate">
-            <span class="cert-corner tl">⭐</span>
-            <span class="cert-corner tr">⭐</span>
-            <span class="cert-corner bl">⭐</span>
-            <span class="cert-corner br">⭐</span>
-            <div style="font-size: 64px;" id="cert-trophy">🏆</div>
-            <div class="cert-title" id="cert-title">太空打字勇者證書</div>
-            <div class="cert-body">
-                恭喜勇者完成<br>
-                <strong>地球防衛任務</strong>
-            </div>
-            <div class="cert-stat">⭐ <span id="cert-score">0</span> 分</div>
-            <div class="cert-stat-sub">擊落外星人 <span id="cert-kills">0</span> 隻 · 準確率 <span id="cert-acc">0</span>%</div>
-            <div class="cert-rank" id="cert-rank">🥈 稱號：地球小衛兵</div>
-            <div style="margin-top: 16px; font-size: 14px; color: #93c5fd;" id="cert-date"></div>
-        </div>
-        <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
-            <button class="big-btn gold" onclick="location.reload()">🔄 再次出擊</button>
-            <button class="big-btn" onclick="window.print()">🖨️ 列印證書</button>
-        </div>
-    </div>
-</div>
-
-<script>
-'use strict';
-
-// ============================================================
-// Audio
-// ============================================================
-let audioCtx = null;
-function getAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    return audioCtx;
-}
-function beep(freq, duration, type = 'square', volume = 0.12) {
-    try {
-        const ctx = getAudio();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = type;
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(volume, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + duration);
-    } catch (e) { /* audio unavailable */ }
-}
-function laserSound() {
-    try {
-        const ctx = getAudio();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(1200, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.12);
-    } catch (e) { /* audio unavailable */ }
-}
-const SFX = {
-    type: () => beep(900, 0.05, 'square', 0.08),
-    laser: () => laserSound(),
-    boom: () => { laserSound(); setTimeout(() => beep(200, 0.2, 'sawtooth', 0.15), 50); },
-    miss: () => beep(150, 0.1, 'sawtooth', 0.06),
-    damage: () => { beep(220, 0.4, 'sawtooth', 0.2); setTimeout(() => beep(180, 0.3, 'sawtooth', 0.15), 100); },
-    levelUp: () => [523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => beep(f, 0.15, 'sine', 0.1), i * 80)),
-    win: () => [523, 659, 784, 1047, 1319, 1047, 1319].forEach((f, i) => setTimeout(() => beep(f, 0.18, 'sine', 0.12), i * 120)),
-    lose: () => [400, 300, 200, 100].forEach((f, i) => setTimeout(() => beep(f, 0.25, 'sawtooth', 0.15), i * 200)),
-};
-
-// ============================================================
-// Game State
-// ============================================================
-const state = {
-    level: 1,
-    lives: 3,
-    score: 0,
-    killsThisLevel: 0,
-    totalKills: 0,
-    correctKeys: 0,
-    totalKeys: 0,
-    aliens: [],
-    spawnTimer: null,
-    rafId: null,
-    playing: false,
-};
-
-const LEVELS = {
-    1: {
-        label: '第 1 關 · 字母轟炸',
-        sub: '按一個字母擊落外星人',
-        words: 'abcdefghijklmnopqrstuvwxyz'.split(''),
-        target: 8,
-        spawnMs: 2800,
-        fallSpeed: 0.045,  // px per ms
-    },
-    2: {
-        label: '第 2 關 · 短字突襲',
-        sub: '輸入 2 字母擊落',
-        words: ['it','go','up','hi','am','is','of','at','in','to','on','no','we','he','me','my','do','if','so','as'],
-        target: 8,
-        spawnMs: 3200,
-        fallSpeed: 0.055,
-    },
-    3: {
-        label: '第 3 關 · 真實單字',
-        sub: '輸入 3 字母單字',
-        words: ['cat','dog','run','sun','bee','fox','pig','bug','sky','bus','egg','top','red','fun','hat','cup','box','toy','car','bag'],
-        target: 8,
-        spawnMs: 3600,
-        fallSpeed: 0.065,
-    },
-};
-
-const ALIEN_EMOJIS = ['👾','👽','🛸','👻','🤖','😈'];
-
-// ============================================================
-// Element Helpers
-// ============================================================
-const $ = (id) => document.getElementById(id);
-const gameArea = () => $('game-area');
-
-function particles(x, y, emojis, count = 8) {
-    for (let i = 0; i < count; i++) {
-        const p = document.createElement('div');
-        p.className = 'particle';
-        p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-        p.style.left = x + 'px';
-        p.style.top = y + 'px';
-        const angle = (Math.PI * 2 * i) / count + Math.random() * 0.3;
-        const dist = 70 + Math.random() * 50;
-        p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
-        p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
-        gameArea().appendChild(p);
-        setTimeout(() => p.remove(), 800);
-    }
-}
-
-function scorePopup(x, y, text) {
-    const d = document.createElement('div');
-    d.className = 'score-popup';
-    d.textContent = text;
-    d.style.left = x + 'px';
-    d.style.top = y + 'px';
-    gameArea().appendChild(d);
-    setTimeout(() => d.remove(), 900);
-}
-
-function showHint(emoji, text, sub, duration = 2400) {
-    const banner = document.createElement('div');
-    banner.className = 'hint-banner';
-    banner.innerHTML = `<div class="hint-emoji">${emoji}</div><div class="hint-text">${text}</div><div class="hint-sub">${sub}</div>`;
-    gameArea().appendChild(banner);
-    setTimeout(() => {
-        banner.style.transition = 'opacity 0.3s';
-        banner.style.opacity = '0';
-        setTimeout(() => banner.remove(), 300);
-    }, duration);
-}
-
-function showLevelTitle(text, sub) {
-    const t = document.createElement('div');
-    t.className = 'level-title';
-    t.textContent = text;
-    const s = document.createElement('div');
-    s.className = 'level-sub';
-    s.textContent = sub;
-    gameArea().appendChild(t);
-    gameArea().appendChild(s);
-    setTimeout(() => { t.remove(); s.remove(); }, 2200);
-}
-
-function updateHud() {
-    $('hud-lives').textContent = '❤️'.repeat(state.lives) + '🖤'.repeat(3 - state.lives);
-    $('hud-score').textContent = '⭐ ' + state.score;
-    $('hud-level').textContent = `第 ${state.level} 關 (${state.killsThisLevel}/${LEVELS[state.level].target})`;
-    if (state.lives === 1) $('hud-lives').classList.add('warning');
-    else $('hud-lives').classList.remove('warning');
-}
-
-// ============================================================
-// Aliens
-// ============================================================
-function spawnAlien() {
-    if (!state.playing) return;
-    const lvl = LEVELS[state.level];
-    const word = lvl.words[Math.floor(Math.random() * lvl.words.length)];
-
-    // Avoid spawning a word whose first letter conflicts with active alien's next letter
-    // (prevents accidental targeting confusion)
-    if (state.aliens.some(a => a.word.toLowerCase() === word.toLowerCase())) {
-        // duplicate, try once more
-        return setTimeout(spawnAlien, 200);
+    /* 紙流星目標層 */
+    .sc-meteor-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
     }
 
-    const margin = 80;
-    const x = margin + Math.random() * (window.innerWidth - margin * 2);
-    const y = -80;
-    const emoji = ALIEN_EMOJIS[Math.floor(Math.random() * ALIEN_EMOJIS.length)];
+    /* 單顆紙流星容器（中心點定位） */
+    .sc-meteor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 78px;
+      height: 78px;
+      margin-left: -39px;
+      margin-top: -39px;
+      will-change: transform, opacity;
+    }
 
-    const el = document.createElement('div');
-    el.className = 'alien';
-    el.innerHTML = `<div class="alien-body">${emoji}</div><div class="alien-word"></div>`;
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-    gameArea().appendChild(el);
+    /* 流星背後短短的剪紙紙條尾巴 */
+    .sc-meteor-tail {
+      position: absolute;
+      left: 50%;
+      bottom: 70%;
+      width: 34px;
+      height: 44px;
+      margin-left: -17px;
+      z-index: 1;
+      pointer-events: none;
+    }
 
-    const alien = {
-        el,
-        word: word.toLowerCase(),
-        typed: '',
-        x, y,
-        speed: lvl.fallSpeed * (0.85 + Math.random() * 0.3),
-        wordEl: el.querySelector('.alien-word'),
-        dying: false,
+    .sc-tail-strip {
+      position: absolute;
+      bottom: 0;
+      border-radius: 4px 4px 2px 2px;
+      opacity: 0.82;
+    }
+
+    .sc-tail-a {
+      left: 5px;
+      width: 11px;
+      height: 36px;
+      background: linear-gradient(180deg, rgba(255, 220, 203, 0.08) 0%, var(--peach-soft, #FFDCCB) 55%, var(--peach, #FF9E7A) 100%);
+      transform: rotate(-7deg);
+      transform-origin: bottom center;
+    }
+
+    .sc-tail-b {
+      right: 5px;
+      width: 10px;
+      height: 30px;
+      background: linear-gradient(180deg, rgba(255, 241, 184, 0.08) 0%, var(--butter-soft, #FFF1B8) 55%, var(--butter, #FFD966) 100%);
+      transform: rotate(8deg);
+      transform-origin: bottom center;
+    }
+
+    .sc-meteor-active .sc-tail-a {
+      height: 44px;
+      background: linear-gradient(180deg, rgba(214, 238, 251, 0.1) 0%, var(--sky-soft, #D6EEFB) 52%, var(--sky-dk, #1F6B9C) 100%);
+    }
+
+    .sc-meteor-active .sc-tail-b {
+      height: 36px;
+      background: linear-gradient(180deg, rgba(255, 217, 102, 0.1) 0%, var(--butter-soft, #FFF1B8) 50%, var(--peach, #FF9E7A) 100%);
+    }
+
+    /* 背後剪紙圓角星輪廓 */
+    .sc-meteor-star {
+      position: absolute;
+      inset: -7px;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* 紙流星主體卡紙圓片 */
+    .sc-meteor-body {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      border-radius: 50% 48% 51% 49% / 49% 51% 48% 50%;
+      background: var(--card, #FFF8E6);
+      border: 3px solid var(--kraft-2, #C9A66B);
+      box-shadow: 0 5px 0 rgba(59, 42, 32, 0.12), inset 0 -4px 0 rgba(201, 166, 107, 0.26);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+
+    /* 目前要打的目標：天藍粗框＋天藍虛線瞄準圈＋高對比奶油淺底 */
+    .sc-meteor-active .sc-meteor-body {
+      background: var(--butter-soft, #FFF1B8);
+      border: 4px solid var(--sky-dk, #1F6B9C);
+      outline: 3.5px dashed var(--sky-dk, #1F6B9C);
+      outline-offset: 6px;
+      box-shadow: 0 6px 0 rgba(31, 107, 156, 0.2), inset 0 -5px 0 rgba(214, 238, 251, 0.7);
+    }
+
+    /* 目前目標的瞄準小角標 */
+    .sc-aim-tag {
+      display: none;
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4;
+      padding: 1px 7px;
+      border-radius: 99px;
+      background: var(--sky-dk, #1F6B9C);
+      color: var(--card, #FFF8E6);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      box-shadow: 0 2px 0 rgba(59, 42, 32, 0.16);
+    }
+
+    .sc-meteor-active .sc-aim-tag {
+      display: block;
+    }
+
+    /* 打錯時的柔和紅框＋✗ 徽章（對錯一律同時有符號） */
+    .sc-meteor-miss .sc-meteor-body {
+      background: #FFEBE8;
+      border-color: var(--berry-dk, #B3262B);
+      outline-color: var(--berry-dk, #B3262B);
+    }
+
+    .sc-miss-badge {
+      display: none;
+      position: absolute;
+      right: -8px;
+      top: -6px;
+      z-index: 5;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--berry-dk, #B3262B);
+      color: var(--card, #FFF8E6);
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 26px;
+      text-align: center;
+      border: 2px solid var(--card, #FFF8E6);
+      box-shadow: 0 2px 0 rgba(59, 42, 32, 0.2);
+    }
+
+    .sc-meteor-miss .sc-miss-badge {
+      display: block;
+    }
+
+    /* 目標文字：深棕字配淺底（對比度 > 11:1） */
+    .sc-meteor-char {
+      position: relative;
+      z-index: 3;
+      color: var(--ink-1, #3B2A20);
+      font-family: var(--f-zh, 'Noto Sans TC', sans-serif);
+      font-size: 44px;
+      font-weight: 700;
+      line-height: 1;
+      text-align: center;
+    }
+
+    /* 英打指定 Fredoka / Consolas 等寬友善字體，至少 44px */
+    .sc-stage[data-lang="en"] .sc-meteor-char {
+      font-family: 'Fredoka', Consolas, monospace;
+      font-size: 46px;
+      font-weight: 600;
+    }
+
+    /* 空白字元 ␣ 加上淡框幫助低年級辨識 */
+    .sc-meteor-char.sc-char-space {
+      padding: 0 6px 2px;
+      border-radius: 8px;
+      background: rgba(31, 107, 156, 0.1);
+    }
+
+    /* 小狐狸紙捲火箭砲台 */
+    .sc-cannon {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 96px;
+      height: 86px;
+      margin-left: -48px;
+      margin-top: -66px;
+      pointer-events: none;
+      z-index: 6;
+      will-change: transform;
+      filter: drop-shadow(0 4px 0 rgba(59, 42, 32, 0.14));
+    }
+
+    /* 連擊每 10 下：月球小外星朋友舉牌「好厲害！」 */
+    .sc-alien {
+      position: absolute;
+      bottom: 6px;
+      width: 142px;
+      height: 102px;
+      pointer-events: none;
+      z-index: 7;
+      opacity: 0;
+      will-change: transform, opacity;
+      filter: drop-shadow(0 4px 0 rgba(59, 42, 32, 0.15));
+    }
+
+    /* 星星紙屑、煙霧與 +1 浮字圖層（不擋住目標字） */
+    .sc-fx-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 8;
+    }
+
+    .sc-particle {
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+
+    .sc-smoke {
+      position: absolute;
+      left: 0;
+      top: 0;
+      border-radius: 50%;
+      background: #F0E3CC;
+      border: 2px solid var(--kraft-2, #C9A66B);
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+
+    .sc-pop {
+      position: absolute;
+      left: 0;
+      top: 0;
+      padding: 2px 10px;
+      border-radius: 10px 8px 10px 8px;
+      background: var(--card, #FFF8E6);
+      border: 2px solid var(--leaf-dk, #2D7A38);
+      color: var(--leaf-dk, #2D7A38);
+      font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+      box-shadow: 0 3px 0 rgba(59, 42, 32, 0.12);
+      will-change: transform, opacity;
+    }
+
+    /* 暫停時強制凍結任何潛在樣式過渡 */
+    .sc-stage.sc-paused * {
+      animation-play-state: paused !important;
+      transition: none !important;
+    }
+
+    /* 系統偏好減少動態時關閉任何過渡效果 */
+    @media (prefers-reduced-motion: reduce) {
+      .sc-stage * {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/typing/passages.js"></script>
+  <script src="../../assets/typing/en-items.js"></script>
+  <script src="../../assets/js/typing-core.js"></script>
+  <script src="../../assets/js/typing-ui.js"></script>
+  <script>
+    /* 太空打字防衛戰：集中管理所有速度、數量、版面比例與視覺常數 */
+    var SCENE_CONFIG = {
+      /* 各階級同時在畫面上的紙流星數量（約束 6：初階 3、進階 4、高階 5） */
+      TARGET_COUNT: { t1: 3, t2: 4, t3: 5 },
+      /* 各階級從頂部掉到月球防線的總秒數（約束 6：初階 ≥14 秒、進階 10 秒、高階 7 秒） */
+      FALL_SECONDS: { t1: 15, t2: 10, t3: 7 },
+      /* 尚未輪到的目標速度比例與最大前進行程（約束 9：速度 1/3、最多走全程 1/3） */
+      WAITING_SPEED_RATIO: 1 / 3,
+      WAITING_MAX_PROGRESS: 1 / 3,
+      /* 單幀時間差上限（約束 4：0.1 秒） */
+      MAX_DT: 0.1,
+      /* 場景動態比例（依 api.field 實際寬高即時計算，不寫死容器尺寸） */
+      LAYOUT: {
+        FLOOR_RATIO: 0.78,      // 月球防線位於場景高度的 78%
+        MARGIN_X_RATIO: 0.11,   // 左右安全邊距佔寬度 11%
+        METEOR_SIZE: 78,        // 紙流星基準直徑（px）
+        METEOR_SIZE_SM: 70,     // 高度較窄時紙流星直徑（仍完整容納 ≥44px 字）
+        COMPACT_HEIGHT: 245,    // 啟動緊湊尺寸的高度門檻
+        CANNON_OFFSET_Y: 8,     // 小狐狸砲台貼齊月球表面的微調位移
+        MAX_CRATERS: 8          // 月球表面最多保留的隕石坑數量
+      },
+      /* 動畫與回饋秒數（全部由 rAF 驅動，pause 時立刻凍結） */
+      TIMING: {
+        BEAM_DURATION: 0.25,        // 彩色紙帶光束持續 0.25 秒
+        HIT_FADE_DURATION: 0.26,    // reduced-motion 模式打對淡出秒數
+        SPAWN_FADE_DURATION: 0.24,  // 目標出生淡入秒數
+        MISS_DURATION: 0.42,        // 打錯輕晃與 ✗ 提示持續秒數
+        MISS_CYCLES: 1.5,           // 0.42 秒內輕晃 1.5 週期（約 2.4 次/秒，低於 3 次/秒）
+        MISS_SHAKE_PX: 7,           // 打錯水平輕晃幅度
+        CANNON_JUMP_DURATION: 0.28, // 打對時小狐狸砲台開心彈跳秒數
+        CANNON_FOLLOW_SPEED: 11,    // 砲台水平平滑追蹤係數
+        POP_DURATION: 0.68,         // +1 浮字存活秒數
+        PARTICLE_MIN_LIFE: 0.42,    // 星星紙屑最短存活秒數
+        PARTICLE_MAX_LIFE: 0.68,    // 星星紙屑最長存活秒數
+        SMOKE_DURATION: 0.85,       // 撞擊小煙存活秒數
+        ALIEN_DURATION: 2.0,        // 小外星朋友舉牌總停留秒數
+        ALIEN_POP_TIME: 0.26        // 小外星朋友探頭與縮回各佔秒數
+      },
+      /* 粒子與連擊參數 */
+      FX: {
+        PARTICLE_COUNT: 9,          // 每顆流星碎成的星星紙屑數
+        SMOKE_PUFFS: 3,             // 撞擊月球冒出的小煙朵數
+        ALIEN_COMBO_STEP: 10        // 每 10 連擊召喚一次小外星朋友
+      },
+      /* 依循 system.md 色票（不另發明刺眼霓虹主色） */
+      COLORS: {
+        BEAM_RIBBONS: ['#1F6B9C', '#FFD966', '#FF9E7A', '#7CCB6F'],
+        STAR_PARTICLES: ['#FFD966', '#FF9E7A', '#7CCB6F', '#D6EEFB', '#FFF8E6'],
+        STAR_STROKE: '#5E4838'
+      }
     };
-    state.aliens.push(alien);
-    renderAlienWord(alien);
-    refreshActiveAlien();
-}
 
-function renderAlienWord(alien) {
-    const typed = alien.typed;
-    const word = alien.word;
-    let html = '';
-    for (let i = 0; i < word.length; i++) {
-        const ch = word[i].toUpperCase();
-        if (i < typed.length) html += `<span class="typed">${ch}</span>`;
-        else if (i === typed.length) html += `<span class="next">${ch}</span>`;
-        else html += `<span class="pending">${ch}</span>`;
-    }
-    alien.wordEl.innerHTML = html;
-}
+    TypingIsland.mount({
+      unit: 3,
+      title: '太空打字防衛戰',
+      subtitle: '射擊類・英打',
+      langs: ['en'],
+      homeUrl: '../../index.html',
+      scene: function (api) {
+        var SVG_NS = 'http://www.w3.org/2000/svg';
+        var field = api.field;
 
-function refreshActiveAlien() {
-    // Active alien = lowest one on screen (closest to Earth) that isn't dying
-    const alive = state.aliens.filter(a => !a.dying);
-    if (alive.length === 0) return;
-    let lowest = alive[0];
-    alive.forEach(a => { if (a.y > lowest.y) lowest = a; });
-    state.aliens.forEach(a => a.el.classList.toggle('active', a === lowest && !a.dying));
-}
+        /* 場景狀態變數（全部集中管理，pause／stop 皆可安全凍結） */
+        var initialized = false;
+        var running = false;
+        var rafId = 0;
+        var lastTime = 0;
 
-// ============================================================
-// Update Loop (alien fall)
-// ============================================================
-let lastFrame = 0;
-function loop(timestamp) {
-    if (!state.playing) return;
-    const dt = lastFrame ? timestamp - lastFrame : 16;
-    lastFrame = timestamp;
+        /* DOM 圖層參考 */
+        var stageEl = null;
+        var defenseLineEl = null;
+        var craterLayerEl = null;
+        var beamSvgEl = null;
+        var meteorLayerEl = null;
+        var cannonEl = null;
+        var alienEl = null;
+        var fxLayerEl = null;
 
-    const earthTop = window.innerHeight - parseFloat(getComputedStyle($('earth')).fontSize) - 20;
+        /* 遊戲實體狀態 */
+        var targets = [];       // 場上對齊 api.upcoming 的紙流星清單
+        var beams = [];         // 彩色紙帶光束清單
+        var particles = [];     // 星星紙屑粒子清單
+        var ghosts = [];        // reduced-motion 模式打對淡出殘影
+        var pops = [];          // +1 開心浮字清單
+        var smokes = [];        // 撞擊月球小煙清單
+        var craters = [];       // 月球表面小坑清單
+        var lastUsedLane = -1;  // 避免連續新流星擠在同一軌道
 
-    state.aliens.forEach(a => {
-        if (a.dying) return;
-        a.y += a.speed * dt;
-        a.el.style.top = a.y + 'px';
+        /* 小狐狸砲台與小外星朋友狀態 */
+        var cannon = { x: 0, targetX: 0, jumpTimer: 0, missTimer: 0 };
+        var alien = { active: false, elapsed: 0, side: 'right' };
 
-        // Reached earth?
-        if (a.y >= earthTop) {
-            a.dying = true;
-            alienReachesEarth(a);
+        /* 偵測系統無障礙「減少動態」設定 */
+        var reducedMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+        function isReducedMotion() {
+          return !!(reducedMotionQuery && reducedMotionQuery.matches);
         }
+
+        /* 取得目前難度設定（預設防呆回退到 t1） */
+        function getTier() {
+          var t = api.settings && api.settings.tier;
+          return SCENE_CONFIG.TARGET_COUNT[t] ? t : 't1';
+        }
+
+        /* 動態量測 api.field 尺寸與關鍵座標，絕不寫死寬高 */
+        function getMetrics() {
+          var w = Math.max(field.clientWidth || 0, 320);
+          var h = Math.max(field.clientHeight || 0, 180);
+          var meteorSize = h < SCENE_CONFIG.LAYOUT.COMPACT_HEIGHT
+            ? SCENE_CONFIG.LAYOUT.METEOR_SIZE_SM
+            : SCENE_CONFIG.LAYOUT.METEOR_SIZE;
+          var radius = meteorSize / 2;
+          var floorY = Math.round(h * SCENE_CONFIG.LAYOUT.FLOOR_RATIO);
+          var startY = Math.min(Math.max(radius + 8, h * 0.15), floorY - radius - 24);
+          var endY = Math.max(startY + 24, floorY - radius + 4);
+          var cannonY = floorY + SCENE_CONFIG.LAYOUT.CANNON_OFFSET_Y;
+          return {
+            w: w,
+            h: h,
+            meteorSize: meteorSize,
+            radius: radius,
+            floorY: floorY,
+            startY: startY,
+            endY: endY,
+            cannonY: cannonY
+          };
+        }
+
+        /* 建立背景剪紙場景（土星、圓圓小行星、靜態星星貼紙、月球表面、小狐狸砲台、小外星人） */
+        function initDom() {
+          if (initialized) return;
+          initialized = true;
+          field.innerHTML = '';
+
+          stageEl = document.createElement('div');
+          stageEl.className = 'sc-stage';
+
+          /* 紙張紋理層 */
+          var grain = document.createElement('div');
+          grain.className = 'sc-paper-grain';
+          stageEl.appendChild(grain);
+
+          /* 背景剪紙裝飾層：土星環、圓圓小行星、不閃爍小星星貼紙 */
+          var bg = document.createElement('div');
+          bg.className = 'sc-bg-layer';
+          bg.innerHTML =
+            /* 左上剪紙土星 */
+            '<svg class="sc-planet-saturn" viewBox="0 0 120 78" aria-hidden="true">' +
+              '<ellipse cx="60" cy="41" rx="54" ry="15" transform="rotate(-14 60 41)" fill="none" stroke="#FFF8E6" stroke-width="11"/>' +
+              '<ellipse cx="60" cy="41" rx="54" ry="15" transform="rotate(-14 60 41)" fill="none" stroke="#FF9E7A" stroke-width="6"/>' +
+              '<circle cx="60" cy="39" r="24" fill="#FFF1B8" stroke="#FFF8E6" stroke-width="4"/>' +
+              '<circle cx="60" cy="39" r="22" fill="#F8DE95" stroke="#C9A66B" stroke-width="2"/>' +
+              '<path d="M40 34 Q60 28 80 34" fill="none" stroke="#E4CC9C" stroke-width="3" stroke-linecap="round"/>' +
+              '<path d="M41 44 Q60 50 79 44" fill="none" stroke="#FF9E7A" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>' +
+              '<path d="M12 52 A54 15 -14 0 0 108 30" fill="none" stroke="#FFF8E6" stroke-width="9" stroke-linecap="round"/>' +
+              '<path d="M12 52 A54 15 -14 0 0 108 30" fill="none" stroke="#FF9E7A" stroke-width="5" stroke-linecap="round"/>' +
+            '</svg>' +
+            /* 右上剪紙圓圓小行星 */
+            '<svg class="sc-planet-mini" viewBox="0 0 72 72" aria-hidden="true">' +
+              '<circle cx="36" cy="36" r="28" fill="#FFF8E6"/>' +
+              '<circle cx="36" cy="36" r="24" fill="#E8C6D8" stroke="#B68FA5" stroke-width="2"/>' +
+              '<circle cx="27" cy="29" r="5" fill="#D9B1C7"/>' +
+              '<circle cx="45" cy="41" r="6.5" fill="#D9B1C7"/>' +
+              '<circle cx="42" cy="24" r="3.2" fill="#D9B1C7"/>' +
+            '</svg>' +
+            /* 中段遠景小行星 */
+            '<svg class="sc-planet-tiny" viewBox="0 0 40 40" aria-hidden="true">' +
+              '<circle cx="20" cy="20" r="15" fill="#FFF8E6"/>' +
+              '<circle cx="20" cy="20" r="12" fill="#D6EEFB" stroke="#8CB8D1" stroke-width="1.8"/>' +
+              '<circle cx="16" cy="17" r="2.8" fill="#B7DEF2"/>' +
+            '</svg>' +
+            /* 靜態小星星貼紙（不閃爍） */
+            makeStickerStarSvg('18%', '19%', 20, '#FFD966', -12) +
+            makeStickerStarSvg('28%', '9%', 16, '#FFF8E6', 14) +
+            makeStickerStarSvg('53%', '14%', 18, '#FFD966', 8) +
+            makeStickerStarSvg('68%', '8%', 15, '#FFF8E6', -18) +
+            makeStickerStarSvg('79%', '25%', 19, '#FFD966', 10) +
+            makeStickerStarSvg('91%', '34%', 15, '#FFF8E6', -8) +
+            makeStickerStarSvg('11%', '44%', 16, '#FFF1B8', 16);
+          stageEl.appendChild(bg);
+
+          /* 底部剪紙月球表面 */
+          var moonLayer = document.createElement('div');
+          moonLayer.className = 'sc-moon-layer';
+          moonLayer.innerHTML =
+            '<svg class="sc-moon-svg" viewBox="0 0 1200 110" preserveAspectRatio="none" aria-hidden="true">' +
+              /* 遠層米色剪紙月丘 */
+              '<path d="M0 32 Q180 4 380 26 T780 22 T1200 30 L1200 110 L0 110 Z" fill="#EAD7B7" stroke="#FFF8E6" stroke-width="4"/>' +
+              /* 近層溫潤月球表面 */
+              '<path d="M0 44 Q240 20 520 38 T980 34 T1200 46 L1200 110 L0 110 Z" fill="#F7E8CB" stroke="#C9A66B" stroke-width="2.5"/>' +
+              /* 靜態裝飾淺月坑 */
+              '<ellipse cx="145" cy="74" rx="34" ry="10" fill="#E4CC9C" opacity="0.72"/>' +
+              '<ellipse cx="420" cy="82" rx="46" ry="12" fill="#E4CC9C" opacity="0.65"/>' +
+              '<ellipse cx="760" cy="72" rx="30" ry="9" fill="#E4CC9C" opacity="0.72"/>' +
+              '<ellipse cx="1040" cy="80" rx="42" ry="11" fill="#E4CC9C" opacity="0.68"/>' +
+            '</svg>';
+          stageEl.appendChild(moonLayer);
+
+          /* 月球防線標記 */
+          defenseLineEl = document.createElement('div');
+          defenseLineEl.className = 'sc-defense-line';
+          defenseLineEl.innerHTML = '<span class="sc-defense-tag">月球防線</span>';
+          stageEl.appendChild(defenseLineEl);
+
+          /* 動態隕石坑圖層 */
+          craterLayerEl = document.createElement('div');
+          craterLayerEl.className = 'sc-crater-layer';
+          stageEl.appendChild(craterLayerEl);
+
+          /* 彩色紙帶光束 SVG 圖層 */
+          beamSvgEl = document.createElementNS(SVG_NS, 'svg');
+          beamSvgEl.setAttribute('class', 'sc-beam-layer');
+          beamSvgEl.setAttribute('aria-hidden', 'true');
+          stageEl.appendChild(beamSvgEl);
+
+          /* 紙流星目標層 */
+          meteorLayerEl = document.createElement('div');
+          meteorLayerEl.className = 'sc-meteor-layer';
+          stageEl.appendChild(meteorLayerEl);
+
+          /* 小狐狸紙捲小火箭砲台 */
+          cannonEl = document.createElement('div');
+          cannonEl.className = 'sc-cannon';
+          cannonEl.innerHTML =
+            '<svg viewBox="0 0 96 86" width="96" height="86" aria-hidden="true">' +
+              /* 剪紙火箭尾翼 */
+              '<path d="M22 60 L10 77 L28 73 Z" fill="#D9531F" stroke="#3B2A20" stroke-width="2.2" stroke-linejoin="round"/>' +
+              '<path d="M74 60 L86 77 L68 73 Z" fill="#D9531F" stroke="#3B2A20" stroke-width="2.2" stroke-linejoin="round"/>' +
+              /* 上方紙捲發射管 */
+              '<rect x="41" y="2" width="14" height="18" rx="5" fill="#FFF8E6" stroke="#3B2A20" stroke-width="2.2"/>' +
+              '<rect x="38" y="2" width="20" height="6" rx="3" fill="#FF9E7A" stroke="#3B2A20" stroke-width="2"/>' +
+              /* 小狐狸雙耳 */
+              '<path d="M31 28 L25 11 L41 21 Z" fill="#E87D44" stroke="#3B2A20" stroke-width="2.2" stroke-linejoin="round"/>' +
+              '<path d="M31 24 L28 15 L37 21 Z" fill="#FFF8E6"/>' +
+              '<path d="M65 28 L71 11 L55 21 Z" fill="#E87D44" stroke="#3B2A20" stroke-width="2.2" stroke-linejoin="round"/>' +
+              '<path d="M65 24 L68 15 L59 21 Z" fill="#FFF8E6"/>' +
+              /* 淡天藍紙框太空頭盔弧光 */
+              '<circle cx="48" cy="31" r="19" fill="rgba(214,238,251,0.45)" stroke="#1F6B9C" stroke-width="2"/>' +
+              /* 小狐狸臉蛋 */
+              '<ellipse cx="48" cy="33" rx="15" ry="12.5" fill="#E87D44" stroke="#3B2A20" stroke-width="2"/>' +
+              '<path d="M34 34 Q41 31 48 39 Q55 31 62 34 Q59 44 48 45 Q37 44 34 34 Z" fill="#FFF8E6"/>' +
+              /* 小狐狸微笑眼神與鼻頭 */
+              '<path d="M40 31 Q42.5 28.5 45 31" fill="none" stroke="#3B2A20" stroke-width="2.2" stroke-linecap="round"/>' +
+              '<path d="M51 31 Q53.5 28.5 56 31" fill="none" stroke="#3B2A20" stroke-width="2.2" stroke-linecap="round"/>' +
+              '<circle cx="48" cy="36" r="2.3" fill="#3B2A20"/>' +
+              '<circle cx="38" cy="36.5" r="2.2" fill="#FF9E7A" opacity="0.65"/>' +
+              '<circle cx="58" cy="36.5" r="2.2" fill="#FF9E7A" opacity="0.65"/>' +
+              /* 紙捲小火箭砲台本體 */
+              '<path d="M23 47 Q48 41 73 47 L69 75 Q48 80 27 75 Z" fill="#E4CC9C" stroke="#3B2A20" stroke-width="2.4" stroke-linejoin="round"/>' +
+              /* 捲紙紋路與桃橘紙帶裝飾 */
+              '<path d="M25 56 Q48 51 71 56 L70 63 Q48 58 26 63 Z" fill="#FF9E7A" stroke="#3B2A20" stroke-width="1.6"/>' +
+              '<circle cx="48" cy="59" r="6" fill="#FFF1B8" stroke="#3B2A20" stroke-width="1.8"/>' +
+              '<circle cx="48" cy="59" r="2.5" fill="#1F6B9C"/>' +
+              /* 紙捲底部邊緣 */
+              '<ellipse cx="48" cy="76" rx="20" ry="4.5" fill="#C9A66B" stroke="#3B2A20" stroke-width="2"/>' +
+            '</svg>';
+          stageEl.appendChild(cannonEl);
+
+          /* 每 10 連擊跳出來的月球小外星朋友（舉牌「好厲害！」） */
+          alienEl = document.createElement('div');
+          alienEl.className = 'sc-alien';
+          alienEl.innerHTML =
+            '<svg viewBox="0 0 142 102" width="142" height="102" aria-hidden="true">' +
+              /* 舉牌支撐小棒 */
+              '<rect x="76" y="42" width="5" height="34" rx="2.5" fill="#C9A66B" stroke="#3B2A20" stroke-width="1.8"/>' +
+              /* 「好厲害！」剪紙奶油黃舉牌 */
+              '<rect x="44" y="6" width="90" height="40" rx="10" fill="#FFF1B8" stroke="#3B2A20" stroke-width="2.4"/>' +
+              '<rect x="48" y="10" width="82" height="32" rx="7" fill="none" stroke="#C9A66B" stroke-width="1.6" stroke-dasharray="4 3"/>' +
+              '<text x="89" y="33" text-anchor="middle" fill="#3B2A20" font-size="18" font-weight="900" font-family="Noto Sans TC, Microsoft JhengHei, sans-serif">好厲害！</text>' +
+              /* 草綠小外星朋友身體與觸角 */
+              '<path d="M26 44 L19 29" stroke="#2D7A38" stroke-width="3" stroke-linecap="round"/>' +
+              '<circle cx="18" cy="27" r="4.5" fill="#FFD966" stroke="#3B2A20" stroke-width="1.8"/>' +
+              '<path d="M44 44 L50 30" stroke="#2D7A38" stroke-width="3" stroke-linecap="round"/>' +
+              '<circle cx="51" cy="28" r="4.5" fill="#FFD966" stroke="#3B2A20" stroke-width="1.8"/>' +
+              '<path d="M12 96 C12 58 20 42 36 42 C52 42 60 58 60 96 Z" fill="#7CCB6F" stroke="#3B2A20" stroke-width="2.4"/>' +
+              /* 舉牌小手 */
+              '<path d="M55 68 Q68 62 77 56" fill="none" stroke="#7CCB6F" stroke-width="8" stroke-linecap="round"/>' +
+              '<path d="M55 68 Q68 62 77 56" fill="none" stroke="#3B2A20" stroke-width="2" stroke-linecap="round"/>' +
+              /* 開心表情 */
+              '<circle cx="28" cy="61" r="4" fill="#FFF8E6" stroke="#3B2A20" stroke-width="1.8"/>' +
+              '<circle cx="28.8" cy="61" r="1.8" fill="#3B2A20"/>' +
+              '<circle cx="44" cy="61" r="4" fill="#FFF8E6" stroke="#3B2A20" stroke-width="1.8"/>' +
+              '<circle cx="44.8" cy="61" r="1.8" fill="#3B2A20"/>' +
+              '<path d="M30 72 Q36 78 42 72" fill="none" stroke="#3B2A20" stroke-width="2.4" stroke-linecap="round"/>' +
+              '<circle cx="22" cy="68" r="2.6" fill="#FF9E7A" opacity="0.7"/>' +
+              '<circle cx="50" cy="68" r="2.6" fill="#FF9E7A" opacity="0.7"/>' +
+            '</svg>';
+          stageEl.appendChild(alienEl);
+
+          /* 粒子、煙霧、+1 浮字圖層 */
+          fxLayerEl = document.createElement('div');
+          fxLayerEl.className = 'sc-fx-layer';
+          stageEl.appendChild(fxLayerEl);
+
+          field.appendChild(stageEl);
+        }
+
+        /* 產生靜態剪紙小星星貼紙 SVG 字串（無閃爍） */
+        function makeStickerStarSvg(left, top, size, fill, rot) {
+          return (
+            '<svg class="sc-sticker-star" style="left:' + left + ';top:' + top + ';width:' + size + 'px;height:' + size + 'px;transform:rotate(' + rot + 'deg);" viewBox="0 0 24 24" aria-hidden="true">' +
+              '<path d="M12 2.5 L14.8 8.5 L21.3 9.3 L16.5 13.8 L17.8 20.2 L12 17 L6.2 20.2 L7.5 13.8 L2.7 9.3 L9.2 8.5 Z" fill="' + fill + '" stroke="#FFF8E6" stroke-width="2" stroke-linejoin="round"/>' +
+            '</svg>'
+          );
+        }
+
+        /* 產生紙流星背後剪紙星形輪廓 SVG */
+        function makeMeteorStarBg(isActive) {
+          var fill = isActive ? '#D6EEFB' : '#F2E0BE';
+          var stroke = isActive ? '#1F6B9C' : '#C9A66B';
+          return (
+            '<svg class="sc-meteor-star" viewBox="0 0 100 100" aria-hidden="true">' +
+              '<path d="M50 4 L61 20 L80 15 L79 35 L96 46 L81 59 L86 78 L66 78 L56 96 L43 81 L24 86 L25 66 L7 56 L22 43 L17 24 L37 24 Z" fill="' + fill + '" stroke="' + stroke + '" stroke-width="2" stroke-linejoin="round" opacity="0.88"/>' +
+            '</svg>'
+          );
+        }
+
+        /* 挑選一個尚未被場上其他流星佔用的水平軌道，確保字絕對不重疊 */
+        function pickLane(count) {
+          var used = {};
+          for (var i = 0; i < targets.length; i++) {
+            used[targets[i].lane] = true;
+          }
+          var free = [];
+          for (var lane = 0; lane < count; lane++) {
+            if (!used[lane]) free.push(lane);
+          }
+          if (!free.length) {
+            return Math.floor(Math.random() * count);
+          }
+          /* 若有多個空軌道，盡量避免跟剛出生的上一顆完全同一軌，讓小狐狸砲台左右滑動更好玩 */
+          var candidates = free.length > 1
+            ? free.filter(function (l) { return l !== lastUsedLane; })
+            : free;
+          var chosen = candidates[Math.floor(Math.random() * candidates.length)];
+          lastUsedLane = chosen;
+          return chosen;
+        }
+
+        /* 計算指定軌道對應的實際水平 x 像素座標 */
+        function laneToX(lane, count, jitter, width) {
+          var margin = width * SCENE_CONFIG.LAYOUT.MARGIN_X_RATIO;
+          var usable = Math.max(width - margin * 2, 80);
+          var base = margin + usable * ((lane + 0.5) / Math.max(count, 1));
+          var maxJitter = Math.min(usable / Math.max(count, 1) * 0.12, 16);
+          return base + jitter * maxJitter;
+        }
+
+        /* 建立單顆紙流星 DOM 元件（顯示字一律用 u.display，空白顯示 ␣） */
+        function createMeteorElement(u, isActive) {
+          var el = document.createElement('div');
+          el.className = 'sc-meteor' + (isActive ? ' sc-meteor-active' : '');
+
+          var tail = document.createElement('div');
+          tail.className = 'sc-meteor-tail';
+          tail.innerHTML = '<span class="sc-tail-strip sc-tail-a"></span><span class="sc-tail-strip sc-tail-b"></span>';
+          el.appendChild(tail);
+
+          var starWrap = document.createElement('div');
+          starWrap.innerHTML = makeMeteorStarBg(isActive);
+          el.appendChild(starWrap.firstChild);
+
+          var body = document.createElement('div');
+          body.className = 'sc-meteor-body';
+
+          var charSpan = document.createElement('span');
+          var rawDisplay = typeof u.display === 'string' ? u.display : '';
+          var shownText = rawDisplay === ' ' ? '␣' : rawDisplay;
+          charSpan.className = 'sc-meteor-char' + (rawDisplay === ' ' ? ' sc-char-space' : '');
+          charSpan.textContent = shownText; // 用 textContent 保留原樣大小寫與 IVS，安全顯示標點
+          body.appendChild(charSpan);
+          el.appendChild(body);
+
+          var aimTag = document.createElement('span');
+          aimTag.className = 'sc-aim-tag';
+          aimTag.textContent = '瞄準';
+          el.appendChild(aimTag);
+
+          var missBadge = document.createElement('span');
+          missBadge.className = 'sc-miss-badge';
+          missBadge.setAttribute('aria-hidden', 'true');
+          missBadge.textContent = '✗';
+          el.appendChild(missBadge);
+
+          meteorLayerEl.appendChild(el);
+          return el;
+        }
+
+        /* 切換紙流星是否為目前要打的目標（同步更新天藍虛線框與星形背板色） */
+        function setMeteorActive(it, active) {
+          if (it.active === active) return;
+          it.active = active;
+          it.el.classList.toggle('sc-meteor-active', active);
+          var oldStar = it.el.querySelector('.sc-meteor-star');
+          if (oldStar) {
+            var tmp = document.createElement('div');
+            tmp.innerHTML = makeMeteorStarBg(active);
+            it.el.replaceChild(tmp.firstChild, oldStar);
+          }
+        }
+
+        /* 與共用程式的 api.upcoming(n) 嚴格對齊紙流星清單 */
+        function syncTargets() {
+          var tier = getTier();
+          var count = SCENE_CONFIG.TARGET_COUNT[tier];
+          var want = api.upcoming(count) || [];
+          var m = getMetrics();
+
+          /* 先移掉多出來的尾巴目標 */
+          while (targets.length > want.length) {
+            var removed = targets.pop();
+            if (removed && removed.el) removed.el.remove();
+          }
+
+          /* 逐一比對 key，對齊或補上新紙流星 */
+          for (var i = 0; i < want.length; i++) {
+            var u = want[i];
+            var key = u.passageIndex + ':' + u.index;
+            var it = targets[i];
+            if (!it || it.key !== key) {
+              if (it && it.el) it.el.remove();
+              var lane = pickLane(count);
+              var jitter = (Math.random() * 2 - 1);
+              var isFirst = (i === 0);
+              var el = createMeteorElement(u, isFirst);
+              it = {
+                key: key,
+                el: el,
+                lane: lane,
+                laneCount: count,
+                jitter: jitter,
+                x: laneToX(lane, count, jitter, m.w),
+                progress: isFirst ? 0 : Math.random() * 0.04,
+                spawnTimer: SCENE_CONFIG.TIMING.SPAWN_FADE_DURATION,
+                missTimer: 0,
+                active: isFirst
+              };
+              targets[i] = it;
+            } else {
+              /* 階級或寬度變化時維持合理軌道與最新座標 */
+              it.laneCount = count;
+              if (it.lane >= count) it.lane = it.lane % count;
+              it.x = laneToX(it.lane, count, it.jitter, m.w);
+              setMeteorActive(it, i === 0);
+            }
+          }
+
+          /* 讓小狐狸砲台瞄準目前的第 0 顆目標 */
+          if (targets[0]) {
+            cannon.targetX = targets[0].x;
+          } else {
+            cannon.targetX = m.w * 0.5;
+          }
+        }
+
+        /* 清空上一回合留下的全部動態元素（約束 11） */
+        function clearRoundEntities() {
+          for (var i = 0; i < targets.length; i++) targets[i].el.remove();
+          targets = [];
+
+          for (var b = 0; b < beams.length; b++) beams[b].group.remove();
+          beams = [];
+
+          for (var p = 0; p < particles.length; p++) particles[p].el.remove();
+          particles = [];
+
+          for (var g = 0; g < ghosts.length; g++) ghosts[g].el.remove();
+          ghosts = [];
+
+          for (var f = 0; f < pops.length; f++) pops[f].el.remove();
+          pops = [];
+
+          for (var s = 0; s < smokes.length; s++) smokes[s].el.remove();
+          smokes = [];
+
+          for (var c = 0; c < craters.length; c++) craters[c].el.remove();
+          craters = [];
+
+          lastUsedLane = -1;
+          cannon.jumpTimer = 0;
+          cannon.missTimer = 0;
+          alien.active = false;
+          alien.elapsed = 0;
+          if (alienEl) {
+            alienEl.style.opacity = '0';
+            alienEl.style.transform = 'translate3d(0, 110px, 0)';
+          }
+        }
+
+        /* 產生一道彩色紙帶光束（0.25 秒，非刺眼雷射，rAF 驅動） */
+        function spawnPaperBeam(fromX, fromY, toX, toY) {
+          var group = document.createElementNS(SVG_NS, 'g');
+          var lines = [];
+          var colors = SCENE_CONFIG.COLORS.BEAM_RIBBONS;
+          var dx = toX - fromX;
+          var dy = toY - fromY;
+          var len = Math.max(Math.hypot(dx, dy), 1);
+          var nx = -dy / len;
+          var ny = dx / len;
+
+          for (var i = 0; i < colors.length; i++) {
+            var offset = (i - (colors.length - 1) / 2) * 5.2;
+            var line = document.createElementNS(SVG_NS, 'line');
+            line.setAttribute('x1', (fromX + nx * offset).toFixed(1));
+            line.setAttribute('y1', (fromY + ny * offset).toFixed(1));
+            line.setAttribute('x2', (toX + nx * offset).toFixed(1));
+            line.setAttribute('y2', (toY + ny * offset).toFixed(1));
+            line.setAttribute('stroke', colors[i]);
+            line.setAttribute('stroke-width', '4.2');
+            line.setAttribute('stroke-linecap', 'round');
+            group.appendChild(line);
+            lines.push({ el: line, offset: offset });
+          }
+
+          beamSvgEl.appendChild(group);
+          beams.push({
+            group: group,
+            lines: lines,
+            fromX: fromX,
+            fromY: fromY,
+            toX: toX,
+            toY: toY,
+            nx: nx,
+            ny: ny,
+            elapsed: 0,
+            duration: SCENE_CONFIG.TIMING.BEAM_DURATION
+          });
+        }
+
+        /* 產生打對後的剪紙星星紙屑（reduced-motion 時不產生粒子） */
+        function spawnStarConfetti(x, y) {
+          if (isReducedMotion()) return;
+          var count = SCENE_CONFIG.FX.PARTICLE_COUNT;
+          var colors = SCENE_CONFIG.COLORS.STAR_PARTICLES;
+
+          for (var i = 0; i < count; i++) {
+            var el = document.createElement('div');
+            el.className = 'sc-particle';
+            var size = 12 + Math.random() * 10;
+            var color = colors[i % colors.length];
+            el.style.width = size + 'px';
+            el.style.height = size + 'px';
+            el.innerHTML =
+              '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" aria-hidden="true">' +
+                '<path d="M12 2 L14.9 8.4 L21.8 9.2 L16.7 13.9 L18 20.8 L12 17.3 L6 20.8 L7.3 13.9 L2.2 9.2 L9.1 8.4 Z" fill="' + color + '" stroke="' + SCENE_CONFIG.COLORS.STAR_STROKE + '" stroke-width="1.6" stroke-linejoin="round"/>' +
+              '</svg>';
+            fxLayerEl.appendChild(el);
+
+            var angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.45;
+            var speed = 65 + Math.random() * 95;
+            var life = SCENE_CONFIG.TIMING.PARTICLE_MIN_LIFE +
+              Math.random() * (SCENE_CONFIG.TIMING.PARTICLE_MAX_LIFE - SCENE_CONFIG.TIMING.PARTICLE_MIN_LIFE);
+
+            particles.push({
+              el: el,
+              x: x,
+              y: y,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed - 35,
+              rot: Math.random() * 360,
+              vrot: (Math.random() - 0.5) * 320,
+              elapsed: 0,
+              life: life
+            });
+          }
+        }
+
+        /* reduced-motion 模式：打對時改用溫和原地淡出，不晃動也沒有粒子 */
+        function spawnFadeGhost(el, x, y, size) {
+          var clone = el.cloneNode(true);
+          clone.classList.remove('sc-meteor-miss');
+          clone.style.width = size + 'px';
+          clone.style.height = size + 'px';
+          clone.style.marginLeft = (-size / 2) + 'px';
+          clone.style.marginTop = (-size / 2) + 'px';
+          clone.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0)';
+          fxLayerEl.appendChild(clone);
+          ghosts.push({
+            el: clone,
+            elapsed: 0,
+            duration: SCENE_CONFIG.TIMING.HIT_FADE_DURATION
+          });
+        }
+
+        /* 產生打對時的 +1 開心浮字（放在目標上方偏側，避免遮擋下一個字） */
+        function spawnScorePop(x, y, text) {
+          var el = document.createElement('div');
+          el.className = 'sc-pop';
+          el.textContent = text;
+          fxLayerEl.appendChild(el);
+          pops.push({
+            el: el,
+            x: x,
+            y: Math.max(24, y - 34),
+            elapsed: 0,
+            duration: SCENE_CONFIG.TIMING.POP_DURATION
+          });
+        }
+
+        /* 流星落到月球表面：留下小坑並冒出一朵剪紙小煙 */
+        function spawnImpactCraterAndSmoke(xRatio, m) {
+          /* 月球表面小坑（以相對寬度比例儲存，resize 時不跑位） */
+          var craterEl = document.createElement('div');
+          craterEl.className = 'sc-crater';
+          var yOffset = 10 + Math.random() * 14;
+          craterLayerEl.appendChild(craterEl);
+          craters.push({ el: craterEl, xRatio: xRatio, yOffset: yOffset });
+          if (craters.length > SCENE_CONFIG.LAYOUT.MAX_CRATERS) {
+            craters.shift().el.remove();
+          }
+
+          /* 冒出剪紙小煙（reduced-motion 改為 1 朵靜態淡出） */
+          var puffs = isReducedMotion() ? 1 : SCENE_CONFIG.FX.SMOKE_PUFFS;
+          var px = xRatio * m.w;
+          var py = m.floorY + 6;
+          for (var i = 0; i < puffs; i++) {
+            var puffEl = document.createElement('div');
+            puffEl.className = 'sc-smoke';
+            var size = 18 + i * 7;
+            puffEl.style.width = size + 'px';
+            puffEl.style.height = size + 'px';
+            puffEl.style.marginLeft = (-size / 2) + 'px';
+            puffEl.style.marginTop = (-size / 2) + 'px';
+            fxLayerEl.appendChild(puffEl);
+
+            smokes.push({
+              el: puffEl,
+              x: px + (i - (puffs - 1) / 2) * 14,
+              y: py,
+              vx: (i - (puffs - 1) / 2) * 16,
+              vy: -(24 + i * 8),
+              elapsed: 0,
+              duration: SCENE_CONFIG.TIMING.SMOKE_DURATION
+            });
+          }
+        }
+
+        /* 召喚月球上的小外星朋友舉牌「好厲害！」（停留 2 秒，避開砲台那一側） */
+        function triggerAlienCelebrate() {
+          var m = getMetrics();
+          alien.active = true;
+          alien.elapsed = 0;
+          alien.side = cannon.x > m.w * 0.5 ? 'left' : 'right';
+        }
+
+        /* 依據目前狀態將所有元素繪製到正確位置（包含 resize 與暫停靜止畫面） */
+        function renderAll() {
+          var m = getMetrics();
+          var reduced = isReducedMotion();
+
+          /* 月球防線高度 */
+          defenseLineEl.style.top = m.floorY + 'px';
+
+          /* 繪製所有紙流星 */
+          for (var i = 0; i < targets.length; i++) {
+            var it = targets[i];
+            it.x = laneToX(it.lane, it.laneCount, it.jitter, m.w);
+            var y = m.startY + (m.endY - m.startY) * it.progress;
+
+            var shakeX = 0;
+            if (it.missTimer > 0 && !reduced) {
+              var missProg = 1 - it.missTimer / SCENE_CONFIG.TIMING.MISS_DURATION;
+              shakeX = Math.sin(missProg * Math.PI * 2 * SCENE_CONFIG.TIMING.MISS_CYCLES) *
+                SCENE_CONFIG.TIMING.MISS_SHAKE_PX * (1 - missProg * 0.4);
+            }
+
+            var scale = it.active ? 1 : 0.91;
+            var opacity = it.spawnTimer > 0
+              ? Math.max(0, 1 - it.spawnTimer / SCENE_CONFIG.TIMING.SPAWN_FADE_DURATION)
+              : 1;
+
+            it.el.style.width = m.meteorSize + 'px';
+            it.el.style.height = m.meteorSize + 'px';
+            it.el.style.marginLeft = (-m.radius) + 'px';
+            it.el.style.marginTop = (-m.radius) + 'px';
+            it.el.style.opacity = opacity.toFixed(3);
+            it.el.style.transform =
+              'translate3d(' + (it.x + shakeX).toFixed(1) + 'px,' + y.toFixed(1) + 'px,0) scale(' + scale + ')';
+            it.el.classList.toggle('sc-meteor-miss', it.missTimer > 0);
+          }
+
+          /* 繪製小狐狸紙捲小火箭砲台 */
+          var jumpY = 0;
+          if (cannon.jumpTimer > 0 && !reduced) {
+            var jp = 1 - cannon.jumpTimer / SCENE_CONFIG.TIMING.CANNON_JUMP_DURATION;
+            jumpY = -Math.sin(jp * Math.PI) * 11;
+          }
+          var cannonShake = 0;
+          if (cannon.missTimer > 0 && !reduced) {
+            var mp = 1 - cannon.missTimer / SCENE_CONFIG.TIMING.MISS_DURATION;
+            cannonShake = Math.sin(mp * Math.PI * 2 * SCENE_CONFIG.TIMING.MISS_CYCLES) * 4;
+          }
+          cannonEl.style.transform =
+            'translate3d(' + (cannon.x + cannonShake).toFixed(1) + 'px,' + (m.cannonY + jumpY).toFixed(1) + 'px,0)';
+
+          /* 繪製月球表面小坑 */
+          for (var c = 0; c < craters.length; c++) {
+            var cr = craters[c];
+            cr.el.style.left = (cr.xRatio * m.w).toFixed(1) + 'px';
+            cr.el.style.top = (m.floorY + cr.yOffset).toFixed(1) + 'px';
+          }
+
+          /* 繪製月球小外星朋友舉牌 */
+          if (alien.active) {
+            var dur = SCENE_CONFIG.TIMING.ALIEN_DURATION;
+            var popT = SCENE_CONFIG.TIMING.ALIEN_POP_TIME;
+            var showRatio = 1;
+            if (alien.elapsed < popT) {
+              showRatio = alien.elapsed / popT;
+            } else if (alien.elapsed > dur - popT) {
+              showRatio = Math.max(0, (dur - alien.elapsed) / popT);
+            }
+
+            alienEl.style.left = alien.side === 'left' ? '18px' : 'auto';
+            alienEl.style.right = alien.side === 'right' ? '18px' : 'auto';
+            if (reduced) {
+              alienEl.style.opacity = showRatio.toFixed(3);
+              alienEl.style.transform = 'translate3d(0, 0, 0)';
+            } else {
+              var slideY = (1 - showRatio) * 96;
+              alienEl.style.opacity = Math.min(1, showRatio * 1.4).toFixed(3);
+              alienEl.style.transform = 'translate3d(0,' + slideY.toFixed(1) + 'px,0)';
+            }
+          } else {
+            alienEl.style.opacity = '0';
+          }
+        }
+
+        /* 單一 rAF 主迴圈：所有位置、粒子、光束、煙霧與 2 秒舉牌皆由 dt 驅動 */
+        function tick(now) {
+          if (!running) return;
+          var dt = Math.min(Math.max((now - lastTime) / 1000, 0), SCENE_CONFIG.MAX_DT);
+          lastTime = now;
+
+          var m = getMetrics();
+          var tier = getTier();
+          var fallSpeed = 1 / SCENE_CONFIG.FALL_SECONDS[tier]; // 每秒進度增量（0 -> 1）
+          var reduced = isReducedMotion();
+
+          /* 1. 更新紙流星掉落進度（未輪到的速度 1/3、最多走 1/3 全程） */
+          for (var i = 0; i < targets.length; i++) {
+            var it = targets[i];
+            if (it.spawnTimer > 0) {
+              it.spawnTimer = Math.max(0, it.spawnTimer - dt);
+            }
+            if (it.missTimer > 0) {
+              it.missTimer = Math.max(0, it.missTimer - dt);
+            }
+
+            if (i === 0) {
+              it.progress += fallSpeed * dt;
+              if (it.progress >= 1) {
+                /* 流星撞到月球防線：留下小坑＋小煙，呼叫 api.loseLife()，流星回到上方重新落下 */
+                var hitXRatio = Math.min(0.92, Math.max(0.08, it.x / m.w));
+                spawnImpactCraterAndSmoke(hitXRatio, m);
+                it.progress = 0;
+                it.spawnTimer = SCENE_CONFIG.TIMING.SPAWN_FADE_DURATION;
+                api.loseLife();
+                /* 若愛心歸零共用程式會在 loseLife() 內呼叫 pause()／stop()，立刻中止本幀 */
+                if (!running) return;
+              }
+            } else {
+              it.progress += fallSpeed * SCENE_CONFIG.WAITING_SPEED_RATIO * dt;
+              if (it.progress > SCENE_CONFIG.WAITING_MAX_PROGRESS) {
+                it.progress = SCENE_CONFIG.WAITING_MAX_PROGRESS;
+              }
+            }
+          }
+
+          /* 2. 更新小狐狸火箭砲台左右追蹤與跳躍狀態 */
+          if (targets[0]) {
+            cannon.targetX = targets[0].x;
+          }
+          if (reduced) {
+            cannon.x = cannon.targetX;
+          } else {
+            cannon.x += (cannon.targetX - cannon.x) * Math.min(1, dt * SCENE_CONFIG.TIMING.CANNON_FOLLOW_SPEED);
+          }
+          if (cannon.jumpTimer > 0) cannon.jumpTimer = Math.max(0, cannon.jumpTimer - dt);
+          if (cannon.missTimer > 0) cannon.missTimer = Math.max(0, cannon.missTimer - dt);
+
+          /* 3. 更新彩色紙帶光束（0.25 秒） */
+          for (var b = beams.length - 1; b >= 0; b--) {
+            var bm = beams[b];
+            bm.elapsed += dt;
+            var bp = bm.elapsed / bm.duration;
+            if (bp >= 1) {
+              bm.group.remove();
+              beams.splice(b, 1);
+            } else {
+              var extend = reduced ? 1 : Math.min(1, bp / 0.32);
+              var alpha = bp < 0.35 ? 0.92 : Math.max(0, 0.92 * (1 - (bp - 0.35) / 0.65));
+              bm.group.setAttribute('opacity', alpha.toFixed(3));
+              for (var l = 0; l < bm.lines.length; l++) {
+                var ln = bm.lines[l];
+                var curX = bm.fromX + (bm.toX - bm.fromX) * extend + bm.nx * ln.offset;
+                var curY = bm.fromY + (bm.toY - bm.fromY) * extend + bm.ny * ln.offset;
+                ln.el.setAttribute('x2', curX.toFixed(1));
+                ln.el.setAttribute('y2', curY.toFixed(1));
+              }
+            }
+          }
+
+          /* 4. 更新剪紙星星紙屑粒子 */
+          for (var p = particles.length - 1; p >= 0; p--) {
+            var pt = particles[p];
+            pt.elapsed += dt;
+            if (pt.elapsed >= pt.life) {
+              pt.el.remove();
+              particles.splice(p, 1);
+            } else {
+              pt.vy += 170 * dt; // 溫和重力感
+              pt.x += pt.vx * dt;
+              pt.y += pt.vy * dt;
+              pt.rot += pt.vrot * dt;
+              var pr = 1 - pt.elapsed / pt.life;
+              pt.el.style.opacity = pr.toFixed(3);
+              pt.el.style.transform =
+                'translate3d(' + pt.x.toFixed(1) + 'px,' + pt.y.toFixed(1) + 'px,0) rotate(' + pt.rot.toFixed(1) + 'deg) scale(' + (0.55 + pr * 0.55).toFixed(2) + ')';
+            }
+          }
+
+          /* 5. 更新 reduced-motion 淡出殘影 */
+          for (var g = ghosts.length - 1; g >= 0; g--) {
+            var gh = ghosts[g];
+            gh.elapsed += dt;
+            if (gh.elapsed >= gh.duration) {
+              gh.el.remove();
+              ghosts.splice(g, 1);
+            } else {
+              gh.el.style.opacity = (1 - gh.elapsed / gh.duration).toFixed(3);
+            }
+          }
+
+          /* 6. 更新 +1 開心浮字 */
+          for (var f = pops.length - 1; f >= 0; f--) {
+            var po = pops[f];
+            po.elapsed += dt;
+            if (po.elapsed >= po.duration) {
+              po.el.remove();
+              pops.splice(f, 1);
+            } else {
+              var fp = po.elapsed / po.duration;
+              var lift = reduced ? 0 : fp * 34;
+              po.el.style.opacity = (1 - fp).toFixed(3);
+              po.el.style.transform =
+                'translate3d(' + po.x.toFixed(1) + 'px,' + (po.y - lift).toFixed(1) + 'px,0) translateX(-50%)';
+            }
+          }
+
+          /* 7. 更新撞擊月球小煙 */
+          for (var s = smokes.length - 1; s >= 0; s--) {
+            var sm = smokes[s];
+            sm.elapsed += dt;
+            if (sm.elapsed >= sm.duration) {
+              sm.el.remove();
+              smokes.splice(s, 1);
+            } else {
+              var sp = sm.elapsed / sm.duration;
+              if (!reduced) {
+                sm.x += sm.vx * dt;
+                sm.y += sm.vy * dt;
+              }
+              var smScale = reduced ? 1 : (0.85 + sp * 0.75);
+              sm.el.style.opacity = (0.85 * (1 - sp)).toFixed(3);
+              sm.el.style.transform =
+                'translate3d(' + sm.x.toFixed(1) + 'px,' + sm.y.toFixed(1) + 'px,0) scale(' + smScale.toFixed(2) + ')';
+            }
+          }
+
+          /* 8. 更新小外星朋友舉牌計時（2 秒後消失） */
+          if (alien.active) {
+            alien.elapsed += dt;
+            if (alien.elapsed >= SCENE_CONFIG.TIMING.ALIEN_DURATION) {
+              alien.active = false;
+              alien.elapsed = 0;
+            }
+          }
+
+          renderAll();
+          rafId = requestAnimationFrame(tick);
+        }
+
+        /* 停止動畫迴圈的共用小幫手 */
+        function haltLoop() {
+          running = false;
+          if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = 0;
+          }
+          if (stageEl) {
+            stageEl.classList.add('sc-paused');
+          }
+        }
+
+        return {
+          /* 第一回合開始前呼叫一次：建立場景靜態元素 */
+          start: function () {
+            initDom();
+            var lang = (api.settings && api.settings.lang) ? api.settings.lang : 'en';
+            stageEl.setAttribute('data-lang', lang);
+          },
+
+          /* 每回合開始：清空上一回合元素並從 api.upcoming 重新建立紙流星 */
+          roundStart: function () {
+            initDom();
+            var lang = (api.settings && api.settings.lang) ? api.settings.lang : 'en';
+            stageEl.setAttribute('data-lang', lang);
+            clearRoundEntities();
+            syncTargets();
+            var m = getMetrics();
+            cannon.x = targets[0] ? targets[0].x : m.w * 0.5;
+            cannon.targetX = cannon.x;
+            renderAll();
+          },
+
+          /* 恢復動畫迴圈 */
+          resume: function () {
+            if (!initialized) initDom();
+            if (running) return;
+            running = true;
+            stageEl.classList.remove('sc-paused');
+            lastTime = performance.now();
+            rafId = requestAnimationFrame(tick);
+          },
+
+          /* 暫停：立即停掉所有動畫（無任何 setTimeout / setInterval 殘留） */
+          pause: function () {
+            haltLoop();
+          },
+
+          /* 整局結束：停掉一切動畫 */
+          stop: function () {
+            haltLoop();
+          },
+
+          /* 打對：射出彩色紙帶光束、星星紙屑、砲台跳一下、+1、每 10 連擊外星朋友舉牌 */
+          hit: function (res) {
+            var m = getMetrics();
+            var count = (res && res.correct) ? res.correct : 1;
+            var reduced = isReducedMotion();
+            var nozzleY = m.cannonY - 58;
+
+            for (var i = 0; i < count && targets.length > 0; i++) {
+              var hitTarget = targets.shift();
+              var hitY = m.startY + (m.endY - m.startY) * hitTarget.progress;
+
+              /* 從火箭砲口射出彩色紙帶光束（0.25 秒） */
+              spawnPaperBeam(cannon.x, nozzleY, hitTarget.x, hitY);
+
+              if (reduced) {
+                spawnFadeGhost(hitTarget.el, hitTarget.x, hitY, m.meteorSize);
+              } else {
+                spawnStarConfetti(hitTarget.x, hitY);
+              }
+
+              if (i === 0) {
+                spawnScorePop(hitTarget.x, hitY, '✓ +' + count);
+              }
+
+              hitTarget.el.remove();
+            }
+
+            /* 小狐狸火箭砲台開心跳一下 */
+            if (!reduced) {
+              cannon.jumpTimer = SCENE_CONFIG.TIMING.CANNON_JUMP_DURATION;
+            }
+
+            /* 連擊每滿 10 下，月球上的小外星朋友跳出來舉牌「好厲害！」 */
+            var combo = (res && typeof res.combo === 'number') ? res.combo : api.combo();
+            var prevCombo = Math.max(0, combo - count);
+            var step = SCENE_CONFIG.FX.ALIEN_COMBO_STEP;
+            if (combo > 0 && Math.floor(combo / step) > Math.floor(prevCombo / step)) {
+              triggerAlienCelebrate();
+            }
+
+            syncTargets();
+            renderAll();
+          },
+
+          /* 打錯：目標輕輕晃動並顯示柔和紅框＋✗，絕不整個場景閃紅 */
+          miss: function () {
+            if (targets[0]) {
+              targets[0].missTimer = SCENE_CONFIG.TIMING.MISS_DURATION;
+            }
+            cannon.missTimer = SCENE_CONFIG.TIMING.MISS_DURATION;
+            renderAll();
+          },
+
+          /* 視窗大小改變：即時重算寬高與所有物件位置 */
+          resize: function () {
+            if (!initialized) return;
+            syncTargets();
+            renderAll();
+          }
+        };
+      }
     });
-
-    state.rafId = requestAnimationFrame(loop);
-}
-
-function alienReachesEarth(alien) {
-    alien.el.remove();
-    state.aliens = state.aliens.filter(a => a !== alien);
-    state.lives--;
-    SFX.damage();
-    const earth = $('earth');
-    earth.classList.remove('hit');
-    void earth.offsetWidth;
-    earth.classList.add('hit');
-    const overlay = $('danger-overlay');
-    overlay.classList.remove('flash');
-    void overlay.offsetWidth;
-    overlay.classList.add('flash');
-    updateHud();
-    refreshActiveAlien();
-    if (state.lives <= 0) {
-        endGame(false);
-    }
-}
-
-// ============================================================
-// Key Handler
-// ============================================================
-function handleKey(e) {
-    if (!state.playing) return;
-    if (e.key.length !== 1) return;
-    const key = e.key.toLowerCase();
-    if (!/^[a-z]$/.test(key)) return;
-    state.totalKeys++;
-
-    // Find active alien (lowest non-dying)
-    const alive = state.aliens.filter(a => !a.dying);
-    if (alive.length === 0) {
-        SFX.miss();
-        return;
-    }
-    let target = alive[0];
-    alive.forEach(a => { if (a.y > target.y) target = a; });
-
-    const expected = target.word[target.typed.length];
-    if (key === expected) {
-        state.correctKeys++;
-        target.typed += key;
-        SFX.type();
-        renderAlienWord(target);
-        fireLaser(target);
-        if (target.typed.length >= target.word.length) {
-            killAlien(target);
-        }
-    } else {
-        SFX.miss();
-        target.el.style.filter = 'brightness(1.5) hue-rotate(-30deg)';
-        setTimeout(() => target.el.style.filter = '', 120);
-    }
-}
-
-function fireLaser(target) {
-    const turret = $('turret');
-    const tr = turret.getBoundingClientRect();
-    const ax = target.x;
-    const ay = target.y;
-    const startX = tr.left + tr.width / 2;
-    const startY = tr.top + tr.height / 2;
-    const dx = ax - startX;
-    const dy = ay - startY;
-    const length = Math.hypot(dx, dy);
-    const angle = Math.atan2(dy, dx) * 180 / Math.PI + 90; // +90 because laser is vertical
-
-    const laser = document.createElement('div');
-    laser.className = 'laser';
-    laser.style.left = startX + 'px';
-    laser.style.top = (startY - length) + 'px';
-    laser.style.height = length + 'px';
-    laser.style.transform = `rotate(${angle}deg)`;
-    laser.style.transformOrigin = `center ${length}px`;
-    gameArea().appendChild(laser);
-    SFX.laser();
-    setTimeout(() => laser.remove(), 200);
-}
-
-function killAlien(alien) {
-    alien.dying = true;
-    alien.el.classList.add('dying');
-    state.aliens = state.aliens.filter(a => a !== alien);
-    SFX.boom();
-    particles(alien.x, alien.y, ['💥','✨','⭐','🌟'], 10);
-    const bonus = (alien.word.length * 10);
-    state.score += bonus;
-    state.killsThisLevel++;
-    state.totalKills++;
-    scorePopup(alien.x, alien.y, `+${bonus}`);
-    setTimeout(() => alien.el.remove(), 500);
-    updateHud();
-    refreshActiveAlien();
-    checkLevelClear();
-}
-
-// ============================================================
-// Level Flow
-// ============================================================
-function checkLevelClear() {
-    if (state.killsThisLevel >= LEVELS[state.level].target) {
-        nextLevel();
-    }
-}
-
-function nextLevel() {
-    state.playing = false;
-    clearInterval(state.spawnTimer);
-    // Clear remaining aliens
-    state.aliens.forEach(a => a.el.remove());
-    state.aliens = [];
-
-    if (state.level >= 3) {
-        endGame(true);
-        return;
-    }
-
-    state.level++;
-    state.killsThisLevel = 0;
-    SFX.levelUp();
-    setTimeout(() => {
-        startLevel();
-    }, 800);
-}
-
-function startLevel() {
-    const lvl = LEVELS[state.level];
-    showLevelTitle(lvl.label, lvl.sub);
-    updateHud();
-
-    setTimeout(() => {
-        state.playing = true;
-        state.spawnTimer = setInterval(spawnAlien, lvl.spawnMs);
-        spawnAlien();
-        lastFrame = 0;
-        state.rafId = requestAnimationFrame(loop);
-    }, 2000);
-}
-
-// ============================================================
-// Start / End
-// ============================================================
-function startGame() {
-    state.level = 1;
-    state.lives = 3;
-    state.score = 0;
-    state.killsThisLevel = 0;
-    state.totalKills = 0;
-    state.correctKeys = 0;
-    state.totalKeys = 0;
-    state.aliens = [];
-
-    $('start-screen').classList.add('hidden');
-    $('game-screen').classList.remove('hidden');
-    getAudio();
-    startLevel();
-}
-
-function endGame(isVictory) {
-    state.playing = false;
-    clearInterval(state.spawnTimer);
-    cancelAnimationFrame(state.rafId);
-    state.aliens.forEach(a => a.el.remove());
-    state.aliens = [];
-
-    try {
-        const prev = parseInt(localStorage.getItem('edtech-unit3-score') || '0', 10);
-        if (state.score > prev) localStorage.setItem('edtech-unit3-score', state.score);
-    } catch (e) { /* localStorage unavailable */ }
-
-    $('game-screen').classList.add('hidden');
-    $('end-screen').classList.remove('hidden');
-
-    const accuracy = state.totalKeys > 0 ? Math.round((state.correctKeys / state.totalKeys) * 100) : 100;
-    $('cert-score').textContent = state.score;
-    $('cert-kills').textContent = state.totalKills;
-    $('cert-acc').textContent = accuracy;
-
-    const today = new Date();
-    $('cert-date').textContent = `${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日 頒發`;
-
-    if (isVictory) {
-        SFX.win();
-        $('cert-trophy').textContent = '👑';
-        $('cert-title').textContent = '太空打字勇者證書';
-        if (accuracy >= 90) {
-            $('cert-rank').textContent = '🏆 稱號：黃金太空指揮官';
-        } else if (accuracy >= 75) {
-            $('cert-rank').textContent = '🥇 稱號：神準雷射射手';
-        } else {
-            $('cert-rank').textContent = '🥈 稱號：地球小衛兵';
-        }
-    } else {
-        SFX.lose();
-        $('cert-trophy').textContent = '💪';
-        $('cert-title').textContent = '太空勇敢挑戰';
-        $('cert-rank').textContent = '🥉 稱號：勇敢練習小新兵';
-    }
-}
-
-// ============================================================
-// Listeners
-// ============================================================
-document.addEventListener('keydown', handleKey);
-window.addEventListener('resize', () => {
-    // Keep aliens within bounds on resize
-    state.aliens.forEach(a => {
-        if (a.x > window.innerWidth - 60) {
-            a.x = window.innerWidth - 60;
-            a.el.style.left = a.x + 'px';
-        }
-    });
-});
-</script>
-<script defer src="../../assets/js/beacon.js"></script>
-</body>
-</html>
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

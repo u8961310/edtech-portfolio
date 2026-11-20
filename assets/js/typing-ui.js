@@ -128,7 +128,8 @@
       var seq = C.pickSequence(settings);
       game = {
         plan: plan, round: 1, tracker: C.createTracker(seq), lives: C.LIVES,
-        activeMs: 0, roundMs: 0, running: false, last: 0, timer: null, lastPassage: null, l3: false
+        totalMs: settings.minutes * 60000,   // 上方倒數＝選的分鐘數（休息、暫停不計）
+        activeMs: 0, roundMs: 0, roundLen: 0, running: false, last: 0, timer: null, lastPassage: null, l3: false
       };
       app.dataset.lang = settings.lang;
       app.classList.toggle('no-zy', settings.lang === 'zh' && !settings.zhuyin);
@@ -141,6 +142,8 @@
 
     function beginRound() {
       game.roundMs = 0;
+      // 剩下的總時間平均分給剩下的回合：前面回合愛心提早用完，省下的時間留給後面，總長不變
+      game.roundLen = (game.totalMs - game.activeMs) / (game.plan.rounds - game.round + 1);
       game.lives = C.LIVES;
       renderHUD();
       renderPoem();
@@ -174,7 +177,7 @@
       game.activeMs += dt;
       game.roundMs += dt;
       renderTime();
-      if (game.roundMs >= game.plan.roundSec * 1000) endRound();
+      if (game.roundMs >= game.roundLen || game.activeMs >= game.totalMs) endRound();
     }
     function endRound() {
       pause('round');
@@ -200,7 +203,7 @@
       $('.ti-lives', app).setAttribute('aria-label', '愛心 ' + game.lives + ' 顆');
     }
     function renderTime() {
-      var left = Math.max(0, Math.ceil(game.plan.roundSec - game.roundMs / 1000));
+      var left = Math.max(0, Math.ceil((game.totalMs - game.activeMs) / 1000));
       $('.ti-time .v', app).textContent = String(Math.floor(left / 60)).padStart(2, '0') + ':' + String(left % 60).padStart(2, '0');
     }
     function renderScore() {
@@ -316,7 +319,10 @@
         if (!game || !game.running) return;
         game.lives = Math.max(0, game.lives - 1);
         renderLives();
-        if (!game.lives) endRound();
+        if (game.lives) return;
+        if (game.round < game.plan.rounds) return endRound();
+        game.lives = C.LIVES;   // 最後一回合：補滿愛心繼續打，打到倒數歸零
+        renderLives();
       }
     };
 
@@ -436,7 +442,7 @@
     show('setup');
     // 測試用：網址帶 ?debug=1 才有，讓自動測試不用等滿一回合
     if (/[?&]debug=1\b/.test(location.search)) {
-      window.__tiDebug = { endRound: function () { if (game) game.roundMs = game.plan.roundSec * 1000; } };
+      window.__tiDebug = { endRound: function () { if (game) { game.activeMs += game.roundLen - game.roundMs; game.roundMs = game.roundLen; } } };
     }
     return { api: api, quit: quit };
   }
