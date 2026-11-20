@@ -1,0 +1,5 @@
+bpmf-huninn-xmas.woff2 是「注音粉圓 Bpmf Huninn」Version 1.610 的子集（只含本單元用到的字）。
+Copyright 2025 The Bpmf Project Authors (https://github.com/ButTaiwan/bpmfvs)
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+The license is available with a FAQ at: https://openfontlicense.org
+子集以 fontTools pyftsubset 產生（保留 name 表著作權資訊與 OpenType 特性），未修改字形。
