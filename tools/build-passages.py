@@ -63,6 +63,8 @@ for p in src["passages"]:
             tag = "已指定" if m else "預設"
             review.append(f"{p['id']}\t{ctx}\t{tag}：{rs[n - 1]}\t全部讀音：{' / '.join(f'{k + 1}.{r}' for k, r in enumerate(rs))}")
     item = {k: p[k] for k in ("id", "lang", "grade", "domain", "curriculum", "source", "title")}
+    # 選填欄位（打字島 2026-11-20 加）：作者、白話一句
+    item.update({k: p[k] for k in ("author", "gloss") if k in p})
     item["text"] = "".join(text)
     if p["lang"] == "zh":
         item["zhuyin"] = zhuyin
