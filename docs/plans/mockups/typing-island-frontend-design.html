@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>打字島 設計稿 晴天貼紙版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+@font-face { font-family:'Bpmf Huninn'; src:url('fonts/bpmf-huninn-typing.woff2') format('woff2'); }
+
+/*
+  色票（四個固定意思，8 關共用）
+  重點／目前字 = 陽光黃   按鈕／主操作 = 晴天藍   正確 = 草綠（附 ✓）   錯誤 = 番茄紅（附 ✗）
+  底色：米白、淡天空藍。文字：深藍灰（不用純黑），底不用純白。
+*/
+:root{
+  --cream:#F6F0E0;      /* 大面積底色（不是純白） */
+  --card:#FBF7EA;       /* 卡片底 */
+  --ink:#1F2D4F;        /* 文字 */
+  --ink-2:#3B4A70;      /* 次要文字 */
+  --done:#43517A;       /* 已打對的字：變淡但仍 ≥ 7:1 */
+  --edge:#7C86A3;       /* 元件邊框 ≥ 3:1 */
+  --yellow:#FFD84D;     /* 重點 */
+  --yellow-soft:#FFF0B3;
+  --blue:#1F6FD6;       /* 按鈕 */
+  --blue-d:#134A9A;
+  --green:#1F7A33;      /* 正確 */
+  --green-soft:#DCEFD6;
+  --red:#C8321F;        /* 錯誤 */
+  --red-soft:#FBD9D2;
+  --sky:#D5E7F5;        /* 場景／HUD 底 */
+  --tint:#D9E8F7;
+  --lav:#E8E0F5;
+  --sans:'Noto Sans TC','Microsoft JhengHei',system-ui,sans-serif;
+  --stk:drop-shadow(3px 0 0 #FBF7EA) drop-shadow(-3px 0 0 #FBF7EA) drop-shadow(0 3px 0 #FBF7EA) drop-shadow(0 -3px 0 #FBF7EA) drop-shadow(0 7px 6px rgba(31,45,79,.25));
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-size:16px;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:4px solid var(--blue);outline-offset:2px}
+.stk{filter:var(--stk)}
+.zh{font-family:'Bpmf Huninn','Noto Sans TC','Microsoft JhengHei',sans-serif}
+.ic{width:22px;height:22px;flex:none;vertical-align:middle}
+
+.mockbar{height:30px;background:#1F2D4F;display:flex;align-items:center;gap:4px;padding:0 10px;font-size:13px;color:#F1ECDD}
+.mockbar span{margin-right:10px}
+.mockbar button{background:none;border:0;padding:3px 12px;border-radius:12px;color:#F1ECDD}
+.mockbar button[aria-selected=true]{background:var(--yellow);color:var(--ink);font-weight:700}
+.screen{display:none;height:calc(100vh - 30px);padding:12px 20px 14px;
+  background:radial-gradient(circle at 12% 18%,#E6EEE0 0 90px,transparent 91px),radial-gradient(circle at 92% 82%,#E2ECF3 0 120px,transparent 121px),var(--cream)}
+.screen.on{display:grid}
+h1,h2,h3{font-weight:900}
+
+.cap{display:inline-grid;place-items:center;min-width:34px;height:36px;padding:0 6px;background:var(--card);color:var(--ink);border:3px solid var(--ink);border-bottom-width:6px;border-radius:11px;font-weight:700;font-size:18px;line-height:1}
+.cap.wide{min-width:64px;font-size:16px}
+.btn{border:0;border-radius:999px;font-weight:900}
+.btn.main{background:var(--blue);color:#FBF7EA;box-shadow:0 6px 0 var(--blue-d)}
+.btn.sub{background:var(--card);border:3px solid var(--ink);color:var(--ink);box-shadow:0 6px 0 var(--ink)}
+
+/* 詩句：目前要打的字 = 黃底＋深色粗框（≥40px） */
+.poem{display:flex;flex-direction:column;gap:2px}
+.row{display:flex;align-items:center;height:68px;white-space:nowrap}
+.ch{display:inline-block;font-family:'Bpmf Huninn','Noto Sans TC',sans-serif;font-size:40px;line-height:60px;height:60px;padding:0 2px;color:var(--ink);border:3px solid transparent;border-radius:14px}
+.ch.p{padding:0 2px;width:26px;color:var(--ink-2);text-align:center}
+.ch.done{color:var(--done)}
+.ch.cur{border-color:var(--ink);background:var(--yellow);box-shadow:0 4px 0 var(--ink)}
+/* 打錯：柔和脈動 2 次就停（<3 次/秒） */
+.ch.flash{animation:pulse 1s ease-in-out 2}
+@keyframes pulse{50%{background:var(--red-soft);border-color:var(--red);box-shadow:0 4px 0 var(--red)}}
+
+/* ---------- 1 設定 ---------- */
+#s1{grid-template-columns:minmax(0,1fr) 440px;grid-template-rows:auto 1fr;gap:0 28px}
+.s1-head{grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 4px 8px}
+.s1-head h1{font-size:46px;line-height:1.1;letter-spacing:.06em}
+.s1-head p{font-size:19px;color:var(--ink-2);font-weight:500}
+.s1-head svg{margin-left:auto;width:78px;height:64px}
+.form{display:flex;flex-direction:column;justify-content:space-evenly;padding:4px 0}
+.field{display:grid;grid-template-columns:92px 1fr;gap:16px;align-items:center}
+.field>b{font-size:21px;font-weight:900}
+.opts{display:flex;gap:12px}
+.opt{flex:1;min-height:58px;background:var(--card);border:3px solid var(--edge);border-radius:20px;font-size:21px;font-weight:700;padding:6px 10px;position:relative}
+.opt[aria-pressed=true]{background:var(--yellow);border-color:var(--ink);box-shadow:0 5px 0 var(--ink);font-weight:900}
+.opt[aria-pressed=true]::after{content:"";position:absolute;right:-9px;top:-11px;width:28px;height:28px;border-radius:50%;background:var(--blue) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Cpath d='M7 14.5l4.5 4.5L21 9' fill='none' stroke='%23FBF7EA' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");border:3px solid var(--card)}
+.lv{min-height:94px;text-align:left;display:flex;align-items:center;gap:12px}
+.lv .n{font-size:28px;font-weight:900;display:block}
+.lv .g{font-size:16px;font-weight:500;display:block}
+.lv svg{flex:none;width:52px;height:52px}
+.lock{display:flex;align-items:center;gap:12px;min-height:58px;padding:8px 16px;background:var(--tint);border:3px dashed var(--ink-2);border-radius:20px;font-size:17px;font-weight:500}
+.sw{display:none;align-items:center;gap:14px;min-height:58px;font-size:19px;font-weight:700}
+.sw .track{width:80px;height:42px;border-radius:21px;background:var(--green);position:relative;border:3px solid var(--ink)}
+.sw .track::after{content:"";position:absolute;top:3px;right:4px;width:30px;height:30px;border-radius:50%;background:var(--card);border:2px solid var(--ink)}
+.sw .track.off{background:#B9B4A8}
+.sw .track.off::after{right:auto;left:4px}
+body.adv .lock{display:none}
+body.adv .sw{display:flex}
+.side{display:flex;flex-direction:column;gap:16px;padding-top:6px}
+.goal{background:var(--card);border:3px solid var(--ink);border-radius:28px;padding:16px 24px 16px;flex:1;box-shadow:0 7px 0 var(--sky)}
+.goal h2{font-size:26px;margin-bottom:6px}
+.goal ul{padding:0}
+.goal li{list-style:none;display:flex;gap:12px;align-items:baseline;font-size:21px;padding:7px 0;border-bottom:3px dotted #CFC6AE;font-weight:500}
+.goal li:last-child{border:0}
+.goal li em{font-style:normal;font-weight:900;font-size:32px;color:var(--blue)}
+.goal p{font-size:16px;color:var(--ink-2);margin-top:6px;font-weight:500}
+.start{height:104px;font-size:48px;letter-spacing:.3em;padding-left:.3em;box-shadow:0 8px 0 var(--blue-d),0 12px 16px rgba(31,45,79,.22)}
+.start:active{transform:translateY(5px);box-shadow:0 3px 0 var(--blue-d)}
+
+/* ---------- HUD ---------- */
+#s2,#s3{grid-template-columns:minmax(0,1fr);grid-template-rows:54px minmax(0,1fr) 238px;gap:10px}
+.hud{background:var(--sky);border-radius:27px;display:flex;align-items:center;padding:0 10px 0 22px;gap:10px;border:3px solid var(--ink)}
+.hud .t{font-weight:900;font-size:23px;margin-right:auto;letter-spacing:.05em}
+.hud .it{display:flex;align-items:center;gap:8px;padding:0 16px;height:38px;background:var(--card);border-radius:19px;font-size:16px;font-weight:500;white-space:nowrap}
+.hud .it b{font-size:25px;font-weight:900}
+.hud .it b.cb{color:var(--blue)}
+.hp{display:inline-flex;gap:3px}
+.hp svg{width:24px;height:22px}
+.stage{position:relative;border-radius:28px;overflow:hidden;border:3px solid var(--ink)}
+.stage>svg.bg{position:absolute;inset:0;width:100%;height:100%}
+.bottom{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px}
+.poembox{border:3px solid var(--ink);background:var(--card);border-radius:28px;padding:12px 22px 10px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 6px 0 var(--green-soft)}
+.poembox .meta{font-size:17px;color:var(--ink-2);margin-bottom:6px;font-weight:500}
+.poembox .meta b{font-weight:900;font-size:22px;color:var(--ink);margin-right:10px}
+.ladder{border:3px solid var(--ink);background:var(--card);border-radius:28px;padding:6px 16px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 6px 0 var(--yellow)}
+.rung{display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:center;min-height:58px;border-bottom:3px dotted #CFC6AE}
+.rung:last-child{border:0}
+.rung .no{width:30px;height:30px;border-radius:50%;background:var(--blue);color:var(--card);font-weight:900;display:grid;place-items:center;font-size:16px}
+.rung.off .no{background:var(--card);color:var(--ink-2);border:3px solid var(--edge)}
+.rung .tx{font-size:16px;font-weight:500;color:var(--ink-2);line-height:1.35}
+.rung .tx b{display:flex;align-items:center;gap:6px;color:var(--ink);font-size:17px;font-weight:900}
+.rung.off .tx b{color:var(--ink-2)}
+.caps{display:flex;gap:6px;margin-top:3px}
+
+/* ---------- 2 泡泡 ---------- */
+.tg{position:absolute;width:104px;height:104px}
+.tg>svg{position:absolute;inset:0;width:104px;height:104px;filter:var(--stk)}
+.tg .zh{position:absolute;left:16px;top:16px;width:72px;height:72px;border-radius:50%;background:var(--card);text-align:center;font-size:40px;line-height:72px;color:var(--ink)}
+.tg.fall{animation:drift 3s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translateY(8px)}}
+.tg.cur::before{content:"";position:absolute;inset:-12px;border:5px dashed var(--ink);border-radius:50%;background:rgba(251,247,234,.65)}
+.pop{position:absolute;display:flex;align-items:center;gap:8px;font-weight:900;font-size:24px;color:var(--green);background:var(--card);border-radius:999px;padding:4px 18px 4px 10px;border:3px solid var(--green)}
+.pop.err{color:var(--red);border-color:var(--red);font-size:20px}
+.floor{position:absolute;right:16px;bottom:10px;background:var(--card);border-radius:999px;padding:2px 14px;font-size:16px;font-weight:700;color:var(--ink);border:2px solid var(--edge)}
+
+/* ---------- 3 對打 ---------- */
+.duelhud{position:absolute;left:16px;right:16px;top:12px;display:flex;justify-content:space-between;gap:20px;z-index:2}
+.hpbar{width:410px;background:var(--card);border-radius:22px;padding:6px 14px 8px;border:3px solid var(--ink)}
+.hpbar .nm{display:flex;justify-content:space-between;font-weight:700;font-size:17px;margin-bottom:3px}
+.hpbar .nm b{font-weight:900;font-size:21px}
+.bar{height:18px;border:3px solid var(--ink);background:#E4DCC8;border-radius:9px;overflow:hidden}
+.bar i{display:block;height:100%}
+.me .bar i{width:78%;background:var(--green)}
+.foe .bar i{width:42%;background:var(--red)}
+.combo{position:absolute;left:50%;top:80px;transform:translateX(-50%);z-index:2;text-align:center;background:var(--yellow);color:var(--ink);padding:4px 26px 7px;border-radius:26px;border:3px solid var(--ink);box-shadow:0 5px 0 var(--ink)}
+.combo b{font-weight:900;font-size:38px;line-height:1.1;display:block}
+.combo span{font-size:16px;font-weight:700}
+.fx{position:absolute;z-index:2;display:flex;align-items:center;gap:6px;font-weight:900;color:var(--green);font-size:36px;background:var(--card);border:3px solid var(--green);border-radius:999px;padding:0 18px 0 10px}
+.fx .ic{width:30px;height:30px}
+.kbd{border:3px solid var(--ink);background:var(--card);border-radius:28px;padding:8px 12px;display:flex;flex-direction:column;gap:6px;box-shadow:0 6px 0 var(--sky)}
+.kbd h3{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.mini{display:inline-block;width:20px;height:20px;border:3px solid var(--ink);background:var(--yellow);border-radius:7px}
+.bottom.kbm{grid-template-columns:minmax(0,1fr) 566px}
+.kb{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+.kr{display:flex;gap:3px}
+.k{height:32px;border:2px solid var(--edge);border-radius:7px;background:var(--card);position:relative;color:var(--ink);flex:none}
+.k .en{position:absolute;left:3px;top:1px;font-size:11px;font-weight:700;line-height:1.2;color:var(--ink-2)}
+.k .zy{position:absolute;right:3px;bottom:0;font-size:14px;font-weight:700;line-height:1.2}
+.k.mod{background:#E4DCC8;border-color:#B8AE92}
+.k.mod .en{position:static;display:grid;place-items:center;height:100%;font-size:11px;font-weight:500}
+.k.L{background:var(--tint)}
+.k.R{background:var(--lav)}
+.k.home::after{content:"";position:absolute;left:50%;bottom:-1px;width:12px;height:3px;margin-left:-6px;background:var(--ink-2);border-radius:2px}
+.k.hot{background:var(--yellow);border:3px solid var(--ink);box-shadow:0 2px 0 var(--ink);z-index:1}
+.k.hot .en{color:var(--ink);left:2px;top:0}
+.k.hot .zy{right:2px}
+.k.hot sup{position:absolute;right:1px;top:1px;background:var(--ink);color:var(--card);width:14px;height:14px;border-radius:50%;font-size:10px;display:grid;place-items:center;font-weight:900;line-height:1}
+.leg{display:flex;gap:14px;font-size:14px;color:var(--ink-2);font-weight:500;margin-left:auto}
+.leg i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:4px;border:2px solid var(--edge)}
+
+/* ---------- 4 結算 ---------- */
+#s4{grid-template-columns:810px minmax(0,1fr);grid-template-rows:auto 1fr auto;gap:12px 24px}
+.s4-head{grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:0 4px 4px}
+.s4-head h1{font-size:36px}
+.s4-head p{font-size:18px;color:var(--ink-2);font-weight:500}
+.okchip{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--green-soft);border:3px solid var(--green);border-radius:999px;padding:2px 18px 2px 8px;font-weight:900;font-size:19px;color:var(--ink)}
+.left{display:flex;flex-direction:column;gap:12px}
+.poemcard{position:relative;background:var(--card);border:3px solid var(--ink);border-radius:28px;padding:10px 24px 12px;box-shadow:0 6px 0 var(--green-soft)}
+.poemcard .meta{font-size:17px;color:var(--ink-2);font-weight:500}
+.poemcard .meta b{font-weight:900;font-size:24px;color:var(--ink);margin-right:10px}
+.badge{position:absolute;right:-12px;top:-34px;width:84px;height:84px;transform:rotate(-8deg);animation:pop .5s cubic-bezier(.3,1.6,.5,1) 1}
+@keyframes pop{from{transform:scale(1.6) rotate(-8deg);opacity:0}}
+.gloss{background:var(--green-soft);color:var(--ink);border-radius:28px;border:3px solid var(--ink);padding:14px 24px 16px;flex:1;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.gloss small{font-size:16px;font-weight:700}
+.gloss p{font-weight:700;font-size:26px;line-height:1.55}
+.cheer{background:var(--yellow);border:3px solid var(--ink);border-radius:999px;padding:6px 20px;font-size:20px;font-weight:900;display:flex;align-items:center;gap:12px}
+.cheer svg{width:38px;height:34px;flex:none}
+.right{display:flex;flex-direction:column;gap:12px}
+.stats{flex:none;display:flex;flex-direction:column;border:3px solid var(--ink);background:var(--card);border-radius:28px;box-shadow:0 6px 0 var(--sky)}
+.st{min-height:72px;display:grid;grid-template-columns:116px 120px 1fr;align-items:center;padding:8px 18px;border-bottom:3px dotted #CFC6AE;gap:8px}
+.st:last-child{border:0}
+.st .lb{font-size:18px;font-weight:900}
+.st .v{font-weight:900;font-size:40px;line-height:1.1}
+.st .v small{font-size:17px;font-weight:500;margin-left:4px}
+.cmp{font-size:16px;color:var(--ink-2);font-weight:500}
+.cmp b{color:var(--green);font-size:19px;font-weight:900}
+.cmp .tr{height:12px;background:#E4DCC8;border-radius:6px;margin-top:5px;position:relative}
+.cmp .tr i{position:absolute;left:0;top:0;bottom:0;background:var(--green);border-radius:6px}
+.cmp .tr u{position:absolute;top:-4px;bottom:-4px;width:4px;border-radius:2px;background:var(--ink)}
+.errs{border:3px solid var(--ink);background:var(--card);border-radius:28px;padding:10px 16px 10px;flex:1;display:flex;flex-direction:column;box-shadow:0 6px 0 var(--yellow)}
+.errs h2{font-size:19px;margin-bottom:2px;display:flex;align-items:center;gap:8px}
+#errs{flex:1;display:flex;flex-direction:column}
+.er{display:grid;grid-template-columns:30px 82px 1fr 74px;align-items:center;gap:8px;border-bottom:3px dotted #CFC6AE;flex:1}
+.er:last-child{border:0}
+.er .rk{font-weight:900;color:var(--ink-2);font-size:17px;text-align:center}
+.er .zh{font-size:38px;line-height:1}
+.er .caps{margin:0}
+.er .cap{height:32px;min-width:30px;font-size:16px}
+.er .cnt{font-size:16px;color:var(--red);text-align:right;font-weight:700}
+.acts{grid-column:1/-1;display:flex;gap:18px;justify-content:flex-end}
+.acts .btn{height:60px;padding:0 44px;font-size:24px;letter-spacing:.1em}
+
+/* ---------- 5 獎狀 ---------- */
+#s5{grid-template-columns:minmax(0,1fr) 270px;gap:20px;align-items:center}
+.cert{position:relative;height:578px;background:var(--card);border-radius:30px;padding:16px;box-shadow:0 8px 0 var(--yellow),0 14px 24px rgba(31,45,79,.18)}
+.cert-in{height:100%;border:5px dashed var(--blue);border-radius:22px;padding:14px 40px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative}
+.cert h1{font-size:64px;letter-spacing:.5em;padding-left:.5em;line-height:1.1;color:var(--red)}
+.cert .to{font-size:20px;font-weight:500;margin-top:2px;color:var(--ink-2)}
+.cert .nm{font-size:50px;font-weight:900;border-bottom:5px dotted var(--ink);padding:0 40px;margin:2px 0 8px;line-height:1.25}
+.cert .txt{font-size:23px;line-height:1.7;font-weight:500;max-width:760px}
+.cert .txt b{font-weight:900;color:var(--blue)}
+.cert .rank{margin-top:8px;display:flex;align-items:center;gap:14px;background:var(--yellow);border:3px solid var(--ink);border-radius:999px;padding:4px 30px 6px;box-shadow:0 5px 0 var(--ink)}
+.cert .rank b{font-size:34px;font-weight:900}
+.cert .stars{display:flex;gap:4px}
+.cert .stars svg{width:36px;height:36px}
+.cert .foot{margin-top:auto;width:100%;display:flex;justify-content:space-between;align-items:flex-end;font-size:22px;font-weight:700}
+.cert .foot .by{text-align:left;line-height:1.7}
+.cert .foot .by small{display:block;font-size:16px;color:var(--ink-2);font-weight:500}
+.cert .seal{width:116px;height:116px;transform:rotate(-10deg);margin-right:10px}
+.cert .deco{position:absolute}
+.cert .deco.l{left:16px;top:70px;width:92px}
+.cert .deco.r{right:16px;top:70px;width:92px}
+.cert-side{display:flex;flex-direction:column;gap:16px}
+.cert-side p{font-size:17px;color:var(--ink-2);font-weight:500;line-height:1.6}
+.cert-side .btn{height:64px;font-size:24px;letter-spacing:.08em}
+@media print{
+  @page{size:A4 landscape;margin:8mm}
+  html,body{height:auto;overflow:visible;background:#fff}
+  body *{visibility:hidden}
+  .cert,.cert *{visibility:visible}
+  .cert{position:fixed;left:0;top:0;width:100%;height:100%;box-shadow:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
+/* ---------- 6 休息一下 ---------- */
+#s6{grid-template-columns:minmax(0,1fr);place-items:center}
+.rest{width:1120px;height:560px;background:var(--card);border:3px solid var(--ink);border-radius:36px;box-shadow:0 8px 0 var(--sky);display:grid;grid-template-columns:480px 1fr;overflow:hidden}
+.rest .scene{background:var(--sky);border-right:3px solid var(--ink);position:relative}
+.rest .scene svg{position:absolute;inset:0;width:100%;height:100%}
+.rest .info{padding:34px 44px 30px;display:flex;flex-direction:column;gap:14px}
+.rest h1{font-size:46px;line-height:1.1}
+.rest .sub{font-size:20px;color:var(--ink-2);font-weight:500}
+.steps{display:flex;flex-direction:column;gap:10px}
+.step{display:flex;align-items:center;gap:14px;background:var(--cream);border-radius:20px;padding:10px 18px;font-size:22px;font-weight:700}
+.step .n{width:34px;height:34px;border-radius:50%;background:var(--blue);color:var(--card);display:grid;place-items:center;font-weight:900;font-size:19px;flex:none}
+.step small{font-size:16px;font-weight:500;color:var(--ink-2);display:block}
+.count{display:flex;align-items:center;gap:18px;margin-top:auto}
+.ring{position:relative;width:96px;height:96px;flex:none}
+.ring svg{width:96px;height:96px;transform:rotate(-90deg)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:36px;font-weight:900}
+.count p{font-size:18px;color:var(--ink-2);font-weight:500;flex:1}
+.rest .btn{height:58px;padding:0 28px;font-size:21px}
+
+@media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="heart" viewBox="0 0 24 22"><path d="M12 21 C2 14 1 7 5 4 C8 2 11 4 12 7 C13 4 16 2 19 4 C23 7 22 14 12 21Z" fill="#C8321F" stroke="#1F2D4F" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="heart0" viewBox="0 0 24 22"><path d="M12 21 C2 14 1 7 5 4 C8 2 11 4 12 7 C13 4 16 2 19 4 C23 7 22 14 12 21Z" fill="#FBF7EA" stroke="#7C86A3" stroke-width="2" stroke-dasharray="3 2.5" stroke-linejoin="round"/></symbol>
+    <symbol id="ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1F7A33"/><path d="M6.5 12.5l4 4 7-8.5" fill="none" stroke="#FBF7EA" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ng" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#C8321F"/><path d="M7.5 7.5l9 9M16.5 7.5l-9 9" fill="none" stroke="#FBF7EA" stroke-width="3" stroke-linecap="round"/></symbol>
+    <symbol id="cat" viewBox="0 0 80 66">
+      <path d="M10 24 L12 4 L30 14Z M70 24 L68 4 L50 14Z" fill="#FFB45E" stroke="#1F2D4F" stroke-width="3" stroke-linejoin="round"/>
+      <ellipse cx="40" cy="38" rx="33" ry="26" fill="#FFB45E" stroke="#1F2D4F" stroke-width="3"/>
+      <path d="M12 12 L16 8 L22 14Z M68 12 L64 8 L58 14Z" fill="#FFD0A0"/>
+      <circle cx="28" cy="36" r="4" fill="#1F2D4F"/><circle cx="52" cy="36" r="4" fill="#1F2D4F"/>
+      <circle cx="29.5" cy="34.5" r="1.4" fill="#FBF7EA"/><circle cx="53.5" cy="34.5" r="1.4" fill="#FBF7EA"/>
+      <ellipse cx="19" cy="46" rx="6" ry="4" fill="#F59A8C"/><ellipse cx="61" cy="46" rx="6" ry="4" fill="#F59A8C"/>
+      <path d="M36 44 Q40 49 44 44 M40 41 V45" fill="none" stroke="#1F2D4F" stroke-width="2.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="lvA" viewBox="0 0 52 52"><circle cx="26" cy="30" r="18" fill="#FBF7EA" stroke="#1F2D4F" stroke-width="3"/><path d="M26 12 Q16 2 8 8 Q12 18 26 14 Q40 18 44 8 Q36 2 26 12Z" fill="#5CBF73" stroke="#1F2D4F" stroke-width="3" stroke-linejoin="round"/><circle cx="20" cy="30" r="2.5" fill="#1F2D4F"/><circle cx="32" cy="30" r="2.5" fill="#1F2D4F"/><path d="M22 36 Q26 40 30 36" fill="none" stroke="#1F2D4F" stroke-width="2.5" stroke-linecap="round"/></symbol>
+    <symbol id="lvB" viewBox="0 0 52 52"><circle cx="26" cy="28" r="18" fill="#FBF7EA" stroke="#1F2D4F" stroke-width="3"/><ellipse cx="18" cy="10" rx="5" ry="11" fill="#FBF7EA" stroke="#1F2D4F" stroke-width="3"/><ellipse cx="34" cy="10" rx="5" ry="11" fill="#FBF7EA" stroke="#1F2D4F" stroke-width="3"/><circle cx="20" cy="28" r="2.5" fill="#1F2D4F"/><circle cx="32" cy="28" r="2.5" fill="#1F2D4F"/><ellipse cx="14" cy="34" rx="4" ry="3" fill="#F59A8C"/><ellipse cx="38" cy="34" rx="4" ry="3" fill="#F59A8C"/></symbol>
+    <symbol id="lvC" viewBox="0 0 52 52"><path d="M26 6 L32 20 L47 21 L35 31 L39 46 L26 38 L13 46 L17 31 L5 21 L20 20Z" fill="#FFD84D" stroke="#1F2D4F" stroke-width="3" stroke-linejoin="round"/><circle cx="21" cy="27" r="2" fill="#1F2D4F"/><circle cx="31" cy="27" r="2" fill="#1F2D4F"/><path d="M23 32 Q26 35 29 32" fill="none" stroke="#1F2D4F" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="strawb" viewBox="0 0 104 104"><path d="M52 98 C20 78 6 52 13 34 C20 15 46 17 52 31 C58 17 84 15 91 34 C98 52 84 78 52 98Z" fill="#F0705F"/><path d="M34 20 Q52 2 70 20 Q52 30 34 20Z" fill="#5CBF73"/></symbol>
+    <symbol id="starT" viewBox="0 0 104 104"><path d="M52 6 L65 37 L98 40 L73 62 L81 95 L52 78 L23 95 L31 62 L6 40 L39 37Z" fill="#FFD84D" stroke="#FFD84D" stroke-width="8" stroke-linejoin="round"/></symbol>
+    <symbol id="orange" viewBox="0 0 104 104"><circle cx="52" cy="56" r="44" fill="#FF9F43"/><path d="M52 16 Q62 0 80 8 Q72 24 52 16Z" fill="#5CBF73"/></symbol>
+    <symbol id="grape" viewBox="0 0 104 104"><circle cx="52" cy="56" r="44" fill="#9D86E0"/><path d="M52 16 Q42 0 28 6 Q34 22 52 16Z" fill="#5CBF73"/></symbol>
+    <symbol id="starIc" viewBox="0 0 52 52"><path d="M26 4 L33 19 L49 21 L37 32 L40 48 L26 40 L12 48 L15 32 L3 21 L19 19Z" fill="#FFD84D" stroke="#1F2D4F" stroke-width="3" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<nav class="mockbar" role="tablist" aria-label="設計稿畫面">
+  <span>打字島 晴天貼紙版</span>
+  <button role="tab" aria-selected="true" data-s="s1">1 設定</button>
+  <button role="tab" aria-selected="false" data-s="s2">2 泡泡槍</button>
+  <button role="tab" aria-selected="false" data-s="s3">3 對打</button>
+  <button role="tab" aria-selected="false" data-s="s4">4 結算</button>
+  <button role="tab" aria-selected="false" data-s="s5">5 獎狀</button>
+  <button role="tab" aria-selected="false" data-s="s6">6 休息</button>
+</nav>
+
+<!-- ============ 1 設定 ============ -->
+<section class="screen on" id="s1">
+  <header class="s1-head">
+    <h1>打字島</h1>
+    <p>選好航線，就出發囉！</p>
+    <svg class="stk" viewBox="0 0 80 66" aria-hidden="true"><use href="#cat"/></svg>
+  </header>
+
+  <div class="form">
+    <div class="field"><b>階級</b>
+      <div class="opts" id="lvOpts">
+        <button class="opt lv" aria-pressed="true" data-lv="t1"><svg viewBox="0 0 52 52"><use href="#lvA"/></svg><span><span class="n">初階</span><span class="g">1–3 年級</span></span></button>
+        <button class="opt lv" aria-pressed="false" data-lv="t2"><svg viewBox="0 0 52 52"><use href="#lvB"/></svg><span><span class="n">進階</span><span class="g">4–5 年級</span></span></button>
+        <button class="opt lv" aria-pressed="false" data-lv="t3"><svg viewBox="0 0 52 52"><use href="#lvC"/></svg><span><span class="n">高階</span><span class="g">6 年級</span></span></button>
+      </div>
+    </div>
+    <div class="field"><b>注音</b>
+      <div>
+        <div class="lock"><svg width="24" height="26" viewBox="0 0 22 26" aria-hidden="true"><rect x="2" y="11" width="18" height="14" rx="4" fill="#1F2D4F"/><path d="M6 11V8a5 5 0 0 1 10 0v3" fill="none" stroke="#1F2D4F" stroke-width="3"/></svg><span>初階、進階固定顯示注音，不能關。</span></div>
+        <div class="sw"><button class="track" id="zhSw" aria-label="顯示注音" aria-pressed="true"></button><span id="zhTx">顯示注音</span></div>
+      </div>
+    </div>
+    <div class="field"><b>時間</b>
+      <div class="opts" data-grp>
+        <button class="opt" aria-pressed="false">10 分鐘</button>
+        <button class="opt" aria-pressed="true">15 分鐘</button>
+        <button class="opt" aria-pressed="false">20 分鐘</button>
+      </div>
+    </div>
+    <div class="field"><b>中打文章</b>
+      <div class="opts" data-grp>
+        <button class="opt" aria-pressed="true">唐詩</button>
+        <button class="opt" aria-pressed="false">宋詞</button>
+        <button class="opt" aria-pressed="false">三字經</button>
+        <button class="opt" aria-pressed="false">隨機</button>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <div class="goal">
+      <h2>本局目標</h2>
+      <ul>
+        <li>正確率<em id="g1">90%</em>以上</li>
+        <li>打完<em id="g2">3</em>首詩</li>
+        <li>每分鐘<em id="g3">12</em>字以上</li>
+      </ul>
+      <p id="gTx">先求打得準，再求打得快。</p>
+    </div>
+    <button class="btn main start">開始</button>
+  </aside>
+</section>
+
+<!-- ============ 2 泡泡槍 ============ -->
+<section class="screen" id="s2">
+  <div class="hud">
+    <span class="t">泡泡摘果</span>
+    <span class="it">回合 <b>2</b> / 5</span>
+    <span class="it">剩餘時間 <b>08:12</b></span>
+    <span class="it">血量 <span class="hp"><svg><use href="#heart"/></svg><svg><use href="#heart"/></svg><svg><use href="#heart"/></svg><svg><use href="#heart0"/></svg><svg><use href="#heart0"/></svg></span></span>
+    <span class="it">連擊 <b class="cb">× 12</b></span>
+    <span class="it">正確率 <b>94%</b></span>
+  </div>
+
+  <div class="stage">
+    <svg class="bg" viewBox="0 0 1326 289" preserveAspectRatio="none" aria-hidden="true">
+      <defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BBD9EE"/><stop offset="1" stop-color="#E9F1EA"/></linearGradient></defs>
+      <rect width="1326" height="289" fill="url(#sk)"/>
+      <circle cx="1170" cy="70" r="38" fill="#FFE27A"/>
+      <g fill="#FBF7EA"><ellipse cx="250" cy="60" rx="70" ry="24"/><ellipse cx="300" cy="46" rx="44" ry="26"/><ellipse cx="780" cy="40" rx="80" ry="22"/><ellipse cx="830" cy="28" rx="46" ry="22"/><ellipse cx="1010" cy="120" rx="56" ry="18"/></g>
+      <path d="M0 232 Q160 190 330 226 T700 220 T1050 224 T1326 214 V289 H0Z" fill="#BFE0B8"/>
+      <path d="M0 256 Q200 228 420 252 T860 248 T1326 244 V289 H0Z" fill="#9DD09A"/>
+      <g fill="#FBF7EA"><circle cx="120" cy="262" r="6"/><circle cx="560" cy="270" r="5"/><circle cx="1000" cy="266" r="6"/></g>
+      <g fill="#FF9F43"><circle cx="120" cy="262" r="2.5"/><circle cx="560" cy="270" r="2"/><circle cx="1000" cy="266" r="2.5"/></g>
+      <g fill="#FBF7EA" fill-opacity=".8" stroke="#5B9BD0" stroke-width="2.5"><circle cx="663" cy="176" r="9"/><circle cx="664" cy="156" r="6"/><circle cx="663" cy="142" r="4"/></g>
+      <g class="stk" transform="translate(663 286)">
+        <ellipse cx="0" cy="-22" rx="30" ry="22" fill="#FFB45E" stroke="#1F2D4F" stroke-width="3"/>
+        <rect x="14" y="-58" width="18" height="40" rx="9" fill="#8FD3B4" stroke="#1F2D4F" stroke-width="3" transform="rotate(-8 23 -38)"/>
+        <circle cx="26" cy="-62" r="9" fill="#FBF7EA" stroke="#1F2D4F" stroke-width="3"/>
+        <g transform="translate(-40 -108)"><use href="#cat" width="80" height="66"/></g>
+      </g>
+    </svg>
+    <div class="floor">草地：果子掉到這裡就扣 1 顆愛心</div>
+
+    <div class="tg cur fall" style="left:611px;top:36px;animation-delay:-1s"><svg viewBox="0 0 104 104"><use href="#strawb"/></svg><span class="zh">還&#xE01E1;</span></div>
+    <div class="tg fall" style="left:290px;top:30px;animation-delay:-2s"><svg viewBox="0 0 104 104"><use href="#starT"/></svg><span class="zh">兩</span></div>
+    <div class="tg fall" style="left:890px;top:12px;animation-delay:-.4s"><svg viewBox="0 0 104 104"><use href="#orange"/></svg><span class="zh">岸</span></div>
+    <div class="tg fall" style="left:120px;top:112px;animation-delay:-2.6s"><svg viewBox="0 0 104 104"><use href="#grape"/></svg><span class="zh">猿</span></div>
+    <div class="pop" style="left:430px;top:150px"><svg class="ic"><use href="#ok"/></svg>啵！+10</div>
+    <div class="pop err" style="left:930px;top:150px"><svg class="ic"><use href="#ng"/></svg>差一點，再試一次</div>
+  </div>
+
+  <div class="bottom">
+    <div class="poembox">
+      <div class="meta"><b>早發白帝城</b>李白　第 2 首，共 3 首　現在打第 2 小句</div>
+      <div class="poem" id="poem2"></div>
+    </div>
+    <div class="ladder" aria-label="提示階梯">
+      <div class="rung"><span class="no">1</span><div class="tx"><b><svg class="ic"><use href="#ng"/></svg>字框紅閃</b>打錯第 1 次</div></div>
+      <div class="rung"><span class="no">2</span><div class="tx"><b>「還」按這幾個鍵</b><div class="caps" id="caps2"></div></div></div>
+      <div class="rung off"><span class="no">3</span><div class="tx"><b>鍵盤圖標出位置</b>再錯 1 次才出現</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3 對打 ============ -->
+<section class="screen" id="s3">
+  <div class="hud">
+    <span class="t">勇者對軟萌怪</span>
+    <span class="it">回合 <b>1</b> / 5</span>
+    <span class="it">剩餘時間 <b>13:40</b></span>
+    <span class="it">連擊 <b class="cb">× 8</b></span>
+    <span class="it">正確率 <b>91%</b></span>
+  </div>
+
+  <div class="stage">
+    <svg class="bg" viewBox="0 0 1326 289" preserveAspectRatio="none" aria-hidden="true">
+      <defs><linearGradient id="sk3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D5E7F5"/><stop offset="1" stop-color="#F1EEDD"/></linearGradient></defs>
+      <rect width="1326" height="289" fill="url(#sk3)"/>
+      <g fill="#FBF7EA"><ellipse cx="180" cy="120" rx="70" ry="22"/><ellipse cx="230" cy="106" rx="42" ry="24"/><ellipse cx="1100" cy="150" rx="70" ry="20"/></g>
+      <path d="M0 236 Q170 196 340 232 T700 226 T1050 230 T1326 220 V289 H0Z" fill="#BFE0B8"/>
+      <path d="M0 258 Q200 232 420 255 T860 252 T1326 248 V289 H0Z" fill="#9DD09A"/>
+      <g fill="#FFD84D" stroke="#FBF7EA" stroke-width="3" stroke-linejoin="round">
+        <path d="M400 168 l7 14 16 2 -12 11 3 16 -14 -8 -14 8 3 -16 -12 -11 16 -2z" transform="translate(0 -10)"/>
+        <path d="M560 150 l6 12 14 2 -10 10 3 14 -13 -7 -12 7 3 -14 -10 -10 14 -2z" transform="translate(0 -16)"/>
+        <path d="M720 160 l5 10 12 2 -9 8 2 12 -10 -6 -10 6 2 -12 -9 -8 12 -2z" transform="translate(0 -12)"/>
+      </g>
+      <g class="stk" transform="translate(250 280)">
+        <ellipse cx="0" cy="-26" rx="30" ry="26" fill="#FBF7EA" stroke="#1F2D4F" stroke-width="3"/>
+        <path d="M-30 -34 H30" stroke="#1F6FD6" stroke-width="10"/>
+        <ellipse cx="-14" cy="-120" rx="10" ry="30" fill="#FBF7EA" stroke="#1F2D4F" stroke-width="3"/>
+        <ellipse cx="16" cy="-124" rx="10" ry="30" fill="#FBF7EA" stroke="#1F2D4F" stroke-width="3"/>
+        <ellipse cx="-14" cy="-120" rx="4" ry="20" fill="#F59A8C"/><ellipse cx="16" cy="-124" rx="4" ry="20" fill="#F59A8C"/>
+        <circle cx="0" cy="-76" r="38" fill="#FBF7EA" stroke="#1F2D4F" stroke-width="3"/>
+        <path d="M-38 -84 Q0 -126 38 -84 Q0 -96 -38 -84Z" fill="#1F6FD6" stroke="#1F2D4F" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="-13" cy="-72" r="4.5" fill="#1F2D4F"/><circle cx="13" cy="-72" r="4.5" fill="#1F2D4F"/>
+        <circle cx="-11.5" cy="-73.5" r="1.5" fill="#FBF7EA"/><circle cx="14.5" cy="-73.5" r="1.5" fill="#FBF7EA"/>
+        <ellipse cx="-24" cy="-62" rx="6" ry="4" fill="#F59A8C"/><ellipse cx="24" cy="-62" rx="6" ry="4" fill="#F59A8C"/>
+        <path d="M-5 -62 Q0 -57 5 -62" fill="none" stroke="#1F2D4F" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M28 -40 L74 -86" stroke="#1F2D4F" stroke-width="12" stroke-linecap="round"/>
+        <path d="M28 -40 L74 -86" stroke="#FBF7EA" stroke-width="6" stroke-linecap="round"/>
+        <path d="M72 -84 L100 -112" stroke="#FFD84D" stroke-width="12" stroke-linecap="round"/>
+        <circle cx="100" cy="-112" r="9" fill="#FFD84D" stroke="#1F2D4F" stroke-width="3"/>
+      </g>
+      <g class="stk" transform="translate(1076 280)">
+        <path d="M-78 0 Q-92 -90 -40 -132 Q0 -158 40 -132 Q92 -90 78 0 Q58 -12 40 0 Q20 -12 0 0 Q-20 -12 -40 0 Q-58 -12 -78 0Z" fill="#9D86E0" stroke="#1F2D4F" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M-40 -128 Q-48 -156 -62 -150 Q-64 -132 -50 -122Z M40 -128 Q48 -156 62 -150 Q64 -132 50 -122Z" fill="#9D86E0" stroke="#1F2D4F" stroke-width="3" stroke-linejoin="round"/>
+        <ellipse cx="-26" cy="-84" rx="14" ry="17" fill="#FBF7EA" stroke="#1F2D4F" stroke-width="3"/><ellipse cx="26" cy="-84" rx="14" ry="17" fill="#FBF7EA" stroke="#1F2D4F" stroke-width="3"/>
+        <circle cx="-23" cy="-82" r="7" fill="#1F2D4F"/><circle cx="29" cy="-82" r="7" fill="#1F2D4F"/>
+        <circle cx="-21" cy="-85" r="2.2" fill="#FBF7EA"/><circle cx="31" cy="-85" r="2.2" fill="#FBF7EA"/>
+        <ellipse cx="-52" cy="-58" rx="9" ry="5" fill="#F59A8C"/><ellipse cx="52" cy="-58" rx="9" ry="5" fill="#F59A8C"/>
+        <path d="M-14 -56 Q0 -42 14 -56Z" fill="#FBF7EA" stroke="#1F2D4F" stroke-width="3" stroke-linejoin="round"/>
+      </g>
+    </svg>
+
+    <div class="duelhud">
+      <div class="hpbar me"><div class="nm"><b>小勇者</b><span>血量 78%</span></div><div class="bar"><i></i></div></div>
+      <div class="hpbar foe"><div class="nm"><b>軟萌怪</b><span>血量 42%</span></div><div class="bar"><i style="margin-left:auto"></i></div></div>
+    </div>
+    <div class="combo"><b>× 8</b><span>連擊　傷害加成 +40%</span></div>
+    <div class="fx" style="left:880px;top:112px"><svg class="ic"><use href="#ok"/></svg>-24</div>
+  </div>
+
+  <div class="bottom kbm">
+    <div class="poembox">
+      <div class="meta"><b>靜夜思</b>李白　第 1 首，共 3 首</div>
+      <div class="poem" id="poem3"></div>
+    </div>
+    <div class="kbd" aria-label="鍵盤位置提示">
+      <h3><i class="mini"></i>「地」依序按 <span id="seq3"></span><span class="leg"><span><i style="background:var(--tint)"></i>左手</span><span><i style="background:var(--lav)"></i>右手</span></span></h3>
+      <div class="kb" id="kb3"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4 結算 ============ -->
+<section class="screen" id="s4">
+  <header class="s4-head">
+    <h1>第 1 回合完成</h1>
+    <p>靜夜思　李白</p>
+    <div class="okchip"><svg class="ic"><use href="#ok"/></svg>達成本局目標</div>
+  </header>
+
+  <div class="left">
+    <div class="poemcard">
+      <div class="meta"><b>靜夜思</b>李白</div>
+      <div class="poem" id="poem4"></div>
+      <svg class="badge stk" viewBox="0 0 92 92" aria-label="通過">
+        <path d="M46 4 L56 22 L76 14 L74 36 L90 46 L74 56 L76 78 L56 70 L46 88 L36 70 L16 78 L18 56 L2 46 L18 36 L16 14 L36 22Z" fill="#FFD84D" stroke="#FFD84D" stroke-width="4" stroke-linejoin="round"/>
+        <text x="46" y="57" text-anchor="middle" font-size="30" font-weight="900" fill="#1F2D4F" font-family="Noto Sans TC, Microsoft JhengHei, sans-serif">讚</text>
+      </svg>
+    </div>
+    <div class="gloss"><small>這首詩在說</small><p>看見床前的月光像霜一樣，抬頭看月亮，就想起了家鄉。</p></div>
+    <div class="cheer"><svg viewBox="0 0 80 66" aria-hidden="true"><use href="#cat"/></svg>比上次多打 3 個字，進步了！</div>
+  </div>
+
+  <div class="right">
+    <div class="stats">
+      <div class="st"><span class="lb">每分鐘字數</span><span class="v">18<small>字</small></span>
+        <div class="cmp"><b>▲ 多 3 字</b>　上次 15 字<div class="tr"><i style="width:72%"></i><u style="left:60%"></u></div></div></div>
+      <div class="st"><span class="lb">正確率</span><span class="v">93<small>%</small></span>
+        <div class="cmp"><b>▲ 高 2%</b>　上次 91%<div class="tr"><i style="width:93%"></i><u style="left:91%"></u></div></div></div>
+    </div>
+    <div class="errs">
+      <h2><svg class="ic"><use href="#ng"/></svg>最常打錯的 5 個字</h2>
+      <div id="errs"></div>
+    </div>
+  </div>
+
+  <div class="acts">
+    <button class="btn sub">換文章</button>
+    <button class="btn main">再玩一次</button>
+  </div>
+</section>
+
+<!-- ============ 5 獎狀 ============ -->
+<section class="screen" id="s5">
+  <div class="cert" id="cert">
+    <div class="cert-in">
+      <svg class="deco l" viewBox="0 0 80 66" aria-hidden="true"><use href="#cat"/></svg>
+      <svg class="deco r" viewBox="0 -4 52 56" aria-hidden="true"><use href="#lvB"/></svg>
+      <h1>獎　狀</h1>
+      <div class="to">闖關小勇士</div>
+      <div class="nm">王小明</div>
+      <p class="txt">在打字島〈唐詩・初階〉闖關成功，<br>正確率 <b>96%</b>、每分鐘 <b>32 字</b>，特頒此狀以資鼓勵。</p>
+      <div class="rank">
+        <span class="stars" aria-label="2 顆星，共 3 顆">
+          <svg viewBox="0 0 52 52"><use href="#starIc"/></svg>
+          <svg viewBox="0 0 52 52"><use href="#starIc"/></svg>
+          <svg viewBox="0 0 52 52"><path d="M26 4 L33 19 L49 21 L37 32 L40 48 L26 40 L12 48 L15 32 L3 21 L19 19Z" fill="#FBF7EA" stroke="#7C86A3" stroke-width="3" stroke-dasharray="4 3" stroke-linejoin="round"/></svg>
+        </span>
+        <b>打字小高手</b>
+      </div>
+      <div class="foot">
+        <div class="by"><small>頒發單位</small>打字島　闖關總部</div>
+        <svg class="seal" viewBox="0 0 120 120" aria-label="打字島印章">
+          <circle cx="60" cy="60" r="55" fill="none" stroke="#C8321F" stroke-width="5"/>
+          <circle cx="60" cy="60" r="46" fill="#C8321F"/>
+          <circle cx="60" cy="60" r="46" fill="none" stroke="#FBF7EA" stroke-width="2" stroke-dasharray="3 5"/>
+          <text x="60" y="58" text-anchor="middle" font-size="24" font-weight="900" fill="#FBF7EA" font-family="Noto Sans TC, Microsoft JhengHei, sans-serif">打字島</text>
+          <text x="60" y="86" text-anchor="middle" font-size="17" font-weight="700" fill="#FBF7EA" font-family="Noto Sans TC, Microsoft JhengHei, sans-serif">認證章</text>
+        </svg>
+        <div class="date">中華民國 115 年 11 月 20 日</div>
+      </div>
+    </div>
+  </div>
+  <aside class="cert-side">
+    <p>闖關成功了，好棒！<br>可以印出來貼在家裡。</p>
+    <button class="btn main" onclick="window.print()">列印獎狀</button>
+    <button class="btn sub">回到打字島</button>
+  </aside>
+</section>
+
+<!-- ============ 6 休息一下 ============ -->
+<section class="screen" id="s6">
+  <div class="rest">
+    <div class="scene">
+      <svg viewBox="0 0 480 554" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <rect width="480" height="554" fill="#D5E7F5"/>
+        <circle cx="370" cy="110" r="42" fill="#FFE27A"/>
+        <g fill="#FBF7EA"><ellipse cx="120" cy="120" rx="70" ry="22"/><ellipse cx="170" cy="106" rx="42" ry="24"/></g>
+        <path d="M0 330 L120 230 L210 300 L320 200 L480 330Z" fill="#B7CBDD"/>
+        <path d="M0 360 L90 300 L200 350 L300 290 L480 360V400H0Z" fill="#9DB7CC"/>
+        <path d="M0 380 Q120 350 240 380 T480 370 V554 H0Z" fill="#BFE0B8"/>
+        <path d="M0 450 Q140 420 280 450 T480 440 V554 H0Z" fill="#9DD09A"/>
+        <g class="stk" transform="translate(240 520)"><use href="#cat" width="130" height="107" x="-65" y="-107"/></g>
+        <rect x="56" y="58" width="2" height="0" fill="none"/>
+      </svg>
+    </div>
+    <div class="info">
+      <h1>休息一下</h1>
+      <p class="sub">這回合打得很棒！先讓眼睛放鬆一下再繼續。</p>
+      <div class="steps">
+        <div class="step"><span class="n">1</span><span>看看遠方 20 秒<small>找一個很遠的地方，例如窗外的樹</small></span></div>
+        <div class="step"><span class="n">2</span><span>眨眨眼睛 10 下<small>慢慢眨，讓眼睛濕濕的</small></span></div>
+        <div class="step"><span class="n">3</span><span>動動肩膀和手指<small>甩一甩手，再坐直</small></span></div>
+      </div>
+      <div class="count">
+        <div class="ring"><svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="40" fill="none" stroke="#E4DCC8" stroke-width="12"/><circle cx="48" cy="48" r="40" fill="none" stroke="#1F6FD6" stroke-width="12" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="75"/></svg><b>14</b></div>
+        <p>還有 14 秒，會自動繼續。</p>
+        <button class="btn sub">略過</button>
+        <button class="btn main">休息好了</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="typing-data/passages.js"></script>
+<script>
+(function(){
+  var P = window.PASSAGES || [];
+  function byId(id){ return P.filter(function(p){return p.id===id})[0]; }
+
+  var ROWS = [
+    {k:'1234567890-', z:['ㄅ','ㄉ','ˇ','ˋ','ㄓ','ˊ','˙','ㄚ','ㄞ','ㄢ','ㄦ']},
+    {k:'qwertyuiop', z:['ㄆ','ㄊ','ㄍ','ㄐ','ㄔ','ㄗ','ㄧ','ㄛ','ㄟ','ㄣ']},
+    {k:'asdfghjkl;', z:['ㄇ','ㄋ','ㄎ','ㄑ','ㄕ','ㄘ','ㄨ','ㄜ','ㄠ','ㄤ']},
+    {k:'zxcvbnm,./', z:['ㄈ','ㄌ','ㄏ','ㄒ','ㄖ','ㄙ','ㄩ','ㄝ','ㄡ','ㄥ']}
+  ];
+  var MAP = {};
+  ROWS.forEach(function(r){ r.z.forEach(function(z,i){ MAP[z] = r.k[i]; }); });
+  function keysOf(zy){
+    var out = [], tone = false;
+    Array.from(zy).forEach(function(c){ if(MAP[c]){ out.push({z:c,k:MAP[c]}); if('ˇˋˊ˙'.indexOf(c)>-1) tone = true; } });
+    if(!tone) out.push({z:'一聲',k:'空白'});
+    return out;
+  }
+  function capsHTML(zy){
+    return keysOf(zy).map(function(o){
+      return o.k==='空白' ? '<span class="cap wide">空白鍵</span>' : '<span class="cap">'+o.k.toUpperCase()+'</span>';
+    }).join('');
+  }
+
+  /* 詩句：依句號切成列；破音字接 IVS；opts.onlyRow 只畫指定那一列 */
+  function renderPoem(el, p, curIdx, opts){
+    opts = opts || {};
+    var chars = Array.from(p.text), rows = [], row = '';
+    chars.forEach(function(c,i){
+      var punct = p.zhuyin[i] === '';
+      var cls = 'ch' + (punct ? ' p' : '') + (i < curIdx ? ' done' : '') + (i === curIdx ? ' cur' + (opts.flash ? ' flash' : '') : '');
+      if(opts.allDone && !punct) cls = 'ch';
+      var iv = (p.ivs && p.ivs[i] && p.ivs[i] > 1) ? String.fromCodePoint(0xE01E0 + p.ivs[i] - 1) : '';
+      row += '<span class="'+cls+'">' + c + iv + '</span>';
+      if(c === '。' || (opts.clause && c === '，')){ rows.push(row); row = ''; }
+    });
+    if(row) rows.push(row);
+    if(opts.show) rows = rows.slice(opts.show[0], opts.show[1]);
+    el.innerHTML = rows.map(function(r){ return '<div class="row">'+r+'</div>'; }).join('');
+  }
+
+  var p2 = byId('tang-2-01');
+  if(p2){
+    renderPoem(document.getElementById('poem2'), p2, 14, {flash:true, clause:true, show:[0,2]});
+    document.getElementById('caps2').innerHTML = capsHTML(p2.zhuyin[14]);
+  }
+
+  var p1 = byId('tang-1-01');
+  if(p1){
+    renderPoem(document.getElementById('poem3'), p1, 8, {clause:true, show:[0,2]});
+    var keys = keysOf(p1.zhuyin[8]).map(function(o){return o.k;});
+    document.getElementById('seq3').innerHTML = keys.map(function(k,i){return '<span class="cap" style="height:28px;min-width:28px;font-size:16px;border-bottom-width:5px">'+['①','②','③','④'][i]+' '+k.toUpperCase()+'</span>';}).join(' ');
+
+    /* 完整 5 排鍵盤；注音由 ROWS 對照表產生 */
+    var U = 35.6, LEFT = '`12345qwertasdfgzxcvb';
+    var ZY = {}; Object.keys(MAP).forEach(function(z){ ZY[MAP[z]] = z; });
+    function K(label, w, mod){ return {l:label, w:w, mod:mod}; }
+    function chars(s, w){ return Array.from(s).map(function(c){ return K(c, w||1); }); }
+    var LAYOUT = [
+      [K('`',1)].concat(chars('1234567890-=')).concat([K('Backspace',2,1)]),
+      [K('Tab',1.5,1)].concat(chars('qwertyuiop[]')).concat([K('\\',1.5)]),
+      [K('Caps Lock',1.75,1)].concat(chars("asdfghjkl;'")).concat([K('Enter',2.25,1)]),
+      [K('Shift',2.25,1)].concat(chars('zxcvbnm,./')).concat([K('Shift',2.75,1)]),
+      [K('Ctrl',1.75,1),K('Win',1.5,1),K('Alt',1.5,1),K('',7,1),K('Alt',1.5,1),K('Ctrl',1.75,1)]
+    ];
+    var kb = '';
+    LAYOUT.forEach(function(row){
+      kb += '<div class="kr">';
+      row.forEach(function(key){
+        var w = Math.round(key.w*U-3), c = key.l;
+        if(key.mod){ kb += '<div class="k mod" style="width:'+w+'px"><span class="en">'+c+'</span></div>'; return; }
+        var n = keys.indexOf(c), zy = ZY[c] || '';
+        var cls = 'k' + (LEFT.indexOf(c)>-1 ? ' L' : ' R') + ((c==='f'||c==='j') ? ' home' : '') + (n>-1 ? ' hot' : '');
+        kb += '<div class="'+cls+'" style="width:'+w+'px">'+(n>-1?'<sup>'+(n+1)+'</sup>':'')+'<span class="en">'+c.toUpperCase()+'</span><span class="zy">'+zy+'</span></div>';
+      });
+      kb += '</div>';
+    });
+    document.getElementById('kb3').innerHTML = kb;
+
+    renderPoem(document.getElementById('poem4'), p1, -1, {allDone:true});
+
+    var errs = [[6,'疑',3],[10,'霜',3],[12,'舉',2],[22,'鄉',2],[14,'望',1]];
+    document.getElementById('errs').innerHTML = errs.map(function(e,i){
+      var zy = p1.zhuyin[e[0]];
+      return '<div class="er"><span class="rk">'+(i+1)+'</span><span class="zh">'+e[1]+'</span><span class="caps">'+capsHTML(zy)+'</span><span class="cnt">✗ '+e[2]+' 次</span></div>';
+    }).join('');
+  }
+
+  function show(id){
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.toggle('on', s.id===id); });
+    document.querySelectorAll('.mockbar button').forEach(function(b){ b.setAttribute('aria-selected', b.dataset.s===id); });
+    try{ history.replaceState(null,'','#'+id); }catch(e){}
+  }
+  document.querySelectorAll('.mockbar button').forEach(function(b){ b.onclick=function(){ show(b.dataset.s); }; });
+  if(/^#s[1-6]$/.test(location.hash)) show(location.hash.slice(1));
+
+  document.querySelectorAll('[data-grp]').forEach(function(g){
+    g.querySelectorAll('.opt').forEach(function(o){ o.onclick=function(){
+      g.querySelectorAll('.opt').forEach(function(x){ x.setAttribute('aria-pressed', x===o); });
+    };});
+  });
+  var GOALS = {
+    t1:['90%','3','12','先求打得準，再求打得快。'],
+    t2:['92%','4','20','注音會一直在，專心把字打準。'],
+    t3:['95%','5','30','可以關掉注音，挑戰自己。']
+  };
+  document.querySelectorAll('#lvOpts .opt').forEach(function(o){ o.onclick=function(){
+    document.querySelectorAll('#lvOpts .opt').forEach(function(x){ x.setAttribute('aria-pressed', x===o); });
+    var g = GOALS[o.dataset.lv];
+    document.getElementById('g1').textContent=g[0]; document.getElementById('g2').textContent=g[1];
+    document.getElementById('g3').textContent=g[2]; document.getElementById('gTx').textContent=g[3];
+    document.body.classList.toggle('adv', o.dataset.lv==='t3');
+  };});
+  var sw = document.getElementById('zhSw');
+  sw.onclick=function(){ var off = !sw.classList.contains('off'); sw.classList.toggle('off', off); sw.setAttribute('aria-pressed', !off); document.getElementById('zhTx').textContent = off?'不顯示注音':'顯示注音'; };
+})();
+</script>
+</body>
+</html>
