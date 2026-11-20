@@ -145,8 +145,8 @@
       renderHUD();
       renderPoem();
       renderLadder();
+      if (game.round === 1 && scene.start) scene.start();   // 契約：start 在第一回合 roundStart 之前
       if (scene.roundStart) scene.roundStart(game.round);
-      if (game.round === 1 && scene.start) scene.start();
       resume();
     }
 
