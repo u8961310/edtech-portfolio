@@ -85,17 +85,17 @@ await t('第三人加入被擋（房間滿）', async () => {
 await t('非房主改設定無效、房主改設定雙方同步', async () => {
   B.send({ t: 'settings', settings: { lang: 'en' } });
   await sleep(300);
-  A.send({ t: 'settings', settings: { lang: 'zh', grade: 'low', duration: 60 } });
+  A.send({ t: 'settings', settings: { lang: 'zh', grade: 'low', duration: 600 } });
   const r = await B.wait('room', (x) => x.settings.grade === 'low');
   assert.strictEqual(r.settings.lang, 'zh');
-  assert.strictEqual(r.settings.duration, 60);
+  assert.strictEqual(r.settings.duration, 600);
 });
 
 await t('開打：雙方收到同一個 seed 與血量', async () => {
   A.send({ t: 'start' });
   const ca = await A.wait('countdown'), cb = await B.wait('countdown');
   assert.strictEqual(ca.seed, cb.seed);
-  assert.strictEqual(Object.values(ca.maxHp)[0].maxHp, 25);
+  assert.strictEqual(Object.values(ca.maxHp)[0].maxHp, 167);   // 初階 25 × 600/90 秒
   await sleep(Math.max(0, ca.startsAt - Date.now()) + 100);
 });
 
@@ -119,8 +119,8 @@ await t('B 斷線重連用 token 接回原位，補到開局資訊', async () =>
 
 await t('A 穩定打字把 B 打倒，雙方收到 hit 與 end', async () => {
   let pos = 0;
-  for (let i = 0; i < 40; i++) {
-    pos += 2;
+  for (let i = 0; i < 80; i++) {   // 血量隨 10 分鐘放大到 167，每次 4 字（在 MAX_CPS 寬容內）
+    pos += 4;
     A.send({ t: 'prog', pos, miss: 0 });
     await sleep(260);
     if (A.events.some((e) => e.t === 'end')) break;

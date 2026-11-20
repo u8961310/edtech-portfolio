@@ -10,14 +10,16 @@
   'use strict';
 
   var CONFIG = {
-    // 血量：大約是「該年級一般速度打滿 90 秒的字數」，打得比平均快就能提早擊倒對手
+    // 血量基準：大約是「該年級一般速度打滿 HP_BASE_SEC 秒的字數」；實際血量照比賽時間等比例放大，
+    // 一般速度要打滿整場才擊倒，打得比平均快就能提早擊倒對手
     HP: { zh: { low: 25, mid: 40, high: 60 }, en: { low: 60, mid: 100, high: 150 } },
+    HP_BASE_SEC: 90,
     COMBO_BONUS_AT: 10,     // 連擊第 10 字起傷害加成
     COMBO_MULT: 1.5,
     MAX_CPS: 8,             // 每秒最多算 8 字；超過視為異常（貼上、改程式）不計
     BURST_SLACK: 4,         // 網路延遲造成一次送來多字的寬容量
-    DURATIONS: [60, 90, 120],
-    DEFAULT_DURATION: 90,
+    DURATIONS: [600, 900, 1200],   // 10／15／20 分鐘（2026-11-20 跟打字島一致）
+    DEFAULT_DURATION: 600,
     COUNTDOWN_MS: 3000,
     HANDICAP_MAX: 1.5,      // 讓分：較慢的一方血量最多放大 1.5 倍
     // 對電腦練習：機器人每分鐘字數與失誤率
@@ -81,7 +83,7 @@
    */
   function newMatch(settings, players, startAt) {
     var s = normalizeSettings(settings);
-    var base = CONFIG.HP[s.lang][s.grade];
+    var base = CONFIG.HP[s.lang][s.grade] * s.duration / CONFIG.HP_BASE_SEC;
     var maxBest = 0;
     players.forEach(function (p) { maxBest = Math.max(maxBest, p.best || 0); });
     var state = {

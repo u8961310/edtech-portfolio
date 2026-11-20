@@ -15,7 +15,7 @@ function t(name, fn) { fn(); n++; console.log('ok', name); }
 
 t('設定不合法時用預設值', () => {
   const s = R.normalizeSettings({ lang: 'jp', grade: 'x', duration: 999, handicap: 1 });
-  assert.deepStrictEqual(s, { lang: 'zh', grade: 'mid', domain: 'random', duration: 90, handicap: true });
+  assert.deepStrictEqual(s, { lang: 'zh', grade: 'mid', domain: 'random', duration: 600, handicap: true });
 });
 
 t('同 seed 文章順序相同、篩不到領域會退回同年級', () => {
@@ -29,7 +29,7 @@ t('同 seed 文章順序相同、篩不到領域會退回同年級', () => {
 
 t('傷害、連擊加成、打錯連擊歸零', () => {
   const m = R.newMatch({ lang: 'zh', grade: 'mid' }, [{ id: 'a', nick: 'A' }, { id: 'b', nick: 'B' }], 0);
-  assert.strictEqual(m.players.b.hp, 40);
+  assert.strictEqual(m.players.b.hp, 267);   // 40 × 600/90 秒，四捨五入
   let r = R.applyProgress(m, 'a', { pos: 9, miss: 0 }, 2000);
   assert.strictEqual(r.damage, 9);
   r = R.applyProgress(m, 'a', { pos: 11, miss: 0 }, 3000);       // 第 10、11 字 ×1.5
@@ -38,7 +38,7 @@ t('傷害、連擊加成、打錯連擊歸零', () => {
   assert.strictEqual(r.damage, 1.5);
   assert.strictEqual(m.players.a.combo, 0);
   assert.strictEqual(m.players.a.maxCombo, 12);
-  assert.strictEqual(m.players.b.hp, 40 - 13.5);
+  assert.strictEqual(m.players.b.hp, 267 - 13.5);
 });
 
 t('太快、倒退、開打前都不計', () => {
@@ -51,9 +51,9 @@ t('太快、倒退、開打前都不計', () => {
 
 t('血量歸零就結束，勝負看血量比例', () => {
   const m = R.newMatch({ lang: 'zh', grade: 'low' }, [{ id: 'a', nick: 'A' }, { id: 'b', nick: 'B' }], 0);
-  for (let i = 1; i <= 30; i++) R.applyProgress(m, 'a', { pos: i, miss: 0 }, i * 1000);
-  assert.strictEqual(R.isOver(m, 30000), true);
-  const res = R.result(m, 30000);
+  for (let i = 1; i <= 170; i++) R.applyProgress(m, 'a', { pos: i, miss: 0 }, i * 1000);   // 初階血量 25 × 600/90 ≈ 167
+  assert.strictEqual(R.isOver(m, 170000), true);
+  const res = R.result(m, 170000);
   assert.strictEqual(res.winner, 'a');
   assert.strictEqual(res.players[0].acc, 100);
 });
@@ -61,14 +61,14 @@ t('血量歸零就結束，勝負看血量比例', () => {
 t('讓分：慢的一方血量放大，最多 1.5 倍', () => {
   const m = R.newMatch({ lang: 'zh', grade: 'mid', handicap: true },
     [{ id: 'fast', best: 60 }, { id: 'slow', best: 20 }], 0);
-  assert.strictEqual(m.players.fast.maxHp, 40);
-  assert.strictEqual(m.players.slow.maxHp, 60);
+  assert.strictEqual(m.players.fast.maxHp, 267);   // 40 × 600/90 秒
+  assert.strictEqual(m.players.slow.maxHp, 400);
 });
 
 t('時間到平手', () => {
   const m = R.newMatch({}, [{ id: 'a' }, { id: 'b' }], 0);
-  assert.strictEqual(R.isOver(m, 90000), true);
-  assert.strictEqual(R.result(m, 90000).winner, null);
+  assert.strictEqual(R.isOver(m, 600000), true);
+  assert.strictEqual(R.result(m, 600000).winner, null);
 });
 
 t('中打比對器：跳過標點、打錯停住、tier 累加、換篇', () => {
@@ -117,11 +117,11 @@ t('對電腦：room／countdown 事件欄位齊全', () => {
   const got = {};
   ['room', 'countdown', 'hit'].forEach(e => bt.on(e, d => { got[e] = d; }));
   bt.create({ nick: '小明', best: 0 });
-  bt.setSettings({ lang: 'zh', grade: 'low', duration: 60 });
+  bt.setSettings({ lang: 'zh', grade: 'low', duration: 600 });
   bt.start();
   bt.leave();                                                  // 停掉計時器（實際對打在瀏覽器實測）
   const cd = got.countdown;
-  assert.ok(cd.seq.length && cd.startsAt && cd.maxHp.me.hp === 25 && cd.duration === 60);
+  assert.ok(cd.seq.length && cd.startsAt && cd.maxHp.me.hp === 167 && cd.duration === 600);
   assert.strictEqual(got.room.you.isHost, true);
 });
 

@@ -842,8 +842,9 @@ input:focus-visible {
 }
 .timer .t b {
   font-family: 'Fredoka', sans-serif;
-  font-size: clamp(32px, 5.2vh, 42px);
+  font-size: clamp(22px, 3.7vh, 28px);   /* 分:秒（10:00）要塞進圓圈 */
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
   display: block;
 }
 .timer .t span {
@@ -1909,9 +1910,9 @@ input:focus-visible {
         <div class="opt-row">
           <b id="txt-opt-duration">時間</b>
           <div class="row" id="opt-duration-group">
-            <button type="button" class="chip" data-duration="60">60 秒</button>
-            <button type="button" class="chip on" data-duration="90">90 秒</button>
-            <button type="button" class="chip" data-duration="120">120 秒</button>
+            <button type="button" class="chip on" data-duration="600">10 分鐘</button>
+            <button type="button" class="chip" data-duration="900">15 分鐘</button>
+            <button type="button" class="chip" data-duration="1200">20 分鐘</button>
           </div>
         </div>
 
@@ -1965,7 +1966,7 @@ input:focus-visible {
           <circle id="timer-ring" cx="60" cy="60" r="42" fill="none" stroke="#c92a2a" stroke-width="10"
             stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
         </svg>
-        <div class="t"><div><b id="timer-sec">90</b><span>秒</span></div></div>
+        <div class="t"><div><b id="timer-sec">10:00</b><span>剩餘</span></div></div>
       </div>
 
       <div class="fighter opp" id="hud-opp">
@@ -2035,7 +2036,7 @@ input:focus-visible {
   <section class="screen" id="screen-result" aria-label="對戰結算">
     <header class="res-top">
       <span class="ribbon" id="res-ribbon">小明 獲勝</span>
-      <span class="sub" id="res-sub">自然科學・90 秒・讓分：開</span>
+      <span class="sub" id="res-sub">自然科學・10 分鐘・讓分：開</span>
       <span class="spacer"></span>
       <button type="button" class="btn sm sound-toggle" aria-pressed="true">🔊 音效開</button>
     </header>
@@ -2487,7 +2488,7 @@ input:focus-visible {
       lang: 'zh',
       grade: 'mid',
       domain: 'random',
-      duration: 90,
+      duration: 600,
       handicap: true
     },
     tracker: null,
@@ -3171,9 +3172,9 @@ input:focus-visible {
   }
 
   function updateTimerUI(remainingSec) {
-    const dur = Math.max(1, state.settings.duration || 90);
+    const dur = Math.max(1, state.settings.duration || 600);
     const sec = Math.max(0, Math.ceil(remainingSec));
-    $('timer-sec').textContent = String(sec);
+    $('timer-sec').textContent = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
     const ratio = Math.max(0, Math.min(1, remainingSec / dur));
     const dashOffset = 264 * (1 - ratio);
     $('timer-ring').setAttribute('stroke-dashoffset', dashOffset.toFixed(1));
@@ -3556,7 +3557,7 @@ input:focus-visible {
     const subParts = [
       state.lastPassageDomain || TEXT.langLabels[state.settings.lang],
       state.lastPassageTitle ? '《' + state.lastPassageTitle + '》' : '',
-      state.settings.duration + ' 秒',
+      Math.round(state.settings.duration / 60) + ' 分鐘',
       '讓分：' + (state.settings.handicap ? '開' : '關')
     ].filter(Boolean);
     $('res-sub').textContent = subParts.join('・');
