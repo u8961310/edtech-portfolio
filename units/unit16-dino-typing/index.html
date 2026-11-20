@@ -485,6 +485,8 @@
 
       // 還沒輪到的石頭怪跟隨速度倍率（約目前目標的 1/3）
       QUEUE_SPEED_RATIO: 1 / 3,
+      // 排在畫面外（進度 < 0）的石頭怪走進畫面的速度（每秒占全程比例），避免輪到時還看不到
+      OFFSCREEN_ENTRY_SPEED: 0.25,
 
       // rAF 時間差上限（毫秒），避免切回分頁瞬間暴衝
       MAX_DT_MS: 100,
@@ -1096,7 +1098,8 @@
               } else {
                 var cap = getSlotCapProgress(i);
                 var prevP = monsters[i - 1] ? monsters[i - 1].p : SCENE_CONFIG.QUEUE_FRONT_PROGRESS;
-                spawnP = Math.max(0, Math.min(cap, prevP - getMinGapProgress()));
+                // 不夾在 0：打得快時前一隻還在右邊緣，夾 0 會全部疊在同一點；允許排在畫面外，依序走進來
+                spawnP = Math.min(cap, prevP - getMinGapProgress());
               }
               m = createMonsterEntity(u, spawnP);
               monsters[i] = m;
@@ -1391,7 +1394,7 @@
 
             if (i === 0) {
               // 最前面那隻朝小恐龍前進
-              m.p += leadSpeed * dt;
+              m.p += (m.p < 0.02 ? Math.max(leadSpeed, SCENE_CONFIG.OFFSCREEN_ENTRY_SPEED) : leadSpeed) * dt;   // 還在畫面外就快速走進來
 
               // 走到恐龍面前：撞恐龍一下（> < 眼）、扣愛心、退回隊伍最前面起點重走（字不變）
               if (m.p >= 1) {
@@ -1407,7 +1410,7 @@
               var behindPrevCap = monsters[i - 1].p - minGapP;
               var limit = Math.min(cap, behindPrevCap);
               if (m.p < limit) {
-                m.p = Math.min(limit, m.p + queueSpeed * dt);
+                m.p = Math.min(limit, m.p + (m.p < 0.02 ? Math.max(queueSpeed, SCENE_CONFIG.OFFSCREEN_ENTRY_SPEED) : queueSpeed) * dt);
               }
             }
           }
