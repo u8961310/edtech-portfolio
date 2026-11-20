@@ -80,6 +80,20 @@
   td.bar { padding-right: 14px; }
   td.bar span { display: block; height: 8px; border-radius: 0 4px 4px 0; background: var(--s1); margin-top: 7px; min-width: 2px; }
 
+  /* 來過的學校：橫向長條（前 N 名）＋收合的完整明細表 */
+  .hbar { padding: 12px 14px 8px; position: relative; }
+  .hbar .r { display: grid; grid-template-columns: 2.2em minmax(0, 32%) 1fr 5.5em; align-items: center; gap: 8px; padding: 3px 4px; border-radius: 3px; }
+  .hbar .r:hover, .hbar .r:focus { background: rgba(30, 58, 95, .06); outline: none; }
+  .hbar .rk { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .hbar .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hbar .tr { height: 14px; }
+  .hbar .tr span { display: block; height: 100%; background: var(--s1); border-radius: 0 4px 4px 0; min-width: 2px; }
+  .hbar .v { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .hbar .v small { color: var(--muted); font-size: 12px; margin-left: 2px; }
+  .hbar .more { font-size: 13px; color: var(--muted); padding: 6px 4px 0; }
+  details.all > summary { padding: 8px 14px; cursor: pointer; color: var(--accent); border-top: 1px solid var(--line); font-size: 14px; }
+  details.all[open] > summary { border-bottom: 1px solid var(--line); }
+
   /* 登入 */
   .login { max-width: 420px; margin: 12vh auto 0; background: var(--paper); border: 1px solid var(--line); }
   .login h2 { margin: 0; background: var(--navy); color: #fff; font-size: 16px; padding: 10px 16px; }
@@ -98,6 +112,7 @@
     table { table-layout: auto; }
     col { width: auto !important; }
     td.bar { width: 28%; }
+    .hbar .r { grid-template-columns: 1.8em minmax(0, 42%) 1fr 4.8em; gap: 6px; }
     th, td { padding: 7px 8px; }
     thead th { white-space: normal; }
     td.trunc { white-space: normal; overflow: visible; }
@@ -139,8 +154,9 @@
     <div class="summary" id="summary"></div>
 
     <section>
-      <h2>來過的學校<small>依訪客人日排名</small></h2>
+      <h2>來過的學校<small id="orgsSub">依裝置人日排名</small></h2>
       <div id="orgs"></div>
+      <div class="note">裝置人日＝同一天同一台裝置算一次（2026-11-19 起才有裝置資料，之前只來過的學校為 0，改依訪客人日排在後面）。</div>
     </section>
 
     <section>
@@ -367,6 +383,51 @@
       }).join('') + '</div>';
   }
 
+  // 來過的學校：前 ORG_TOP 名畫橫向長條（裝置人日，0 起算），其餘合計一行；完整明細表收進 <details>
+  var ORG_TOP = 10;
+  function drawOrgs(orgs, ranks, tableHtml) {
+    var el = $('orgs'), SUB = '依裝置人日排名';
+    if (!orgs.length) { el.innerHTML = tableHtml; $('orgsSub').textContent = SUB; return; }
+    var top = orgs.slice(0, ORG_TOP), rest = orgs.slice(ORG_TOP);
+    var max = Math.max.apply(null, top.map(function (o) { return o.device_days; })) || 1;
+    $('orgsSub').textContent = orgs.length > ORG_TOP ? '前 ' + ORG_TOP + ' 名，' + SUB : SUB;
+    var restSum = rest.reduce(function (a, o) { return a + o.device_days; }, 0);
+    el.innerHTML = '<div class="hbar" role="img" aria-label="來過的學校，依裝置人日排名的橫向長條圖">' +
+      top.map(function (o, i) {
+        return '<div class="r" tabindex="0" data-i="' + i + '"><span class="rk">' + ranks[i] + '</span>' +
+          '<span class="nm">' + esc(o.org_name || '（未知）') + '</span>' +
+          '<span class="tr">' + (o.device_days ? '<span style="width:' + (o.device_days / max * 100).toFixed(1) + '%"></span>' : '') + '</span>' +
+          '<span class="v">' + fmt(o.device_days) + '<small>人日</small></span></div>';
+      }).join('') +
+      (rest.length ? '<div class="more">其餘 ' + fmt(rest.length) + ' 所合計 ' + fmt(restSum) + ' 裝置人日</div>' : '') +
+      '<div class="tip" hidden></div></div>' +
+      '<details class="all"><summary>看全部 ' + fmt(orgs.length) + ' 所明細表</summary>' + tableHtml + '</details>';
+    var box = el.querySelector('.hbar'), tip = box.querySelector('.tip');
+    function show(r) {
+      var o = top[+r.dataset.i];
+      tip.innerHTML = '<b>' + esc(o.org_name || '（未知）') + '</b>' +
+        '<div class="row"><span>網域</span><span>' + esc(o.ptr_domain || '—') + '</span></div>' +
+        '<div class="row"><span>裝置人日</span><span>' + fmt(o.device_days) + '</span></div>' +
+        '<div class="row"><span>訪客人日</span><span>' + fmt(o.visitors) + '</span></div>' +
+        '<div class="row"><span>來訪天數</span><span>' + fmt(o.days) + '</span></div>' +
+        '<div class="row"><span>裝置</span><span>' + fmt(o.devices) + '</span></div>' +
+        '<div class="row"><span>瀏覽頁數</span><span>' + fmt(o.pages) + '</span></div>' +
+        '<div class="row"><span>首次／最近</span><span>' + esc(o.first_seen) + '／' + esc(o.last_seen) + '</span></div>';
+      tip.hidden = false;
+      var bb = box.getBoundingClientRect(), rb = r.getBoundingClientRect();
+      var topPx = rb.bottom - bb.top + 4;
+      if (topPx + tip.offsetHeight > bb.height + 40) topPx = rb.top - bb.top - tip.offsetHeight - 4;
+      tip.style.left = Math.max(4, Math.min(bb.width - tip.offsetWidth - 4, rb.width * 0.3)) + 'px';
+      tip.style.top = topPx + 'px';
+    }
+    box.querySelectorAll('.r').forEach(function (r) {
+      r.addEventListener('mouseenter', function () { show(r); });
+      r.addEventListener('focus', function () { show(r); });
+      r.addEventListener('mouseleave', function () { tip.hidden = true; });
+      r.addEventListener('blur', function () { tip.hidden = true; });
+    });
+  }
+
   function render(d) {
     lastData = d;
     var s = d.summary || {};
@@ -384,25 +445,29 @@
       '<div><div class="k" title="同一位訪客同一天看同一頁只算一次">瀏覽頁數</div><div class="v">' + fmt(s.pages) + '<small>頁</small></div></div>' +
       '<div><div class="k" title="學術網路來源中，查得到單位名稱的比例">單位辨識率</div><div class="v">' + hr + '</div></div>';
 
-    // 來過的學校：依訪客人日排名（同人日同名次，同名次內瀏覽頁數多的在前）
-    var orgs = (d.orgs || []).slice().sort(function (a, b) {
-      return (b.visitors - a.visitors) || (b.pages - a.pages) || String(b.last_seen).localeCompare(String(a.last_seen));
+    // 來過的學校：依裝置人日排名（同一天同一台裝置算一次）；裝置人日相同再比訪客人日，兩者都相同才同名次
+    //   device_key 2026-11-19 起才有，之前只來過的學校裝置人日為 0，排在後面、靠訪客人日分先後
+    var orgs = (d.orgs || []).map(function (o) { o.device_days = o.device_days || 0; return o; }).sort(function (a, b) {
+      return (b.device_days - a.device_days) || (b.visitors - a.visitors) || (b.pages - a.pages) ||
+        String(b.last_seen).localeCompare(String(a.last_seen));
     });
-    var rank = 0;
-    $('orgs').innerHTML = table([
-      { t: '名次', w: '6%', num: true }, { t: '學校／單位', w: '26%' }, { t: '網域', w: '15%', sm: true },
-      { t: '來訪天數', w: '10%', num: true, sm: true }, { t: '訪客人日', w: '10%', num: true },
-      { t: '裝置', w: '9%', num: true }, { t: '瀏覽頁數', w: '10%', num: true, sm: true }, { t: '最近來訪', w: '14%' }
+    var same = function (i) { return i > 0 && orgs[i].device_days === orgs[i - 1].device_days && orgs[i].visitors === orgs[i - 1].visitors; };
+    var rank = 0, ranks = orgs.map(function (o, i) { if (!same(i)) rank = i + 1; return rank; });
+    var orgTable = table([
+      { t: '名次', w: '6%', num: true }, { t: '學校／單位', w: '22%' }, { t: '網域', w: '14%', sm: true },
+      { t: '來訪天數', w: '9%', num: true, sm: true }, { t: '裝置人日', w: '10%', num: true },
+      { t: '訪客人日', w: '9%', num: true, sm: true }, { t: '裝置', w: '7%', num: true, sm: true },
+      { t: '瀏覽頁數', w: '9%', num: true, sm: true }, { t: '最近來訪', w: '14%' }
     ], orgs.map(function (o, i) {
-      if (i === 0 || o.visitors !== orgs[i - 1].visitors) rank = i + 1;
-      return '<tr><td class="num">' + rank + '</td>' +
+      return '<tr><td class="num">' + ranks[i] + '</td>' +
         '<td class="trunc" title="' + esc(o.org_name) + '">' + esc(o.org_name || '（未知）') +
         '<span class="sub">首次 ' + esc(o.first_seen) + '</span></td>' +
         '<td class="trunc hide-sm">' + esc(o.ptr_domain || '—') + '</td>' +
-        '<td class="num hide-sm">' + fmt(o.days) + '</td><td class="num">' + fmt(o.visitors) + '</td>' +
-        '<td class="num">' + fmt(o.devices) + '</td>' +
+        '<td class="num hide-sm">' + fmt(o.days) + '</td><td class="num">' + fmt(o.device_days) + '</td>' +
+        '<td class="num hide-sm">' + fmt(o.visitors) + '</td><td class="num hide-sm">' + fmt(o.devices) + '</td>' +
         '<td class="num hide-sm">' + fmt(o.pages) + '</td><td class="date">' + esc(o.last_seen) + '</td></tr>';
     }));
+    drawOrgs(orgs, ranks, orgTable);
 
     // 每日造訪：只列有人來的日子（伺服器只回有資料的日期）
     var daily = (d.daily || []).slice();

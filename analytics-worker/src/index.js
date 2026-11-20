@@ -135,12 +135,14 @@ async function stats(env, days) {
               COUNT(DISTINCT day) AS days,
               COUNT(DISTINCT day || visitor_key) AS visitors,
               COUNT(DISTINCT device_key) AS devices,
+              -- 裝置人日：同一天同一台裝置算一次（device_key 2026-11-19 起才有，之前的資料為 0）
+              COUNT(DISTINCT CASE WHEN device_key IS NOT NULL THEN day || device_key END) AS device_days,
               COUNT(*) AS pages,
               MIN(day) AS first_seen,
               MAX(day) AS last_seen
          FROM visits ${W} AND source_type = 'school'
         GROUP BY COALESCE(org_name, ptr_domain)
-        ORDER BY visitors DESC, pages DESC, last_seen DESC`),
+        ORDER BY device_days DESC, visitors DESC, pages DESC, last_seen DESC`),
     q(`SELECT day,
               COUNT(DISTINCT CASE WHEN source_type = 'school' THEN visitor_key END) AS school,
               COUNT(DISTINCT CASE WHEN source_type = 'tanet_unknown' THEN visitor_key END) AS tanet_unknown,
