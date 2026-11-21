@@ -37,3 +37,6 @@ out/
 # 5. Cloudflare Workers 本機狀態 (miniflare 模擬資料，不進版控)
 .wrangler/
 tools/og/home.png
+
+# Playwright MCP 截圖（子代理自檢用，不進版控）
+.playwright-mcp/

@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>全班成績匯出 mockup｜B 版「收銀台」（ui-ux-pro-max）</title>
+<style>
+/* ============ Tokens：沿用打字島 C 版色票（system.md） ============ */
+:root{
+  --paper:#F7E8CB; --card:#FFF8E6; --card-2:#FDF1D8;
+  --kraft:#E4CC9C; --kraft-2:#C9A66B;
+  --ink-1:#3B2A20; --ink-2:#5E4838; --ink-3:#74604E;
+  --sky-dk:#1F6B9C; --sky-soft:#D6EEFB;
+  --leaf:#7CCB6F; --leaf-dk:#2D7A38; --leaf-soft:#DDF3D8;
+  --berry-dk:#B3262B; --berry-soft:#FFD9D6;
+  --peach:#FF9E7A; --peach-dk:#D9531F; --peach-soft:#FFDCCB;
+  --butter:#FFD966; --butter-soft:#FFF1B8;
+  /* 老師端：對帳單深藍 */
+  --navy:#1F3A5F; --navy-2:#2C4C79;
+  --f-ui:'Noto Sans TC','Microsoft JhengHei','PingFang TC',sans-serif;
+  --f-num:'Fredoka','Bahnschrift','Segoe UI',sans-serif;
+  --sh:0 2px 0 var(--kraft-2),0 6px 14px rgba(94,72,56,.18);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--f-ui);background:#E9DDC4;color:var(--ink-1);font-size:16px}
+button,input{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+:focus-visible{outline:3px solid var(--sky-dk);outline-offset:2px}
+
+/* ---------- 展示用分頁列（不屬於任何畫面） ---------- */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;padding:10px 12px;background:#CDBB97;align-items:center}
+.tabs button{border:2px solid var(--ink-2);background:var(--card);padding:8px 14px;border-radius:6px;min-height:44px;font-weight:700}
+.tabs button[aria-selected=true]{background:var(--navy);color:var(--card);border-color:var(--navy)}
+.tabs .sp{flex:1}
+.tabs .ghost{background:transparent;font-weight:500}
+.stage{padding:14px;display:flex;justify-content:center}
+.frame{display:none;position:relative;overflow:hidden;flex:none}
+.frame.on{display:block}
+
+/* ============ ① 學生端 1366×657 ============ */
+#f-student{width:1366px;height:657px;background:var(--paper);padding:20px;
+  display:none}
+#f-student.on{display:grid;grid-template-columns:500px 1fr;gap:26px}
+.cert{background:var(--card);border-radius:10px 16px 8px 14px;box-shadow:var(--sh);padding:26px 30px;position:relative;
+  display:flex;flex-direction:column;align-items:center;text-align:center;border:3px double var(--kraft-2)}
+.ribbon{background:var(--butter);padding:6px 46px;font-size:34px;font-weight:900;letter-spacing:.5em;padding-left:calc(46px + .5em);
+  clip-path:polygon(0 0,100% 0,calc(100% - 16px) 50%,100% 100%,0 100%,16px 50%);margin-top:4px}
+.cert .who{margin-top:30px;font-size:20px;color:var(--ink-2)}
+.cert .nm{font-size:44px;font-weight:900;margin:4px 0 2px;border-bottom:3px dotted var(--kraft-2);padding:0 22px}
+.cert .line{margin-top:22px;font-size:20px;line-height:1.7}
+.cert .line b{font-family:var(--f-num);font-size:26px;color:var(--peach-dk)}
+.cert .stars{font-size:44px;color:var(--peach-dk);letter-spacing:.1em;margin-top:6px;line-height:1.1}
+.cert .title{font-size:20px;font-weight:700;margin-top:2px}
+.cert .date{margin-top:auto;display:flex;width:100%;justify-content:space-between;align-items:flex-end;font-size:18px;color:var(--ink-2)}
+.seal{width:84px;height:84px;border-radius:50%;border:4px solid var(--berry-dk);color:var(--berry-dk);display:grid;place-items:center;
+  font-weight:900;font-size:20px;line-height:1.1;transform:rotate(-8deg)}
+
+.slip{background:var(--card);border-radius:16px 8px 14px 10px;box-shadow:var(--sh);padding:14px 24px 12px;position:relative;
+  display:flex;flex-direction:column;margin-top:6px}
+.slip::before{content:"";position:absolute;top:-14px;left:50%;width:120px;height:28px;margin-left:-60px;background:var(--butter);
+  opacity:.9;border-radius:3px;transform:rotate(-2deg);box-shadow:0 1px 0 var(--kraft-2)}
+.slip h2{margin:6px 0 0;font-size:26px;display:flex;justify-content:space-between;align-items:baseline}
+.slip h2 small{font-size:16px;font-weight:500;color:var(--ink-2)}
+.slip-body{display:grid;grid-template-columns:272px 1fr;gap:26px;margin-top:12px;flex:1;min-height:0}
+.lbl{font-size:18px;font-weight:700;color:var(--ink-2);margin:0 0 6px}
+.seatdisp{height:68px;border:3px solid var(--kraft-2);background:var(--card-2);border-radius:10px 6px 10px 6px;
+  display:flex;align-items:center;justify-content:flex-end;padding:0 18px;gap:8px;font-size:60px;font-weight:700;line-height:1;color:var(--peach-dk)}
+.seatdisp.empty{color:var(--ink-3);font-size:22px;font-family:var(--f-ui);font-weight:500;justify-content:center}
+.seatdisp small{font-size:24px;color:var(--ink-1);font-family:var(--f-ui);font-weight:700}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.pad button{height:56px;border:2px solid var(--kraft-2);border-bottom-width:5px;background:var(--card);border-radius:8px 6px 8px 6px;
+  font-family:var(--f-num);font-size:28px;font-weight:600;transition:transform .08s,background .15s}
+.pad button:hover{background:var(--kraft)}
+.pad button:active{transform:translateY(3px);border-bottom-width:2px}
+.pad button.fn{font-family:var(--f-ui);font-size:18px;background:var(--card-2);font-weight:700}
+.hint{font-size:16px;color:var(--ink-2);margin:8px 0 0}
+.nameIn{width:100%;height:50px;border:3px solid var(--kraft-2);background:var(--card-2);border-radius:8px;padding:0 14px;font-size:22px;font-weight:700}
+.qrrow{display:grid;grid-template-columns:216px 1fr;gap:16px;margin-top:10px;align-items:start}
+.qrbox{width:216px;height:216px;background:var(--card);border:3px solid var(--kraft-2);border-radius:10px;display:grid;place-items:center;padding:8px}
+.qrbox canvas{width:192px;height:192px;image-rendering:pixelated}
+.qrbox.none{background:repeating-linear-gradient(45deg,var(--card-2),var(--card-2) 10px,var(--card) 10px,var(--card) 20px);border-style:dashed;text-align:center}
+.qrbox.none p{margin:0;font-size:24px;font-weight:700;color:var(--ink-1);background:var(--butter-soft);padding:10px 14px;border-radius:8px}
+.chk{margin:0;display:grid;grid-template-columns:auto 1fr;font-size:18px}
+.chk dt,.chk dd{margin:0;padding:4px 0;border-bottom:2px dotted var(--kraft-2)}
+.chk dt{color:var(--ink-2);padding-right:14px}
+.chk dd{font-weight:700;text-align:right;white-space:nowrap}
+.chk dt{white-space:nowrap}
+.chk dd b{font-family:var(--f-num);font-size:24px}
+.chk-title{font-size:18px;font-weight:700;margin:0 0 4px;color:var(--ink-2)}
+.privacy{margin:10px 0 0;font-size:16px;color:var(--ink-2);background:var(--sky-soft);border-radius:8px;padding:8px 12px;color:#1A4F73}
+.raw{font-family:Consolas,monospace;font-size:14px;color:var(--ink-3);margin-top:6px;word-break:break-all}
+
+/* ============ 老師端共用 ============ */
+.t{font-size:15px;color:var(--ink-1)}
+.t-head{background:var(--navy);color:var(--card);padding:10px 14px}
+.t-head .row{display:flex;gap:10px;align-items:center}
+.t-head h1{margin:0;font-size:18px;font-weight:700;white-space:nowrap}
+.cls{flex:1;min-width:0;height:38px;border:2px solid var(--kraft);background:var(--card);color:var(--ink-1);border-radius:4px;padding:0 10px;font-weight:700;font-size:16px}
+.btn{height:44px;padding:0 14px;border:2px solid var(--navy);background:var(--card);color:var(--navy);font-weight:700;border-radius:4px;white-space:nowrap;font-size:16px}
+.btn:hover{background:var(--card-2)}
+.btn.pri{background:var(--navy);color:var(--card)}
+.btn.pri:hover{background:var(--navy-2)}
+.btn.dng{border-color:var(--berry-dk);color:var(--berry-dk)}
+.btn.sm{height:36px;font-size:14px;padding:0 10px}
+.ok{color:var(--leaf-dk)} .upd{color:var(--sky-dk)}
+
+/* ---------- ② 掃描中（收銀台）390×844 ---------- */
+#f-scan{width:390px;height:844px;background:var(--paper);display:none;flex-direction:column;border:2px solid var(--ink-2)}
+#f-scan.on{display:flex}
+.cam{position:relative;height:214px;background:#26323F;display:grid;place-items:center;flex:none;overflow:hidden}
+.cam .corner{position:absolute;width:30px;height:30px;border:5px solid var(--butter)}
+.cam .c1{left:56px;top:22px;border-right:0;border-bottom:0}.cam .c2{right:56px;top:22px;border-left:0;border-bottom:0}
+.cam .c3{left:56px;bottom:22px;border-right:0;border-top:0}.cam .c4{right:56px;bottom:22px;border-left:0;border-top:0}
+.cam canvas{width:124px;height:124px;margin-top:-34px;image-rendering:pixelated;opacity:0;transition:opacity .15s}
+.cam.show canvas{opacity:1}
+.cam .idle{position:absolute;color:#E8EEF4;font-size:16px;text-align:center;padding:0 80px}
+.cam.show .idle{display:none}
+.scanline{position:absolute;left:62px;right:62px;height:3px;background:var(--leaf);top:30px;animation:sweep 2.4s ease-in-out infinite}
+.cam.show .scanline{display:none}
+@keyframes sweep{0%,100%{top:30px}50%{top:178px}}
+.toast{position:absolute;left:12px;right:12px;bottom:10px;border-radius:4px;padding:8px 12px;font-weight:700;font-size:17px;display:none;align-items:center;gap:10px}
+.toast.new{display:flex;background:var(--leaf-soft);color:var(--leaf-dk);border:2px solid var(--leaf-dk)}
+.toast.upd{display:flex;background:var(--sky-soft);color:var(--sky-dk);border:2px solid var(--sky-dk)}
+.toast.bad{display:flex;background:var(--berry-soft);color:var(--berry-dk);border:2px solid var(--berry-dk)}
+.toast .big{font-family:var(--f-num);font-size:26px;line-height:1}
+.simrow{display:flex;gap:8px;padding:8px 12px;background:var(--card-2);border-bottom:2px solid var(--kraft);align-items:center}
+.simrow span{font-size:14px;color:var(--ink-2);flex:none}
+.simrow .btn{flex:1;height:36px;font-size:14px;padding:0 6px}
+.rc-head{display:flex;justify-content:space-between;padding:8px 14px 6px;font-size:14px;color:var(--ink-2);font-weight:700;border-bottom:2px dashed var(--kraft-2)}
+.receipt{flex:1;overflow:hidden;background:var(--card);margin:0 10px;border-left:2px solid var(--kraft);border-right:2px solid var(--kraft);
+  position:relative}
+.rc{display:grid;grid-template-columns:46px 1fr auto;gap:2px 10px;padding:8px 12px;border-bottom:2px dashed var(--kraft)}
+.rc .sn{grid-row:span 2;font-size:30px;font-weight:700;text-align:right;line-height:1.1;align-self:center}
+.rc .nm{font-weight:700;font-size:17px}
+.rc .tm{font-size:14px;color:var(--ink-3);text-align:right}
+.rc .sc{font-size:15px;color:var(--ink-2)}
+.rc .sc b{font-family:var(--f-num);color:var(--ink-1)}
+.rc .tag{font-size:14px;font-weight:700;text-align:right}
+.rc.flash{animation:flash 1.2s ease-out}
+@keyframes flash{0%,35%{background:var(--leaf-soft)}100%{background:var(--card)}}
+.rc.flash.u{animation-name:flashu}
+@keyframes flashu{0%,35%{background:var(--sky-soft)}100%{background:var(--card)}}
+.rc-empty{padding:30px 20px;text-align:center;color:var(--ink-2)}
+.tool{flex:none;height:68px;background:var(--navy);color:var(--card);display:flex;align-items:center;gap:8px;padding:0 10px 0 14px}
+.tool .cnt{flex:1;font-size:15px;line-height:1.15}
+.tool .cnt b{font-family:var(--f-num);font-size:28px}
+.tool .btn{border-color:var(--card);height:44px}
+.tool .btn.pri{background:var(--butter);color:var(--ink-1);border-color:var(--butter)}
+.tool .btn.pri:hover{background:#FFE48A}
+.tool .btn:not(.pri){background:transparent;color:var(--card)}
+
+/* ---------- ③ 成績表（對帳單） ---------- */
+#f-tm{width:390px;height:844px;background:var(--paper);display:none;flex-direction:column;border:2px solid var(--ink-2)}
+#f-tm.on{display:flex}
+#f-tl{width:1024px;height:640px;background:var(--paper);display:none;flex-direction:column;border:2px solid var(--ink-2)}
+#f-tl.on{display:flex}
+.meta{display:flex;align-items:center;gap:10px;padding:8px 14px;font-size:15px;background:var(--card-2);border-bottom:2px solid var(--kraft)}
+.meta input{width:56px;height:34px;border:2px solid var(--kraft-2);background:var(--card);border-radius:4px;text-align:right;font-weight:700;padding:0 6px;font-size:16px}
+.meta .sum{margin-left:auto;font-weight:700}
+.meta .sum b{font-family:var(--f-num);font-size:20px}
+.miss{padding:8px 14px;font-size:14px;line-height:1.55;color:var(--ink-1);background:var(--butter-soft);border-bottom:2px solid var(--kraft)}
+.miss b{color:var(--berry-dk)}
+.tw{flex:1;overflow:auto;background:var(--card);margin:10px 10px 0;border:2px solid var(--navy)}
+table.st{width:100%;border-collapse:collapse;table-layout:fixed;font-size:14px}
+.st th{background:var(--navy);color:var(--card);font-weight:700;padding:6px 4px;line-height:1.2;position:sticky;top:0;font-size:13px;text-align:left}
+.st td{padding:7px 4px;border-bottom:1px solid var(--kraft);white-space:nowrap;overflow:hidden}
+.st tbody tr:nth-child(even){background:var(--card-2)}
+.st .r{text-align:right}
+.st td.r b{font-family:var(--f-num);font-weight:600;font-size:15px}
+.st td.r i{display:inline-block;font-style:normal;text-align:left;color:var(--ink-2)}
+.st .sfx1{width:12px}.st .sfx2{width:34px}
+.st td.sn{font-family:var(--f-num);font-weight:700;font-size:15px}
+.st .nmc{font-weight:700;padding-left:10px}.st.m .nmc{padding-left:8px}
+.st .tm{color:var(--ink-2)}
+.st.m col.c0{width:34px}.st.m col.c1{width:62px}.st.m col.c2{width:38px}.st.m col.c3{width:34px}.st.m col.c4{width:52px}.st.m col.c5{width:52px}.st.m col.c6{width:38px}.st.m col.c7{width:46px}
+.st.l col.c0{width:70px}.st.l col.c1{width:150px}.st.l col.c2{width:120px}.st.l col.c3{width:100px}.st.l col.c4{width:120px}.st.l col.c5{width:150px}.st.l col.c6{width:100px}.st.l col.c7{width:100px}
+.st.l{font-size:16px}.st.l th{font-size:15px;padding:8px 10px}.st.l td{padding:8px 10px}
+.st.l td.sn{font-size:17px}
+.st.l td.r b{font-size:17px}
+.tl-tool{display:flex;gap:10px;padding:10px;align-items:center}
+.tl-tool .gap{flex:1}
+.tm-tool{flex:none;padding:10px;display:flex;gap:8px;background:var(--navy)}
+.tm-tool .btn{flex:1;border-color:var(--card);background:transparent;color:var(--card)}
+.tm-tool .btn.pri{background:var(--butter);color:var(--ink-1);border-color:var(--butter);flex:1.3}
+.tm-tool .btn.dng{color:#FFC9C5;border-color:#FFC9C5}
+.dlg{position:absolute;inset:0;background:rgba(59,42,32,.55);display:none;place-items:center;z-index:5}
+.dlg.on{display:grid}
+.dlg .box{background:var(--card);width:min(330px,90%);padding:18px;border:3px solid var(--berry-dk);border-radius:6px}
+.dlg h3{margin:0 0 6px;font-size:19px;color:var(--berry-dk)}
+.dlg p{margin:0 0 14px;font-size:16px;line-height:1.5}
+.dlg .acts{display:flex;gap:8px;justify-content:flex-end}
+.dlg .btn.dng{background:var(--berry-dk);color:var(--card)}
+.csvnote{font-size:13px;color:var(--ink-2);padding:6px 12px 0}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="tabs" role="tablist" aria-label="畫面切換">
+  <button role="tab" data-go="student" aria-selected="true">① 學生端・成績小卡</button>
+  <button role="tab" data-go="scan" aria-selected="false">② 老師端・掃描中</button>
+  <button role="tab" data-go="tm" aria-selected="false">③a 成績表（手機）</button>
+  <button role="tab" data-go="tl" aria-selected="false">③b 成績表（1024）</button>
+  <span class="sp"></span>
+  <button class="ghost" id="resetDemo">重設示範資料</button>
+</div>
+
+<div class="stage">
+
+<!-- ================= ① 學生端 ================= -->
+<section class="frame on" id="f-student" aria-label="學生端交成績">
+  <article class="cert" aria-label="獎狀">
+    <div class="ribbon">獎狀</div>
+    <div class="who">打字島學員</div>
+    <div class="nm" id="certName">小明</div>
+    <div class="who">小朋友</div>
+    <div class="line" id="certLine"></div>
+    <div class="stars" id="certStars" aria-hidden="true"></div>
+    <div class="title" id="certTitle"></div>
+    <div class="date"><span>中華民國 115 年 11 月 21 日</span><div class="seal">打字島<br>印</div></div>
+  </article>
+
+  <aside class="slip" aria-label="成績小卡">
+    <h2>交成績給老師 <small>當面給老師掃，不會上傳</small></h2>
+    <div class="slip-body">
+      <div>
+        <p class="lbl" id="seatLbl">① 你的座號</p>
+        <div class="seatdisp num" id="seatDisp" aria-live="polite" aria-labelledby="seatLbl"></div>
+        <div class="pad" id="pad" role="group" aria-label="座號數字鍵盤"></div>
+        <p class="hint">按數字輸入（1～40），下次自動記住</p>
+      </div>
+      <div>
+        <p class="lbl"><label for="nameIn">② 名字（可改）</label></p>
+        <input class="nameIn" id="nameIn" maxlength="8" autocomplete="off" value="小明">
+        <div class="qrrow">
+          <div>
+            <p class="lbl" style="margin-top:0">③ 給老師掃</p>
+            <div class="qrbox none" id="qrbox"></div>
+          </div>
+          <div>
+            <p class="chk-title">QR 內容（請核對）</p>
+            <dl class="chk" id="chk"></dl>
+          </div>
+        </div>
+        <p class="privacy" id="privacy">名字只存在這台電腦；QR 只在教室當面掃。</p>
+      </div>
+    </div>
+  </aside>
+</section>
+
+<!-- ================= ② 老師端・掃描中 ================= -->
+<section class="frame t" id="f-scan" aria-label="老師端掃描中">
+  <div class="t-head">
+    <div class="row"><h1>收成績</h1>
+      <label class="sr" style="position:absolute;left:-9999px" for="cls1">班級與節次</label>
+      <input class="cls" id="cls1" data-cls value="四年三班・第 2 節"></div>
+  </div>
+  <div class="cam" id="cam">
+    <i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i>
+    <div class="scanline"></div>
+    <div class="idle">把學生電腦上的 QR 對準框內</div>
+    <canvas id="camCv" width="200" height="200" aria-label="相機看到的 QR"></canvas>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+  <div class="simrow"><span>示範用</span>
+    <button class="btn" id="simMine">掃學生端的 QR</button>
+    <button class="btn" id="simNext">掃下一位同學</button>
+  </div>
+  <div class="rc-head"><span>收據（最新在上）</span><span id="rcCount" class="num"></span></div>
+  <div class="receipt" id="receipt"></div>
+  <div class="tool">
+    <div class="cnt">已收 <b id="cntA" class="num">0</b>／應到 <b id="cntB" class="num">0</b></div>
+    <button class="btn" data-go="tm">成績表</button>
+    <button class="btn pri" data-export>匯出 CSV</button>
+  </div>
+</section>
+
+<!-- ================= ③a 成績表（手機） ================= -->
+<section class="frame t" id="f-tm" aria-label="老師端成績表（手機）">
+  <div class="t-head"><div class="row"><h1>成績表</h1>
+    <label style="position:absolute;left:-9999px" for="cls2">班級與節次</label>
+    <input class="cls" id="cls2" data-cls value="四年三班・第 2 節"></div></div>
+  <div class="meta"><label for="tot2">應到</label><input id="tot2" data-tot type="number" min="1" max="60" value="28"> 人
+    <span class="sum">已收 <b class="num" data-got>0</b>／<b class="num" data-tot-txt>28</b></span></div>
+  <div class="miss" data-miss></div>
+  <div class="tw"><table class="st m" data-table="m"></table></div>
+  <div class="csvnote">匯出檔：UTF-8 含 BOM，Excel 直接開，表頭中文。</div>
+  <div class="tm-tool" style="margin-top:8px">
+    <button class="btn dng" data-clear>清空本節</button>
+    <button class="btn" data-go="scan">繼續掃</button>
+    <button class="btn pri" data-export>匯出 CSV</button>
+  </div>
+  <div class="dlg" data-dlg><div class="box" role="alertdialog" aria-labelledby="dt2">
+    <h3 id="dt2">清空本節？</h3><p data-dlgtxt></p>
+    <div class="acts"><button class="btn" data-cancel>取消</button><button class="btn dng" data-confirm>確定清空</button></div></div></div>
+</section>
+
+<!-- ================= ③b 成績表（1024） ================= -->
+<section class="frame t" id="f-tl" aria-label="老師端成績表（平板／筆電）">
+  <div class="t-head"><div class="row"><h1>收成績・成績表</h1>
+    <label style="position:absolute;left:-9999px" for="cls3">班級與節次</label>
+    <input class="cls" id="cls3" data-cls value="四年三班・第 2 節" style="max-width:320px">
+  </div></div>
+  <div class="meta"><label for="tot3">應到</label><input id="tot3" data-tot type="number" min="1" max="60" value="28"> 人
+    <span class="sum">已收 <b class="num" data-got>0</b>／<b class="num" data-tot-txt>28</b></span>
+  </div>
+  <div class="miss" data-miss></div>
+  <div class="tw"><table class="st l" data-table="l"></table></div>
+  <div class="tl-tool">
+    <span class="csvnote" style="padding:0">匯出檔：UTF-8 含 BOM，Excel 直接開，表頭中文。</span><span class="gap"></span>
+    <button class="btn dng" data-clear>清空本節</button>
+    <button class="btn" data-go="scan">繼續掃</button>
+    <button class="btn pri" data-export>匯出 CSV</button>
+  </div>
+  <div class="dlg" data-dlg><div class="box" role="alertdialog" aria-labelledby="dt3">
+    <h3 id="dt3">清空本節？</h3><p data-dlgtxt></p>
+    <div class="acts"><button class="btn" data-cancel>取消</button><button class="btn dng" data-confirm>確定清空</button></div></div></div>
+</section>
+
+</div>
+
+<script src="vendor/qrcode-generator-2.0.4.js"></script>
+<script src="vendor/jsQR-1.4.0.js"></script>
+<script>
+(function(){
+'use strict';
+qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
+
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var store={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+/* ---------- 學生端狀態（假資料：打字島第 12 關・進階・中文） ---------- */
+var S={seat:'', name:'小明', unit:'unit12', tier:'t2', lang:'zh', acc:96, cpm:28, stars:3, min:10, time:'202611211030'};
+var savedSeat=store.get('edtech-typing-seat');
+S.seat = savedSeat!==null ? savedSeat : '7';
+var savedName=store.get('edtech-typing-name'); if(savedName) S.name=savedName;
+
+var TIER={t1:'初階',t2:'進階',t3:'高階'};
+function unitText(u){return u==='unit23'?'對戰島 單元 23':'打字島 第 '+u.replace('unit','')+' 關'}
+function unitShort(u){return u==='unit23'?'對戰':u.replace('unit','')}
+function cleanName(n){return String(n).replace(/\|/g,'').trim()}
+function qrString(s){
+  return ['ETS1',s.unit,s.unit==='unit23'?'-':s.tier,s.lang,s.seat,cleanName(s.name),s.acc,s.cpm,s.stars,s.min,s.time].join('|');
+}
+function stars(n){return '★★★'.slice(0,n)+'☆☆☆'.slice(0,3-n)}
+function hhmm(t){return t.slice(8,10)+':'+t.slice(10,12)}
+
+/* ---------- QR 產生 → 畫到 canvas；canvas → jsQR 解碼 ---------- */
+function drawQR(canvas,text,px){
+  var qr=qrcode(0,'M'); qr.addData(text); qr.make();
+  var n=qr.getModuleCount(), q=4, size=(n+q*2)*px;
+  canvas.width=canvas.height=size;
+  var c=canvas.getContext('2d'); c.fillStyle='#fff'; c.fillRect(0,0,size,size); c.fillStyle='#000';
+  for(var r=0;r<n;r++)for(var k=0;k<n;k++) if(qr.isDark(r,k)) c.fillRect((k+q)*px,(r+q)*px,px,px);
+}
+function decodeCanvas(canvas){
+  var c=canvas.getContext('2d'), d=c.getImageData(0,0,canvas.width,canvas.height);
+  var res=jsQR(d.data,d.width,d.height); return res?res.data:null;
+}
+
+/* ---------- 學生端 render ---------- */
+function renderStudent(){
+  var has=S.seat!=='';
+  var sd=$('#seatDisp');
+  sd.className='seatdisp num'+(has?'':' empty');
+  sd.innerHTML = has ? S.seat+'<small>號</small>' : '先選座號';
+  $('#certName').textContent=cleanName(S.name)||'小朋友';
+  $('#certLine').innerHTML=unitText(S.unit)+'・'+TIER[S.tier]+'<br>正確率 <b>'+S.acc+'</b>%　每分鐘 <b>'+S.cpm+'</b> 字';
+  $('#certStars').textContent=stars(S.stars);
+  $('#certTitle').textContent='打字小達人';
+  var box=$('#qrbox');
+  var chk=$('#chk');
+  if(!has){
+    box.className='qrbox none'; box.innerHTML='<p>先選座號</p>';
+    chk.innerHTML='<dt>座號</dt><dd>還沒選</dd><dt>QR</dt><dd>選了座號才出現</dd>';
+    return;
+  }
+  var str=qrString(S);
+  box.className='qrbox'; box.innerHTML='<canvas id="qrCv" role="img" aria-label="交成績 QR"></canvas>';
+  drawQR($('#qrCv'),str,6);
+  chk.innerHTML=
+    '<dt>座號・名字</dt><dd><b class="num">'+S.seat+'</b> 號　'+esc(cleanName(S.name))+'</dd>'+
+    '<dt>關卡</dt><dd>'+(S.unit==='unit23'?'對戰島 23':'第 '+S.unit.replace('unit','')+' 關')+'</dd>'+
+    '<dt>階別</dt><dd>'+(S.unit==='unit23'?'－':TIER[S.tier])+'</dd>'+
+    '<dt>正確率</dt><dd><b class="num">'+S.acc+'</b> %</dd>'+
+    '<dt>每分鐘字數</dt><dd><b class="num">'+S.cpm+'</b> 字</dd>'+
+    '<dt>星等</dt><dd><b class="num">'+S.stars+'</b> 顆　'+stars(S.stars)+'</dd>';
+}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+/* 數字鍵盤（ATM） */
+(function(){
+  var pad=$('#pad'), keys=['1','2','3','4','5','6','7','8','9','清除','0','⌫'];
+  pad.innerHTML=keys.map(function(k){
+    var fn=(k==='清除'||k==='⌫');
+    return '<button type="button" class="'+(fn?'fn':'num')+'" data-k="'+k+'" aria-label="'+(k==='⌫'?'倒退':k)+'">'+k+'</button>';
+  }).join('');
+  pad.addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return; var k=b.getAttribute('data-k');
+    if(k==='清除') S.seat='';
+    else if(k==='⌫') S.seat=S.seat.slice(0,-1);
+    else{
+      var nx=(S.seat==='0'?'':S.seat)+k;
+      if(nx.length>2) nx=k;                       // 超過兩位數就從新輸入
+      if(+nx>40) nx=k;                            // 座號最多 40
+      if(+nx<1) nx='';
+      S.seat=nx;
+    }
+    store.set('edtech-typing-seat',S.seat); renderStudent();
+  });
+  document.addEventListener('keydown',function(e){
+    if(!$('#f-student').classList.contains('on')||document.activeElement===$('#nameIn')) return;
+    if(/^[0-9]$/.test(e.key)) $('#pad [data-k="'+e.key+'"]').click();
+    else if(e.key==='Backspace') $('#pad [data-k="⌫"]').click();
+  });
+})();
+$('#nameIn').addEventListener('input',function(){S.name=this.value; store.set('edtech-typing-name',cleanName(this.value)); renderStudent();});
+
+/* ---------- 老師端狀態 ---------- */
+var T={total:28, className:'四年三班・第 2 節', rows:{}, log:[], confirm:false};
+function parseQR(str){
+  if(typeof str!=='string'||str.indexOf('ETS1|')!==0) return null;
+  var p=str.split('|'); if(p.length!==11) return null;
+  var seat=parseInt(p[4],10); if(!(seat>=1&&seat<=40)) return null;
+  return {unit:p[1],tier:p[2],lang:p[3],seat:seat,name:p[5],acc:+p[6],cpm:+p[7],stars:+p[8],min:+p[9],time:p[10]};
+}
+var toastTimer;
+function toast(kind,html){
+  var t=$('#toast'); t.className='toast '+kind; t.innerHTML=html;
+  clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.className='toast';$('#cam').classList.remove('show')},1300);
+}
+function ingest(str,silent){
+  var r=parseQR(str);
+  if(!r){ if(!silent) toast('bad','<span class="big">✗</span>不是成績 QR，沒收'); return null; }
+  var kind = T.rows[r.seat] ? 'upd' : 'new';
+  T.rows[r.seat]=r;
+  T.log.unshift({kind:kind,row:r,id:Date.now()+Math.random()});
+  if(!silent) toast(kind==='new'?'new':'upd',
+    '<span class="big">'+(kind==='new'?'✓':'↻')+'</span><span>'+r.seat+' 號 '+esc(r.name)+'　'+r.acc+'%'+(kind==='upd'?'　已更新':'　已收')+'</span>');
+  renderTeacher(kind==='new'?'new':'upd');
+  return kind;
+}
+function seedDemo(){
+  T.rows={}; T.log=[];
+  [['unit12','t2','zh',3,'小美',100,31,3,'202611211024'],
+   ['unit12','t2','zh',12,'小華',88,22,2,'202611211025'],
+   ['unit4','t1','zh',18,'阿豪',92,19,2,'202611211027'],
+   ['unit23','-','zh',25,'小安',76,16,1,'202611211028']].forEach(function(a){
+    var str='ETS1|'+a[0]+'|'+a[1]+'|'+a[2]+'|'+a[3]+'|'+a[4]+'|'+a[5]+'|'+a[6]+'|'+a[7]+'|10|'+a[8];
+    ingest(str,true);
+  });
+}
+var nextPool=[[9,'小琪',85,24,2,'unit12','t2'],[21,'小宇',94,27,3,'unit11','t3'],[5,'小花',79,17,1,'unit3','t1'],[14,'阿凱',90,25,2,'unit12','t2'],[27,'小恩',97,30,3,'unit12','t2']];
+var nextIdx=0;
+
+function scanViaCanvas(str){
+  var cv=$('#camCv'); drawQR(cv,str,6);
+  $('#cam').classList.add('show');
+  var got=decodeCanvas(cv);   // 真的用 jsQR 解回字串
+  window.__lastDecoded=got;
+  ingest(got);
+}
+$('#simMine').addEventListener('click',function(){
+  if(S.seat===''){ $('#cam').classList.add('show'); toast('bad','<span class="big">✗</span>學生端還沒選座號，沒有 QR'); return; }
+  scanViaCanvas(qrString(S));
+});
+$('#simNext').addEventListener('click',function(){
+  var a=nextPool[nextIdx++%nextPool.length];
+  var s={unit:a[5],tier:a[6],lang:'zh',seat:a[0],name:a[1],acc:a[2],cpm:a[3],stars:a[4],min:10,time:'2026112110'+String(30+nextIdx).padStart(2,'0')};
+  scanViaCanvas(qrString(s));
+});
+
+/* ---------- 老師端 render ---------- */
+function sortedRows(){return Object.keys(T.rows).map(Number).sort(function(a,b){return a-b}).map(function(k){return T.rows[k]})}
+function missing(){var m=[];for(var i=1;i<=T.total;i++) if(!T.rows[i]) m.push(i);return m}
+function tableHTML(kind){
+  var L=kind==='l', rows=sortedRows();
+  var h='<colgroup>'+[0,1,2,3,4,5,6,7].map(function(i){return '<col class="c'+i+'">'}).join('')+'</colgroup>';
+  h+='<thead><tr><th class="r">座號</th><th>名字</th><th>關卡</th><th>階別</th><th class="r">正確率</th><th class="r">'+(L?'每分鐘字數':'每分鐘<br>字數')+'</th><th class="r">星等</th><th>時間</th></tr></thead><tbody>';
+  if(!rows.length) h+='<tr><td colspan="8" style="padding:24px;text-align:center;white-space:normal;color:#5E4838">還沒有人交成績</td></tr>';
+  rows.forEach(function(r){
+    var tier=r.unit==='unit23'?'－':(L?TIER[r.tier]:TIER[r.tier].charAt(0));
+    h+='<tr><td class="sn r">'+r.seat+'</td><td class="nmc">'+esc(r.name)+'</td>'+
+      '<td>'+(L?(r.unit==='unit23'?'對戰島 23':'打字島 '+unitShort(r.unit)):unitShort(r.unit))+'</td><td>'+tier+'</td>'+
+      '<td class="r"><b>'+r.acc+'</b><i class="sfx1">%</i></td>'+
+      '<td class="r"><b>'+r.cpm+'</b>'+(L?'<i class="sfx2">字/分</i>':'')+'</td>'+
+      '<td class="r"><b>'+r.stars+'</b><i class="sfx1">★</i></td>'+
+      '<td class="tm">'+hhmm(r.time)+'</td></tr>';
+  });
+  return h+'</tbody>';
+}
+function renderTeacher(flashKind){
+  var got=Object.keys(T.rows).length, mis=missing();
+  $('#cntA').textContent=got; $('#cntB').textContent=T.total;
+  $('#rcCount').textContent='共 '+T.log.length+' 筆掃描';
+  $$('[data-got]').forEach(function(e){e.textContent=got});
+  $$('[data-tot-txt]').forEach(function(e){e.textContent=T.total});
+  $$('[data-tot]').forEach(function(e){if(document.activeElement!==e) e.value=T.total});
+  $$('[data-cls]').forEach(function(e){if(document.activeElement!==e) e.value=T.className});
+  $$('[data-miss]').forEach(function(e){
+    e.innerHTML = mis.length ? '<b>未交 '+mis.length+' 人：</b>'+mis.join('、') : '<b class="ok" style="color:#2D7A38">全部交齊 ✓</b>';
+  });
+  $$('[data-table]').forEach(function(t){t.innerHTML=tableHTML(t.getAttribute('data-table'))});
+  var rc=$('#receipt');
+  if(!T.log.length){ rc.innerHTML='<div class="rc-empty">還沒掃到任何 QR</div>'; return; }
+  rc.innerHTML=T.log.slice(0,12).map(function(e,i){
+    var r=e.row, nw=e.kind==='new';
+    return '<div class="rc'+(i===0&&flashKind?' flash'+(nw?'':' u'):'')+'">'+
+      '<div class="sn num">'+r.seat+'</div>'+
+      '<div class="nm">'+esc(r.name)+'</div><div class="tm num">'+hhmm(r.time)+'</div>'+
+      '<div class="sc"><b>'+r.acc+'</b>% ・ <b>'+r.cpm+'</b> 字/分 ・ '+r.stars+'★'+(r.unit==='unit23'?'・對戰':'・'+unitShort(r.unit)+' 關')+'</div>'+
+      '<div class="tag '+(nw?'ok':'upd')+'">'+(nw?'✓ 已收':'↻ 已更新')+'</div></div>';
+  }).join('');
+}
+
+/* ---------- CSV ---------- */
+function csvCell(v){v=String(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function buildCSV(){
+  var head=['座號','名字','關卡','階別','正確率(%)','每分鐘字數','星等','選擇分鐘','時間'];
+  var lines=[head.join(',')];
+  sortedRows().forEach(function(r){
+    lines.push([r.seat,r.name,unitText(r.unit),r.unit==='unit23'?'':TIER[r.tier],r.acc,r.cpm,r.stars,r.min,
+      r.time.slice(0,4)+'-'+r.time.slice(4,6)+'-'+r.time.slice(6,8)+' '+hhmm(r.time)].map(csvCell).join(','));
+  });
+  return '﻿'+lines.join('\r\n');
+}
+window.__buildCSV=buildCSV;
+$$('[data-export]').forEach(function(b){b.addEventListener('click',function(){
+  var blob=new Blob([buildCSV()],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='成績_'+T.className.replace(/[\\\/:*?"<>|\s]/g,'')+'.csv'; document.body.appendChild(a); a.click(); a.remove();
+})});
+
+/* ---------- 共用控制 ---------- */
+$$('[data-cls]').forEach(function(i){i.addEventListener('input',function(){T.className=i.value;$$('[data-cls]').forEach(function(o){if(o!==i)o.value=i.value})})});
+$$('[data-tot]').forEach(function(i){i.addEventListener('input',function(){var v=parseInt(i.value,10); if(v>=1&&v<=60){T.total=v;renderTeacher()}})});
+$$('[data-clear]').forEach(function(b){b.addEventListener('click',function(){
+  var f=b.closest('.frame'); $('[data-dlgtxt]',f).textContent='會刪掉目前已收的 '+Object.keys(T.rows).length+' 人成績，無法復原。要先匯出 CSV 嗎？';
+  $('[data-dlg]',f).classList.add('on');
+})});
+$$('[data-dlg]').forEach(function(d){
+  $('[data-cancel]',d).addEventListener('click',function(){d.classList.remove('on')});
+  $('[data-confirm]',d).addEventListener('click',function(){T.rows={};T.log=[];d.classList.remove('on');renderTeacher()});
+});
+function go(name){
+  $$('.frame').forEach(function(f){f.classList.toggle('on',f.id==='f-'+name)});
+  $$('.tabs [data-go]').forEach(function(b){b.setAttribute('aria-selected',b.getAttribute('data-go')===name)});
+}
+$$('[data-go]').forEach(function(b){b.addEventListener('click',function(){go(b.getAttribute('data-go'))})});
+$('#resetDemo').addEventListener('click',function(){seedDemo();renderTeacher()});
+
+window.__T=T; window.__S=S; window.__go=go; window.__parseQR=parseQR; window.__qrString=qrString;
+seedDemo(); renderStudent(); renderTeacher();
+var q=new URLSearchParams(location.search).get('view'); if(q) go(q);
+})();
+</script>
+</body>
+</html>

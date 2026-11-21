@@ -2120,6 +2120,7 @@ input:focus-visible {
             <button type="button" class="btn blue" id="btn-practice-wrong">再練這幾個字</button>
             <button type="button" class="btn gold" id="btn-rematch">再來一局</button>
             <button type="button" class="btn" id="btn-res-lobby">回大廳</button>
+            <button type="button" class="btn" id="btn-res-submit">交成績給老師</button>
           </div>
         </div>
       </div>
@@ -2177,6 +2178,7 @@ input:focus-visible {
 <script src="duel-rules.js"></script>
 <script src="duel-core.js"></script>
 <script src="duel-net.js" onerror="void 0"></script>
+<script src="../../assets/js/class-scores.js"></script>
 
 <script>
 (function () {
@@ -3631,6 +3633,10 @@ input:focus-visible {
     };
     safeWrite(STORAGE_KEYS.best, oldBestAll);
 
+    // 給「交成績給老師」用（assets/js/class-scores.js）
+    state.lastSubmit = { unit: 23, tier: '-', lang: langKey, acc: myAcc, cpm: myCpm, stars: 0, name: me.nick || state.nick,
+      min: Math.max(1, Math.round((state.settings.duration || 600) / 60)) };
+
     lastAll[langKey] = { cpm: myCpm, acc: myAcc };
     safeWrite(STORAGE_KEYS.last, lastAll);
 
@@ -3825,6 +3831,11 @@ input:focus-visible {
       } else {
         startBotRoom(true, []);
       }
+    });
+
+    // 結算頁：交成績給老師（QR，老師用 teacher/scores.html 掃）
+    $('btn-res-submit').addEventListener('click', function () {
+      if (state.lastSubmit && window.ClassScores) window.ClassScores.openSubmit(state.lastSubmit);
     });
 
     // 結算頁：回大廳

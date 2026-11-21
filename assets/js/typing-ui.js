@@ -50,6 +50,22 @@
     }).join('');
   }
 
+  // ------------------------------------------------------------ 交成績模組：用到才載入
+  var JS_BASE = (document.currentScript && document.currentScript.src || '').replace(/[^/]*$/, '');
+  var csLoading = null;
+  function loadClassScores() {
+    if (window.ClassScores) return Promise.resolve(window.ClassScores);
+    if (csLoading) return csLoading;
+    csLoading = new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = JS_BASE + 'class-scores.js';
+      s.onload = function () { window.ClassScores ? resolve(window.ClassScores) : reject(new Error('no ClassScores')); };
+      s.onerror = function () { csLoading = null; reject(new Error('load failed')); };
+      document.head.appendChild(s);
+    });
+    return csLoading;
+  }
+
   // ------------------------------------------------------------ 主程式
   function mount(opts) {
     var langs = opts.langs && opts.langs.length ? opts.langs : ['zh'];
@@ -397,7 +413,18 @@
       if (e.target.closest('.ti-again')) startGame();
       else if (e.target.closest('.ti-change')) { show('setup'); renderSetup(); }
       else if (e.target.closest('.ti-tocert')) showCert();
+      else if (e.target.closest('.ti-submit')) openSubmit();
     });
+
+    // ---------------- 交成績給老師（QR，assets/js/class-scores.js 用到才載入）
+    function openSubmit() {
+      var r = lastResult; if (!r) return;
+      loadClassScores().then(function (CS) {
+        CS.openSubmit({ unit: opts.unit, tier: r.settings.tier, lang: r.settings.lang, acc: r.st.accuracy, cpm: r.st.cpm, stars: r.stars, min: r.settings.minutes },
+          { onClose: function () { if (!$('.ti-cert', app).hidden) $('.ti-cert-name', app).textContent = C.store.name() || '　　　'; $('.ti-name-in', app).value = C.store.name(); } });
+      }, function () { alertBox('交成績的元件載入失敗，請重新整理再試一次。'); });
+    }
+    function alertBox(msg) { var p = $('.ti-cheer', app); if (p) p.textContent = msg; }
 
     // ---------------- 獎狀
     function showCert() {
@@ -422,6 +449,7 @@
     });
     $('.ti-cert', app).addEventListener('click', function (e) {
       if (e.target.closest('.ti-print')) window.print();
+      else if (e.target.closest('.ti-submit')) openSubmit();
       else if (e.target.closest('.ti-home')) location.href = opts.homeUrl || '../../index.html';
       else if (e.target.closest('.ti-back')) show('review');
     });
@@ -508,6 +536,7 @@
       '<div class="col"><div class="ti-panel ti-gloss"><h2>這首在說什麼</h2><div class="ttl"></div><p class="say"></p></div>' +
         '<p class="ti-cheer"></p>' +
         '<div class="btns"><button class="ti-btn1 ti-tocert" type="button">領獎狀</button>' +
+        '<button class="ti-btn2 ti-submit" type="button">交成績給老師</button>' +
         '<button class="ti-btn2 ti-again" type="button">再玩一次</button><button class="ti-btn2 ti-change" type="button">換文章／設定</button></div></div>' +
     '</section>' +
 
@@ -527,6 +556,7 @@
           '<p class="hint">只存在這台電腦，下次不用再打。</p></div>' +
         '<div class="ti-panel"><span class="label">稱號</span><div class="ti-ranks"></div></div>' +
         '<button class="ti-btn1 ti-print" type="button">列印獎狀</button>' +
+        '<button class="ti-btn2 ti-submit" type="button">交成績給老師</button>' +
         '<button class="ti-btn2 ti-back" type="button">看成績</button>' +
         '<button class="ti-btn2 ti-home" type="button">回到打字島</button>' +
       '</div>' +

@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>全班成績 QR 收成績 mockup A 版「點名簿」</title>
+<style>
+@font-face { font-family:'Bpmf Huninn'; src:url('fonts/bpmf-huninn-typing.woff2') format('woff2'); font-display:swap; }
+
+/* ============ Tokens：沿用打字島 system.md；老師端只取底色與墨色 ============ */
+:root{
+  --paper:#F7E8CB; --card:#FFF8E6; --card-2:#FDF1D8;
+  --kraft:#E4CC9C; --kraft-2:#C9A66B;
+  --ink-1:#3B2A20; --ink-2:#5E4838; --ink-3:#74604E;
+  --sky-dk:#1F6B9C; --sky-soft:#D6EEFB;
+  --leaf:#7CCB6F; --leaf-dk:#2D7A38; --leaf-soft:#DDF2D6;
+  --berry-dk:#B3262B; --berry-soft:#FFD9D6;
+  --peach:#FF9E7A; --peach-dk:#D9531F; --peach-soft:#FFDCCB;
+  --butter:#FFD966; --butter-soft:#FFF1B8;
+  /* 老師端專用：銀行對帳單表頭 */
+  --navy:#1B3A5C; --line:#8A7358; --zebra:#FBF0D6;
+  --f-ui:'Noto Sans TC','Microsoft JhengHei','PingFang TC',sans-serif;
+  --f-num:'Fredoka','Bahnschrift','Segoe UI',sans-serif;
+  --sh:0 2px 0 rgba(94,72,56,.22),0 7px 0 -3px rgba(94,72,56,.14);
+}
+*{box-sizing:border-box}
+html{background:#EADBBE}
+body{margin:0;font-family:var(--f-ui);color:var(--ink-1);font-size:16px;line-height:1.5;background:#EADBBE}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--sky-dk);outline-offset:2px}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+
+/* ---------- 展示頁外框（非產品） ---------- */
+.nav{background:var(--ink-1);color:var(--card);display:flex;gap:6px;align-items:center;padding:8px 20px;flex-wrap:wrap}
+.nav b{margin-right:12px;font-size:16px}
+.nav a{color:var(--card);text-decoration:none;padding:6px 12px;border:1px solid #8c7a69;border-radius:6px;font-size:15px}
+.nav a:hover{background:#5a4636}
+.stage{padding:26px 20px 10px;max-width:1500px;margin:0 auto}
+.stage h2{font-size:20px;margin:0 0 4px}
+.stage .cap{margin:0 0 12px;color:var(--ink-2);font-size:16px;max-width:900px}
+.demo-tools{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap;align-items:center;font-size:15px;color:var(--ink-2)}
+.demo-tools button{padding:6px 12px;border:1px dashed var(--ink-3);background:transparent;border-radius:6px;cursor:pointer}
+.demo-tools button:hover{background:var(--card)}
+.phones{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+.decoded{font-size:14px;color:var(--ink-2);margin:8px 0 0;max-width:390px;word-break:break-all}
+.decoded code{font-family:Consolas,monospace;color:var(--ink-1)}
+
+/* ============ 畫面 1：學生端 1366×657 ============ */
+#frame-student{width:1366px;height:657px;overflow:hidden;background:var(--paper);position:relative;display:flex;flex-direction:column;outline:1px solid var(--kraft-2)}
+.s-top{height:44px;flex:none;background:var(--card-2);border-bottom:3px solid var(--kraft);display:flex;align-items:center;padding:0 20px;gap:16px;font-size:18px}
+.s-top .t{font-weight:700}
+.s-top .sp{flex:1}
+.s-top .btn-plain{border:2px solid var(--kraft-2);background:var(--card);border-radius:10px 6px 10px 6px;padding:2px 14px;font-size:16px}
+.s-main{flex:1;display:flex;min-height:0}
+.s-left{flex:1;padding:18px 22px 18px 30px;display:flex;align-items:center;justify-content:center}
+/* 獎狀 */
+.cert{width:640px;background:var(--butter-soft);border:3px solid var(--kraft-2);border-radius:16px 6px 16px 6px;box-shadow:var(--sh);padding:22px 36px 24px;text-align:center;position:relative}
+.cert .ribbon{display:inline-block;background:var(--butter);padding:6px 44px;border-radius:6px 10px 6px 10px;font-size:34px;font-weight:700;margin-top:-40px;border:2px solid var(--kraft-2)}
+.cert .who{font-size:34px;font-weight:700;margin:16px 0 4px}
+.cert .who small{font-size:22px;font-weight:500;margin-left:8px}
+.cert .line{font-size:20px;color:var(--ink-1);margin:4px 0}
+.cert .stars{font-size:44px;color:var(--peach-dk);letter-spacing:6px;margin:8px 0 2px;line-height:1.1}
+.cert .title{font-size:22px;font-weight:700}
+.cert .date{font-size:17px;color:var(--ink-2);margin-top:12px}
+.cert .stamp{position:absolute;right:26px;bottom:22px;width:72px;height:72px;border:3px solid var(--berry-dk);border-radius:50%;color:var(--berry-dk);display:grid;place-items:center;font-weight:700;font-size:17px;line-height:1.15;transform:rotate(-10deg);background:rgba(255,255,255,.0)}
+.s-actions{display:flex;gap:12px;justify-content:center;margin-top:18px}
+.s-btn{border:3px solid var(--kraft-2);background:var(--peach);color:var(--ink-1);border-radius:10px 6px 10px 6px;padding:8px 22px;font-size:18px;font-weight:700;box-shadow:0 3px 0 var(--kraft-2);cursor:pointer}
+.s-btn.alt{background:var(--card)}
+.s-btn:active{transform:translateY(3px);box-shadow:none}
+
+/* 右側交成績面板 */
+.s-panel{width:612px;flex:none;background:var(--card);border-left:4px solid var(--kraft-2);padding:12px 18px 12px;display:flex;flex-direction:column;box-shadow:-6px 0 0 -2px rgba(94,72,56,.12)}
+.s-panel h3{margin:0 0 8px;font-size:24px;display:flex;align-items:baseline;gap:12px}
+.s-panel h3 span{font-size:16px;font-weight:400;color:var(--ink-2)}
+.s-cols{display:flex;gap:20px;flex:1;min-height:0}
+.seat-col{width:246px;flex:none}
+.lbl{font-size:18px;font-weight:700;margin:0 0 6px;display:block}
+.seat-grid{display:grid;grid-template-columns:repeat(5,46px);gap:4px}
+.seat-grid button{width:46px;height:44px;border:2px solid var(--kraft-2);background:var(--card-2);border-radius:8px 4px 8px 4px;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:22px;font-weight:600;color:var(--ink-1);cursor:pointer;padding:0}
+.seat-grid button:hover{background:var(--kraft)}
+.seat-grid button[aria-pressed=true]{background:var(--peach);border-color:var(--peach-dk);box-shadow:inset 0 0 0 2px var(--peach-dk);font-weight:700}
+.seat-col .hint{font-size:16px;color:var(--ink-2);margin:6px 0 0}
+.qr-col{flex:1;min-width:0;display:flex;flex-direction:column}
+.name-in{width:100%;height:44px;border:2px solid var(--kraft-2);background:var(--card-2);border-radius:8px 4px 8px 4px;padding:0 12px;font-size:20px;font-weight:700;margin-bottom:8px}
+.qr-box{background:var(--card-2);border:2px dashed var(--kraft-2);border-radius:10px;display:grid;place-items:center;height:262px;position:relative}
+.qr-box canvas{display:block;height:246px;width:auto;image-rendering:pixelated}
+.qr-box .empty{font-size:22px;font-weight:700;text-align:center;color:var(--ink-1);padding:0 14px;line-height:1.4}
+.qr-box .empty b{display:block;font-size:44px;color:var(--peach-dk);line-height:1}
+.contents{margin:8px 0 0;padding:0;list-style:none;font-size:18px;line-height:1.25}
+.contents li{display:flex;justify-content:space-between;border-bottom:1px solid var(--kraft);padding:2px 2px}
+.contents li span:first-child{color:var(--ink-2)}
+.contents li span:last-child{font-weight:700;font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.contents li span.st{color:var(--peach-dk)}
+.qr-note{font-size:16px;color:var(--ink-2);margin:4px 0 0}
+
+/* ============ 老師端共用 ============ */
+.t-wrap{background:var(--card);color:var(--ink-1);font-size:15px}
+.phone{width:390px;height:844px;overflow:hidden;border:2px solid var(--ink-1);border-radius:26px;position:relative;display:flex;flex-direction:column;background:var(--card)}
+.tablet{width:1024px;height:700px;overflow:hidden;border:2px solid var(--ink-1);border-radius:14px;position:relative;display:flex;flex-direction:column;background:var(--card)}
+.t-head{flex:none;background:var(--navy);color:#fff;padding:12px 14px 10px;display:flex;flex-direction:column;gap:6px}
+.t-head .row{display:flex;align-items:center;gap:8px}
+.cls-in{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px solid #9FB4CB;color:#fff;font-size:18px;font-weight:700;padding:2px 0}
+.cls-in:focus-visible{outline-color:#fff}
+.size-lbl{font-size:15px;white-space:nowrap}
+.size-in{width:52px;background:#fff;color:var(--ink-1);border:1px solid #9FB4CB;border-radius:4px;padding:2px 4px;text-align:right;font-size:16px}
+.t-body{flex:1;min-height:0;display:flex;flex-direction:column;padding:10px 12px 12px;gap:10px;overflow:hidden}
+.tbtn{height:44px;padding:0 14px;border-radius:6px;border:1px solid var(--navy);background:var(--card);color:var(--navy);font-weight:700;font-size:16px;cursor:pointer;white-space:nowrap}
+.tbtn.pri{background:var(--navy);color:#fff}
+.tbtn.pri:hover{background:#12304e}
+.tbtn:hover{background:var(--zebra)}
+.tbtn.warn{border-color:var(--berry-dk);color:var(--berry-dk)}
+.tbtn.warn.fill{background:var(--berry-dk);color:#fff}
+.tbtn:active{transform:translateY(1px)}
+.btn-row{display:flex;gap:8px}
+.btn-row .tbtn{flex:1}
+
+/* ---------- 畫面 2：掃描中 ---------- */
+.cam{flex:none;height:370px;background:#2A2018;position:relative;overflow:hidden;border-radius:6px}
+.cam .hint{position:absolute;left:0;right:0;bottom:12px;text-align:center;color:#FFF1D6;font-size:16px}
+.cam .br{position:absolute;width:34px;height:34px;border:4px solid #FFF8E6}
+.cam .br.a{left:46px;top:42px;border-right:0;border-bottom:0;border-radius:8px 0 0 0}
+.cam .br.b{right:46px;top:42px;border-left:0;border-bottom:0;border-radius:0 8px 0 0}
+.cam .br.c{left:46px;bottom:62px;border-right:0;border-top:0;border-radius:0 0 0 8px}
+.cam .br.d{right:46px;bottom:62px;border-left:0;border-top:0;border-radius:0 0 8px 0}
+.cam .line{position:absolute;left:52px;right:52px;top:60px;height:2px;background:#FFD966;opacity:.9;animation:sweep 2.4s ease-in-out infinite alternate}
+@keyframes sweep{to{transform:translateY(205px)}}
+.cam canvas{position:absolute;left:50%;top:50%;width:200px;height:200px;transform:translate(-50%,-56%);image-rendering:pixelated;display:none}
+.cam.has canvas{display:block}
+.cam.has .line{display:none}
+.cam .ocr{position:absolute;left:50%;top:50%;transform:translate(-50%,-56%);width:196px;height:196px;outline:4px solid var(--leaf);display:none}
+.cam.ok .ocr{display:block}
+.cnt{display:flex;align-items:baseline;gap:8px;justify-content:space-between}
+.cnt .big{font-size:30px;font-weight:700;line-height:1;font-family:var(--f-num)}
+.cnt .big small{font-size:16px;font-weight:600;font-family:var(--f-ui);margin-left:4px}
+.cnt .rest{font-size:15px;color:var(--ink-2)}
+.last{border:1px solid var(--line);background:#fff;border-radius:6px;padding:8px 10px;display:flex;gap:10px;align-items:center;min-height:62px}
+.last .badge{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:22px;font-weight:700;background:var(--zebra);color:var(--ink-2);border:2px solid var(--kraft-2)}
+.last.flash{border-color:var(--leaf-dk);background:var(--leaf-soft)}
+.last.flash .badge{background:var(--leaf-dk);color:#fff;border-color:var(--leaf-dk);animation:pop .25s ease-out}
+.last.upd.flash{border-color:var(--peach-dk);background:var(--peach-soft)}
+.last.upd.flash .badge{background:#fff;color:var(--ink-1);border:3px solid var(--peach-dk);font-size:15px}
+.last.bad{border-color:var(--berry-dk);background:var(--berry-soft)}
+.last.bad .badge{background:var(--berry-dk);color:#fff;border-color:var(--berry-dk)}
+@keyframes pop{from{transform:scale(.6)}to{transform:scale(1)}}
+.last .tx{min-width:0;line-height:1.35}
+.last .tx b{font-size:18px}
+.last .tx .sub{font-size:15px;color:var(--ink-2)}
+.last .tx .sub .n{color:var(--ink-1)}
+.strip{display:flex;gap:4px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:thin}
+.strip .cell{flex:none;width:36px}
+
+/* 點名簿格子（掃描條、成績表共用） */
+.cell{position:relative;height:44px;border:1px solid var(--line);background:var(--card);border-radius:4px;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:17px;font-weight:600;color:var(--ink-2);padding:0;cursor:pointer}
+.cell.on{background:var(--leaf-dk);border-color:var(--leaf-dk);color:#fff}
+.cell.on::after{content:'✓';position:absolute;right:3px;top:0;font-size:11px;font-family:var(--f-ui);font-weight:700}
+.cell.sel{outline:3px solid var(--navy);outline-offset:1px}
+.cell.new{animation:pop .3s ease-out}
+
+/* ---------- 畫面 3：成績表 ---------- */
+.reg-sum{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.reg-sum .big{font-size:26px;font-weight:700;font-family:var(--f-num)}
+.reg-sum .big small{font-size:16px;font-family:var(--f-ui);font-weight:600}
+.reg-sum .miss{color:var(--berry-dk);font-weight:700;font-size:16px}
+.reg-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.detail{border:1px solid var(--line);background:#fff;border-radius:4px;padding:8px 10px;font-size:15px;line-height:1.5;min-height:60px}
+.detail b{font-size:18px}
+.detail .kv{display:flex;flex-wrap:wrap;gap:2px 14px;color:var(--ink-2)}
+.detail .kv span.n{color:var(--ink-1);font-weight:700}
+.tbl-wrap{border:1px solid var(--navy);border-radius:4px;overflow:auto;flex:1;min-height:0;background:#fff}
+table.tbl{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed}
+.tbl th{background:var(--navy);color:#fff;font-weight:700;text-align:left;padding:7px 6px;position:sticky;top:0;white-space:nowrap;font-size:14px}
+.tbl th.r,.tbl td.r{text-align:right}
+.tbl td{padding:6px 6px;border-bottom:1px solid #E6D6B4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbl tbody tr:nth-child(even){background:var(--zebra)}
+.tbl tbody tr{cursor:pointer}
+.tbl tbody tr.sel{background:var(--sky-soft);box-shadow:inset 3px 0 0 var(--navy)}
+.tbl td .u{display:inline-block;text-align:left;padding-left:2px;color:var(--ink-2)}
+.tbl td .u.w1{width:1.2em}
+.tbl td .u.w3{width:2.9em}
+.tbl td.num,.tbl td .nn{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.tbl td.empty{text-align:center;color:var(--ink-2);padding:18px}
+.missing{font-size:15px;color:var(--ink-1);line-height:1.5}
+.missing b{color:var(--berry-dk)}
+.confirm{display:flex;gap:8px;align-items:center;background:var(--berry-soft);border:1px solid var(--berry-dk);border-radius:6px;padding:6px 8px;font-size:15px}
+.confirm span{flex:1;font-weight:700;color:var(--ink-1);line-height:1.3}
+.toast{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:var(--ink-1);color:var(--card);padding:8px 14px;border-radius:6px;font-size:15px;display:none;z-index:5;white-space:nowrap}
+.toast.show{display:block}
+
+/* 平板 */
+.tablet .t-body{padding:12px 16px 14px;gap:10px}
+.tab-top{display:flex;gap:16px;align-items:stretch}
+.tab-top .reg-grid{flex:1;grid-template-columns:repeat(14,1fr)}
+.tab-top .detail{width:300px;flex:none}
+.tab-bar{display:flex;gap:10px;align-items:center}
+.tab-bar .reg-sum{flex:1}
+.tab-bar .btn-row{flex:none}
+.tab-bar .btn-row .tbtn{flex:none}
+.tablet .tbl{font-size:15px}
+.tablet .tbl th{font-size:15px}
+.tbl th:nth-child(1){width:10%}.tbl th:nth-child(2){width:14%}.tbl th:nth-child(3){width:15%}.tbl th:nth-child(4){width:12%}.tbl th:nth-child(5){width:15%}.tbl th:nth-child(6){width:17%}.tbl th:nth-child(7){width:9%}.tbl th:nth-child(8){width:8%}
+.hs{display:none}
+.phone .hf{display:none}.phone .hs{display:inline}
+.phone .tbl th,.phone .tbl td{padding:6px 3px;font-size:13px}
+.phone .tbl th:nth-child(1){width:32px}.phone .tbl th:nth-child(2){width:44px}.phone .tbl th:nth-child(3){width:48px}.phone .tbl th:nth-child(4){width:36px}.phone .tbl th:nth-child(5){width:52px}.phone .tbl th:nth-child(6){width:62px}.phone .tbl th:nth-child(7){width:36px}
+.phone .tbl td .u.w3{width:2.6em}.phone .tbl th:nth-child(8){width:auto}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="畫面">
+  <b>A 版「點名簿」</b>
+  <a href="#s1">1 學生端交成績</a>
+  <a href="#s2">2 老師端掃描</a>
+  <a href="#s3">3 成績表（手機）</a>
+  <a href="#s4">3 成績表（平板）</a>
+</nav>
+
+<!-- ============ 1 學生端 ============ -->
+<section class="stage" id="s1">
+  <h2>1 學生端・交成績面板（1366×657）</h2>
+  <p class="cap">結算與獎狀留在左邊，交成績固定在右側一欄。座號是 5×8 大數字格，點已選的那一格可取消。名字沿用獎狀的 <code>edtech-typing-name</code>，改了獎狀跟 QR 一起變。</p>
+  <div class="demo-tools">示範用（不屬於產品）：
+    <button id="demoNext">換一筆成績</button>
+    <span id="demoNow"></span>
+  </div>
+  <div id="frame-student">
+    <div class="s-top"><span class="t">打字島</span><span id="sTopInfo"></span><span class="sp"></span><span class="btn-plain">再玩一次</span><span class="btn-plain">回島上</span></div>
+    <div class="s-main">
+      <div class="s-left">
+        <div>
+          <div class="cert" id="cert">
+            <span class="ribbon">獎狀</span>
+            <div class="who"><span id="cName">小明</span><small>小朋友</small></div>
+            <div class="line" id="cLine"></div>
+            <div class="line" id="cLine2"></div>
+            <div class="stars" id="cStars" aria-hidden="true"></div>
+            <div class="title" id="cTitle"></div>
+            <div class="date" id="cDate"></div>
+            <div class="stamp">打字<br>島</div>
+          </div>
+          <div class="s-actions"><button class="s-btn alt" type="button">列印獎狀</button><button class="s-btn" type="button">下一關</button></div>
+        </div>
+      </div>
+      <aside class="s-panel" aria-label="交成績給老師">
+        <h3>交成績給老師 <span>讓老師的手機掃一下就好</span></h3>
+        <div class="s-cols">
+          <div class="seat-col">
+            <span class="lbl" id="seatLbl">座號</span>
+            <div class="seat-grid" id="seatGrid" role="group" aria-labelledby="seatLbl"></div>
+            <p class="hint" id="seatHint">已記住上次的座號</p>
+          </div>
+          <div class="qr-col">
+            <label class="lbl" for="nameIn">名字</label>
+            <input class="name-in" id="nameIn" maxlength="8" autocomplete="off">
+            <div class="qr-box" id="qrBox"></div>
+            <ul class="contents" id="contents" aria-label="QR 裡的內容"></ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 老師端掃描 ============ -->
+<section class="stage" id="s2">
+  <h2>2 老師端・掃描中（手機 390×844）</h2>
+  <p class="cap">相機框佔大半，下方一條橫向座號格子，掃到的人即時變綠。同一個座號再掃一次，只顯示橘色「已更新」，不會多一筆。</p>
+  <div class="phones">
+    <div>
+      <div class="phone t-wrap" id="phoneScan">
+        <div class="t-head">
+          <div class="row"><input class="cls-in" id="clsName" value="三年二班　第 2 節" aria-label="班級與節次名稱"></div>
+          <div class="row"><span class="size-lbl">全班</span><input class="size-in" id="clsSize" type="number" min="1" max="40" value="28" aria-label="全班人數"><span class="size-lbl">人</span></div>
+        </div>
+        <div class="t-body">
+          <div class="cam" id="cam">
+            <i class="br a"></i><i class="br b"></i><i class="br c"></i><i class="br d"></i><i class="line"></i>
+            <canvas id="camCanvas" width="10" height="10"></canvas><i class="ocr"></i>
+            <div class="hint" id="camHint">把學生螢幕上的 QR 對進框裡</div>
+          </div>
+          <div class="cnt"><div class="big"><span id="gotN">0</span><small>／<span class="sz">28</span> 人已交</small></div><div class="rest" id="restTxt"></div></div>
+          <div class="last" id="last"><div class="badge" aria-hidden="true">·</div><div class="tx"><b>等第一位同學</b><div class="sub">掃到之後會顯示座號、名字和成績</div></div></div>
+          <div class="strip" id="strip" role="list" aria-label="各座號收件狀況"></div>
+          <div class="btn-row">
+            <button class="tbtn pri" id="simScan" type="button">模擬掃描</button>
+            <button class="tbtn" id="simBad" type="button">掃到別的 QR</button>
+            <button class="tbtn" id="gotoReg" type="button">看成績表</button>
+          </div>
+        </div>
+      </div>
+      <p class="decoded">jsQR 最近一次解出：<code id="decoded">（還沒掃）</code></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3 成績表（手機） ============ -->
+<section class="stage" id="s3">
+  <h2>3 老師端・成績表（手機 390×844）</h2>
+  <p class="cap">上半是點名簿：綠格已交，白格還沒交，點格子看明細。下半是依座號排序的表格，數字靠右、單位固定寬度。</p>
+  <div class="phones">
+    <div class="phone t-wrap" id="phoneReg" data-reg="phone"></div>
+  </div>
+</section>
+
+<!-- ============ 3 成績表（平板） ============ -->
+<section class="stage" id="s4" style="padding-bottom:50px">
+  <h2>3 老師端・成績表（平板／筆電 1024 寬）</h2>
+  <p class="cap">座號格子排成兩行，右邊是被點到那一格的明細，下面是完整表格。</p>
+  <div class="tablet t-wrap" id="tabReg" data-reg="wide"></div>
+</section>
+
+<script src="vendor/qrcode-generator-2.0.4.js"></script>
+<script src="vendor/jsQR-1.4.0.js"></script>
+<script>
+qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
+
+/* ============ 資料與格式 ============ */
+const UNITS=['unit1','unit3','unit4','unit11','unit12','unit13','unit14','unit16','unit23'];
+const TIERS={t1:'初階',t2:'進階',t3:'高階','-':'—'};
+const LANGS={zh:'中文',en:'英文'};
+const unitLabel=u=>u==='unit23'?'對戰島':'第 '+u.replace('unit','')+' 關';
+const tierLabel=t=>TIERS[t]||'—';
+const cleanName=n=>String(n||'').replace(/\|/g,'').trim().slice(0,8);
+const pad=n=>String(n).padStart(2,'0');
+function nowTs(){const d=new Date();return ''+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+pad(d.getHours())+pad(d.getMinutes());}
+const tsTime=ts=>ts.slice(8,10)+':'+ts.slice(10,12);
+const tsDate=ts=>ts.slice(0,4)+'-'+ts.slice(4,6)+'-'+ts.slice(6,8);
+const starTxt=n=>'★'.repeat(n)+'☆'.repeat(3-n);
+const rocDate=ts=>'民國 '+(+ts.slice(0,4)-1911)+' 年 '+(+ts.slice(4,6))+' 月 '+(+ts.slice(6,8))+' 日';
+
+function makeRaw(r){return ['ETS1',r.unit,r.tier,r.lang,r.seat,cleanName(r.name),r.acc,r.cpm,r.stars,r.min,r.ts].join('|');}
+/* 開頭不是 ETS1| 一律不收；欄位逐項檢查 */
+function parseRaw(raw){
+  if(typeof raw!=='string'||!raw.startsWith('ETS1|'))return null;
+  const f=raw.split('|'); if(f.length!==11)return null;
+  const [,unit,tier,lang,seat,name,acc,cpm,stars,min,ts]=f;
+  const I=s=>/^\d{1,3}$/.test(s)?+s:NaN;
+  const r={unit,tier,lang,seat:I(seat),name,acc:I(acc),cpm:I(cpm),stars:I(stars),min:I(min),ts};
+  if(!UNITS.includes(unit)||!(tier in TIERS)||!(lang in LANGS))return null;
+  if(!(r.seat>=1&&r.seat<=99)||!(r.acc>=0&&r.acc<=100)||!(r.stars>=0&&r.stars<=3)||isNaN(r.cpm)||isNaN(r.min))return null;
+  if(!/^\d{12}$/.test(ts)||!name)return null;
+  return r;
+}
+
+/* ============ 狀態 ============ */
+const SAMPLES=[
+  {unit:'unit12',tier:'t2',lang:'zh',acc:96,cpm:28,stars:3,min:10},
+  {unit:'unit4', tier:'t1',lang:'zh',acc:82,cpm:19,stars:2,min:5},
+  {unit:'unit23',tier:'-', lang:'en',acc:91,cpm:34,stars:3,min:10}
+];
+const st={
+  sample:0,
+  seat:+(localStorage.getItem('edtech-typing-seat')||7)||7,
+  name:localStorage.getItem('edtech-typing-name')||'小明',
+  ts:nowTs(),
+  size:28, rows:new Map(), sel:null, confirmClear:false, justSeat:null,
+  lastTxt:null
+};
+function curResult(){const s=SAMPLES[st.sample];return {...s,seat:st.seat,name:cleanName(st.name),ts:st.ts};}
+function curRaw(){return st.seat?makeRaw(curResult()):null;}
+
+/* ============ QR ============ */
+function qrCanvas(raw,targetPx){
+  const q=qrcode(0,'M'); q.addData(raw,'Byte'); q.make();
+  const n=q.getModuleCount(), margin=4;
+  const scale=Math.max(4,Math.floor(targetPx/(n+margin*2)));
+  const size=(n+margin*2)*scale;
+  const c=document.createElement('canvas'); c.width=c.height=size;
+  const g=c.getContext('2d'); g.fillStyle='#FFFFFF'; g.fillRect(0,0,size,size); g.fillStyle='#1A100A';
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++) if(q.isDark(y,x)) g.fillRect((x+margin)*scale,(y+margin)*scale,scale,scale);
+  return c;
+}
+function decodeCanvas(c){
+  const g=c.getContext('2d'); const d=g.getImageData(0,0,c.width,c.height);
+  const r=jsQR(d.data,d.width,d.height); return r?r.data:null;
+}
+
+/* ============ 學生端 ============ */
+const $=id=>document.getElementById(id);
+function renderSeatGrid(){
+  const g=$('seatGrid'); g.innerHTML='';
+  for(let i=1;i<=40;i++){
+    const b=document.createElement('button'); b.type='button'; b.textContent=i;
+    b.setAttribute('aria-pressed',st.seat===i); b.setAttribute('aria-label','座號 '+i);
+    b.onclick=()=>{st.seat=(st.seat===i?null:i); if(st.seat)localStorage.setItem('edtech-typing-seat',st.seat); renderStudent();};
+    g.appendChild(b);
+  }
+}
+function renderStudent(){
+  const s=SAMPLES[st.sample], nm=cleanName(st.name)||'小朋友';
+  [...$('seatGrid').children].forEach((b,i)=>b.setAttribute('aria-pressed',st.seat===i+1));
+  $('seatHint').textContent=st.seat?'座號 '+st.seat+'（已記住，下次不用再選）':'請選你的座號';
+  $('nameIn').value!==st.name&&($('nameIn').value=st.name);
+  $('cName').textContent=nm;
+  const tier=s.tier==='-'?'':'・'+tierLabel(s.tier);
+  $('sTopInfo').textContent=unitLabel(s.unit)+tier+'　結算';
+  $('cLine').textContent=(s.unit==='unit23'?'對戰島':'第 '+s.unit.replace('unit','')+' 關')+tier+'　'+LANGS[s.lang]+'打字';
+  $('cLine2').textContent='正確率 '+s.acc+'%　每分鐘 '+s.cpm+' 字';
+  $('cStars').textContent=starTxt(s.stars);
+  $('cTitle').textContent=['','打字小學徒','打字小高手','打字小達人'][s.stars]||'繼續加油';
+  $('cDate').textContent=rocDate(st.ts);
+  $('demoNow').textContent='目前這筆：'+unitLabel(s.unit)+tier+'，正確率 '+s.acc+'%';
+  const box=$('qrBox'), ul=$('contents'); box.innerHTML='';
+  if(!st.seat){
+    box.innerHTML='<div class="empty"><b>?</b>先選座號<br>才會出現 QR</div>';
+    ul.innerHTML='<li><span>要交給老師的</span><span class="st">先選座號</span></li>';
+    return;
+  }
+  const raw=curRaw(); const c=qrCanvas(raw,290); c.id='stuQR'; box.appendChild(c);
+  window.__stuRaw=raw;
+  const rows=[['座號與名字',st.seat+'　'+nm],['關卡',unitLabel(s.unit)],['階別',tierLabel(s.tier)],['正確率',s.acc+'%'],['每分鐘字數',s.cpm+' 字'],['星等',starTxt(s.stars)]];
+  ul.innerHTML=rows.map(r=>'<li><span>'+r[0]+'</span><span>'+r[1]+'</span></li>').join('');
+}
+$('nameIn').addEventListener('input',e=>{st.name=e.target.value.replace(/\|/g,'');localStorage.setItem('edtech-typing-name',st.name);renderStudent();});
+$('demoNext').onclick=()=>{st.sample=(st.sample+1)%SAMPLES.length;st.ts=nowTs();renderStudent();};
+
+/* ============ 老師端：收件 ============ */
+function ingest(raw){
+  const r=parseRaw(raw); if(!r)return {ok:false};
+  const prev=st.rows.get(r.seat); st.rows.set(r.seat,r);
+  st.justSeat=r.seat; st.sel=r.seat;
+  return {ok:true,kind:prev?'updated':'new',row:r,prev};
+}
+let flashTimer=null;
+function showLast(res){
+  const el=$('last'); el.className='last'; clearTimeout(flashTimer);
+  if(!res.ok){
+    el.classList.add('bad');
+    el.innerHTML='<div class="badge">✗</div><div class="tx"><b>這不是打字島的成績</b><div class="sub">沒有收進去，請對準學生電腦上的交成績 QR</div></div>';
+    flashTimer=setTimeout(()=>{el.classList.remove('bad')},2500); return;
+  }
+  const r=res.row, upd=res.kind==='updated';
+  el.classList.add('flash'); if(upd)el.classList.add('upd');
+  el.innerHTML='<div class="badge">'+(upd?'更新':'✓')+'</div><div class="tx"><b>'+r.seat+' 號　'+esc(r.name)+(upd?'　已更新':'')+'</b>'+
+   '<div class="sub">'+unitLabel(r.unit)+(r.tier==='-'?'':'・'+tierLabel(r.tier))+'　<span class="n">'+r.acc+'%</span>　<span class="n">'+r.cpm+'</span> 字/分　'+starTxt(r.stars)+
+   (upd&&res.prev?'<br>上一筆 '+res.prev.acc+'%，改成 '+r.acc+'%':'')+'</div></div>';
+  flashTimer=setTimeout(()=>{el.classList.remove('flash')},1000);
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* 模擬掃描：學生 QR 畫進取景框 → jsQR 解碼 → 收進表 */
+function simulateScan(){
+  const raw=curRaw(); const cam=$('cam');
+  if(!raw){showLast({ok:false});$('decoded').textContent='學生端還沒選座號，沒有 QR 可掃';return;}
+  const src=qrCanvas(raw,246);
+  const cc=$('camCanvas'); cc.width=src.width; cc.height=src.height; cc.getContext('2d').drawImage(src,0,0);
+  cam.classList.add('has'); $('camHint').textContent='解碼中…';
+  setTimeout(()=>{
+    const data=decodeCanvas(cc); window.__lastDecoded=data;
+    $('decoded').textContent=data||'（解不出來）';
+    const res=ingest(data); showLast(res);
+    if(res.ok){cam.classList.add('ok');$('camHint').textContent='掃到了';}
+    renderAll();
+    setTimeout(()=>{cam.classList.remove('has','ok');$('camHint').textContent='把學生螢幕上的 QR 對進框裡';},1000);
+  },350);
+}
+$('simScan').onclick=simulateScan;
+$('simBad').onclick=()=>{
+  const c=qrCanvas('https://example.com/not-ets',246);
+  const cc=$('camCanvas'); cc.width=c.width; cc.height=c.height; cc.getContext('2d').drawImage(c,0,0);
+  $('cam').classList.add('has');
+  const data=decodeCanvas(cc); $('decoded').textContent=data+'　→ 被擋下';
+  showLast(ingest(data));
+  setTimeout(()=>$('cam').classList.remove('has'),1000);
+};
+$('gotoReg').onclick=()=>$('s3').scrollIntoView();
+$('clsSize').addEventListener('input',e=>{const v=Math.max(1,Math.min(40,+e.target.value||1));st.size=v;renderAll();});
+
+/* ============ 渲染（掃描頁＋兩個成績表共用狀態） ============ */
+function cellsHTML(){
+  let h=''; for(let i=1;i<=st.size;i++){const on=st.rows.has(i);
+    h+='<button type="button" class="cell'+(on?' on':'')+(st.sel===i?' sel':'')+(on&&st.justSeat===i?' new':'')+'" data-seat="'+i+'" aria-label="座號 '+i+(on?' 已交':' 還沒交')+'">'+i+'</button>';}
+  return h;
+}
+function missingList(){const m=[];for(let i=1;i<=st.size;i++)if(!st.rows.has(i))m.push(i);return m;}
+function detailHTML(){
+  const s=st.sel; if(!s)return '<span style="color:var(--ink-2)">點一格座號，看那位同學的成績。</span>';
+  const r=st.rows.get(s);
+  if(!r)return '<b>'+s+' 號　還沒交</b><div class="kv"><span>這位同學的 QR 還沒掃到</span></div>';
+  return '<b>'+r.seat+' 號　'+esc(r.name)+'</b><div class="kv"><span>'+unitLabel(r.unit)+(r.tier==='-'?'':'・'+tierLabel(r.tier))+'・'+LANGS[r.lang]+'</span>'+
+   '<span>正確率 <span class="n">'+r.acc+'%</span></span><span>每分鐘 <span class="n">'+r.cpm+' 字</span></span><span>'+starTxt(r.stars)+'</span><span>選 '+r.min+' 分鐘</span><span>'+tsDate(r.ts)+' '+tsTime(r.ts)+' 收</span></div>';
+}
+function tableHTML(){
+  const seats=[...st.rows.keys()].sort((a,b)=>a-b);
+  const head='<thead><tr><th class="r">座號</th><th>名字</th><th>關卡</th><th>階別</th><th class="r">正確率</th><th class="r"><span class="hf">每分鐘字數</span><span class="hs">字/分</span></th><th class="r">星等</th><th class="r">時間</th></tr></thead>';
+  const body=seats.length?seats.map(k=>{const r=st.rows.get(k);
+    return '<tr data-seat="'+k+'"'+(st.sel===k?' class="sel"':'')+'><td class="r num">'+r.seat+'</td><td>'+esc(r.name)+'</td><td>'+unitLabel(r.unit).replace(/ /g,'')+'</td><td>'+tierLabel(r.tier)+'</td>'+
+     '<td class="r"><span class="nn">'+r.acc+'</span><span class="u w1">%</span></td><td class="r"><span class="nn">'+r.cpm+'</span><span class="u w3">字/分</span></td><td class="r"><span class="nn">'+r.stars+'</span><span class="u w1">★</span></td><td class="r num">'+tsTime(r.ts)+'</td></tr>';}).join('')
+    :'<tr><td class="empty" colspan="8">還沒有成績，按「繼續掃」開始收</td></tr>';
+  return '<table class="tbl">'+head+'<tbody>'+body+'</tbody></table>';
+}
+function regHTML(kind){
+  const got=st.rows.size, miss=missingList();
+  const sum='<div class="reg-sum"><span class="big">'+got+'<small>／'+st.size+' 人已交</small></span><span class="miss">還沒交 '+miss.length+' 人</span></div>';
+  const btns=st.confirmClear
+   ?'<div class="confirm"><span>確定清空本節 '+got+' 筆成績？清掉就找不回來。</span><button class="tbtn" data-act="cancel" type="button">取消</button><button class="tbtn warn fill" data-act="clear" type="button">確定清空</button></div>'
+   :'<div class="btn-row"><button class="tbtn pri" data-act="csv" type="button">匯出 CSV</button><button class="tbtn" data-act="scan" type="button">繼續掃</button><button class="tbtn warn" data-act="ask" type="button">清空本節</button></div>';
+  const missTxt='<div class="missing"><b>還沒交（'+miss.length+'）：</b>'+(miss.length?miss.join('、'):'全班都交了')+'</div>';
+  const head='<div class="t-head"><div class="row"><input class="cls-in" data-cls value="'+esc($('clsName').value)+'" aria-label="班級與節次名稱"></div></div>';
+  if(kind==='phone'){
+    return head+'<div class="t-body">'+sum+'<div class="reg-grid">'+cellsHTML()+'</div><div class="detail">'+detailHTML()+'</div>'+
+      '<div class="tbl-wrap">'+tableHTML()+'</div>'+missTxt+btns+'<div class="toast" data-toast></div></div>';
+  }
+  return head+'<div class="t-body"><div class="tab-bar">'+sum+(st.confirmClear?'<div style="flex:1">'+btns+'</div>':btns)+'</div>'+
+    '<div class="tab-top"><div class="reg-grid">'+cellsHTML()+'</div><div class="detail">'+detailHTML()+'</div></div>'+missTxt+
+    '<div class="tbl-wrap">'+tableHTML()+'</div><div class="toast" data-toast></div></div>';
+}
+function renderScan(){
+  $('gotN').textContent=st.rows.size; document.querySelectorAll('.sz').forEach(e=>e.textContent=st.size);
+  const m=missingList().length; $('restTxt').textContent=m?'還差 '+m+' 人':'全班收齊';
+  const sp=$('strip'); sp.innerHTML=cellsHTML(); sp.querySelectorAll('.cell').forEach(c=>c.setAttribute('role','listitem'));
+  const j=sp.querySelector('.cell[data-seat="'+st.justSeat+'"]'); if(j)sp.scrollLeft=Math.max(0,j.offsetLeft-sp.clientWidth/2+18);
+}
+function renderAll(){
+  renderScan();
+  document.querySelectorAll('[data-reg]').forEach(el=>{el.innerHTML=regHTML(el.dataset.reg);});
+}
+
+/* CSV：UTF-8 BOM＋中文表頭 */
+function buildCSV(){
+  const H=['座號','名字','關卡','階別','語言','正確率(%)','每分鐘字數','星等','選擇分鐘','時間'];
+  const q=v=>{v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const lines=[H.join(',')];
+  [...st.rows.keys()].sort((a,b)=>a-b).forEach(k=>{const r=st.rows.get(k);
+    lines.push([r.seat,r.name,unitLabel(r.unit).replace(/ /g,''),tierLabel(r.tier),LANGS[r.lang],r.acc,r.cpm,r.stars,r.min,tsDate(r.ts)+' '+tsTime(r.ts)].map(q).join(','));});
+  return '﻿'+lines.join('\r\n')+'\r\n';
+}
+function toast(root,msg){const t=root.querySelector('[data-toast]');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+function downloadCSV(){
+  const blob=new Blob([buildCSV()],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=($('clsName').value.replace(/\s|　/g,'')||'成績')+'_'+tsDate(nowTs())+'.csv'; document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* 事件（委派：成績表每次重畫） */
+document.addEventListener('click',e=>{
+  const root=e.target.closest('[data-reg]');
+  const cell=e.target.closest('.cell[data-seat], tr[data-seat]');
+  if(cell&&(root||e.target.closest('#strip'))){st.sel=+cell.dataset.seat;st.justSeat=null;renderAll();return;}
+  const act=e.target.closest('[data-act]'); if(!act||!root)return;
+  const a=act.dataset.act;
+  if(a==='csv'){downloadCSV();toast(root,'已匯出 '+st.rows.size+' 筆（含 UTF-8 BOM）');}
+  if(a==='scan')$('s2').scrollIntoView();
+  if(a==='ask'){st.confirmClear=true;renderAll();}
+  if(a==='cancel'){st.confirmClear=false;renderAll();}
+  if(a==='clear'){st.rows.clear();st.sel=null;st.justSeat=null;st.confirmClear=false;renderAll();}
+});
+document.addEventListener('input',e=>{ if(e.target.matches('[data-cls]')){$('clsName').value=e.target.value;} });
+$('clsName').addEventListener('input',e=>{document.querySelectorAll('[data-cls]').forEach(i=>i.value=e.target.value);});
+
+/* ============ 初始化：先放 4 筆（一樣走 makeRaw → parseRaw） ============ */
+[[3,'小華','unit12','t2',88,24,2,'202611211026'],[12,'小美','unit12','t2',100,31,3,'202611211027'],
+ [18,'小安','unit12','t1',75,17,1,'202611211028'],[25,'小傑','unit12','t3',93,26,3,'202611211029']]
+.forEach(a=>ingest(makeRaw({seat:a[0],name:a[1],unit:a[2],tier:a[3],lang:'zh',acc:a[4],cpm:a[5],stars:a[6],min:10,ts:a[7]})));
+st.sel=null; st.justSeat=null;
+renderSeatGrid(); renderStudent(); renderAll();
+</script>
+</body>
+</html>

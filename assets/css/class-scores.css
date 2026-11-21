@@ -1,0 +1,87 @@
+/* 學生端「交成績給老師」視窗（assets/js/class-scores.js 動態載入）
+ * 色票照 .interface-design/system.md（繪本剪紙）：不用純白底／純黑字、按鈕桃色、重點天藍
+ * 打字島和打字擂台都會用，所以 token 自己帶，不依賴 typing-island.css */
+.cs-overlay {
+  --cs-paper: #F7E8CB; --cs-card: #FFF8E6; --cs-card2: #FDF1D8; --cs-kraft: #E4CC9C; --cs-kraft2: #C9A66B;
+  --cs-ink1: #3B2A20; --cs-ink2: #5E4838; --cs-ink3: #74604E;
+  --cs-peach: #FF9E7A; --cs-peachdk: #D9531F; --cs-sky: #1F6B9C; --cs-skysoft: #D6EEFB; --cs-butter: #FFF1B8;
+  --cs-ui: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  --cs-numf: 'Fredoka', 'Bahnschrift', 'Noto Sans TC', sans-serif;
+  position: fixed; inset: 0; z-index: 9000; background: rgba(59, 42, 32, .55);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+  font-family: var(--cs-ui); color: var(--cs-ink1);
+}
+.cs-overlay *, .cs-overlay *::before, .cs-overlay *::after { box-sizing: border-box; }
+.cs-box {
+  width: min(1180px, 100%); max-height: 100%; overflow: auto;
+  background: var(--cs-card); border: 3px solid var(--cs-kraft2); border-radius: 26px 30px 24px 32px / 30px 24px 32px 26px;
+  box-shadow: 0 8px 0 rgba(150, 100, 50, .35); padding: 18px 24px 22px;
+}
+.cs-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.cs-head h2 { margin: 0; font-size: 30px; font-weight: 900; letter-spacing: .04em; }
+.cs-head span { font-size: 17px; color: var(--cs-ink2); }
+.cs-x {
+  margin-left: auto; width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--cs-kraft2);
+  background: var(--cs-card2); font-size: 22px; color: var(--cs-ink2); cursor: pointer;
+}
+.cs-body { display: grid; grid-template-columns: 330px 320px 1fr; gap: 22px; align-items: start; }
+.cs-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.cs-label { font-size: 18px; font-weight: 800; color: var(--cs-ink2); }
+.cs-num { font-family: var(--cs-numf); font-variant-numeric: tabular-nums; }
+
+.cs-seat {
+  display: flex; align-items: baseline; justify-content: flex-end; gap: 8px; height: 76px; padding: 0 20px;
+  background: var(--cs-card2); border: 2px solid var(--cs-kraft2); border-radius: 16px; font-size: 24px; font-weight: 800;
+}
+.cs-seat .cs-num { font-size: 56px; line-height: 76px; color: var(--cs-peachdk); }
+.cs-seat .cs-empty { line-height: 72px; color: var(--cs-ink3); font-size: 22px; }
+.cs-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cs-pad button {
+  height: 62px; border-radius: 14px; border: 2px solid var(--cs-kraft2); background: var(--cs-card);
+  box-shadow: 0 4px 0 var(--cs-kraft2); font-family: var(--cs-numf); font-size: 30px; font-weight: 700; color: var(--cs-ink1); cursor: pointer;
+}
+.cs-pad button.cs-sm { font-family: var(--cs-ui); font-size: 20px; }
+.cs-pad button:hover { background: var(--cs-butter); }
+.cs-pad button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--cs-kraft2); }
+.cs-hint, .cs-safe { margin: 0; font-size: 16px; color: var(--cs-ink2); line-height: 1.5; }
+
+.cs-name {
+  height: 58px; padding: 0 16px; font-size: 24px; font-weight: 700; color: var(--cs-ink1); font-family: var(--cs-ui);
+  background: var(--cs-card2); border: 2px solid var(--cs-kraft2); border-radius: 14px;
+}
+.cs-qr {
+  width: 300px; height: 300px; border: 2px dashed var(--cs-kraft2); border-radius: 18px; background: var(--cs-card2);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+/* QR 本體要淺底深格才掃得到：用卡片米白底，不用純白 */
+.cs-qr svg { width: 100%; height: 100%; display: block; background: #FFFCF2; }
+.cs-qr svg rect[fill="white"], .cs-qr svg rect[fill="#ffffff"] { fill: #FFFCF2; }
+.cs-qr svg path { fill: var(--cs-ink1); }
+.cs-wait { margin: 0; text-align: center; font-size: 30px; font-weight: 900; color: var(--cs-ink3); line-height: 1.4; }
+
+.cs-chk { margin: 0; display: flex; flex-direction: column; }
+.cs-chk > div { display: flex; justify-content: space-between; align-items: baseline; padding: 9px 2px; border-bottom: 2px dotted var(--cs-kraft); }
+.cs-chk dt { font-size: 18px; color: var(--cs-ink2); }
+.cs-chk dd { margin: 0; font-size: 24px; font-weight: 800; text-align: right; }
+.cs-chk dd .cs-num { font-size: 28px; }
+.cs-stars { color: var(--cs-peachdk); letter-spacing: .05em; }
+.cs-off { color: var(--cs-kraft); }
+.cs-safe { background: var(--cs-skysoft); color: var(--cs-sky); border-radius: 12px; padding: 10px 14px; font-weight: 700; }
+.cs-done {
+  height: 62px; border-radius: 26px 30px 24px 32px / 30px 24px 32px 26px; background: var(--cs-peach);
+  border: 2px solid var(--cs-peachdk); box-shadow: 0 5px 0 var(--cs-peachdk); font-size: 26px; font-weight: 900; color: var(--cs-ink1);
+  letter-spacing: .08em; cursor: pointer; font-family: var(--cs-ui);
+}
+.cs-done:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--cs-peachdk); }
+.cs-overlay button:focus-visible, .cs-overlay input:focus-visible { outline: 4px solid var(--cs-sky); outline-offset: 2px; }
+
+@media (max-width: 1000px) {
+  .cs-body { grid-template-columns: 1fr 1fr; }
+  .cs-chkcol { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .cs-body { grid-template-columns: 1fr; }
+  .cs-qr { width: 100%; height: auto; aspect-ratio: 1; }
+}
+@media print { .cs-overlay { display: none; } }
+@media (prefers-reduced-motion: reduce) { .cs-pad button:active, .cs-done:active { transform: none; } }

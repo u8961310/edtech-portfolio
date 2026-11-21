@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>全班成績匯出（QR 收成績）・C 版「教室座位圖」</title>
+<style>
+@font-face { font-family:'Bpmf Huninn'; src:url('fonts/bpmf-huninn-typing.woff2') format('woff2'); font-display:block; }
+
+/* ============ Tokens ============
+   學生端：沿用打字島 system.md（繪本剪紙，紙影疊層 = 唯一深度策略）
+   老師端：同一套紙色當底，但只用「邊線」做結構（銀行對帳單），不用陰影／漸層 */
+:root{
+  --paper:#F7E8CB; --card:#FFF8E6; --card-2:#FDF1D8;
+  --kraft:#E4CC9C; --kraft-2:#C9A66B;
+  --ink-1:#3B2A20; --ink-2:#5E4838; --ink-3:#74604E; --ink-4:#53402D;
+  --sky-dk:#1F6B9C; --sky-soft:#D6EEFB;
+  --leaf:#7CCB6F; --leaf-dk:#2D7A38;
+  --berry:#E5484D; --berry-dk:#B3262B; --berry-soft:#FFD9D6;
+  --peach:#FF9E7A; --peach-dk:#D9531F; --peach-soft:#FFDCCB;
+  --butter:#FFD966; --butter-soft:#FFF1B8;
+  /* 教室世界的名字：黑板、座位、空位 */
+  --board:#1E4A6B;          /* 老師端表頭：黑板深藍 */
+  --chalk:#FFF8E6;          /* 黑板上的粉筆字 */
+  --seat-in:#E2F3DC;        /* 已交的座位 */
+  --seat-void:#EBDAB5;      /* 沒有人坐的空位 */
+  --star-on:#7A4E00;        /* 星星：深金，卡片底上 > 6:1 */
+  --rule:#C9B58A;           /* 老師端表格橫線 */
+  --f-ui:'Noto Sans TC','Microsoft JhengHei',sans-serif;
+  --f-num:'Fredoka','Bahnschrift','Noto Sans TC','Microsoft JhengHei',sans-serif;
+  /* Bpmf Huninn 子集沒有 IVS 破音字處理，學生姓名／任意國字不能直接套，這版不用；正式版要套就走 typing-core 的 IVS 函式 */
+  --f-zh:'Noto Sans TC','Microsoft JhengHei',sans-serif;
+  --sh:0 1px 0 rgba(59,42,32,.10),0 3px 0 -1px rgba(59,42,32,.06),0 8px 14px -6px rgba(59,42,32,.28);
+}
+*{box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased}
+body{margin:0;background:#EDE0C4;color:var(--ink-1);font:400 16px/1.5 var(--f-ui)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--sky-dk);outline-offset:2px}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+
+/* ============ 外殼（只是 mockup 的瀏覽用，不屬於產品） ============ */
+.shell{padding:14px 24px 10px;background:var(--card);border-bottom:2px solid var(--kraft)}
+.shell h1{margin:0 0 8px;font-size:20px;font-weight:700}
+.shell h1 small{font-weight:400;color:var(--ink-2);font-size:16px;margin-left:8px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{min-height:44px;padding:0 16px;border:2px solid var(--kraft-2);border-bottom-width:4px;border-radius:8px 6px 10px 6px;background:var(--card-2);font-weight:500}
+.tab[aria-selected=true]{background:var(--peach-soft);border-color:var(--peach-dk);font-weight:700}
+.pane{display:none;padding:20px 24px 40px}
+.pane.on{display:block}
+.note{max-width:1100px;margin:14px 0 0;color:var(--ink-2);font-size:16px}
+.note b{color:var(--ink-1)}
+.row{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.tools{width:330px;background:var(--card);border:2px dashed var(--kraft-2);border-radius:10px;padding:14px 16px}
+.tools h3{margin:0 0 4px;font-size:16px}
+.tools p{margin:0 0 10px;font-size:16px;color:var(--ink-2)}
+.tools button{display:block;width:100%;min-height:44px;margin:0 0 8px;padding:6px 12px;text-align:left;background:var(--card-2);border:2px solid var(--kraft-2);border-radius:8px}
+.tools button:hover{background:var(--kraft)}
+.tools code{display:block;margin-top:8px;padding:8px;background:var(--card-2);border:1px solid var(--kraft-2);border-radius:6px;font:400 14px/1.5 Consolas,monospace;word-break:break-all;color:var(--ink-1)}
+
+/* ============ ① 學生端（1366×657） ============ */
+.stage{position:relative;width:1366px;height:657px;overflow:hidden;background:var(--paper);display:flex;gap:20px;padding:18px 20px}
+.cert-col{width:520px;flex:none}
+.cert{height:100%;background:var(--card);border:2px solid var(--kraft);border-radius:16px 10px 16px 8px;box-shadow:var(--sh);padding:14px;position:relative}
+.cert-in{height:100%;border:3px double var(--kraft-2);border-radius:10px 6px 12px 6px;background:var(--butter-soft);padding:20px 26px 16px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.ribbon{background:var(--butter);color:var(--ink-1);font:900 40px/1 var(--f-zh);letter-spacing:.5em;padding:10px 12px 10px 28px;border-radius:6px 10px 6px 10px;border-bottom:4px solid var(--kraft-2)}
+.cert .who{margin:22px 0 4px;font:700 40px/1.3 var(--f-zh)}
+.cert .who small{font-size:24px;font-weight:500;margin-left:8px}
+.cert .sent{margin:10px 0;font-size:21px;line-height:1.75;color:var(--ink-1)}
+.cert .sent .num{font-weight:600;font-size:24px}
+.cert .rank{margin:6px 0;font:700 30px/1.3 var(--f-zh)}
+.cert .rank .stars{font-size:30px;display:block;margin-bottom:2px}
+.cert .foot{margin-top:auto;width:100%;display:flex;justify-content:space-between;align-items:flex-end}
+.cert .date{font-size:18px;color:var(--ink-2);text-align:left}
+.seal{width:84px;height:84px;border:4px solid var(--berry-dk);border-radius:50%;color:var(--berry-dk);display:grid;place-items:center;font:900 20px/1.15 var(--f-ui);transform:rotate(-8deg);text-align:center}
+.side-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
+.panel{flex:1;min-height:0;background:var(--card);border:2px solid var(--kraft);border-radius:10px 16px 8px 16px;box-shadow:var(--sh);padding:14px 20px 12px;display:flex;flex-direction:column}
+.panel>header h2{margin:0;font-size:26px;line-height:1.3;font-weight:900}
+.panel>header p{margin:2px 0 0;font-size:16px;color:var(--ink-2)}
+.pbody{flex:1;min-height:0;display:grid;grid-template-columns:292px 1fr;gap:24px;margin-top:10px}
+.colA,.colB{min-height:0;display:flex;flex-direction:column}
+.lab{display:flex;align-items:center;justify-content:space-between;min-height:36px;margin-bottom:4px;font-size:18px;font-weight:700}
+.lab .step{display:inline-grid;place-items:center;width:26px;height:26px;margin-right:8px;border-radius:50%;background:var(--peach);color:var(--ink-1);font:700 16px var(--f-num)}
+.lab select{height:36px;padding:0 6px;border:2px solid var(--kraft-2);border-radius:6px;background:var(--card-2);font-size:16px}
+.bar{height:24px;margin-bottom:6px;background:var(--kraft);border-radius:4px;text-align:center;font-size:16px;line-height:24px;color:var(--ink-1);letter-spacing:.4em}
+.sg{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:5px}
+.sb{position:relative;height:44px;padding:0;border:2px solid var(--kraft);border-bottom-width:4px;border-radius:8px 6px 10px 6px;background:var(--card-2);font:600 20px var(--f-num);font-variant-numeric:tabular-nums;transition:background-color .12s,transform .1s}
+.sb:hover{background:var(--kraft)}
+.sb:active{transform:translateY(2px);border-bottom-width:2px}
+.sb[aria-pressed=true]{background:var(--peach-soft);border-color:var(--peach-dk);font-weight:700}
+.sb[aria-pressed=true]::after{content:'✓';position:absolute;top:-7px;right:-5px;width:20px;height:20px;border-radius:50%;background:var(--peach);color:var(--ink-1);font:700 14px/20px var(--f-ui)}
+.seatnote{margin:6px 0 0;font-size:16px;color:var(--ink-2)}
+.nameinput{width:100%;height:48px;padding:0 14px;border:2px solid var(--kraft-2);border-radius:8px;background:var(--card-2);font:500 22px var(--f-zh)}
+.nameinput:focus-visible{background:var(--card)}
+.qrrow{display:flex;gap:18px;margin-top:10px}
+.qrbox{width:224px;height:224px;flex:none;display:grid;place-items:center;background:var(--card-2);border:2px solid var(--kraft-2);border-radius:6px 10px 6px 10px}
+.qrbox.empty{border:3px dashed var(--ink-3);background:transparent;text-align:center;font-size:26px;font-weight:900;color:var(--ink-1);line-height:1.4}
+.qrbox.empty span{display:block;font-size:16px;font-weight:400;color:var(--ink-2)}
+.qrbox canvas{display:block;image-rendering:pixelated}
+.read{flex:1;margin:0;display:flex;flex-direction:column}
+.read div{display:flex;justify-content:space-between;align-items:baseline;min-height:34px;border-bottom:1px dashed var(--kraft-2)}
+.read dt{font-size:16px;color:var(--ink-3)}
+.read dd{margin:0;font:700 22px var(--f-num);color:var(--ink-1)}
+.read dd.zh{font-family:var(--f-ui)}
+.read dd.empty{color:var(--ink-3);font-weight:400}
+.colB .fine{margin:8px 0 0;font-size:16px;color:var(--ink-2)}
+.printbtn{height:56px;flex:none;border:3px solid var(--peach-dk);border-bottom-width:6px;border-radius:10px 16px 8px 16px;background:var(--peach);font-size:20px;font-weight:700}
+.printbtn:hover{background:#FFB093}
+.printbtn:active{transform:translateY(3px);border-bottom-width:3px}
+.stars{letter-spacing:.04em;white-space:nowrap}
+.stars .on{color:var(--star-on)}
+.stars .off{color:var(--ink-3)}
+
+/* ============ 老師端共通（平實工具風：邊線、不用陰影） ============ */
+.screen{position:relative;background:var(--paper);overflow:hidden;color:var(--ink-1);border:1px solid var(--kraft-2)}
+.phone{width:390px;height:844px}
+.tablet{width:1024px;height:768px}
+.tbtn{min-height:44px;padding:0 14px;border:1.5px solid var(--board);border-radius:6px;background:var(--card);color:var(--board);font-weight:700;font-size:16px;white-space:nowrap}
+.tbtn:hover{background:var(--sky-soft)}
+.tbtn:active{transform:scale(.97)}
+.tbtn.pri{background:var(--board);color:var(--chalk)}
+.tbtn.pri:hover{background:#17394F}
+.tbtn.dng{border-color:var(--berry-dk);color:var(--berry-dk)}
+.tbtn.dng:hover{background:var(--berry-soft)}
+.clsname{width:100%;min-height:44px;padding:0 10px;border:0;border-bottom:2px solid var(--ink-3);background:transparent;font-size:18px;font-weight:700}
+.clsname:hover{background:var(--card-2)}
+.clsname:focus-visible{background:var(--card);outline-offset:0}
+.stars-lg{font-size:15px}
+
+/* 座位圖（老師端三處共用） */
+.smwrap .bar{margin-bottom:6px;font-size:14px;color:var(--ink-1)}
+.sm{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:6px}
+.seat{border:1.5px dashed var(--ink-3);border-radius:6px;color:var(--ink-3);text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;line-height:1.15;min-height:46px}
+.seat .n{font:700 17px var(--f-num);font-variant-numeric:tabular-nums}
+.seat .st{font-size:13px}
+.seat.in{border:1.5px solid var(--leaf-dk);background:var(--seat-in);color:var(--ink-1)}
+.seat.in .st{font-size:13px}
+.seat.void{border:1.5px solid transparent;background:var(--seat-void);color:var(--ink-2)}
+.seat.void .st{font-size:13px}
+.seat.now{outline:3px solid var(--sky-dk);outline-offset:2px}
+.sm.mini .seat{min-height:30px;flex-direction:row;gap:3px}
+.sm.mini .seat .n{font-size:16px}
+.sm.mini .seat .ck{font-size:14px;color:var(--leaf-dk);font-weight:700}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 0;font-size:14px;color:var(--ink-2)}
+.legend i{display:inline-block;width:16px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.legend .a{background:var(--seat-in);border:1.5px solid var(--leaf-dk)}
+.legend .b{border:1.5px dashed var(--ink-3)}
+.legend .c{background:var(--seat-void)}
+
+/* 成績表（銀行對帳單風） */
+.ledger{width:100%;border-collapse:collapse;table-layout:fixed;background:var(--card);border:1px solid var(--board);font-size:15px}
+.ledger th{background:var(--board);color:var(--chalk);font-weight:500;font-size:14px;padding:0 8px;height:38px;text-align:left;white-space:nowrap}
+.ledger td{height:44px;padding:0 8px;border-bottom:1px solid var(--rule);vertical-align:middle;overflow:hidden;white-space:nowrap}
+.ledger tbody tr:nth-child(even) td{background:var(--card-2)}
+.ledger .r{text-align:right}
+.ledger td.r,.ledger th.r{font-variant-numeric:tabular-nums}
+.ledger td.r .v{font-family:var(--f-num);font-weight:600;font-size:16px}
+.ledger .suf{display:inline-block;width:1.5em;text-align:left;color:var(--ink-2);font-size:13px;padding-left:2px}
+.ledger .sub{display:block;font-size:13px;color:var(--ink-3);line-height:1.2}
+.ledger tr.fresh td{background:var(--seat-in)!important}
+.ledger .none td{height:80px;text-align:center;color:var(--ink-2);white-space:normal}
+.ledger .nm{font-weight:700}
+.tblwrap{max-height:340px;overflow:auto;border:0}
+.miss{margin-top:12px}
+.miss h4{margin:0 0 6px;font-size:15px;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chips span{min-width:34px;height:30px;padding:0 6px;display:inline-grid;place-items:center;border:1.5px dashed var(--ink-3);border-radius:5px;color:var(--ink-2);font:600 15px var(--f-num)}
+
+/* 設定列 */
+.setrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:15px;color:var(--ink-1)}
+.setrow input[type=number]{width:56px;height:40px;padding:0 6px;border:1.5px solid var(--ink-3);border-radius:6px;background:var(--card);font:600 16px var(--f-num);text-align:right}
+.seg{display:inline-flex;border:1.5px solid var(--board);border-radius:6px;overflow:hidden}
+.seg button{min-height:44px;padding:0 16px;border:0;background:var(--card);color:var(--board);font-weight:700;font-size:15px}
+.seg button+button{border-left:1.5px solid var(--board)}
+.seg button[aria-pressed=true]{background:var(--board);color:var(--chalk)}
+
+/* 確認對話 */
+.confirm{position:absolute;inset:0;background:rgba(59,42,32,.55);display:grid;place-items:center;padding:20px;z-index:5}
+.confirm[hidden]{display:none}
+.confirm .box{width:100%;max-width:340px;background:var(--card);border:2px solid var(--berry-dk);border-radius:8px;padding:18px}
+.confirm h3{margin:0 0 6px;font-size:19px;color:var(--berry-dk)}
+.confirm p{margin:0 0 14px;font-size:16px}
+.confirm .btns{display:flex;gap:8px;justify-content:flex-end}
+
+/* ② 掃描 */
+.p-head{padding:10px 16px 0}
+.p-head .meta{font-size:14px;color:var(--ink-2);margin:0 0 0 10px}
+.vf{position:relative;margin:6px 16px 0;height:214px;background:#26231F;border-radius:6px;overflow:hidden}
+.vf canvas{display:block;width:358px;height:214px}
+.vf .corner{position:absolute;width:30px;height:30px;border:4px solid var(--chalk)}
+.vf .tl{left:100px;top:22px;border-right:0;border-bottom:0}
+.vf .tr{right:100px;top:22px;border-left:0;border-bottom:0}
+.vf .bl{left:100px;bottom:22px;border-right:0;border-top:0}
+.vf .br{right:100px;bottom:22px;border-left:0;border-top:0}
+.vf .tag{position:absolute;left:8px;top:6px;font-size:13px;color:#E9DFC9}
+.vf .hint{position:absolute;left:0;right:0;bottom:4px;text-align:center;font-size:14px;color:var(--chalk)}
+.count{display:flex;align-items:baseline;gap:6px;margin:10px 16px 0}
+.count .big{font:700 38px/1 var(--f-num);color:var(--board)}
+.count .u{font-size:18px;font-weight:700}
+.count .of{margin-left:auto;font-size:15px;color:var(--ink-2)}
+.lastcard{margin:8px 16px 0;min-height:86px;border:1.5px dashed var(--ink-3);border-radius:6px;padding:8px 12px;font-size:15px;color:var(--ink-2)}
+.lastcard.has{border:1.5px solid var(--rule);background:var(--card);color:var(--ink-1)}
+.lastcard.flash{background:var(--seat-in);border:2px solid var(--leaf-dk)}
+.lastcard.flash.upd{background:var(--sky-soft);border-color:var(--sky-dk)}
+.lastcard.flash.rej{background:var(--berry-soft);border-color:var(--berry-dk)}
+.lc-top{display:flex;align-items:center;gap:10px}
+.lc-seat{min-width:44px;height:44px;display:grid;place-items:center;border:1.5px solid var(--leaf-dk);border-radius:6px;background:var(--seat-in);font:700 24px var(--f-num)}
+.lc-name{font-size:20px;font-weight:700;line-height:1.2}
+.lc-sub{font-size:14px;color:var(--ink-2)}
+.lc-badge{margin-left:auto;font-weight:700;font-size:15px;text-align:right;line-height:1.2}
+.lc-badge .tick{display:block;font-size:26px;line-height:1;color:var(--leaf-dk)}
+.flash.upd .lc-badge .tick{color:var(--sky-dk)}
+.flash.rej .lc-badge .tick{color:var(--berry-dk)}
+.lc-stats{display:flex;gap:16px;margin-top:6px;font-size:15px;align-items:baseline}
+.lc-stats .v{font:700 17px var(--f-num)}
+.p-mini{margin:10px 16px 0}
+.p-mini h4{margin:0 0 5px;font-size:15px;display:flex;justify-content:space-between;align-items:baseline}
+.p-mini h4 span{font-weight:400;font-size:13px;color:var(--ink-2)}
+.p-foot{position:absolute;left:0;right:0;bottom:0;padding:8px 16px 12px;background:var(--paper);border-top:1px solid var(--rule);display:flex;gap:8px}
+.p-foot .tbtn{flex:1}
+
+/* ③ 手機成績表 */
+.p3-head{padding:10px 16px 0}
+.p3-stat{display:flex;align-items:baseline;gap:6px;margin:6px 0 0}
+.p3-stat .big{font:700 30px/1 var(--f-num);color:var(--board)}
+.p3-stat small{font-size:15px;color:var(--ink-2)}
+.p3-body{padding:8px 16px 0;height:560px;overflow:auto}
+.sethead{margin:6px 0 0;font-size:15px}
+.sethead summary{min-height:36px;display:flex;align-items:center;cursor:pointer;color:var(--board);font-weight:700}
+[data-view=table] .v-map{display:none}
+[data-view=map] .v-table{display:none}
+.phone .ledger th{padding:0 5px;font-size:13px}
+.phone .ledger td{padding:0 5px;height:46px}
+
+/* ④ 平板 */
+.t-head{display:flex;align-items:center;gap:12px;padding:12px 20px 0}
+.t-head .clsname{max-width:480px}
+.t-head .sp{flex:1}
+.t-bar{display:flex;align-items:center;gap:20px;padding:6px 20px 0;border-bottom:1px solid var(--rule);padding-bottom:10px}
+.t-bar .stat{display:flex;align-items:baseline;gap:6px}
+.t-bar .stat .big{font:700 34px/1 var(--f-num);color:var(--board)}
+.t-bar .stat .of{font-size:16px;color:var(--ink-2)}
+.t-bar .setrow{margin-left:auto}
+.t-body{display:grid;grid-template-columns:640px 1fr;gap:20px;padding:14px 20px 0}
+.t-body h3{margin:0 0 6px;font-size:16px}
+.t-body .smwrap .sm{--cols:5}
+.t-cell-star{font-size:15px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <h1>全班成績匯出（QR 收成績）<small>C 版「教室座位圖」・interface-design</small></h1>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-pane="p1" aria-selected="true">① 學生端：交成績面板</button>
+    <button class="tab" role="tab" data-pane="p2" aria-selected="false">② 老師端：掃描中</button>
+    <button class="tab" role="tab" data-pane="p3" aria-selected="false">③ 老師端：手機成績表（表格／座位圖）</button>
+    <button class="tab" role="tab" data-pane="p4" aria-selected="false">④ 老師端：平板成績表</button>
+  </div>
+</div>
+
+<!-- ================= ① 學生端 ================= -->
+<section class="pane on" id="p1">
+  <div class="stage" id="stuStage">
+    <div class="cert-col">
+      <div class="cert"><div class="cert-in">
+        <div class="ribbon">獎狀</div>
+        <div class="who"><span id="certName">小明</span><small>小朋友</small></div>
+        <div class="sent">在打字島〈<span id="certUnit">中打特攻</span>・<span id="certTier">進階</span>〉闖關成功，<br>正確率 <span class="num">96</span>%、每分鐘 <span class="num">28</span> 字，<br>特頒此狀以資鼓勵。</div>
+        <div class="rank"><span class="stars" id="certStars"></span>打字小達人</div>
+        <div class="foot">
+          <div class="date">中華民國 115 年 11 月 21 日</div>
+          <div class="seal">打字<br>島印</div>
+        </div>
+      </div></div>
+    </div>
+    <div class="side-col">
+      <section class="panel" aria-label="交成績給老師">
+        <header>
+          <h2>交成績給老師</h2>
+          <p>點你的座位、核對下面的字，再把 QR 對準老師的手機。名字只存在這台電腦。</p>
+        </header>
+        <div class="pbody">
+          <div class="colA">
+            <div class="lab"><span><span class="step">1</span>點你的座位</span>
+              <select id="stuLayout" aria-label="座位排列">
+                <option value="5x5">5 排 × 5 列</option>
+                <option value="6x5" selected>6 排 × 5 列</option>
+                <option value="6x6">6 排 × 6 列</option>
+                <option value="7x6">7 排 × 6 列</option>
+              </select></div>
+            <div class="bar">講　台</div>
+            <div class="sg" id="stuSeats" role="group" aria-label="座位格，點選你的座號"></div>
+            <p class="seatnote" id="stuSeatNote"></p>
+          </div>
+          <div class="colB">
+            <div class="lab"><span><span class="step">2</span>你的名字</span></div>
+            <input class="nameinput" id="stuName" value="小明" maxlength="10" aria-label="名字（沿用獎狀上的名字，可以改）">
+            <div class="qrrow">
+              <div class="qrbox" id="stuQr" aria-label="交成績 QR code"></div>
+              <dl class="read" id="stuRead"></dl>
+            </div>
+            <p class="fine" id="stuFine"></p>
+          </div>
+        </div>
+      </section>
+      <button class="printbtn" type="button">列印獎狀</button>
+    </div>
+  </div>
+  <p class="note"><b>設計重點：</b>座位格長得跟教室一樣（講台在上、一排一排），小朋友找自己的位子比找數字快；選中是橘色＋右上角 ✓，不只靠顏色。名字預設沿用獎狀上的名字（<code>edtech-typing-name</code>），可改。沒選座號時 QR 不出現，改成虛線框＋「先選座號」。座位排列要跟老師設的一樣，由老師口頭／黑板告知（排列不放進 QR，兩邊不一致只是版面不同，資料不會錯）。試試看：再點一次已選的座位可取消。</p>
+</section>
+
+<!-- ================= ② 老師掃描 ================= -->
+<section class="pane" id="p2">
+  <div class="row">
+    <div class="screen phone" id="phScan">
+      <div class="p-head">
+        <input class="clsname" data-bind="cls" aria-label="班級與節次名稱，可修改">
+        <div class="sethead" style="margin:0"><span class="meta" style="margin:0" data-region="layoutline"></span></div>
+      </div>
+      <div class="vf" id="vf" aria-label="相機取景框">
+        <canvas id="vfCanvas" width="358" height="214"></canvas>
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <span class="tag">相機畫面（mockup 示意）</span>
+        <span class="hint">對準學生螢幕上的 QR</span>
+      </div>
+      <div class="count" data-region="count"></div>
+      <div class="lastcard" data-region="last"></div>
+      <div class="p-mini">
+        <h4>座位圖・亮起＝已收<span data-region="legendmini"></span></h4>
+        <div data-region="mini"></div>
+      </div>
+      <div class="p-foot">
+        <button class="tbtn" data-go="p3">看成績表</button>
+        <button class="tbtn pri" data-act="export">匯出 CSV</button>
+      </div>
+      <div class="confirm" hidden></div>
+    </div>
+    <div class="tools">
+      <h3>mockup 操作（不屬於產品）</h3>
+      <p>真機是相機自動掃。這裡用按鈕代替：把學生端目前的 QR 畫進取景框，再用 jsQR 解回字串。</p>
+      <button data-act="sim">模擬掃描：學生端目前的 QR</button>
+      <button data-act="sim-again">再掃一次同一個座號（會「已更新」，不新增）</button>
+      <button data-act="sim-other">掃到別的 QR（應拒收）</button>
+      <button data-act="reset">還原示範資料</button>
+      <code id="decodeLog">尚未掃描</code>
+    </div>
+  </div>
+  <p class="note"><b>設計重點：</b>取景框下面的迷你座位圖就是「進度條」：每掃到一位，那個座位即時亮起（綠底＋✓），剛掃到的那格有天藍外框約 1 秒。老師一眼看得到「教室後排那一片還沒亮」，不用數人頭。重複掃同一座號會顯示「已更新」，已收人數不變。</p>
+</section>
+
+<!-- ================= ③ 手機成績表 ================= -->
+<section class="pane" id="p3">
+  <div class="row">
+    <div class="screen phone" id="phTable" data-view="table">
+      <div class="p3-head">
+        <input class="clsname" data-bind="cls" aria-label="班級與節次名稱，可修改">
+        <div class="p3-stat" data-region="stat3"></div>
+        <details class="sethead"><summary data-region="setsum"></summary>
+          <div class="setrow"><label>排數 <input type="number" min="1" max="10" data-bind="rows"></label><label>列數 <input type="number" min="1" max="10" data-bind="cols"></label><label>應到 <input type="number" min="1" max="99" data-bind="size"></label></div>
+        </details>
+        <div style="margin-top:6px"><span class="seg" role="group" aria-label="檢視方式"><button data-view-btn="table" aria-pressed="true">表格</button><button data-view-btn="map" aria-pressed="false">座位圖</button></span></div>
+      </div>
+      <div class="p3-body">
+        <div class="v-table"><div data-region="tbl-phone"></div><div class="miss" data-region="missing"></div></div>
+        <div class="v-map smwrap"><div data-region="smap"></div></div>
+      </div>
+      <div class="p-foot">
+        <button class="tbtn dng" data-act="clear">清空本節</button>
+        <button class="tbtn" data-go="p2">繼續掃</button>
+        <button class="tbtn pri" data-act="export">匯出 CSV</button>
+      </div>
+      <div class="confirm" hidden></div>
+    </div>
+
+    <div class="screen phone" id="phTable2" data-view="map">
+      <div class="p3-head">
+        <input class="clsname" data-bind="cls" aria-label="班級與節次名稱，可修改">
+        <div class="p3-stat" data-region="stat3"></div>
+        <details class="sethead"><summary data-region="setsum"></summary>
+          <div class="setrow"><label>排數 <input type="number" min="1" max="10" data-bind="rows"></label><label>列數 <input type="number" min="1" max="10" data-bind="cols"></label><label>應到 <input type="number" min="1" max="99" data-bind="size"></label></div>
+        </details>
+        <div style="margin-top:6px"><span class="seg" role="group" aria-label="檢視方式"><button data-view-btn="table" aria-pressed="false">表格</button><button data-view-btn="map" aria-pressed="true">座位圖</button></span></div>
+      </div>
+      <div class="p3-body">
+        <div class="v-table"><div data-region="tbl-phone"></div><div class="miss" data-region="missing"></div></div>
+        <div class="v-map smwrap"><div data-region="smap"></div></div>
+      </div>
+      <div class="p-foot">
+        <button class="tbtn dng" data-act="clear">清空本節</button>
+        <button class="tbtn" data-go="p2">繼續掃</button>
+        <button class="tbtn pri" data-act="export">匯出 CSV</button>
+      </div>
+      <div class="confirm" hidden></div>
+    </div>
+  </div>
+  <p class="note"><b>設計重點：</b>同一份資料兩種看法，右上切換。手機上表格縮成 6 欄（名字下面小字放交件時間、關卡下面放階別），完整欄位在匯出的 CSV。座位圖的格子＝座號＋星等：綠底實線＝已交、虛線框＝還沒交、米褐底＝沒人坐的空位（座位超過「應到」人數）。「清空本節」一定先跳確認。</p>
+</section>
+
+<!-- ================= ④ 平板 ================= -->
+<section class="pane" id="p4">
+  <div class="screen tablet" id="tab">
+    <div class="t-head">
+      <input class="clsname" data-bind="cls" aria-label="班級與節次名稱，可修改">
+      <span class="sp"></span>
+      <button class="tbtn" data-go="p2">繼續掃</button>
+      <button class="tbtn pri" data-act="export">匯出 CSV</button>
+      <button class="tbtn dng" data-act="clear">清空本節</button>
+    </div>
+    <div class="t-bar">
+      <div class="stat" data-region="stat4"></div>
+      <div class="setrow">座位<label>　<input type="number" min="1" max="10" data-bind="rows"> 排</label>×<label><input type="number" min="1" max="10" data-bind="cols"> 列</label>　<label>應到 <input type="number" min="1" max="99" data-bind="size"> 人</label></div>
+    </div>
+    <div class="t-body">
+      <div>
+        <h3>成績表（依座號排序）</h3>
+        <div class="tblwrap"><div data-region="tbl-tablet"></div></div>
+        <div class="miss" data-region="missing"></div>
+      </div>
+      <div class="smwrap">
+        <h3>座位圖</h3>
+        <div data-region="smap"></div>
+      </div>
+    </div>
+    <div class="confirm" hidden></div>
+  </div>
+  <p class="note"><b>設計重點：</b>表格是帳本（深藍表頭、數字靠右、% 與「字」後綴固定寬度），座位圖是地圖，兩個並排：左邊查某個人的成績，右邊看誰還沒交。「還沒交的座號」在表格下方用虛線小格列出，跟座位圖的虛線框是同一個語言。</p>
+</section>
+
+<script src="vendor/qrcode-generator-2.0.4.js"></script>
+<script src="vendor/jsQR-1.4.0.js"></script>
+<script>
+(function(){
+'use strict';
+qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
+
+/* ---------- 資料 ---------- */
+var UNITS={unit1:['中文打字冒險王','中文打字'],unit3:['太空打字防衛戰','太空打字'],unit4:['鍵盤怪獸冒冒頭','怪獸冒頭'],unit11:['英打太空特攻','英打特攻'],unit12:['中打特攻','中打特攻'],unit13:['極速雷射森林戰','雷射森林'],unit14:['魔法字彈極速覺醒','魔法字彈'],unit16:['恐龍打字大冒險','恐龍打字'],unit23:['打字對戰','打字對戰']};
+var TIERS={t1:'初階',t2:'進階',t3:'高階','-':'—'};
+var LANGS={zh:'中文',en:'英文'};
+var HEAD='ETS1';
+var FLASH_MS=1200; window.ETS_FLASH_MS=null;
+var DEMO=[
+ {seat:3,name:'小美',unit:'unit11',tier:'t2',lang:'en',acc:92,cpm:31,stars:2,min:10,time:'202611211024'},
+ {seat:5,name:'小華',unit:'unit4',tier:'t1',lang:'zh',acc:81,cpm:18,stars:1,min:5,time:'202611211026'},
+ {seat:12,name:'小安',unit:'unit1',tier:'t1',lang:'zh',acc:100,cpm:24,stars:3,min:10,time:'202611211027'},
+ {seat:18,name:'小宇',unit:'unit23',tier:'-',lang:'zh',acc:88,cpm:22,stars:2,min:10,time:'202611211029'}
+];
+var stu={seat:7,name:'小明',unit:'unit12',tier:'t2',lang:'zh',acc:96,cpm:28,stars:3,min:10,time:'202611211030',rows:6,cols:5};
+var S={cls:'三年二班・第三節 電腦課',rows:6,cols:5,size:28,recs:{},last:null};
+function resetDemo(){S.recs={};DEMO.forEach(function(d){S.recs[d.seat]=Object.assign({},d)});S.last=null;}
+resetDemo();
+
+/* ---------- QR 字串：產生與解析 ---------- */
+function cleanName(n){return String(n).replace(/\|/g,'').trim();}
+function buildPayload(s){return [HEAD,s.unit,s.tier,s.lang,s.seat,cleanName(s.name),s.acc,s.cpm,s.stars,s.min,s.time].join('|');}
+function parsePayload(str){
+  if(typeof str!=='string'||str.indexOf(HEAD+'|')!==0)return null;
+  var p=str.split('|'); if(p.length!==11)return null;
+  var seat=+p[4],acc=+p[6],cpm=+p[7],st=+p[8],mn=+p[9];
+  if(!UNITS[p[1]]||!TIERS[p[2]]||!LANGS[p[3]]||!(seat>=1&&seat<=99)||isNaN(acc)||isNaN(cpm)||!(st>=0&&st<=3)||!/^\d{12}$/.test(p[10]))return null;
+  return {seat:seat,name:p[5],unit:p[1],tier:p[2],lang:p[3],acc:acc,cpm:cpm,stars:st,min:mn,time:p[10]};
+}
+function hhmm(t){return t.slice(8,10)+':'+t.slice(10,12);}
+function starsHtml(n,cls){var h='<span class="stars '+(cls||'')+'" role="img" aria-label="'+n+' 顆星">';for(var i=0;i<3;i++)h+='<i class="'+(i<n?'on':'off')+'">'+(i<n?'★':'☆')+'</i>';return h+'</span>';}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]});}
+function rankName(n){return n>=3?'打字小達人':n==2?'打字小高手':'打字小學徒';}
+
+/* ---------- QR 畫到 canvas ---------- */
+function qrCanvas(text,target){
+  var qr=qrcode(0,'M');qr.addData(text);qr.make();
+  var n=qr.getModuleCount(),k=Math.max(3,Math.floor(target/(n+8))),size=(n+8)*k;
+  var c=document.createElement('canvas');c.width=c.height=size;
+  var x=c.getContext('2d');x.fillStyle='#FFF8E6';x.fillRect(0,0,size,size);x.fillStyle='#2A1D14';
+  for(var r=0;r<n;r++)for(var q=0;q<n;q++)if(qr.isDark(r,q))x.fillRect((q+4)*k,(r+4)*k,k,k);
+  return c;
+}
+
+/* ---------- ① 學生端 ---------- */
+function renderStudent(){
+  var g=document.getElementById('stuSeats');
+  g.style.setProperty('--cols',stu.cols);
+  var total=stu.rows*stu.cols,h='';
+  for(var i=1;i<=total;i++)h+='<button class="sb" type="button" data-seat="'+i+'" aria-pressed="'+(stu.seat===i)+'" aria-label="'+i+' 號">'+i+'</button>';
+  g.innerHTML=h;
+  document.getElementById('stuSeatNote').textContent=stu.seat?('上次選的是 '+stu.seat+' 號，已幫你選好。'):'還沒選座號。';
+  var name=cleanName(stu.name),ok=stu.seat&&name;
+  var qb=document.getElementById('stuQr'),rd=document.getElementById('stuRead');
+  qb.innerHTML='';
+  if(ok){qb.className='qrbox';var c=qrCanvas(buildPayload(stu),208);qb.appendChild(c);}
+  else{qb.className='qrbox empty';qb.innerHTML='← 先選座號<span>'+(stu.seat?'再填名字':'點左邊你的座位')+'</span>';}
+  var E='<dd class="empty">—</dd>';
+  function row(k,v,zh){return '<div><dt>'+k+'</dt><dd'+(zh?' class="zh"':'')+'>'+v+'</dd></div>';}
+  rd.innerHTML=ok?
+    row('座號',stu.seat)+row('名字',esc(name),1)+row('關卡',UNITS[stu.unit][1],1)+row('階別',TIERS[stu.tier],1)+row('正確率',stu.acc+' %')+row('每分鐘字數',stu.cpm+' 字')+row('星等',starsHtml(stu.stars)):
+    ['座號','名字','關卡','階別','正確率','每分鐘字數','星等'].map(function(k){return '<div><dt>'+k+'</dt>'+E+'</div>';}).join('');
+  document.getElementById('stuFine').textContent=ok?('QR 裡還有：'+LANGS[stu.lang]+'、選 '+stu.min+' 分鐘、'+hhmm(stu.time)+'。沒有學校、沒有其他個資。'):'座號跟名字都有了，QR 才會出現。';
+  document.getElementById('certName').textContent=name||'　';
+  document.getElementById('certUnit').textContent=UNITS[stu.unit][1];
+  document.getElementById('certTier').textContent=TIERS[stu.tier];
+  document.getElementById('certStars').innerHTML=starsHtml(stu.stars);
+}
+document.getElementById('stuSeats').addEventListener('click',function(e){
+  var b=e.target.closest('[data-seat]');if(!b)return;var s=+b.dataset.seat;
+  stu.seat=(stu.seat===s)?null:s;renderStudent();var nb=document.querySelector('#stuSeats [data-seat="'+s+'"]');if(nb)nb.focus();
+});
+document.getElementById('stuName').addEventListener('input',function(e){stu.name=e.target.value;renderStudent();});
+document.getElementById('stuLayout').addEventListener('change',function(e){var p=e.target.value.split('x');stu.rows=+p[0];stu.cols=+p[1];if(stu.seat>stu.rows*stu.cols)stu.seat=null;renderStudent();});
+
+/* ---------- 老師端各區塊 ---------- */
+function flashing(){return S.last&&(Date.now()-S.last.at)<(window.ETS_FLASH_MS||FLASH_MS);}
+function got(){return Object.keys(S.recs).length;}
+function missingList(){var a=[];for(var i=1;i<=S.size;i++)if(!S.recs[i])a.push(i);return a;}
+function seatCells(mode){
+  var cap=S.rows*S.cols,h='';
+  for(var i=1;i<=cap;i++){
+    var r=S.recs[i],now=S.last&&S.last.rec&&S.last.rec.seat===i&&flashing()&&S.last.kind!=='rej';
+    var cls='seat'+(i>S.size?' void':r?' in':'')+(now?' now':'');
+    if(mode==='mini'){
+      h+='<div class="'+cls+'" aria-label="'+i+' 號'+(r?'已收':'未交')+'">'+(r?'<span class="ck">✓</span>':'')+'<span class="n">'+i+'</span></div>';
+    }else{
+      var st=i>S.size?'空位':r?starsHtml(r.stars):'未交';
+      h+='<div class="'+cls+'" aria-label="'+i+' 號'+(i>S.size?'空位':r?'已收 '+r.stars+' 星':'未交')+'"><span class="n">'+i+'</span><span class="st">'+st+'</span></div>';
+    }
+  }
+  return h;
+}
+var R={
+ layoutline:function(el){el.textContent='座位 '+S.rows+' 排 × '+S.cols+' 列・應到 '+S.size+' 人';},
+ count:function(el){var m=S.size-got();el.innerHTML='<span class="big num">'+got()+'</span><span class="u">人已收</span><span class="of">應到 '+S.size+' 人・'+(m>0?'還差 '+m+' 人':'全部收齊')+'</span>';},
+ legendmini:function(el){el.textContent=S.rows+'排×'+S.cols+'列';},
+ mini:function(el){el.innerHTML='<div class="smwrap"><div class="bar">講　台</div><div class="sm mini" style="--cols:'+S.cols+'">'+seatCells('mini')+'</div></div>';},
+ smap:function(el){el.innerHTML='<div class="bar">講　台</div><div class="sm" style="--cols:'+S.cols+'">'+seatCells('full')+'</div><div class="legend"><span><i class="a"></i>已交（座號＋星等）</span><span><i class="b"></i>還沒交</span><span><i class="c"></i>空位</span></div>';},
+ stat3:function(el){el.innerHTML='<span class="big">'+got()+'</span><span class="num" style="font-size:18px;font-weight:700">/ '+S.size+' 人已收</span><small>・未交 '+missingList().length+'</small>';},
+ stat4:function(el){el.innerHTML='<span class="big">'+got()+'</span><span class="of"><b>/ '+S.size+' 人已收</b>・還沒交 '+missingList().length+' 人</span>';},
+ setsum:function(el){el.textContent='座位 '+S.rows+' 排 × '+S.cols+' 列・應到 '+S.size+' 人（點開修改）';},
+ missing:function(el){var m=missingList();el.innerHTML='<h4>還沒交的座號（'+m.length+'）</h4><div class="chips">'+(m.length?m.map(function(n){return '<span>'+n+'</span>';}).join(''):'<b>全部收齊</b>')+'</div>';},
+ 'tbl-phone':function(el){el.innerHTML=ledger(false);},
+ 'tbl-tablet':function(el){el.innerHTML=ledger(true);},
+ last:function(el){
+  var L=S.last,fl=flashing();
+  if(!L){el.className='lastcard';el.innerHTML='等待掃描…<br><span style="font-size:14px">掃到的那一位會顯示在這裡</span>';return;}
+  if(L.kind==='rej'){el.className='lastcard has'+(fl?' flash rej':'');el.innerHTML='<div class="lc-top"><div><div class="lc-name">這不是打字島的成績 QR</div><div class="lc-sub">已略過，沒有加進成績表</div></div><div class="lc-badge"><span class="tick">✗</span>已拒收</div></div>';return;}
+  var r=L.rec,upd=L.kind==='upd';
+  el.className='lastcard has'+(fl?' flash'+(upd?' upd':''):'');
+  el.innerHTML='<div class="lc-top"><div class="lc-seat">'+r.seat+'</div><div><div class="lc-name">'+esc(r.name)+'</div><div class="lc-sub">'+UNITS[r.unit][1]+(r.tier!=='-'?'・'+TIERS[r.tier]:'')+(r.seat>S.size?'・超出應到人數':'')+'</div></div>'
+   +'<div class="lc-badge"><span class="tick">'+(upd?'↻':'✓')+'</span>'+(fl?(upd?'已更新，沒有多一筆':'已收到'):(upd?'上一位（已更新）':'上一位'))+'</div></div>'
+   +'<div class="lc-stats"><span>正確率 <span class="v">'+r.acc+'%</span></span><span>每分鐘 <span class="v">'+r.cpm+'</span> 字</span>'+starsHtml(r.stars)+'</div>';
+ }
+};
+function ledger(wide){
+  var seats=Object.keys(S.recs).map(Number).sort(function(a,b){return a-b;});
+  var cols=wide?
+   '<colgroup><col style="width:56px"><col style="width:80px"><col style="width:100px"><col style="width:56px"><col style="width:80px"><col style="width:104px"><col style="width:76px"><col style="width:68px"></colgroup>':
+   '<colgroup><col style="width:40px"><col style="width:74px"><col style="width:72px"><col style="width:58px"><col style="width:48px"><col style="width:66px"></colgroup>';
+  var th=wide?
+   '<th class="r">座號</th><th>名字</th><th>關卡</th><th>階別</th><th class="r">正確率</th><th class="r">每分鐘字數</th><th>星等</th><th class="r">時間</th>':
+   '<th class="r">座號</th><th>名字</th><th>關卡</th><th class="r">正確率</th><th class="r">字/分</th><th>星等</th>';
+  var rows='';
+  seats.forEach(function(s){
+    var r=S.recs[s],fresh=S.last&&S.last.rec&&S.last.rec.seat===s&&flashing()&&S.last.kind!=='rej';
+    if(wide){
+      rows+='<tr'+(fresh?' class="fresh"':'')+'><td class="r"><span class="v">'+r.seat+'</span></td><td class="nm">'+esc(r.name)+'</td><td>'+UNITS[r.unit][1]+'</td><td>'+TIERS[r.tier]+'</td><td class="r"><span class="v">'+r.acc+'</span><span class="suf">%</span></td><td class="r"><span class="v">'+r.cpm+'</span><span class="suf">字</span></td><td>'+starsHtml(r.stars)+'</td><td class="r"><span class="v" style="font-size:15px">'+hhmm(r.time)+'</span></td></tr>';
+    }else{
+      rows+='<tr'+(fresh?' class="fresh"':'')+'><td class="r"><span class="v">'+r.seat+'</span></td><td><span class="nm">'+esc(r.name)+'</span><span class="sub num">'+hhmm(r.time)+'</span></td><td>'+UNITS[r.unit][1]+'<span class="sub">'+TIERS[r.tier]+'</span></td><td class="r"><span class="v">'+r.acc+'</span><span class="suf">%</span></td><td class="r"><span class="v">'+r.cpm+'</span></td><td>'+starsHtml(r.stars)+'</td></tr>';
+    }
+  });
+  if(!rows)rows='<tr class="none"><td colspan="'+(wide?8:6)+'">還沒有人交成績。按「繼續掃」開始收。</td></tr>';
+  var t='<table class="ledger">'+cols+'<thead><tr>'+th+'</tr></thead><tbody>'+rows+'</tbody></table>';
+  return t;
+}
+function renderAll(){
+  document.querySelectorAll('[data-region]').forEach(function(el){var f=R[el.dataset.region];if(f)f(el);});
+}
+function renderTimed(){renderAll();if(flashing()){clearTimeout(renderTimed.t);renderTimed.t=setTimeout(renderAll,(window.ETS_FLASH_MS||FLASH_MS)-(Date.now()-S.last.at)+30);}}
+
+/* ---------- 設定綁定 ---------- */
+document.querySelectorAll('[data-bind]').forEach(function(inp){
+  inp.value=S[inp.dataset.bind];
+  inp.addEventListener('input',function(){
+    var k=inp.dataset.bind,v=inp.value;
+    if(k==='cls'){S.cls=v;}
+    else{v=Math.max(1,Math.min(k==='size'?99:10,parseInt(v,10)||1));S[k]=v;if(k!=='size'&&S.size>S.rows*S.cols&&false){}}
+    document.querySelectorAll('[data-bind="'+k+'"]').forEach(function(o){if(o!==inp&&o.value!=String(S[k]))o.value=S[k];});
+    renderAll();
+  });
+});
+document.querySelectorAll('[data-view-btn]').forEach(function(b){
+  b.addEventListener('click',function(){
+    var f=b.closest('.screen');f.dataset.view=b.dataset.viewBtn;
+    f.querySelectorAll('[data-view-btn]').forEach(function(x){x.setAttribute('aria-pressed',x===b);});
+  });
+});
+
+/* ---------- 掃描（真的 jsQR） ---------- */
+var vf=document.getElementById('vfCanvas'),vx=vf.getContext('2d');
+function drawIdle(){vx.fillStyle='#26231F';vx.fillRect(0,0,vf.width,vf.height);}
+drawIdle();
+function scanText(text){
+  var qc=qrCanvas(text,168);
+  drawIdle();
+  vx.drawImage(qc,Math.round((vf.width-qc.width)/2),Math.round((vf.height-qc.height)/2));
+  var img=vx.getImageData(0,0,vf.width,vf.height);
+  var code=jsQR(img.data,img.width,img.height);
+  clearTimeout(scanText.t);scanText.t=setTimeout(drawIdle,900);
+  var out={text:code?code.data:null};
+  var log=document.getElementById('decodeLog');
+  if(!code){log.textContent='jsQR：沒有解出 QR';return out;}
+  var rec=parsePayload(code.data);
+  log.textContent='jsQR 解出：'+code.data+'\n與送進去的字串一致：'+(code.data===text?'是':'否')+(rec?'\n格式檢查：通過':'\n格式檢查：不是 ETS1| 開頭，拒收');
+  log.style.whiteSpace='pre-wrap';
+  var at=Date.now();
+  if(!rec){S.last={kind:'rej',at:at};}
+  else{var had=!!S.recs[rec.seat];S.recs[rec.seat]=rec;S.last={kind:had?'upd':'new',rec:rec,at:at};}
+  out.rec=rec;out.kind=S.last.kind;
+  renderTimed();
+  return out;
+}
+function studentText(){if(!(stu.seat&&cleanName(stu.name)))return null;return buildPayload(stu);}
+function simulate(again){
+  var t=studentText();
+  if(!t){var l=document.getElementById('decodeLog');l.textContent='學生端還沒選座號／填名字，沒有 QR 可掃';return null;}
+  return scanText(t);
+}
+
+/* ---------- 匯出 CSV（UTF-8 BOM、中文表頭） ---------- */
+function buildCsv(){
+  var head=['座號','名字','關卡','階別','語言','正確率(%)','每分鐘字數','星等','選擇分鐘數','交件時間','備註'];
+  var lines=[head.join(',')];
+  function q(v){v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+  var max=Math.max(S.size,0);Object.keys(S.recs).forEach(function(k){max=Math.max(max,+k);});
+  for(var i=1;i<=max;i++){
+    var r=S.recs[i];
+    if(r){var t=r.time;lines.push([r.seat,r.name,UNITS[r.unit][0],TIERS[r.tier],LANGS[r.lang],r.acc,r.cpm,r.stars,r.min,t.slice(0,4)+'-'+t.slice(4,6)+'-'+t.slice(6,8)+' '+hhmm(t),i>S.size?'超出應到人數':''].map(q).join(','));}
+    else if(i<=S.size)lines.push([i,'','','','','','','','','','未交'].join(','));
+  }
+  return '﻿'+lines.join('\r\n')+'\r\n';
+}
+function doExport(){
+  var csv=buildCsv(),d=new Date(),p=function(n){return String(n).padStart(2,'0');};
+  var name='成績_'+S.cls.replace(/[\\/:*?"<>|\s]/g,'')+'_'+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'.csv';
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();a.remove();
+  document.getElementById('decodeLog').textContent='已匯出 '+name+'（'+got()+' 筆＋未交 '+missingList().length+' 列，UTF-8 含 BOM）';
+}
+
+/* ---------- 清空本節（二次確認） ---------- */
+function confirmHtml(){return '<div class="box" role="alertdialog" aria-label="確認清空"><h3>清空本節成績？</h3><p>會刪掉已收的 <b>'+got()+'</b> 筆，無法復原。建議先按「匯出 CSV」。</p><div class="btns"><button class="tbtn" data-act="no">先不要</button><button class="tbtn dng" data-act="yes" style="background:var(--berry-dk);color:var(--card)">確定清空</button></div></div>';}
+function setConfirm(on){document.querySelectorAll('.confirm').forEach(function(c){c.hidden=!on;if(on)c.innerHTML=confirmHtml();});}
+
+document.addEventListener('click',function(e){
+  var go=e.target.closest('[data-go]');if(go){showPane(go.dataset.go);return;}
+  var a=e.target.closest('[data-act]');if(!a)return;
+  switch(a.dataset.act){
+    case 'sim':simulate();break;
+    case 'sim-again':simulate(true);break;
+    case 'sim-other':scanText('https://example.com/not-ets');break;
+    case 'reset':resetDemo();renderAll();document.getElementById('decodeLog').textContent='已還原示範資料';break;
+    case 'export':doExport();break;
+    case 'clear':setConfirm(true);break;
+    case 'no':setConfirm(false);break;
+    case 'yes':S.recs={};S.last=null;setConfirm(false);renderAll();break;
+  }
+});
+
+/* ---------- 分頁 ---------- */
+function showPane(id){
+  document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.id===id);});
+  document.querySelectorAll('.tab').forEach(function(t){t.setAttribute('aria-selected',t.dataset.pane===id);});
+  history.replaceState(null,'','#'+id);
+}
+document.querySelectorAll('.tab').forEach(function(t){t.addEventListener('click',function(){showPane(t.dataset.pane);});});
+if(/^#p[1-4]$/.test(location.hash))showPane(location.hash.slice(1));
+
+renderStudent();renderAll();
+
+/* 給自檢用 */
+window.__ets={S:S,stu:stu,buildPayload:buildPayload,parsePayload:parsePayload,buildCsv:buildCsv,scanText:scanText,simulate:simulate,renderAll:renderAll,renderStudent:renderStudent,studentText:studentText};
+})();
+</script>
+</body>
+</html>
