@@ -13,6 +13,7 @@
 const G1 = '🎒 一年級', GM = '📘 中年級', G3 = '🎓 三年級', GA = '🎲 都能玩';
 const T1 = '🌱 初階 1–3 年級', T2 = '🌿 進階 4–5 年級', T3 = '🌳 高階 6 年級';   // 打字島三階
 const A12 = '🎒 1–2 年級', A34 = '📘 3–4 年級', A14 = '🎨 1–4 年級';                // 畫畫島（2026-11-21 改版）
+const S14 = '⭐ 1–4 年級';                                                           // 小常識島 1–4 年級（2026-11-22；A12／A34 共用）
 
 export const ISLANDS = [
   { id:'mouse', name:'滑鼠島', icon:'🖱️', color:0x5fd38d, units:[
@@ -45,9 +46,16 @@ export const ISLANDS = [
     ['對稱魔鏡','🦋','mirror','units/unit26-mirror-workshop/','對稱魔鏡工坊',A34,26],
     ['任務局','🛠️','toolbox','units/unit27-paint-mission/','小畫家任務局',A34,27],
     ['煙火畫','🎆','fireworks','units/unit28-sparkle-fireworks/','閃亮亮煙火畫',A14,28] ] },   // 自由發揮、不評分（存作品張數）
+  // 小常識島（2026-11-22 改版：數位寵物養成）：寵物小屋＋新 4 關＋舊 2 關重做（unit8 桌面整理大師 → 寵物房間大整理、unit9 網路小警察 → 寵物警察訓練）
+  //   分數來源 'pet'＝讀 edtech-smart-pets，顯示這台電腦住了幾隻寵物
   { id:'smart', name:'小常識島', icon:'📁', color:0xb69bff, units:[
-    ['桌面整理','🗂️','folders','units/unit8-desktop-organizer/','桌面整理大師',G1,8],
-    ['網路警察','👮','siren','units/unit9-net-detective/','網路小警察',G1,9] ] },
+    ['寵物屋','🏠','pethouse','units/smart-pet-house/','寵物小屋：領養與換裝',S14,'pet'],
+    ['新電腦','💻','pc','units/unit29-pet-computer/','寵物的新電腦',A12,29],
+    ['作息表','⏰','clock','units/unit30-pet-schedule/','寵物作息表',A12,30],
+    ['大整理','🗂️','folders','units/unit8-desktop-organizer/','寵物房間大整理',S14,8],
+    ['怪訊息','💬','chat','units/unit31-pet-message/','寵物收到怪訊息',A34,31],
+    ['AI 作業','🤖','robot','units/unit32-pet-ai-homework/','寵物的 AI 作業',A34,32],
+    ['小警察','👮','siren','units/unit9-net-detective/','寵物警察訓練',A34,9] ] },
   { id:'board', name:'大富翁港', icon:'🎲', color:0xff9f5a, units:[
     ['森林大富翁','🌳','dice','board/index.html','資訊大富翁：森林大冒險',GA,'board:forest'],
     ['海洋大富翁','🐳','boat','board/ocean.html','資訊大富翁：海洋大探索',GA,'board:ocean'] ] },
@@ -71,6 +79,9 @@ let certs = {};
 try { certs = (JSON.parse(ls('edtech-board-certs') || '{}') || {}).zones || {}; } catch { /* 壞資料就當沒證書 */ }
 
 function record(src) {
+  if (src === 'pet') {   // 小常識島寵物小屋：這台電腦住了幾隻寵物
+    try { const n = ((JSON.parse(ls('edtech-smart-pets') || '{}') || {}).pets || []).length; return n ? { pets:n } : null; } catch { return null; }
+  }
   if (typeof src === 'string') { const c = certs[src.split(':')[1]]; return c ? { stars:c.stars || 1, coins:c.coins || 0 } : null; }
   const s = ls(`edtech-unit${src}-score`) ?? ls(`edtech-unit${src}-best-score`);
   return s ? { score:s } : null;
@@ -84,7 +95,7 @@ ISLANDS.forEach((isl, ii) => isl.units.forEach(u => UNITS.push({
 })));
 ISLANDS.forEach((isl, ii) => { isl.list = UNITS.filter(u => u.ii === ii); });
 
-export const recText = u => !u.rec ? '🆕 還沒玩' : u.rec.stars ? '⭐'.repeat(u.rec.stars) : `🏆 ${u.rec.score}`;
+export const recText = u => !u.rec ? '🆕 還沒玩' : u.rec.pets ? `🐾 ${u.rec.pets} 隻寵物` : u.rec.stars ? '⭐'.repeat(u.rec.stars) : `🏆 ${u.rec.score}`;
 export const hex = c => '#' + c.toString(16).padStart(6, '0');
 export const pastelHex = (c, a = .3) => {
   const r = c >> 16 & 255, g = c >> 8 & 255, b = c & 255, m = v => Math.round(v + (255 - v) * a);

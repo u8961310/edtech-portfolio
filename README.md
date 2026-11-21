@@ -34,8 +34,13 @@
 | 🎨 1–4 年級 | `unit5-pixel-art` | 像素小畫家 | 畫畫島：低年級數字填色、中年級座標畫圖、像素概念與自由創作 |
 | 🎒 一年級 | `unit6-turtle-commander` | 烏龜小指揮官 | 運算思維入門：序列、除錯、最少步數 |
 | 🎒 一年級 | `unit7-spell-commander` | 指令小法師 | 滑鼠+鍵盤整合、運算思維：順序、重複、條件 |
-| 🎒 一年級 | `unit8-desktop-organizer` | 桌面整理大師 | 檔案管理、拖曳整理、檔案類型辨識 |
-| 🎒 一年級 | `unit9-net-detective` | 網路小警察（圖示判斷版）| 資訊倫理、看圖辨識壞訊號（零文字依賴） |
+| ⭐ 1–4 年級 | `smart-pet-house` | 寵物小屋 | 小常識島大廳：領養寵物（座號＋名字，一台電腦多隻）、換裝、6 關進度（注音） |
+| 🎒 1–2 年級 | `unit29-pet-computer` | 寵物的新電腦 | 小常識島：電腦設備名稱與用途、生活中的資訊產品（資E1，注音） |
+| 🎒 1–2 年級 | `unit30-pet-schedule` | 寵物作息表 | 小常識島：坐姿、護眼、3C 作息（資E11，注音） |
+| ⭐ 1–4 年級 | `unit8-desktop-organizer` | 寵物房間大整理（原桌面整理大師） | 小常識島：依圖示把檔案拖進資料夾、看圖示不看檔名（資E8，注音） |
+| 📘 3–4 年級 | `unit31-pet-message` | 寵物收到怪訊息 | 小常識島：陌生人訊息、釣魚與假訊息、群組禮儀（資E12、資E7） |
+| 📘 3–4 年級 | `unit32-pet-ai-homework` | 寵物的 AI 作業 | 小常識島：合宜使用生成式 AI——誠實、查證、保護個資（資E12、資E2） |
+| 📘 3–4 年級 | `unit9-net-detective` | 寵物警察訓練（原網路小警察） | 小常識島：5 關 25 題情境判斷安全或危險（資E12） |
 | 🎒 一年級 | `unit10-classifier-captain` | 分類大隊長 | 觀察分類、依特徵歸組（資料概念入門） |
 | 📘 中年級 | `unit1-typing-adventure` | 中文打字冒險王 | 注音輸入、中文識讀、闖關成就感 |
 | 📘 中年級 | `unit11-space-typing-pro` | 英打太空特攻 | 計時英打練習、漸進難度、WPM 計分 |
@@ -106,10 +111,12 @@ edtech-portfolio/
     │   └── index.html
     ├── unit7-spell-commander/
     │   └── index.html
-    ├── unit8-desktop-organizer/
+    ├── unit8-desktop-organizer/      # 小常識島：寵物房間大整理
     │   └── index.html
-    ├── unit9-net-detective/
+    ├── unit9-net-detective/          # 小常識島：寵物警察訓練
     │   └── index.html
+    ├── unit29-pet-computer/ … unit32-pet-ai-homework/   # 小常識島新 4 關
+    ├── smart-pet-house/              # 小常識島：寵物小屋
     ├── unit10-classifier-captain/
     │   └── index.html
     ├── unit11-space-typing-pro/

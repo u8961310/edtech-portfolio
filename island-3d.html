@@ -390,6 +390,32 @@ const PROPS = {
     for (let i=0;i<12;i++) { const a = i/12*Math.PI*2, b = (i%3-1)*.5;
       mesh(SP(.022,6,6), cs[i%5], g, -.08+Math.cos(a)*.12*Math.cos(b), .42+Math.sin(b)*.1, Math.sin(a)*.12*Math.cos(b)); }
     mesh(SP(.03,8,6), 0xffffff, g, -.08,.42,0); },
+  // ---- 小常識島（2026-11-22 改版：數位寵物養成）----
+  pethouse(g) {   // 寵物小屋：桃色小屋＋紫屋頂＋門口一顆白色雲朵寶寶（smart-pet-house）
+    mesh(B(.26,.18,.22), 0xffd2b0, g, 0,.09,0);
+    const r = mesh(CO(.21,.14,4), 0x8a6ae0, g, 0,.25,0); r.rotation.y = Math.PI/4;
+    mesh(B(.07,.11,.01), 0xc75f17, g, 0,.055,.111);
+    mesh(SP(.055,12,10), 0xf3f5ff, g, .1,.055,.16); mesh(SP(.035,10,8), 0xf3f5ff, g, .1,.12,.16);
+    mesh(SP(.012,6,6), 0x3b2350, g, .088,.125,.19); mesh(SP(.012,6,6), 0x3b2350, g, .112,.125,.19); },
+  pc(g) {   // 寵物的新電腦：螢幕＋鍵盤＋滑鼠（unit29）
+    mesh(B(.24,.16,.02), 0x3b2350, g, 0,.15,-.04); mesh(B(.2,.12,.005), 0x9bd7f2, g, 0,.15,-.028, { emissive:0x4fa8d8, emissiveIntensity:.35 });
+    mesh(B(.03,.06,.03), 0x5c4870, g, 0,.04,-.04); mesh(B(.1,.01,.06), 0x5c4870, g, 0,.008,-.04);
+    mesh(B(.2,.015,.07), 0xffffff, g, -.02,.008,.08); mesh(SP(.025,10,8), 0xffffff, g, .13,.018,.08).scale.set(1,.6,1.4); },
+  clock(g) {   // 寵物作息表：鬧鐘（unit30）
+    const f = mesh(CY(.11,.11,.05,24), 0xffffff, g, 0,.13,0); f.rotation.x = Math.PI/2;
+    const rim = mesh(new THREE.TorusGeometry(.11,.018,8,24), 0xff8f3f, g, 0,.13,0);
+    mesh(B(.012,.07,.01), 0x3b2350, g, 0,.155,.03); mesh(B(.05,.012,.01), 0x3b2350, g, .02,.13,.03);
+    [-1,1].forEach(s => { mesh(SP(.035,10,8), 0xff8f3f, g, s*.08,.235,0); mesh(CY(.01,.01,.05,6), 0x5c4870, g, s*.07,.02,0); }); },
+  chat(g) {   // 寵物收到怪訊息：手機＋對話泡泡＋紅色驚嘆號（unit31）
+    const ph = mesh(B(.12,.22,.02), 0x3b2350, g, -.05,.12,0); ph.rotation.z = .12;
+    mesh(B(.1,.18,.005), 0xece3fa, g, -.05,.12,.012).rotation.z = .12;
+    mesh(B(.14,.08,.03), 0xffffff, g, .09,.26,.02); mesh(CO(.02,.04,3), 0xffffff, g, .05,.21,.02).rotation.z = Math.PI;
+    mesh(B(.014,.04,.01), 0xb4372b, g, .09,.27,.04); mesh(SP(.009,6,6), 0xb4372b, g, .09,.24,.04); },
+  robot(g) {   // 寵物的 AI 作業：小機器人＋作業本（unit32）
+    mesh(B(.14,.12,.1), 0xddf3e6, g, 0,.08,0); mesh(B(.16,.11,.12), 0xffffff, g, 0,.21,0);
+    [-1,1].forEach(s => mesh(SP(.018,8,6), 0x6a45c9, g, s*.035,.22,.062, { emissive:0x6a45c9, emissiveIntensity:.4 }));
+    mesh(CY(.006,.006,.06,6), 0x5c4870, g, 0,.29,0); mesh(SP(.02,8,6), 0xffc233, g, 0,.33,0, { emissive:0xffb000, emissiveIntensity:.4 });
+    mesh(B(.14,.012,.1), 0xffe1cb, g, .17,.006,.06).rotation.y = -.3; },
   folders(g) { [0xffc94d,0x6fb3ff,0xff8fb1].forEach((c,i) => { mesh(B(.26,.05,.19), c, g, .02*i,.025+i*.055,-.01*i).rotation.y = i*.12; mesh(B(.08,.05,.02), c, g, -.08+.02*i,.03+i*.055,-.1-.01*i).rotation.y = i*.12; }); },
   siren(g) { mesh(CY(.1,.12,.08,16), 0x4a5a7a, g, 0,.04,0); mesh(SP(.07,14,10,0,Math.PI*2,0,Math.PI/2), 0xff4d4d, g, -.04,.08,0, { emissive:0xff2a2a, emissiveIntensity:.5, roughness:.2 });
     mesh(SP(.07,14,10,0,Math.PI*2,0,Math.PI/2), 0x4d8bff, g, .06,.08,0, { emissive:0x2a5aff, emissiveIntensity:.5, roughness:.2 }); mesh(CY(.13,.15,.03,6), 0xfff6e6, g, 0,.18,.05).rotation.x = Math.PI/2; },
