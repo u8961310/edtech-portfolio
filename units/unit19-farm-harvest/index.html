@@ -645,6 +645,11 @@
                 removeVeggie(index);
                 score++;
                 scoreVal.textContent = score;
+                // 存最高分，學習樂園島會讀 edtech-unit19-score 顯示成績
+                try {
+                    const prev = parseInt(localStorage.getItem('edtech-unit19-score') || '0', 10);
+                    if (score > prev) localStorage.setItem('edtech-unit19-score', score);
+                } catch (e) { /* localStorage 不能用就略過 */ }
 
                 // 每 5 分觸發一次兔子送星星事件！
                 if (score > 0 && score % 5 === 0) {

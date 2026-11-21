@@ -565,6 +565,11 @@
 
             updateUI() {
                 document.getElementById('score-val').textContent = this.stars;
+                // 存最高星星數，學習樂園島會讀 edtech-unit20-score 顯示成績
+                try {
+                    const prev = parseInt(localStorage.getItem('edtech-unit20-score') || '0', 10);
+                    if (this.stars > prev) localStorage.setItem('edtech-unit20-score', this.stars);
+                } catch (e) { /* localStorage 不能用就略過 */ }
                 
                 let badgeText = "準備開始";
                 if (this.currentStage === 1) badgeText = "關卡一：找間諜 🔍";

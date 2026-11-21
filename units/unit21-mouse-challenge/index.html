@@ -423,6 +423,11 @@
         // 通關處理
         function completeLevel() {
             playSuccessSound();
+            // 存「最多過了幾關」（0–4），學習樂園島會讀 edtech-unit21-score 顯示成績
+            try {
+                const prev = parseInt(localStorage.getItem('edtech-unit21-score') || '0', 10);
+                if (currentLevel > prev) localStorage.setItem('edtech-unit21-score', currentLevel);
+            } catch (e) { /* localStorage 不能用就略過 */ }
             if (currentLevel < totalLevels) {
                 const next = currentLevel + 1;
                 loadLevel(next);

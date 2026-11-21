@@ -476,6 +476,11 @@
             score += points;
             const scoreEl = document.getElementById('currentScore');
             scoreEl.textContent = score;
+            // 存最高分，學習樂園島會讀 edtech-unit15-score 顯示成績
+            try {
+                const prev = parseInt(localStorage.getItem('edtech-unit15-score') || '0', 10);
+                if (score > prev) localStorage.setItem('edtech-unit15-score', score);
+            } catch (e) { /* localStorage 不能用就略過 */ }
             scoreEl.classList.add('animate__animated', 'animate__bounceIn');
             setTimeout(() => {
                 scoreEl.classList.remove('animate__animated', 'animate__bounceIn');
