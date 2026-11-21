@@ -291,6 +291,7 @@
       else if (e.target.closest('.ti-l3 .ti-btn1')) closeKeyboard();
       else if (e.target.closest('.ti-pausebtn')) pause('user');
       else if (e.target.closest('.ti-paused .ti-btn1')) resume();
+      else if (e.target.closest('.ti-homelink2')) return;   // 回首頁是一般連結，交給瀏覽器跳頁
       else if (e.target.closest('.ti-paused .ti-btn2')) { quit(); }
       else if ($('.ti-play', app).contains(e.target) && !e.target.closest('button')) focusInput();
     });
@@ -478,11 +479,12 @@
 
   // ------------------------------------------------------------ 畫面骨架
   function skeleton(o) {
+    var home = o.homeUrl || '../../index.html';
     var restCard = function (n, title, text) { return '<div class="rs"><span class="no num">' + n + '</span><b>' + title + '</b><span>' + text + '</span></div>'; };
     return '' +
     '<section class="ti-setup">' +
       '<div class="ti-setup-main">' +
-        '<div class="ti-title"><h1>' + esc(o.title) + '</h1><p>' + esc(o.subtitle || '打字島') + '　選好了就按「開始」</p></div>' +
+        '<div class="ti-title"><a class="ti-homelink" href="' + esc(home) + '">🏠 首頁</a><h1>' + esc(o.title) + '</h1><p>' + esc(o.subtitle || '打字島') + '　選好了就按「開始」</p></div>' +
         '<div class="ti-setup-rows"></div>' +
       '</div>' +
       '<div class="ti-setup-side">' +
@@ -514,7 +516,7 @@
           '<button class="ti-btn1" type="button">我知道了，繼續打字</button></div>' +
         '<div class="ti-kb"></div></div></div>' +
       '<div class="ti-paused" hidden><div class="ti-panel"><h2>⏸ 暫停中</h2><p>準備好了再按「繼續」。</p>' +
-        '<div class="btns"><button class="ti-btn1" type="button">繼續</button><button class="ti-btn2" type="button">回到設定</button></div></div></div>' +
+        '<div class="btns"><button class="ti-btn1" type="button">繼續</button><button class="ti-btn2" type="button">回到設定</button><a class="ti-btn2 ti-homelink2" href="' + esc(home) + '">🏠 回首頁</a></div></div></div>' +
     '</section>' +
 
     '<section class="ti-rest" hidden><div class="ti-panel ti-restbox">' +

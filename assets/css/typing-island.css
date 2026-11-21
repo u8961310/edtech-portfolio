@@ -62,6 +62,9 @@ body {
 .ti-setup { display: grid; grid-template-columns: minmax(0,1fr) 420px; gap: 28px; padding: 20px 32px 22px 36px; }
 .ti-setup-main { display: flex; flex-direction: column; min-height: 0; }
 .ti-title { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; }
+.ti-homelink { align-self: center; flex: none; padding: 6px 16px; border-radius: 999px; background: var(--card); border: 2px solid var(--kraft-2); box-shadow: 0 3px 0 var(--kraft-2); color: var(--ink); font-size: 18px; font-weight: 900; text-decoration: none; }
+.ti-homelink:hover { background: var(--butter-soft); }
+.ti-paused .ti-homelink2 { display: inline-flex; align-items: center; color: var(--ink); text-decoration: none; }
 .ti-title h1 { font-size: 40px; font-weight: 900; }
 .ti-title p { color: var(--ink-3); font-size: 17px; }
 .ti-setup-rows { display: flex; flex-direction: column; flex: 1; min-height: 0; }
