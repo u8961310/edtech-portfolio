@@ -91,6 +91,14 @@ await t('非房主改設定無效、房主改設定雙方同步', async () => {
   assert.strictEqual(r.settings.duration, 600);
 });
 
+await t('30 秒功能測試時長伺服器接受（測完改回 10 分鐘）', async () => {
+  A.send({ t: 'settings', settings: { lang: 'zh', grade: 'low', duration: 30 } });
+  const r = await B.wait('room', (x) => x.settings.duration === 30);
+  assert.strictEqual(r.settings.duration, 30);
+  A.send({ t: 'settings', settings: { lang: 'zh', grade: 'low', duration: 600 } });
+  await B.wait('room', (x) => x.settings.duration === 600);
+});
+
 await t('開打：雙方收到同一個 seed 與血量', async () => {
   A.send({ t: 'start' });
   const ca = await A.wait('countdown'), cb = await B.wait('countdown');
