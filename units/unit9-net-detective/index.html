@@ -1,896 +1,1155 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>網路小警察 - 看圖判斷壞壞</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-<style>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; min-height: 100%; overflow-x: hidden; }
-    :root {
-        --c: #3b82f6;
-        --c-dark: #1e40af;
-        --c-light: #93c5fd;
-        --c-bg: #eff6ff;
-        --good: #16a34a;
-        --good-dark: #15803d;
-        --bad: #dc2626;
-        --bad-dark: #991b1b;
-    }
-    body {
-        font-family: 'Noto Sans TC', sans-serif;
-        user-select: none;
-        -webkit-user-select: none;
-        background:
-            radial-gradient(circle at 20% 80%, color-mix(in srgb, var(--c) 20%, transparent) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--c) 25%, transparent) 0%, transparent 50%),
-            linear-gradient(180deg, #dbeafe 0%, #bfdbfe 60%, #93c5fd 100%);
-        color: #1e293b;
-        min-height: 100vh;
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>寵物警察訓練 - 小常識島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Baloo+2:wght@700;800&display=swap">
+  <link rel="stylesheet" href="../../assets/css/smart-island.css">
+  <style>
+    /* ===== 寵物警察訓練場景樣式（一律以 sc- 開頭，不覆寫 .sm- 樣式） ===== */
+    .sc-wrap {
+      position: relative;
+      width: 1366px;
+      height: 591px;
+      overflow: hidden;
+      font-family: 'Noto Sans TC', sans-serif;
+      color: var(--ink);
     }
 
-    .screen {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    }
-    .hidden { display: none !important; }
-
-    /* ===== Title ===== */
-    .title-emoji {
-        font-size: clamp(80px, 14vw, 140px);
-        animation: float 2.4s ease-in-out infinite;
-        filter: drop-shadow(0 4px 16px color-mix(in srgb, var(--c) 60%, transparent));
-    }
-    @keyframes float {
-        0%, 100% { transform: translateY(0) rotate(-3deg); }
-        50% { transform: translateY(-12px) rotate(3deg); }
-    }
-    .title-text {
-        font-size: clamp(36px, 6vw, 60px);
-        font-weight: 900;
-        color: var(--c-dark);
-        text-shadow: 3px 3px 0 white, 5px 5px 0 var(--c-light);
-        margin: 8px 0 4px;
-        text-align: center;
-    }
-    .subtitle {
-        font-size: clamp(18px, 2.4vw, 26px);
-        color: var(--c-dark);
-        font-weight: 900;
-        margin-bottom: 24px;
-        text-align: center;
+    /* 左側主任務區：導言條 ＋ 大情境卡 ＋ 安全／危險大按鈕 */
+    .sc-main {
+      position: absolute;
+      left: 34px;
+      top: 18px;
+      width: 892px;
+      height: 554px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
-    /* ===== Rule preview (start screen) ===== */
-    .rule-card {
-        background: white;
-        border: 3px solid var(--c);
-        border-radius: 20px;
-        padding: 18px 22px;
-        max-width: 540px;
-        margin: 0 auto 24px;
-        text-align: center;
-        box-shadow: 0 6px 0 var(--c-light);
+    /* 關卡任務導言條 */
+    .sc-mission {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 20px;
+      background: var(--lilac);
+      border: 3px solid var(--edge);
+      border-radius: 20px;
+      box-shadow: inset 0 2px 0 #fff, 0 4px 0 rgba(59, 35, 80, .08);
+      min-height: 54px;
+      box-sizing: border-box;
     }
-    .rule-row {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 14px;
-        font-size: clamp(28px, 5vw, 40px);
-        margin: 8px 0;
+    .sc-lv-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      background: var(--violet);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 900;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
-    .rule-arrow {
-        font-size: clamp(20px, 3vw, 28px);
-        color: var(--c);
-        font-weight: 900;
-    }
-    .rule-tag {
-        font-size: clamp(28px, 5vw, 42px);
-        font-weight: 900;
-        padding: 4px 16px;
-        border-radius: 999px;
-        color: white;
-    }
-    .rule-tag.good { background: var(--good); }
-    .rule-tag.bad { background: var(--bad); }
-
-    /* ===== Big button ===== */
-    .big-btn {
-        font-family: 'Noto Sans TC', sans-serif;
-        font-size: clamp(22px, 3vw, 30px);
-        font-weight: 900;
-        padding: 16px 36px;
-        background: linear-gradient(180deg, var(--c-light), var(--c));
-        color: white;
-        border: none;
-        border-radius: 999px;
-        box-shadow: 0 5px 0 var(--c-dark);
-        cursor: pointer;
-        transition: transform 0.1s;
-        text-shadow: 2px 2px 0 var(--c-dark);
-        margin: 6px;
-    }
-    .big-btn:hover { transform: translateY(-2px); }
-    .big-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--c-dark); }
-    .big-btn.gold {
-        background: linear-gradient(180deg, #fbbf24, #f59e0b);
-        box-shadow: 0 5px 0 #b45309;
-        text-shadow: 2px 2px 0 #92400e;
-    }
-    .big-btn.gold:active { box-shadow: 0 2px 0 #b45309; }
-    .big-btn.gray {
-        background: linear-gradient(180deg, #94a3b8, #64748b);
-        box-shadow: 0 5px 0 #334155;
-        text-shadow: 2px 2px 0 #334155;
+    .sc-mission-text {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.35;
     }
 
-    /* ===== Game Layout ===== */
-    #game-screen {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 12px 12px 20px;
-        gap: 14px;
+    /* 中央大情境卡（SVG 插圖 ＋ 案件來源標籤 ＋ 情境描述） */
+    .sc-case {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding: 24px 30px;
+      background: var(--card);
+      box-sizing: border-box;
+      position: relative;
     }
-    .game-top {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        max-width: 720px;
+    .sc-art-frame {
+      width: 286px;
+      height: 224px;
+      flex-shrink: 0;
+      border-radius: 22px;
+      background: var(--sky);
+      border: 3px solid var(--edge);
+      box-shadow: inset 0 3px 0 rgba(255, 255, 255, .85), inset 0 -4px 0 rgba(59, 35, 80, .06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      box-sizing: border-box;
     }
-    .info-box {
-        background: white;
-        padding: 8px 18px;
-        border-radius: 999px;
-        font-weight: 900;
-        font-size: clamp(15px, 1.8vw, 19px);
-        color: var(--c-dark);
-        border: 3px solid var(--c);
-        box-shadow: 0 3px 0 var(--c-light);
+    .sc-art-frame svg {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
-    .top-back {
-        background: white;
-        border: 3px solid var(--c);
-        color: var(--c-dark);
-        font-family: 'Noto Sans TC', sans-serif;
-        font-weight: 900;
-        font-size: 16px;
-        padding: 6px 18px;
-        border-radius: 999px;
-        cursor: pointer;
-        text-decoration: none;
-        box-shadow: 0 3px 0 var(--c-light);
+    .sc-case-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 14px;
+      min-width: 0;
     }
-
-    /* ===== Icon stage ===== */
-    .stage {
-        background: white;
-        border: 4px solid var(--c);
-        border-radius: 28px;
-        padding: 28px 24px;
-        width: 100%;
-        max-width: 540px;
-        box-shadow: 0 8px 0 var(--c-light);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
+    .sc-case-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
-    .icon-row {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: clamp(12px, 3vw, 28px);
-        width: 100%;
-        min-height: clamp(90px, 14vh, 130px);
+    .sc-source-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      background: var(--butter);
+      border: 2px solid #E8C574;
+      color: var(--ink);
+      font-size: 17px;
+      font-weight: 900;
+      white-space: nowrap;
     }
-    .big-icon {
-        font-size: clamp(56px, 12vw, 88px);
-        line-height: 1;
-        animation: icon-pop 0.5s ease-out;
-        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+    .sc-case-num {
+      font-family: var(--f-num, 'Baloo 2', 'Noto Sans TC', sans-serif);
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--ink2);
+      white-space: nowrap;
     }
-    @keyframes icon-pop {
-        from { transform: scale(0.4); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
+    .sc-question {
+      margin: 0;
+      font-size: 27px;
+      font-weight: 900;
+      line-height: 1.5;
+      color: var(--ink);
+      letter-spacing: .01em;
     }
-
-    /* ===== Answer buttons ===== */
-    .answer-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 14px;
-        width: 100%;
-        max-width: 540px;
-    }
-    .ans-btn {
-        font-family: 'Noto Sans TC', sans-serif;
-        border: 4px solid;
-        border-radius: 22px;
-        padding: 18px 8px 14px;
-        font-weight: 900;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        transition: transform 0.1s;
-        min-height: 110px;
-    }
-    .ans-btn:active { transform: translateY(3px); }
-    .ans-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .ans-btn .a-icon {
-        font-size: clamp(48px, 9vw, 72px);
-        line-height: 1;
-    }
-    .ans-btn .a-label {
-        font-size: clamp(28px, 5vw, 36px);
-        font-weight: 900;
-    }
-    .ans-btn.good {
-        background: linear-gradient(180deg, #86efac, #22c55e);
-        border-color: var(--good-dark);
-        box-shadow: 0 6px 0 var(--good-dark);
-        color: white;
-        text-shadow: 2px 2px 0 var(--good-dark);
-    }
-    .ans-btn.good:active { box-shadow: 0 2px 0 var(--good-dark); }
-    .ans-btn.bad {
-        background: linear-gradient(180deg, #fca5a5, #ef4444);
-        border-color: var(--bad-dark);
-        box-shadow: 0 6px 0 var(--bad-dark);
-        color: white;
-        text-shadow: 2px 2px 0 var(--bad-dark);
-    }
-    .ans-btn.bad:active { box-shadow: 0 2px 0 var(--bad-dark); }
-
-    /* ===== Feedback overlay ===== */
-    .feedback {
-        position: fixed; inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0,0,0,0.4);
-        z-index: 50;
-        pointer-events: none;
-        animation: fb-in 0.2s ease-out;
-    }
-    @keyframes fb-in { from { opacity: 0; } to { opacity: 1; } }
-    .feedback-mark {
-        font-size: clamp(160px, 30vw, 280px);
-        line-height: 1;
-        filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
-    }
-    .feedback-mark.good {
-        animation: mark-good 1s ease-out;
-    }
-    @keyframes mark-good {
-        0% { transform: scale(0.2); opacity: 0; }
-        40% { transform: scale(1.3); opacity: 1; }
-        70% { transform: scale(1) translateY(0); opacity: 1; }
-        100% { transform: scale(1) translateY(-40px); opacity: 0; }
-    }
-    .feedback-mark.bad {
-        animation: mark-bad 0.7s ease-out;
-    }
-    @keyframes mark-bad {
-        0% { transform: scale(0.2) rotate(-20deg); opacity: 0; }
-        30% { transform: scale(1.3) rotate(10deg); opacity: 1; }
-        50% { transform: scale(1) rotate(-8deg); }
-        70% { transform: scale(1.05) rotate(6deg); }
-        100% { transform: scale(1) rotate(0); opacity: 1; }
-    }
-    .fb-bonus {
-        position: absolute;
-        bottom: 28%;
-        font-size: clamp(28px, 5vw, 44px);
-        font-weight: 900;
-        color: #fef9c3;
-        text-shadow: 3px 3px 0 var(--good-dark), 5px 5px 0 rgba(0,0,0,0.4);
-        animation: bonus-up 1s ease-out;
-    }
-    @keyframes bonus-up {
-        0% { transform: translateY(20px); opacity: 0; }
-        50% { transform: translateY(-10px); opacity: 1; }
-        100% { transform: translateY(-50px); opacity: 0; }
+    .sc-ask-line {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--ink2);
     }
 
-    /* ===== Correct hint (the right icon flashes) ===== */
-    .correct-hint {
-        position: fixed; inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0,0,0,0.55);
-        z-index: 51;
-        pointer-events: none;
+    /* 下方兩個大判斷按鈕（安全 ✓ ／ 危險 ✗，皆 >= 220x80） */
+    .sc-choices {
+      display: flex;
+      gap: 24px;
+      height: 98px;
+      flex-shrink: 0;
     }
-    .ch-card {
-        background: white;
-        border: 5px solid var(--c);
-        border-radius: 24px;
-        padding: 24px 32px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-        box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    .sc-choice-btn {
+      flex: 1;
+      min-width: 240px;
+      min-height: 88px;
+      border-radius: 22px;
+      border: 3px solid var(--edge);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 30px;
+      font-weight: 900;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: transform .18s ease-out, box-shadow .18s ease-out, filter .18s ease-out;
+      padding: 0 28px;
+      box-sizing: border-box;
     }
-    .ch-row {
-        display: flex;
-        gap: 18px;
-        align-items: center;
-        justify-content: center;
+    .sc-choice-btn svg {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
     }
-    .ch-icon {
-        font-size: clamp(60px, 10vw, 96px);
-        line-height: 1;
+    .sc-choice-btn .sc-keyhint {
+      font-family: var(--f-num, 'Baloo 2', 'Noto Sans TC', sans-serif);
+      font-size: 17px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .72);
+      color: var(--ink);
+      border: 2px solid rgba(59, 35, 80, .18);
+      white-space: nowrap;
     }
-    .ch-icon.target {
-        animation: ch-flash 0.4s ease-in-out infinite alternate;
-        filter: drop-shadow(0 0 16px var(--bad));
+    .sc-choice-safe {
+      background: var(--ok-soft);
+      border-color: var(--ok);
+      color: var(--ok);
+      box-shadow: inset 0 3px 0 rgba(255, 255, 255, .9), inset 0 -5px 0 rgba(24, 107, 65, .18), 0 7px 0 #186B41, 0 12px 20px rgba(24, 107, 65, .16);
     }
-    @keyframes ch-flash {
-        from { transform: scale(1); filter: drop-shadow(0 0 8px var(--bad)); }
-        to { transform: scale(1.25); filter: drop-shadow(0 0 24px var(--bad)) brightness(1.2); }
+    .sc-choice-danger {
+      background: var(--bad-soft);
+      border-color: var(--bad);
+      color: var(--bad);
+      box-shadow: inset 0 3px 0 rgba(255, 255, 255, .9), inset 0 -5px 0 rgba(180, 55, 43, .18), 0 7px 0 #B4372B, 0 12px 20px rgba(180, 55, 43, .16);
     }
-    .ch-tag {
-        font-size: clamp(30px, 5vw, 44px);
-        font-weight: 900;
-        padding: 6px 22px;
-        border-radius: 999px;
-        color: white;
-        background: var(--bad);
-        text-shadow: 2px 2px 0 var(--bad-dark);
+    .sc-choice-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      filter: brightness(1.02);
     }
-    .ch-tag.good {
-        background: var(--good);
-        text-shadow: 2px 2px 0 var(--good-dark);
+    .sc-choice-btn:active:not(:disabled) {
+      transform: translateY(3px);
     }
-
-    /* ===== Shake on wrong ===== */
-    .shake { animation: shake 0.5s; }
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        20%, 60% { transform: translateX(-8px); }
-        40%, 80% { transform: translateX(8px); }
+    .sc-choice-btn:focus-visible,
+    .sc-sound-btn:focus-visible {
+      outline: 4px solid var(--violet);
+      outline-offset: 3px;
     }
-
-    /* ===== Banner (level clear) ===== */
-    .banner {
-        position: fixed; inset: 0;
-        background: rgba(0,0,0,0.55);
-        display: flex; align-items: center; justify-content: center;
-        z-index: 100;
-        animation: fb-in 0.25s ease-out;
-        padding: 20px;
+    .sc-choice-btn:disabled {
+      cursor: default;
+      opacity: .72;
     }
-    .banner-card {
-        background: white;
-        border: 5px solid var(--c);
-        padding: 30px 36px;
-        border-radius: 26px;
-        text-align: center;
-        max-width: 90%;
-        box-shadow: 0 12px 0 var(--c-light), 0 16px 40px rgba(0,0,0,0.4);
-    }
-    .banner-trophy { font-size: clamp(60px, 10vw, 92px); line-height: 1; }
-    .banner-title {
-        font-size: clamp(28px, 4vw, 40px);
-        font-weight: 900;
-        color: var(--c-dark);
-        margin: 10px 0 4px;
-    }
-    .banner-stars {
-        font-size: clamp(36px, 5vw, 52px);
-        letter-spacing: 6px;
-        margin: 12px 0;
-    }
-    .banner-actions {
-        margin-top: 18px;
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        justify-content: center;
+    .sc-choice-btn.sc-picked {
+      opacity: 1;
+      transform: translateY(2px);
     }
 
-    /* ===== Certificate ===== */
-    .certificate {
-        background: linear-gradient(180deg, #fefce8, #fef3c7);
-        border: 6px double #b45309;
-        border-radius: 24px;
-        padding: 36px 32px;
-        text-align: center;
-        max-width: 560px;
-        position: relative;
-        color: var(--c-dark);
-        box-shadow: 0 16px 40px rgba(0,0,0,0.25);
-    }
-    .cert-corner { position: absolute; font-size: 40px; }
-    .cert-corner.tl { top: 10px; left: 14px; }
-    .cert-corner.tr { top: 10px; right: 14px; }
-    .cert-corner.bl { bottom: 10px; left: 14px; }
-    .cert-corner.br { bottom: 10px; right: 14px; }
-    .cert-trophy { font-size: clamp(64px, 10vw, 96px); line-height: 1; }
-    .cert-title { font-size: clamp(30px, 4.4vw, 44px); font-weight: 900; color: var(--c-dark); margin: 10px 0 6px; }
-    .cert-body { font-size: clamp(18px, 2.2vw, 22px); color: #312e81; line-height: 1.8; margin: 14px 0; font-weight: 700; }
-    .cert-stat {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        align-items: center;
-        margin: 14px 0;
-    }
-    .cert-stat .lvl-line {
-        display: flex;
-        gap: 10px;
-        font-size: clamp(16px, 2vw, 20px);
-        font-weight: 900;
-        color: var(--c-dark);
-    }
-    .cert-stat .lvl-label {
-        min-width: 70px;
-        text-align: right;
-        color: var(--c);
-    }
-    .cert-rank { font-size: clamp(24px, 3vw, 34px); font-weight: 900; color: var(--c-dark); margin-top: 14px; }
-
-    /* ===== Print ===== */
-    @media print {
-        body { background: white; }
-        #start-screen, #game-screen, .banner, .feedback, .correct-hint { display: none !important; }
-        #end-screen { min-height: auto; padding: 0; }
-        #end-screen > div:not(.certificate) { display: none !important; }
-        .certificate { box-shadow: none; border-color: #b45309; }
+    /* 右側寵物警察陪伴區 */
+    .sc-petzone {
+      position: absolute;
+      left: 948px;
+      top: 16px;
+      width: 386px;
+      height: 556px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
     }
 
-    @media (max-width: 380px) {
-        .icon-row { gap: 8px; }
-        .ans-btn { padding: 14px 4px 10px; min-height: 96px; }
+    /* 寵物警察小徽章列（不改寵物本體，用獨立徽章裝飾） */
+    .sc-badge-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 16px 7px 10px;
+      border-radius: 999px;
+      background: var(--butter);
+      border: 3px solid #E5BC63;
+      box-shadow: inset 0 2px 0 rgba(255, 255, 255, .9), 0 5px 0 rgba(168, 103, 14, .18);
+      transition: transform .25s ease-out, box-shadow .25s ease-out;
     }
-</style>
-</head>
-<body>
-
-<!-- ===== Start Screen ===== -->
-<div id="start-screen" class="screen">
-    <div class="title-emoji">🕵️</div>
-    <h1 class="title-text">網路小警察</h1>
-    <p class="subtitle">看圖判斷壞壞 🛡️</p>
-
-    <div class="rule-card">
-        <div class="rule-row">
-            <span>👨</span><span>📚</span><span>⚽</span>
-            <span class="rule-arrow">→</span>
-            <span class="rule-tag good">✅</span>
-        </div>
-        <div class="rule-row">
-            <span>📨</span><span>💰</span><span>🔗</span>
-            <span class="rule-arrow">→</span>
-            <span class="rule-tag bad">🚨</span>
-        </div>
-    </div>
-
-    <button class="big-btn" onclick="startGame()">🚀 開始</button>
-    <a href="../../index.html" class="big-btn gray" style="text-decoration:none; display:inline-block;">🏠 回家</a>
-</div>
-
-<!-- ===== Game Screen ===== -->
-<div id="game-screen" class="hidden">
-    <div class="game-top">
-        <a href="../../index.html" class="top-back">🏠</a>
-        <div class="info-box" id="level-info">第 1 關</div>
-        <div class="info-box" id="q-info">1 / 5</div>
-        <div class="info-box" id="star-info">⭐ 0</div>
-    </div>
-
-    <div class="stage" id="stage">
-        <div class="icon-row" id="icon-row"></div>
-    </div>
-
-    <div class="answer-row">
-        <button class="ans-btn good" id="btn-good" onclick="answer(false)">
-            <span class="a-icon">✅</span>
-            <span class="a-label">好</span>
-        </button>
-        <button class="ans-btn bad" id="btn-bad" onclick="answer(true)">
-            <span class="a-icon">🚨</span>
-            <span class="a-label">壞</span>
-        </button>
-    </div>
-</div>
-
-<!-- ===== End Screen ===== -->
-<div id="end-screen" class="screen hidden">
-    <div class="certificate">
-        <span class="cert-corner tl">🕵️</span>
-        <span class="cert-corner tr">🛡️</span>
-        <span class="cert-corner bl">⭐</span>
-        <span class="cert-corner br">🏅</span>
-        <div class="cert-trophy" id="cert-trophy">🏆</div>
-        <div class="cert-title">小警察證書</div>
-        <div class="cert-body">
-            勇敢的小警察<br>
-            <strong>看圖通過所有試煉！</strong>
-        </div>
-        <div class="cert-stat" id="cert-stars"></div>
-        <div class="cert-rank" id="cert-rank">🥇 警察</div>
-        <div style="margin-top: 14px; font-size: 15px; color: var(--c); font-weight: 700;" id="cert-date"></div>
-    </div>
-    <div style="margin-top: 18px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
-        <button class="big-btn" onclick="location.reload()">🔄 再玩</button>
-        <button class="big-btn gold" onclick="window.print()">🖨️ 印出</button>
-        <a href="../../index.html" class="big-btn gray" style="text-decoration:none; display:inline-block;">🏠 回家</a>
-    </div>
-</div>
-
-<script>
-'use strict';
-
-// ============================================================
-// Audio (Web Audio API)
-// ============================================================
-let audioCtx = null;
-function getAudio() {
-    if (!audioCtx) {
-        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    .sc-badge-icon {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    return audioCtx;
-}
-function beep(freq, dur, type = 'sine', vol = 0.12) {
-    try {
-        const ctx = getAudio(); if (!ctx) return;
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.type = type;
-        osc.frequency.value = freq;
-        g.gain.setValueAtTime(vol, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-        osc.connect(g).connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + dur);
-    } catch(e) {}
-}
-const SFX = {
-    correct() {
-        beep(660, 0.1, 'triangle', 0.12);
-        setTimeout(() => beep(880, 0.1, 'triangle', 0.12), 90);
-        setTimeout(() => beep(1175, 0.18, 'triangle', 0.12), 180);
-    },
-    wrong() {
-        beep(180, 0.16, 'square', 0.13);
-        setTimeout(() => beep(120, 0.22, 'square', 0.13), 150);
-    },
-    levelClear() {
-        const notes = [523, 659, 784];
-        notes.forEach((f, i) => setTimeout(() => beep(f, 0.16, 'triangle', 0.12), i * 110));
-    },
-    finale() {
-        const notes = [523, 659, 784, 1047, 1319];
-        notes.forEach((f, i) => setTimeout(() => beep(f, 0.2, 'triangle', 0.13), i * 130));
-    },
-};
-
-// ============================================================
-// Data: danger / safe icon sets
-// ============================================================
-const DANGER = ['📨','💰','🎰','🔗','🔐','👤','🪟','❌','🤖','📞'];
-const SAFE   = ['👨','👩','👴','👵','👨‍🏫','🏫','📚','🎒','⚽','🍎'];
-
-function isDanger(icon) { return DANGER.indexOf(icon) >= 0; }
-
-// ============================================================
-// Levels (25 questions across 5 stages)
-// ============================================================
-const LEVELS = [
-    // 第 1 關：明顯混合（純好 / 純壞）
-    {
-        title: '第 1 關',
-        questions: [
-            { icons: ['📨','💰','🔗'], danger: true },
-            { icons: ['👨','🏫','📚'], danger: false },
-            { icons: ['🎰','💰','🔐'], danger: true },
-            { icons: ['👩','🍎','⚽'], danger: false },
-            { icons: ['📨','👤','🔗'], danger: true },
-        ],
-    },
-    // 第 2 關：3 個中混 1 個壞
-    {
-        title: '第 2 關',
-        questions: [
-            { icons: ['👨','📚','💰'], danger: true },
-            { icons: ['👵','🍎','🎒'], danger: false },
-            { icons: ['🏫','📚','🔗'], danger: true },
-            { icons: ['👴','⚽','🍎'], danger: false },
-            { icons: ['👩','🎒','🔐'], danger: true },
-        ],
-    },
-    // 第 3 關：相似 emoji（人 vs 陌生人）
-    {
-        title: '第 3 關',
-        questions: [
-            { icons: ['👤','📚','🎒'], danger: true },
-            { icons: ['👨‍🏫','🏫','📚'], danger: false },
-            { icons: ['👴','👩','👨'], danger: false },
-            { icons: ['👤','💰','📞'], danger: true },
-            { icons: ['👵','👨‍🏫','🍎'], danger: false },
-        ],
-    },
-    // 第 4 關：少見情境（假冒、彈窗、帳號鎖定）
-    {
-        title: '第 4 關',
-        questions: [
-            { icons: ['🤖','📚','🏫'], danger: true },
-            { icons: ['🪟','💰','🔗'], danger: true },
-            { icons: ['👨‍🏫','📚','🎒'], danger: false },
-            { icons: ['❌','🔐','📞'], danger: true },
-            { icons: ['🍎','⚽','👴'], danger: false },
-        ],
-    },
-    // 第 5 關 BOSS：壓力混合
-    {
-        title: '第 5 關',
-        questions: [
-            { icons: ['👨','🤖','📚'], danger: true },
-            { icons: ['🎒','🍎','⚽'], danger: false },
-            { icons: ['📞','🏫','👨‍🏫'], danger: true },
-            { icons: ['👵','👨','👩'], danger: false },
-            { icons: ['🪟','❌','🔐'], danger: true },
-        ],
-    },
-];
-
-// ============================================================
-// State
-// ============================================================
-const state = {
-    levelIdx: 0,
-    qIdx: 0,
-    levelCorrect: 0,
-    levelStars: [],
-    totalStars: 0,
-    locked: false,
-};
-
-function $(id) { return document.getElementById(id); }
-
-// ============================================================
-// Render
-// ============================================================
-function renderQuestion() {
-    const level = LEVELS[state.levelIdx];
-    const q = level.questions[state.qIdx];
-    const row = $('icon-row');
-    row.innerHTML = '';
-    q.icons.forEach((ic, i) => {
-        const span = document.createElement('span');
-        span.className = 'big-icon';
-        span.style.animationDelay = (i * 0.08) + 's';
-        span.textContent = ic;
-        row.appendChild(span);
-    });
-    $('level-info').textContent = level.title;
-    $('q-info').textContent = (state.qIdx + 1) + ' / ' + level.questions.length;
-    $('star-info').textContent = '⭐ ' + state.totalStars;
-    $('btn-good').disabled = false;
-    $('btn-bad').disabled = false;
-}
-
-// ============================================================
-// Answer flow
-// ============================================================
-function answer(playerSaysDanger) {
-    if (state.locked) return;
-    state.locked = true;
-    $('btn-good').disabled = true;
-    $('btn-bad').disabled = true;
-
-    const level = LEVELS[state.levelIdx];
-    const q = level.questions[state.qIdx];
-    const correct = (playerSaysDanger === q.danger);
-
-    if (correct) {
-        state.levelCorrect++;
-        SFX.correct();
-        showFeedbackGood();
-        setTimeout(advance, 900);
-    } else {
-        SFX.wrong();
-        showFeedbackBad(q);
-        setTimeout(advance, 1700);
+    .sc-badge-icon svg {
+      width: 40px;
+      height: 40px;
+      display: block;
     }
-}
+    .sc-badge-text {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .sc-badge-score {
+      font-family: var(--f-num, 'Baloo 2', 'Noto Sans TC', sans-serif);
+      font-size: 19px;
+      font-weight: 800;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: #fff;
+      color: var(--violet-d);
+      border: 2px solid #D5C5F2;
+      white-space: nowrap;
+    }
+    /* 答對時警徽亮一下（單次動畫，不連續閃爍） */
+    .sc-badge-bar.sc-glow {
+      animation: scBadgeGlow .58s ease-out 1;
+    }
+    @keyframes scBadgeGlow {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 194, 51, .75); }
+      45% { transform: scale(1.08); box-shadow: 0 0 0 14px rgba(255, 194, 51, .35); }
+      100% { transform: scale(1); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .9), 0 5px 0 rgba(168, 103, 14, .18); }
+    }
 
-function showFeedbackGood() {
-    const fb = document.createElement('div');
-    fb.className = 'feedback';
-    fb.innerHTML = '<div class="feedback-mark good">✅</div><div class="fb-bonus">+1 ⭐</div>';
-    document.body.appendChild(fb);
-    setTimeout(() => fb.remove(), 900);
-}
+    /* 寵物對話泡泡 */
+    .sc-bubble {
+      width: 356px;
+      min-height: 82px;
+      padding: 14px 20px;
+      box-sizing: border-box;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.42;
+      color: var(--ink);
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: var(--card);
+    }
+    .sc-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -13px;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      background: var(--card);
+      border-right: 3px solid var(--edge);
+      border-bottom: 3px solid var(--edge);
+      transform: translateX(-50%) rotate(45deg);
+    }
 
-function showFeedbackBad(q) {
-    const fb = document.createElement('div');
-    fb.className = 'feedback';
-    fb.innerHTML = '<div class="feedback-mark bad">❌</div>';
-    document.body.appendChild(fb);
-    $('stage').classList.add('shake');
+    /* 寵物本體舞台（290x290 px） */
+    .sc-pet-stage {
+      width: 290px;
+      height: 290px;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .sc-pet-stage svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    /* 答錯時輕輕搖一下（單次短動畫） */
+    .sc-pet-stage.sc-shake {
+      animation: scPetShake .34s ease-in-out 1;
+    }
+    @keyframes scPetShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-7px) rotate(-2deg); }
+      75% { transform: translateX(7px) rotate(2deg); }
+    }
 
-    setTimeout(() => {
-        fb.remove();
-        $('stage').classList.remove('shake');
-        const hint = document.createElement('div');
-        hint.className = 'correct-hint';
-        if (q.danger) {
-            const dangerIc = q.icons.find(isDanger) || q.icons[0];
-            hint.innerHTML =
-                '<div class="ch-card">' +
-                  '<div class="ch-row">' +
-                    q.icons.map(ic => {
-                        const cls = (ic === dangerIc) ? 'ch-icon target' : 'ch-icon';
-                        return '<span class="' + cls + '">' + ic + '</span>';
-                    }).join('') +
-                  '</div>' +
-                  '<div class="ch-tag">🚨</div>' +
-                '</div>';
-        } else {
-            hint.innerHTML =
-                '<div class="ch-card">' +
-                  '<div class="ch-row">' +
-                    q.icons.map(ic => '<span class="ch-icon">' + ic + '</span>').join('') +
-                  '</div>' +
-                  '<div class="ch-tag good">✅</div>' +
-                '</div>';
+    /* 寵物名牌膠囊 */
+    .sc-pet-plate {
+      padding: 6px 18px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 3px solid var(--edge);
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--ink);
+      white-space: nowrap;
+      box-shadow: 0 4px 0 rgba(59, 35, 80, .08);
+    }
+
+    /* 右下角音效開關按鈕（預設關閉，>= 44x44px） */
+    .sc-sound-btn {
+      position: absolute;
+      right: 22px;
+      bottom: 18px;
+      min-width: 52px;
+      height: 52px;
+      padding: 0 14px;
+      border-radius: 18px;
+      border: 3px solid var(--edge);
+      background: var(--card);
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 16px;
+      font-weight: 900;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: inset 0 2px 0 #fff, 0 5px 0 #EBD6C5;
+      transition: transform .18s ease-out, background .18s ease-out;
+    }
+    .sc-sound-btn svg {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .sc-sound-btn[aria-pressed="true"] {
+      background: var(--butter);
+      border-color: #E5BC63;
+    }
+    .sc-sound-btn:hover {
+      transform: translateY(-2px);
+    }
+    .sc-sound-btn:active {
+      transform: translateY(2px);
+    }
+
+    /* 護眼與動態減弱偏好設定 */
+    @media (prefers-reduced-motion: reduce) {
+      .sc-choice-btn,
+      .sc-badge-bar,
+      .sc-sound-btn {
+        transition: none;
+      }
+      .sc-badge-bar.sc-glow,
+      .sc-pet-stage.sc-shake {
+        animation: none;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/smart-pet.js"></script>
+  <script src="../../assets/js/smart-ui.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    /* =====================================================================
+     * 題目與關卡常數集中設定（5 關 × 5 題 ＝ 25 題，選項順序固定不洗牌）
+     * ans: 0 ＝ 安全、1 ＝ 危險
+     * ===================================================================== */
+    var SCENE_CONFIG = {
+      STARS: { THREE: 5, TWO: 3 }, // 5 題全對 3 顆星；3–4 題 2 顆星；0–2 題 1 顆星
+      LEVELS: [
+        {
+          name: '一眼看出來',
+          icon: '<svg viewBox="0 0 40 40" fill="none"><circle cx="17" cy="17" r="10.5" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.6"/><path d="M13 13.5c1.5-1.5 3.8-2 5.8-1.2" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M24.8 24.8l9.2 9.2" stroke="#FF8F3F" stroke-width="4.8" stroke-linecap="round"/><path d="M24.8 24.8l9.2 9.2" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/></svg>',
+          intro: '第一站巡邏！先練習一眼就能分清楚的安全與危險情況。',
+          learned: '陌生警告和奇怪連結不亂點，先告訴大人',
+          questions: [
+            {
+              tag: '班級群組',
+              pic: 'classNotice',
+              q: '老師在班級聯絡群組裡，提醒大家明天美勞課要帶彩色筆。',
+              petSay: '這是班導師貼的上課提醒，你覺得這個情況安全嗎？',
+              options: [
+                { text: '安全', why: '正解' },
+                { text: '危險', why: '以為在網路群組收到的任何通知都不能相信' }
+              ],
+              ans: 0,
+              explain: '老師在班級群組貼上課提醒是日常聯絡，可以放心記下來。'
+            },
+            {
+              tag: '跳出警告',
+              pic: 'virusPopup',
+              q: '逛網頁時突然跳出紅框警告：「你的電腦中毒了！快按這裡下載掃毒工具」。',
+              petSay: '哇！螢幕突然跳出嚇人的紅框，快幫我判斷一下！',
+              options: [
+                { text: '安全', why: '看到寫著掃毒和保護電腦，以為下載能幫忙修好電腦' },
+                { text: '危險', why: '正解' }
+              ],
+              ans: 1,
+              explain: '網頁突然跳出的中毒警告多半是騙人的，不要亂點下載，先關掉並告訴大人。'
+            },
+            {
+              tag: '網頁廣告',
+              pic: 'adGift',
+              q: '小遊戲旁邊的廣告寫著：「填寫家裡完整地址，就能免費拿可愛貼紙」。',
+              petSay: '免費貼紙好吸引人，但是它要填家裡地址耶！',
+              options: [
+                { text: '安全', why: '覺得只是拿一張免費小貼紙，填寫地址應該沒關係' },
+                { text: '危險', why: '正解' }
+              ],
+              ans: 1,
+              explain: '家裡地址是重要隱私，不隨便填在網路廣告裡，也不要點可疑贈品。'
+            },
+            {
+              tag: '學校官網',
+              pic: 'schoolWeb',
+              q: '和爸爸一起打開學校官方網站，查看這學期校慶運動會的日期。',
+              petSay: '有爸爸陪著看學校網站，這個情況安不安全呢？',
+              options: [
+                { text: '安全', why: '正解' },
+                { text: '危險', why: '以為只要打開網頁連結就一定會有安全風險' }
+              ],
+              ans: 0,
+              explain: '有大人陪伴並瀏覽認識的學校官方網站，是安全又放心的做法。'
+            },
+            {
+              tag: '聊天訊息',
+              pic: 'shortLink',
+              q: '剛認識的網友傳來一串看不懂的短網址，催你趕快點開來看有趣影片。',
+              petSay: '這串網址長得怪怪的，對方還一直催我點開！',
+              options: [
+                { text: '安全', why: '以為只是看一段有趣影片，點進去應該不會怎樣' },
+                { text: '危險', why: '正解' }
+              ],
+              ans: 1,
+              explain: '來路不明的短網址可能連到詐騙或病毒網站，不點開，直接告訴大人。'
+            }
+          ]
+        },
+        {
+          name: '藏了一個危險',
+          icon: '<svg viewBox="0 0 40 40" fill="none"><rect x="6" y="16" width="24" height="18" rx="4" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.6"/><path d="M5 16h26M18 16v18" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/><path d="M18 16c-2.5-5-8-5-8-1.5S15 16 18 16zm0 0c2.5-5 8-5 8-1.5S21 16 18 16z" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/><circle cx="31" cy="11" r="7" fill="#FCE6E1" stroke="#3B2350" stroke-width="2.6"/><path d="M31 8v3.2" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/><circle cx="31" cy="14.2" r="1.2" fill="#3B2350"/></svg>',
+          intro: '第二站巡邏！有些事情表面上好玩又好心，要睜大眼睛找找藏起來的陷阱。',
+          learned: '不亂開定位也不借帳密，保護個人資料',
+          questions: [
+            {
+              tag: '平板遊戲',
+              pic: 'gpsPuzzle',
+              q: '剛下載的單機拼圖遊戲，畫面跳出要求「一定要開啟手機定位」才能玩。',
+              petSay: '奇怪，玩拼圖為什麼要知道我們在哪裡呢？',
+              options: [
+                { text: '安全', why: '覺得軟體要求開啟權限都是正常的，照著按允許才能玩' },
+                { text: '危險', why: '正解' }
+              ],
+              ans: 1,
+              explain: '單機拼圖不需要知道你的位置，亂要求定位的軟體不允許，先找大人確認。'
+            },
+            {
+              tag: '閱讀網站',
+              pic: 'ebook',
+              q: '用平板開啟老師在課堂教過的圖書館閱讀網站，點選繪本故事來看。',
+              petSay: '這是老師在課堂介紹過的閱讀網站，可以安心看嗎？',
+              options: [
+                { text: '安全', why: '正解' },
+                { text: '危險', why: '以為只要在平板點網站看故事，就可能不小心中陷阱' }
+              ],
+              ans: 0,
+              explain: '使用老師教過、來源正確的學習網站看故事書，是安全的網路使用方式。'
+            },
+            {
+              tag: '個人頭像',
+              pic: 'avatar',
+              q: '在學習網站設定大頭貼時，選了系統內建的小兔子插畫，沒放本人照片。',
+              petSay: '用可愛的兔子畫像當大頭貼，這樣做法安全嗎？',
+              options: [
+                { text: '安全', why: '正解' },
+                { text: '危險', why: '以為在網站上設定任何頭像都會洩漏個人隱私' }
+              ],
+              ans: 0,
+              explain: '用可愛插圖當頭像能保護長相不外流，是安全保護自己的好方法。'
+            },
+            {
+              tag: '遊戲點數',
+              pic: 'borrowPass',
+              q: '隔壁班同學說能幫你免費增加遊戲點數，只要把帳號和密碼借他登入。',
+              petSay: '他說要幫我加免費點數，可是要借我的帳號和密碼喔！',
+              options: [
+                { text: '安全', why: '覺得對方是同校同學又是好意幫忙，借一下帳號應該沒關係' },
+                { text: '危險', why: '正解' }
+              ],
+              ans: 1,
+              explain: '帳號密碼連同學都不能借，免費加點數也很可能是陷阱，千萬不給。'
+            },
+            {
+              tag: '網路測驗',
+              pic: 'quizTrap',
+              q: '一個「測測你是哪種水果」的心理測驗，開始前要求輸入生日和爸媽手機號碼。',
+              petSay: '水果測驗看起來很可愛，為什麼要填生日和手機號碼？',
+              options: [
+                { text: '安全', why: '以為只是玩個可愛小測驗，填生日才能算得比較準' },
+                { text: '危險', why: '正解' }
+              ],
+              ans: 1,
+              explain: '好玩的小測驗常偷偷收集個資，生日和電話都不能隨便填，直接關掉。'
+            }
+          ]
+        },
+        {
+          name: '認識的人還是陌生人',
+          icon: '<svg viewBox="0 0 40 40" fill="none"><circle cx="14.5" cy="14" r="5.5" fill="#DDF3E6" stroke="#3B2350" stroke-width="2.6"/><path d="M6.5 31c0-4.6 3.6-8 8-8s8 3.4 8 8" fill="#DDF3E6" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/><circle cx="27.5" cy="15" r="5" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.6"/><path d="M22.5 31c.4-3.8 2.8-6.5 6.2-6.5 3.1 0 5.3 2.6 5.8 6.5" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/><path d="M26.5 13.5c0-1 .8-1.6 1.7-1.6s1.6.6 1.6 1.5c0 .9-.8 1.2-1.4 1.6-.3.2-.4.5-.4.9" stroke="#3B2350" stroke-width="2.2" stroke-linecap="round"/></svg>',
+          intro: '第三站巡邏！分清楚身邊真正認識的親友，還有網路上看不見臉的陌生人。',
+          learned: '不和網友見面也不給照片，小心陌生人',
+          questions: [
+            {
+              tag: '家庭群組',
+              pic: 'familyChat',
+              q: '爸爸在全家的聊天群組裡傳訊息說：「今天塞車，我會晚十分鐘回家。」',
+              petSay: '這是全家人平常用的聊天群組，安不安全呢？',
+              options: [
+                { text: '安全', why: '正解' },
+                { text: '危險', why: '看到說要晚回家就緊張，以為這類訊息一定有問題' }
+              ],
+              ans: 0,
+              explain: '家人用平常用的家庭群組聯絡日常行程，是安全又正常的訊息。'
+            },
+            {
+              tag: '打聽行蹤',   // 11-21 Claude 改：原「網友約見面」跟 unit31 第 1 關重複
+              pic: 'homeAlone',
+              q: '網路上一個自稱是媽媽同事的人傳訊息問你：「你們家今天晚上有沒有人在家？」',
+              petSay: '他說他是媽媽的同事，可是我從來沒見過他……',
+              options: [
+                { text: '安全', why: '對方說認識媽媽，覺得回答一下家裡有沒有人沒關係' },
+                { text: '危險', why: '正解' }
+              ],
+              ans: 1,
+              explain: '家裡有沒有人、什麼時候出門都是行蹤，不告訴網路上的人，先問爸媽。'
+            },
+            {
+              tag: '家人視訊',
+              pic: 'grandmaCall',
+              q: '週末晚上媽媽坐在旁邊陪你，一起用平板跟住在外縣市的阿嬤視訊聊天。',
+              petSay: '有媽媽一起陪著跟阿嬤聊天，這樣安全嗎？',
+              options: [
+                { text: '安全', why: '正解' },
+                { text: '危險', why: '以為只要打開平板鏡頭視訊就一定會不安全' }
+              ],
+              ans: 0,
+              explain: '和真正認識的家人視訊，而且有爸媽在旁邊陪伴，是很安全的。'
+            },
+            {
+              tag: '作業討論',
+              pic: 'studyGroup',
+              q: '同班好朋友放學後，在爸媽同意的群組裡和你一起討論今天的數學功課。',
+              petSay: '是同班同學，而且爸媽都知道這個群組，可以嗎？',
+              options: [
+                { text: '安全', why: '正解' },
+                { text: '危險', why: '以為在網路上跟同學聊天討論作業都是不被允許的' }
+              ],
+              ans: 0,
+              explain: '在爸媽知情的群組裡和認識的同學討論功課，是很安全的互動。'
+            },
+            {
+              tag: '冒充同學',   // 11-21 Claude 改：原「陌生人要制服照」跟 unit31 第 1 關重複
+              pic: 'fakeClassmate',
+              q: '一個頭貼是卡通、沒看過的新帳號說他是你同班同學，要你把班級群組的邀請連結傳給他。',
+              petSay: '他說他是我同學，可是名字和頭貼我都認不出來……',
+              options: [
+                { text: '安全', why: '對方說是同班同學，覺得幫忙拉進班級群組是好意' },
+                { text: '危險', why: '正解' }
+              ],
+              ans: 1,
+              explain: '認不出來的帳號可能是假冒的，先當面問同學或請老師確認，再決定要不要給。'
+            }
+          ]
+        },
+        {
+          name: '奇怪的畫面',
+          icon: '<svg viewBox="0 0 40 40" fill="none"><rect x="4.5" y="7" width="31" height="22" rx="4.5" fill="#FFF9F2" stroke="#3B2350" stroke-width="2.6"/><rect x="9" y="11.5" width="22" height="13" rx="2" fill="#FCE6E1" stroke="#3B2350" stroke-width="2.2"/><path d="M20 14.5v3.5" stroke="#B4372B" stroke-width="2.6" stroke-linecap="round"/><circle cx="20" cy="21" r="1.4" fill="#B4372B"/><path d="M15 29v5M25 29v5M12 34h16" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/></svg>',
+          intro: '第四站巡邏！遇到假冒網頁、跳出視窗或奇怪簡訊時，記得先冷靜觀察！',
+          learned: '遇奇怪畫面與驗證碼先停下來問大人',
+          questions: [
+            {
+              tag: '帳號警告',
+              pic: 'lockedAccount',
+              q: '瀏覽網頁時突然跳出視窗：「你的帳號異常被鎖住了！請立刻在這裡輸入密碼解鎖」。',
+              petSay: '啊！它說帳號被鎖住了，要不要趕快輸入密碼？',
+              options: [
+                { text: '安全', why: '怕帳號真的不能用而緊張，急著輸入密碼想趕快解開' },
+                { text: '危險', why: '正解' }
+              ],
+              ans: 1,
+              explain: '突然跳出要你輸入密碼的視窗通常是釣魚陷阱，不要輸入，先請大人檢查。'
+            },
+            {
+              tag: '簡訊驗證',
+              pic: 'otpCode',
+              q: '有一個陌生帳號傳訊息說他填錯電話，拜託你把剛收到的六位數驗證碼轉傳給他。',
+              petSay: '他說只是填錯電話，想跟我要剛收到的六個數字耶！',
+              options: [
+                { text: '安全', why: '以為只是好心幫別人把按錯的數字轉傳回去，沒什麼損失' },
+                { text: '危險', why: '正解' }
+              ],
+              ans: 1,
+              explain: '驗證碼就像家門鑰匙，絕不能告訴任何人，遇到索取就拒絕並告知大人。'
+            },
+            {
+              tag: '系統提示',
+              pic: 'sysUpdate',
+              q: '平板跳出「有新版系統可以更新」的畫面，你先不亂按，拿去問爸爸能不能更新。',
+              petSay: '看不懂的畫面先停手找爸爸看，這個做法安全嗎？',
+              options: [
+                { text: '安全', why: '正解' },
+                { text: '危險', why: '以為只要畫面跳出沒看過的提示就代表這件事是危險的' }
+              ],
+              ans: 0,
+              explain: '遇到看不懂的更新或系統畫面，不自己亂點而先找大人確認，是最安全的做法。'
+            },
+            {
+              tag: '下載軟體',
+              pic: 'appStore',
+              q: '想安裝老師推薦的國語字典軟體，請媽媽一起從官方應用程式商店下載。',
+              petSay: '和媽媽一起在官方商店下載字典，這樣安全嗎？',
+              options: [
+                { text: '安全', why: '正解' },
+                { text: '危險', why: '以為只要從網路下載任何軟體就一定會中病毒' }
+              ],
+              ans: 0,
+              explain: '請大人陪同並透過官方應用程式商店下載軟體，能大幅減少裝到壞程式的風險。'
+            },
+            {
+              tag: '假冒網頁',
+              pic: 'fakeSite',
+              q: '點進一個長得像常玩遊戲的網頁，但網址多了一個怪字母，還要求立刻重新輸入帳密。',
+              petSay: '畫面長得幾乎一模一樣，但上面網址多了一個奇怪的字母！',
+              options: [
+                { text: '安全', why: '看到網頁圖片和顏色跟平常一樣，就以為是官方正版網站' },
+                { text: '危險', why: '正解' }
+              ],
+              ans: 1,
+              explain: '假冒網站常把外觀做得很像，但網址會藏怪字，發現不對勁就立刻關閉網頁。'
+            }
+          ]
+        },
+        {
+          name: '警察大考驗',
+          icon: '<svg viewBox="0 0 40 40" fill="none"><path d="M20 5l12 4.6v9.8c0 7.7-5 13-12 15.6-7-2.6-12-7.9-12-15.6V9.6L20 5z" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/><path d="M20 12.2l2.1 4.3 4.7.7-3.4 3.3.8 4.7-4.2-2.2-4.2 2.2.8-4.7-3.4-3.3 4.7-.7 2.1-4.3z" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.2" stroke-linejoin="round"/></svg>',
+          intro: '最後大考驗！各種情況通通混在一起，通過就能成為正式網路小警察！',
+          learned: '上網保持警覺，不點不明連結並記得登出',
+          questions: [
+            {
+              tag: '電腦教室',
+              pic: 'logout',
+              q: '電腦課下課前，先按「登出」離開自己的學習網站帳號，再把椅子靠好。',
+              petSay: '離開公用電腦前先把帳號登出，這樣安全嗎？',
+              options: [
+                { text: '安全', why: '正解' },
+                { text: '危險', why: '以為直接關掉視窗就好，不清楚登出動作其實是在保護帳號' }
+              ],
+              ans: 0,
+              explain: '用完公用電腦一定要按登出，才不會讓下一位同學誤用到你的帳號。'
+            },
+            {
+              tag: '不明檔案',
+              pic: 'crackFile',
+              q: '在沒聽過的討論區看到有人分享「付費遊戲免費破解檔」，直接按下載安裝。',
+              petSay: '不用花錢的破解遊戲檔……點下去安裝真的沒問題嗎？',
+              options: [
+                { text: '安全', why: '覺得不用花錢就能玩到付費遊戲很划算，沒注意檔案來源' },
+                { text: '危險', why: '正解' }
+              ],
+              ans: 1,
+              explain: '破解檔不只違法，還常暗藏木馬病毒，看到不明下載連結絕對不點。'
+            },
+            {
+              tag: '假冒客服',
+              pic: 'fakeSupport',
+              q: '有個自稱「遊戲客服小幫手」的陌生帳號私訊你，說不立刻點連結就會把帳號刪掉。',
+              petSay: '他說不點連結就要刪掉帳號，好緊張喔！快幫我判斷！',
+              options: [
+                { text: '安全', why: '聽到帳號會被刪除就嚇到了，以為對方寫著客服就是真的官方' },
+                { text: '危險', why: '正解' }
+              ],
+              ans: 1,
+              explain: '壞人常假冒客服製造恐慌催你點連結，遇到威脅先冷靜、不點擊、告訴大人。'
+            },
+            {
+              tag: '應變處理',
+              pic: 'closeTab',
+              q: '查資料時網頁一直彈出奇怪的小視窗，你立刻關掉分頁，馬上叫媽媽過來看。',
+              petSay: '不亂點怪視窗，馬上關掉並找媽媽幫忙，這樣安不安全？',
+              options: [
+                { text: '安全', why: '正解' },
+                { text: '危險', why: '以為只要畫面出現過奇怪視窗，整個情況就算危險行為' }
+              ],
+              ans: 0,
+              explain: '遇到怪視窗不亂點、馬上關閉並找大人幫忙，就是小警察最正確的做法。'
+            },
+            {
+              tag: '安全設定',
+              pic: 'kidShield',
+              q: '星期天和爸爸媽媽一起在平板開啟「兒童保護模式」，幫忙擋掉不適合小孩的網頁。',
+              petSay: '跟爸媽一起把保護盾牌打開，這個做法安全嗎？',
+              options: [
+                { text: '安全', why: '正解' },
+                { text: '危險', why: '以為去改平板裡面的保護設定會把平板弄壞或外洩資料' }
+              ],
+              ans: 0,
+              explain: '和大人一起開啟防護功能，可以讓上網變得更安全，是保護自己的好方法。'
+            }
+          ]
         }
-        document.body.appendChild(hint);
-        setTimeout(() => hint.remove(), 1200);
-    }, 500);
-}
+      ]
+    };
 
-function advance() {
-    const level = LEVELS[state.levelIdx];
-    state.qIdx++;
-    state.locked = false;
-    if (state.qIdx >= level.questions.length) {
-        levelClear();
-    } else {
-        renderQuestion();
-    }
-}
+    /* =====================================================================
+     * 介面小圖示 SVG（純 inline SVG，不用 emoji）
+     * ===================================================================== */
+    var UI_SVG = {
+      // 安全按鈕圖示：盾牌＋勾
+      safe: '<svg viewBox="0 0 44 44" fill="none" aria-hidden="true"><path d="M22 4l15 5.5v11.3c0 9.1-6.2 15.5-15 19.2C13.2 36.3 7 29.9 7 20.8V9.5L22 4z" fill="#186B41" stroke="#3B2350" stroke-width="3" stroke-linejoin="round"/><path d="M15 22.5l4.8 4.8L29.5 17" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      // 危險按鈕圖示：警示圓＋叉
+      danger: '<svg viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle cx="22" cy="22" r="17.5" fill="#B4372B" stroke="#3B2350" stroke-width="3"/><path d="M15.5 15.5l13 13M28.5 15.5l-13 13" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>',
+      // 寵物小警徽
+      badge: '<svg viewBox="0 0 44 44" fill="none" aria-hidden="true"><path d="M22 3.5l14.5 5.2v11.6c0 8.8-5.9 14.9-14.5 18.7C13.4 35.2 7.5 29.1 7.5 20.3V8.7L22 3.5z" fill="#FFC233" stroke="#3B2350" stroke-width="3" stroke-linejoin="round"/><path d="M22 11.5l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8L22 11.5z" fill="#FFF9F2" stroke="#3B2350" stroke-width="2.2" stroke-linejoin="round"/></svg>',
+      // 喇叭關（預設靜音）
+      soundOff: '<svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M5 10.5h5l6.5-5v17l-6.5-5H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2z" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.4" stroke-linejoin="round"/><path d="M20 11l5.5 6M25.5 11L20 17" stroke="#B4372B" stroke-width="2.6" stroke-linecap="round"/></svg>',
+      // 喇叭開
+      soundOn: '<svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M5 10.5h5l6.5-5v17l-6.5-5H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2z" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.4" stroke-linejoin="round"/><path d="M19.8 10.3a5 5 0 0 1 0 7.4M22.8 7.5a9 9 0 0 1 0 13" stroke="#3B2350" stroke-width="2.4" stroke-linecap="round"/></svg>'
+    };
 
-// ============================================================
-// Level flow
-// ============================================================
-function calcStars(correctCount, total) {
-    if (correctCount >= total) return 3;
-    if (correctCount === total - 1) return 2;
-    return 1;
-}
+    /* =====================================================================
+     * 25 題專屬情境插圖（inline SVG，viewBox 0 0 260 200，黏土點心屋色系）
+     * ===================================================================== */
+    var PIC = {
+      classNotice: '<svg viewBox="0 0 260 200" fill="none"><rect x="38" y="18" width="184" height="164" rx="18" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="52" y="34" width="156" height="28" rx="10" fill="#6A45C9"/><circle cx="70" cy="48" r="7" fill="#FFF0C4"/><rect x="86" y="44" width="76" height="8" rx="4" fill="#fff"/><rect x="54" y="74" width="152" height="58" rx="14" fill="#DDF3E6" stroke="#3B2350" stroke-width="3"/><rect x="68" y="88" width="90" height="10" rx="5" fill="#186B41"/><rect x="68" y="106" width="64" height="8" rx="4" fill="#5C4870"/><path d="M168 156l26-44 12 7-26 44-14 4 2-11z" fill="#FF8F3F" stroke="#3B2350" stroke-width="3" stroke-linejoin="round"/><path d="M192 114l12 7" stroke="#3B2350" stroke-width="3"/><rect x="60" y="146" width="84" height="20" rx="10" fill="#ECE3FA"/></svg>',
 
-function levelClear() {
-    const level = LEVELS[state.levelIdx];
-    const stars = calcStars(state.levelCorrect, level.questions.length);
-    state.totalStars += stars;
-    state.levelStars[state.levelIdx] = stars;
+      virusPopup: '<svg viewBox="0 0 260 200" fill="none"><rect x="24" y="24" width="212" height="140" rx="16" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="36" y="36" width="188" height="24" rx="8" fill="#B4372B"/><circle cx="50" cy="48" r="5" fill="#FFF0C4"/><circle cx="65" cy="48" r="5" fill="#FFF0C4"/><path d="M130 70l28 48H102l28-48z" fill="#FFF0C4" stroke="#B4372B" stroke-width="4" stroke-linejoin="round"/><path d="M130 88v14" stroke="#B4372B" stroke-width="4.5" stroke-linecap="round"/><circle cx="130" cy="110" r="3" fill="#B4372B"/><rect x="66" y="128" width="128" height="26" rx="13" fill="#B4372B" stroke="#3B2350" stroke-width="3"/><path d="M130 134v12M124 141l6 6 6-6" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M108 164h44M92 178h76" stroke="#3B2350" stroke-width="5" stroke-linecap="round"/></svg>',
 
-    const isLast = state.levelIdx >= LEVELS.length - 1;
-    if (isLast) SFX.finale(); else SFX.levelClear();
+      adGift: '<svg viewBox="0 0 260 200" fill="none"><rect x="24" y="22" width="212" height="156" rx="18" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="38" y="36" width="184" height="44" rx="12" fill="#FFF0C4" stroke="#3B2350" stroke-width="3"/><path d="M68 48l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6z" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.4"/><rect x="94" y="48" width="110" height="9" rx="4.5" fill="#3B2350"/><rect x="94" y="63" width="76" height="7" rx="3.5" fill="#C75F17"/><path d="M60 124l24-20 24 20v28H60v-28z" fill="#FCE6E1" stroke="#3B2350" stroke-width="3" stroke-linejoin="round"/><rect x="78" y="134" width="12" height="18" rx="3" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.5"/><rect x="122" y="106" width="96" height="18" rx="7" fill="#fff" stroke="#B4372B" stroke-width="3"/><rect x="122" y="132" width="96" height="18" rx="7" fill="#fff" stroke="#B4372B" stroke-width="3"/><circle cx="212" cy="100" r="14" fill="#B4372B" stroke="#3B2350" stroke-width="3"/><path d="M212 94v7" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="212" cy="105" r="2" fill="#fff"/></svg>',
 
-    const banner = document.createElement('div');
-    banner.className = 'banner';
-    banner.id = 'banner';
-    banner.innerHTML =
-        '<div class="banner-card">' +
-            '<div class="banner-trophy">🎉</div>' +
-            '<div class="banner-title">' + level.title + ' 過關</div>' +
-            '<div class="banner-stars">' +
-                '⭐'.repeat(stars) + '☆'.repeat(3 - stars) +
-            '</div>' +
-            '<div class="banner-actions">' +
-                (isLast
-                    ? '<button class="big-btn gold" onclick="finishAll()">🏆 領證</button>'
-                    : '<button class="big-btn" onclick="nextLevel()">▶ 下一關</button>') +
-            '</div>' +
-        '</div>';
-    document.body.appendChild(banner);
-}
+      schoolWeb: '<svg viewBox="0 0 260 200" fill="none"><rect x="24" y="20" width="212" height="142" rx="16" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="36" y="32" width="188" height="22" rx="8" fill="#DDF3E6" stroke="#3B2350" stroke-width="2.5"/><circle cx="49" cy="43" r="4" fill="#186B41"/><rect x="60" y="39" width="110" height="8" rx="4" fill="#186B41"/><path d="M74 102l56-34 56 34v46H74v-46z" fill="#FFE1CB" stroke="#3B2350" stroke-width="3.5" stroke-linejoin="round"/><rect x="116" y="118" width="28" height="30" rx="5" fill="#6A45C9" stroke="#3B2350" stroke-width="3"/><rect x="86" y="110" width="18" height="18" rx="4" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.5"/><rect x="156" y="110" width="18" height="18" rx="4" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.5"/><path d="M130 68V52l18 6-18 6" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/><path d="M104 162h52M88 178h84" stroke="#3B2350" stroke-width="5" stroke-linecap="round"/></svg>',
 
-function closeBanner() {
-    const b = $('banner');
-    if (b) b.remove();
-}
+      shortLink: '<svg viewBox="0 0 260 200" fill="none"><rect x="30" y="26" width="200" height="148" rx="22" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><circle cx="72" cy="70" r="22" fill="#ECE3FA" stroke="#3B2350" stroke-width="3.5"/><path d="M68 65c0-3 2.5-5 5.2-5 2.8 0 5 1.8 5 4.4 0 2.5-2 3.5-3.8 4.8-1 .7-1.4 1.4-1.4 2.8" stroke="#3B2350" stroke-width="3.2" stroke-linecap="round"/><circle cx="73" cy="78" r="2.2" fill="#3B2350"/><rect x="104" y="48" width="108" height="44" rx="14" fill="#FCE6E1" stroke="#B4372B" stroke-width="3"/><path d="M122 70h26M156 70h36" stroke="#B4372B" stroke-width="4.5" stroke-linecap="round"/><rect x="52" y="108" width="156" height="46" rx="14" fill="#FFF0C4" stroke="#3B2350" stroke-width="3"/><path d="M74 131h16c4 0 7-3 7-7s-3-7-7-7H74c-4 0-7 3-7 7s3 7 7 7zM114 131h16c4 0 7-3 7-7s-3-7-7-7h-16c-4 0-7 3-7 7s3 7 7 7zM91 124h22" stroke="#3B2350" stroke-width="3.2" stroke-linecap="round"/><path d="M162 122l22 10-8 4 5 10-5 2-5-10-7 5-2-21z" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/></svg>',
 
-function nextLevel() {
-    closeBanner();
-    state.levelIdx++;
-    state.qIdx = 0;
-    state.levelCorrect = 0;
-    state.locked = false;
-    renderQuestion();
-}
+      gpsPuzzle: '<svg viewBox="0 0 260 200" fill="none"><rect x="34" y="18" width="192" height="164" rx="22" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="52" y="38" width="66" height="60" rx="10" fill="#DDF3E6" stroke="#3B2350" stroke-width="3"/><rect x="122" y="38" width="66" height="60" rx="10" fill="#ECE3FA" stroke="#3B2350" stroke-width="3"/><rect x="52" y="102" width="66" height="60" rx="10" fill="#FFF0C4" stroke="#3B2350" stroke-width="3"/><rect x="92" y="64" width="124" height="96" rx="16" fill="#FCE6E1" stroke="#B4372B" stroke-width="3.8"/><path d="M154 78c-12 0-21 9.2-21 20.6 0 15.6 21 36.4 21 36.4s21-20.8 21-36.4C175 87.2 166 78 154 78z" fill="#B4372B" stroke="#3B2350" stroke-width="3.2"/><circle cx="154" cy="98" r="7.5" fill="#FFF9F2" stroke="#3B2350" stroke-width="2.8"/><rect x="116" y="140" width="76" height="10" rx="5" fill="#B4372B"/></svg>',
 
-function finishAll() {
-    closeBanner();
-    try {
-        const prev = parseInt(localStorage.getItem('edtech-unit9-score') || '0', 10);
-        if (state.totalStars > prev) localStorage.setItem('edtech-unit9-score', state.totalStars);
-    } catch(e) {}
+      ebook: '<svg viewBox="0 0 260 200" fill="none"><rect x="28" y="20" width="204" height="160" rx="20" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><path d="M130 56c-18-12-46-12-72-4v94c26-8 54-8 72 4 18-12 46-12 72-4V52c-26-8-54-8-72 4z" fill="#FFF0C4" stroke="#3B2350" stroke-width="3.5" stroke-linejoin="round"/><path d="M130 56v94" stroke="#3B2350" stroke-width="3.5"/><circle cx="94" cy="90" r="15" fill="#FF8F3F" stroke="#3B2350" stroke-width="3"/><path d="M74 122h40M74 134h32M148 78h40M148 94h36M148 110h40M148 126h28" stroke="#3B2350" stroke-width="3.2" stroke-linecap="round"/><circle cx="204" cy="40" r="14" fill="#DDF3E6" stroke="#186B41" stroke-width="3"/><path d="M198 40l4 4 8-8" stroke="#186B41" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
-    $('game-screen').classList.add('hidden');
-    $('end-screen').classList.remove('hidden');
+      avatar: '<svg viewBox="0 0 260 200" fill="none"><rect x="32" y="20" width="196" height="160" rx="22" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><circle cx="130" cy="96" r="52" fill="#DDF3E6" stroke="#186B41" stroke-width="4"/><ellipse cx="114" cy="56" rx="10" ry="22" fill="#fff" stroke="#3B2350" stroke-width="3.2"/><ellipse cx="146" cy="56" rx="10" ry="22" fill="#fff" stroke="#3B2350" stroke-width="3.2"/><circle cx="130" cy="100" r="28" fill="#fff" stroke="#3B2350" stroke-width="3.2"/><circle cx="120" cy="96" r="3.5" fill="#3B2350"/><circle cx="140" cy="96" r="3.5" fill="#3B2350"/><path d="M124 108c3 3 9 3 12 0" stroke="#3B2350" stroke-width="3" stroke-linecap="round"/><circle cx="192" cy="146" r="18" fill="#186B41" stroke="#3B2350" stroke-width="3"/><path d="M184 146l5.5 5.5 11-11" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
-    let starsHtml = '';
-    for (let i = 0; i < LEVELS.length; i++) {
-        const s = state.levelStars[i] || 0;
-        starsHtml +=
-            '<span class="lvl-line">' +
-                '<span class="lvl-label">第' + (i + 1) + '關</span>' +
-                '⭐'.repeat(s) + '☆'.repeat(3 - s) +
-            '</span>';
-    }
-    $('cert-stars').innerHTML = starsHtml;
+      borrowPass: '<svg viewBox="0 0 260 200" fill="none"><rect x="24" y="24" width="212" height="152" rx="20" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><circle cx="80" cy="78" r="28" fill="#FFF0C4" stroke="#3B2350" stroke-width="3.5"/><path d="M80 62v32M70 72h20M70 84h20" stroke="#C75F17" stroke-width="3.6" stroke-linecap="round"/><rect x="122" y="54" width="96" height="46" rx="14" fill="#FCE6E1" stroke="#B4372B" stroke-width="3"/><circle cx="142" cy="77" r="5" fill="#3B2350"/><circle cx="160" cy="77" r="5" fill="#3B2350"/><circle cx="178" cy="77" r="5" fill="#3B2350"/><circle cx="196" cy="77" r="5" fill="#3B2350"/><circle cx="106" cy="136" r="16" fill="#FF8F3F" stroke="#3B2350" stroke-width="3.5"/><path d="M122 136h66v14M164 136v10" stroke="#3B2350" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M46 144l18-18" stroke="#B4372B" stroke-width="4" stroke-linecap="round"/></svg>',
 
-    const total = state.totalStars;
-    if (total >= 15) {
-        $('cert-trophy').textContent = '👑';
-        $('cert-rank').textContent = '👑 警察王';
-    } else if (total >= 13) {
-        $('cert-trophy').textContent = '🥇';
-        $('cert-rank').textContent = '🥇 警察';
-    } else if (total >= 9) {
-        $('cert-trophy').textContent = '🥈';
-        $('cert-rank').textContent = '🥈 新人';
-    } else {
-        $('cert-trophy').textContent = '💪';
-        $('cert-rank').textContent = '💪 再來';
-    }
+      quizTrap: '<svg viewBox="0 0 260 200" fill="none"><rect x="30" y="18" width="200" height="164" rx="20" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><circle cx="82" cy="64" r="22" fill="#FF8F3F" stroke="#3B2350" stroke-width="3.2"/><path d="M82 42c2-9 9-12 14-10" stroke="#186B41" stroke-width="3.5" stroke-linecap="round"/><rect x="116" y="48" width="94" height="12" rx="6" fill="#6A45C9"/><rect x="116" y="68" width="68" height="10" rx="5" fill="#ECE3FA"/><rect x="48" y="102" width="164" height="28" rx="10" fill="#FCE6E1" stroke="#B4372B" stroke-width="3"/><path d="M64 122v-8h18v8M73 108v6" stroke="#B4372B" stroke-width="2.8" stroke-linecap="round"/><rect x="96" y="112" width="96" height="8" rx="4" fill="#B4372B"/><rect x="48" y="140" width="164" height="28" rx="10" fill="#FCE6E1" stroke="#B4372B" stroke-width="3"/><rect x="64" y="146" width="14" height="16" rx="3" fill="#fff" stroke="#B4372B" stroke-width="2.4"/><rect x="96" y="150" width="96" height="8" rx="4" fill="#B4372B"/></svg>',
 
-    const today = new Date();
-    $('cert-date').textContent = (today.getFullYear() - 1911) + ' 年 ' + (today.getMonth() + 1) + ' 月 ' + today.getDate() + ' 日 頒發';
-}
+      familyChat: '<svg viewBox="0 0 260 200" fill="none"><rect x="52" y="16" width="156" height="168" rx="24" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="64" y="30" width="132" height="26" rx="10" fill="#DDF3E6" stroke="#186B41" stroke-width="2.5"/><path d="M82 48l10-9 10 9" stroke="#186B41" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="110" y="39" width="70" height="8" rx="4" fill="#186B41"/><circle cx="84" cy="92" r="16" fill="#E1EEFB" stroke="#3B2350" stroke-width="3"/><circle cx="80" cy="90" r="2.2" fill="#3B2350"/><circle cx="88" cy="90" r="2.2" fill="#3B2350"/><path d="M79 97c3 2.5 7 2.5 10 0" stroke="#3B2350" stroke-width="2.4" stroke-linecap="round"/><rect x="108" y="72" width="84" height="44" rx="14" fill="#FFF0C4" stroke="#3B2350" stroke-width="3"/><path d="M124 98h46v-10l-8-8h-26l-12 8v10z" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.5" stroke-linejoin="round"/><circle cx="134" cy="100" r="5" fill="#3B2350"/><circle cx="160" cy="100" r="5" fill="#3B2350"/><rect x="82" y="132" width="108" height="32" rx="12" fill="#DDF3E6" stroke="#3B2350" stroke-width="3"/><rect x="96" y="144" width="76" height="8" rx="4" fill="#186B41"/></svg>',
 
-// ============================================================
-// Flow
-// ============================================================
-function startGame() {
-    state.levelIdx = 0;
-    state.qIdx = 0;
-    state.levelCorrect = 0;
-    state.levelStars = [];
-    state.totalStars = 0;
-    state.locked = false;
-    $('start-screen').classList.add('hidden');
-    $('end-screen').classList.add('hidden');
-    $('game-screen').classList.remove('hidden');
-    renderQuestion();
-    getAudio();
-}
+      // 11-21 Claude 補：替換題的情境圖（房子＋問號訊息、卡通頭貼帳號＋連結）
+      homeAlone: '<svg viewBox="0 0 260 200" fill="none"><rect x="24" y="20" width="212" height="160" rx="20" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><path d="M58 104l44-36 44 36v52H58z" fill="#FFE1CB" stroke="#3B2350" stroke-width="3.5" stroke-linejoin="round"/><rect x="92" y="122" width="20" height="34" rx="3" fill="#C75F17" stroke="#3B2350" stroke-width="3"/><rect x="70" y="112" width="16" height="14" rx="2" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.6"/><path d="M150 52h68a10 10 0 0 1 10 10v34a10 10 0 0 1-10 10h-40l-14 12v-12h-14a10 10 0 0 1-10-10V62a10 10 0 0 1 10-10z" fill="#FCE6E1" stroke="#B4372B" stroke-width="3.2" stroke-linejoin="round"/><path d="M178 70c0-5 4-8 8-8s8 3 8 7c0 4-3 5.5-5.5 7.5-1.4 1.2-2.3 2.4-2.3 4.4" stroke="#B4372B" stroke-width="4" stroke-linecap="round"/><circle cx="186.3" cy="93" r="3" fill="#B4372B"/></svg>',
+      fakeClassmate: '<svg viewBox="0 0 260 200" fill="none"><rect x="24" y="20" width="212" height="160" rx="20" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><circle cx="88" cy="90" r="38" fill="#ECE3FA" stroke="#3B2350" stroke-width="3.5"/><circle cx="74" cy="84" r="5" fill="#3B2350"/><circle cx="102" cy="84" r="5" fill="#3B2350"/><path d="M76 102q12 9 24 0" stroke="#3B2350" stroke-width="3.5" stroke-linecap="round"/><path d="M60 62l-6-18 18 10M116 62l6-18-18 10" fill="#ECE3FA" stroke="#3B2350" stroke-width="3" stroke-linejoin="round"/><rect x="58" y="138" width="60" height="22" rx="11" fill="#FCE6E1" stroke="#B4372B" stroke-width="2.8"/><path d="M80 149h16" stroke="#B4372B" stroke-width="3" stroke-linecap="round"/><path d="M152 96a14 14 0 0 1 14-14h12M196 104a14 14 0 0 1-14 14h-12" stroke="#6A45C9" stroke-width="6" stroke-linecap="round"/><path d="M170 100h20" stroke="#6A45C9" stroke-width="6" stroke-linecap="round"/><circle cx="208" cy="62" r="16" fill="#B4372B" stroke="#3B2350" stroke-width="3"/><path d="M208 53v10" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/><circle cx="208" cy="69" r="2.2" fill="#fff"/></svg>',
+      parkMeet: '<svg viewBox="0 0 260 200" fill="none"><rect x="24" y="20" width="212" height="160" rx="20" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><circle cx="80" cy="84" r="30" fill="#ECE3FA" stroke="#3B2350" stroke-width="3.5"/><path d="M74 77c0-4 3-6.5 6.5-6.5s6.5 2.2 6.5 5.5c0 3-2.5 4.4-4.6 6-1.2 1-1.9 2-1.9 3.6" stroke="#3B2350" stroke-width="3.8" stroke-linecap="round"/><circle cx="80.5" cy="96" r="2.8" fill="#3B2350"/><path d="M118 84h26M136 74l10 10-10 10" stroke="#B4372B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="192" cy="70" r="26" fill="#DDF3E6" stroke="#3B2350" stroke-width="3.2"/><rect x="187" y="94" width="10" height="32" rx="3" fill="#C75F17" stroke="#3B2350" stroke-width="2.8"/><rect x="152" y="128" width="70" height="16" rx="6" fill="#FF8F3F" stroke="#3B2350" stroke-width="3"/><path d="M162 144v16M212 144v16" stroke="#3B2350" stroke-width="4" stroke-linecap="round"/><circle cx="62" cy="144" r="18" fill="#B4372B" stroke="#3B2350" stroke-width="3"/><path d="M55 137l14 14M69 137l-14 14" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/></svg>',
 
-// ============================================================
-// Listeners
-// ============================================================
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'F8') {
-        e.preventDefault();
-        state.levelStars = [3, 3, 2, 3, 2];
-        state.totalStars = 13;
-        $('start-screen').classList.add('hidden');
-        $('game-screen').classList.add('hidden');
-        finishAll();
-        return;
-    }
-});
-</script>
-<script defer src="../../assets/js/beacon.js"></script>
-</body>
-</html>
+      grandmaCall: '<svg viewBox="0 0 260 200" fill="none"><rect x="26" y="20" width="208" height="160" rx="22" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="42" y="34" width="176" height="114" rx="14" fill="#E1EEFB" stroke="#3B2350" stroke-width="3"/><circle cx="130" cy="86" r="32" fill="#FFE1CB" stroke="#3B2350" stroke-width="3.2"/><path d="M98 84c0-20 14-34 32-34s32 14 32 34c-8-10-18-14-32-14s-24 4-32 14z" fill="#ECE3FA" stroke="#3B2350" stroke-width="3"/><circle cx="118" cy="88" r="8" fill="#fff" stroke="#3B2350" stroke-width="2.6"/><circle cx="142" cy="88" r="8" fill="#fff" stroke="#3B2350" stroke-width="2.6"/><path d="M126 88h8" stroke="#3B2350" stroke-width="2.6"/><path d="M122 103c4 4 12 4 16 0" stroke="#3B2350" stroke-width="3" stroke-linecap="round"/><circle cx="130" cy="164" r="10" fill="#186B41"/><path d="M194 52c0-5 5-8 9-4 4-4 9-1 9 4 0 6-9 12-9 12s-9-6-9-12z" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.4"/></svg>',
+
+      studyGroup: '<svg viewBox="0 0 260 200" fill="none"><rect x="28" y="20" width="204" height="160" rx="20" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="46" y="42" width="96" height="114" rx="12" fill="#FFF0C4" stroke="#3B2350" stroke-width="3.2"/><path d="M64 70h58M64 92h44M64 114h54M64 134h36" stroke="#3B2350" stroke-width="3.5" stroke-linecap="round"/><circle cx="186" cy="72" r="24" fill="#DDF3E6" stroke="#186B41" stroke-width="3.2"/><path d="M174 72h24M186 60v24" stroke="#186B41" stroke-width="4" stroke-linecap="round"/><rect x="156" y="110" width="60" height="44" rx="12" fill="#ECE3FA" stroke="#3B2350" stroke-width="3"/><path d="M170 128h32M170 140h20" stroke="#6A45C9" stroke-width="3.5" stroke-linecap="round"/></svg>',
+
+      uniformPhoto: '<svg viewBox="0 0 260 200" fill="none"><rect x="26" y="20" width="208" height="160" rx="20" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="46" y="44" width="112" height="112" rx="16" fill="#E1EEFB" stroke="#3B2350" stroke-width="3.2"/><path d="M74 146v-36l14-14h28l14 14v36H74z" fill="#fff" stroke="#3B2350" stroke-width="3" stroke-linejoin="round"/><path d="M94 96l8 16 8-16" fill="#6A45C9" stroke="#3B2350" stroke-width="2.5"/><circle cx="102" cy="74" r="16" fill="#FFE1CB" stroke="#3B2350" stroke-width="3"/><rect x="168" y="64" width="54" height="44" rx="12" fill="#FCE6E1" stroke="#B4372B" stroke-width="3.2"/><circle cx="195" cy="86" r="12" fill="#fff" stroke="#B4372B" stroke-width="3"/><path d="M174 126l42 28M216 126l-42 28" stroke="#B4372B" stroke-width="4.5" stroke-linecap="round"/></svg>',
+
+      lockedAccount: '<svg viewBox="0 0 260 200" fill="none"><rect x="24" y="22" width="212" height="156" rx="18" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="38" y="36" width="184" height="24" rx="8" fill="#B4372B"/><path d="M110 92V80c0-11 9-20 20-20s20 9 20 20v12" stroke="#3B2350" stroke-width="4.5" stroke-linecap="round"/><rect x="98" y="90" width="64" height="46" rx="12" fill="#FF8F3F" stroke="#3B2350" stroke-width="3.8"/><circle cx="130" cy="110" r="6" fill="#3B2350"/><path d="M130 116v10" stroke="#3B2350" stroke-width="4" stroke-linecap="round"/><rect x="64" y="146" width="132" height="20" rx="8" fill="#FCE6E1" stroke="#B4372B" stroke-width="3"/><circle cx="84" cy="156" r="3.5" fill="#B4372B"/><circle cx="100" cy="156" r="3.5" fill="#B4372B"/><circle cx="116" cy="156" r="3.5" fill="#B4372B"/><circle cx="132" cy="156" r="3.5" fill="#B4372B"/></svg>',
+
+      otpCode: '<svg viewBox="0 0 260 200" fill="none"><rect x="36" y="18" width="114" height="164" rx="22" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="50" y="42" width="86" height="44" rx="12" fill="#FFF0C4" stroke="#3B2350" stroke-width="3"/><text x="93" y="71" text-anchor="middle" font-family="Baloo 2, sans-serif" font-size="22" font-weight="800" fill="#3B2350">482916</text><circle cx="93" cy="128" r="18" fill="#FF8F3F" stroke="#3B2350" stroke-width="3"/><path d="M93 118v20M86 128h14" stroke="#FFF9F2" stroke-width="3.2" stroke-linecap="round"/><path d="M158 76h34" stroke="#B4372B" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="6 6"/><circle cx="212" cy="76" r="24" fill="#ECE3FA" stroke="#3B2350" stroke-width="3.5"/><path d="M207 70c0-3 2.5-5 5.2-5s5 1.8 5 4.4c0 2.5-2 3.5-3.8 4.8-1 .7-1.4 1.4-1.4 2.8" stroke="#3B2350" stroke-width="3.2" stroke-linecap="round"/><circle cx="212" cy="83" r="2.2" fill="#3B2350"/><circle cx="212" cy="140" r="20" fill="#B4372B" stroke="#3B2350" stroke-width="3"/><path d="M204 132l16 16M220 132l-16 16" stroke="#fff" stroke-width="3.6" stroke-linecap="round"/></svg>',
+
+      sysUpdate: '<svg viewBox="0 0 260 200" fill="none"><rect x="26" y="20" width="144" height="160" rx="20" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="44" y="46" width="108" height="84" rx="14" fill="#E1EEFB" stroke="#3B2350" stroke-width="3"/><path d="M98 66a22 22 0 1 1-19 11" stroke="#6A45C9" stroke-width="4.5" stroke-linecap="round"/><path d="M74 68l5 10 10-4" stroke="#6A45C9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><rect x="58" y="144" width="80" height="18" rx="9" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.5"/><circle cx="206" cy="74" r="26" fill="#DDF3E6" stroke="#186B41" stroke-width="3.5"/><circle cx="198" cy="70" r="3" fill="#3B2350"/><circle cx="214" cy="70" r="3" fill="#3B2350"/><path d="M198 83c4 4 12 4 16 0" stroke="#3B2350" stroke-width="3" stroke-linecap="round"/><rect x="176" y="114" width="60" height="46" rx="16" fill="#DDF3E6" stroke="#186B41" stroke-width="3.5"/><path d="M194 137l8 8 16-16" stroke="#186B41" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
+      appStore: '<svg viewBox="0 0 260 200" fill="none"><rect x="48" y="18" width="164" height="164" rx="24" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><path d="M84 74h92l8 84H76l8-84z" fill="#E1EEFB" stroke="#3B2350" stroke-width="3.6" stroke-linejoin="round"/><path d="M104 74V58c0-14 12-24 26-24s26 10 26 24v16" stroke="#3B2350" stroke-width="4" stroke-linecap="round"/><rect x="104" y="94" width="52" height="48" rx="10" fill="#FFF0C4" stroke="#3B2350" stroke-width="3"/><path d="M116 112h28M116 124h20" stroke="#3B2350" stroke-width="3.2" stroke-linecap="round"/><circle cx="192" cy="148" r="22" fill="#186B41" stroke="#3B2350" stroke-width="3.2"/><path d="M182 148l7 7 14-14" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
+      fakeSite: '<svg viewBox="0 0 260 200" fill="none"><rect x="20" y="22" width="220" height="156" rx="18" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="34" y="38" width="192" height="36" rx="12" fill="#FCE6E1" stroke="#B4372B" stroke-width="3.2"/><text x="116" y="62" text-anchor="middle" font-family="Baloo 2, sans-serif" font-size="20" font-weight="800" fill="#3B2350">g0me-p1ay.xyz</text><circle cx="192" cy="56" r="24" fill="rgba(255,240,196,.72)" stroke="#3B2350" stroke-width="3.5"/><path d="M210 74l20 20" stroke="#FF8F3F" stroke-width="7" stroke-linecap="round"/><path d="M210 74l20 20" stroke="#3B2350" stroke-width="3.2" stroke-linecap="round"/><rect x="46" y="94" width="114" height="24" rx="8" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.5"/><rect x="46" y="130" width="114" height="28" rx="12" fill="#B4372B" stroke="#3B2350" stroke-width="3"/><rect x="74" y="140" width="58" height="8" rx="4" fill="#fff"/></svg>',
+
+      logout: '<svg viewBox="0 0 260 200" fill="none"><rect x="24" y="20" width="212" height="142" rx="18" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="64" y="42" width="76" height="98" rx="12" fill="#DDF3E6" stroke="#186B41" stroke-width="3.6"/><circle cx="122" cy="92" r="5" fill="#186B41"/><path d="M116 92h74M172 74l20 18-20 18" stroke="#186B41" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M104 162h52M88 178h84" stroke="#3B2350" stroke-width="5" stroke-linecap="round"/></svg>',
+
+      crackFile: '<svg viewBox="0 0 260 200" fill="none"><rect x="26" y="20" width="208" height="160" rx="20" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="66" y="54" width="128" height="92" rx="16" fill="#FCE6E1" stroke="#B4372B" stroke-width="3.8"/><path d="M126 54l-14 26 22 14-16 26 12 26" stroke="#B4372B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="188" cy="64" r="20" fill="#B4372B" stroke="#3B2350" stroke-width="3"/><circle cx="182" cy="60" r="3" fill="#fff"/><circle cx="194" cy="60" r="3" fill="#fff"/><path d="M180 71c4-3 12-3 16 0" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/><path d="M170 50l-8-8M206 50l8-8" stroke="#3B2350" stroke-width="3" stroke-linecap="round"/></svg>',
+
+      fakeSupport: '<svg viewBox="0 0 260 200" fill="none"><rect x="24" y="22" width="212" height="156" rx="20" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><circle cx="78" cy="92" r="28" fill="#ECE3FA" stroke="#3B2350" stroke-width="3.5"/><path d="M58 66l8-16 12 10 12-10 8 16H58z" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.8" stroke-linejoin="round"/><circle cx="70" cy="90" r="3" fill="#3B2350"/><circle cx="86" cy="90" r="3" fill="#3B2350"/><path d="M70 104h16" stroke="#3B2350" stroke-width="3" stroke-linecap="round"/><rect x="118" y="48" width="98" height="58" rx="14" fill="#FCE6E1" stroke="#B4372B" stroke-width="3.2"/><path d="M167 60v18" stroke="#B4372B" stroke-width="5" stroke-linecap="round"/><circle cx="167" cy="89" r="3.5" fill="#B4372B"/><rect x="118" y="118" width="98" height="36" rx="12" fill="#B4372B" stroke="#3B2350" stroke-width="3"/><rect x="136" y="132" width="62" height="8" rx="4" fill="#fff"/></svg>',
+
+      closeTab: '<svg viewBox="0 0 260 200" fill="none"><rect x="24" y="22" width="184" height="132" rx="16" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="42" y="42" width="110" height="72" rx="12" fill="#FCE6E1" stroke="#B4372B" stroke-width="3"/><rect x="76" y="66" width="116" height="74" rx="12" fill="#FFF0C4" stroke="#3B2350" stroke-width="3"/><circle cx="196" cy="54" r="26" fill="#186B41" stroke="#3B2350" stroke-width="3.6"/><path d="M186 44l20 20M206 44l-20 20" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/><rect x="128" y="150" width="108" height="32" rx="16" fill="#DDF3E6" stroke="#186B41" stroke-width="3"/><path d="M148 166l8 8 16-16" stroke="#186B41" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="180" y="162" width="40" height="8" rx="4" fill="#186B41"/></svg>',
+
+      kidShield: '<svg viewBox="0 0 260 200" fill="none"><rect x="34" y="22" width="192" height="156" rx="22" fill="#FFF9F2" stroke="#3B2350" stroke-width="4"/><rect x="50" y="38" width="160" height="124" rx="14" fill="#E1EEFB" stroke="#3B2350" stroke-width="3"/><path d="M130 48l42 15v32c0 25-17 42-42 52-25-10-42-27-42-52V63l42-15z" fill="#DDF3E6" stroke="#186B41" stroke-width="4" stroke-linejoin="round"/><path d="M112 100l13 13 24-26" stroke="#186B41" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    };
+
+    /* =====================================================================
+     * 掛載小常識島第 9 關：寵物警察訓練
+     * ===================================================================== */
+    SmartIsland.mount({
+      unit: 9,
+      title: '寵物警察訓練',
+      grade: '3–4 年級',
+      howto: '寵物要考網路小警察！判斷每個情況是安全還是危險。',
+      zhuyin: false,
+      teach: '判斷網路情境安不安全｜資E12 了解並遵守資訊倫理與使用資訊科技的相關規範',
+      levels: SCENE_CONFIG.LEVELS.map(function (lv) {
+        return { name: lv.name, icon: lv.icon };
+      }),
+      scene: function (api) {
+        var alive = false;
+        var locked = false;
+        var levelIdx = 0;
+        var qIdx = 0;
+        var review = [];
+        var timers = [];
+        var soundOn = false;
+        var audioCtx = null;
+        var reducedMotion = false;
+
+        // 檢查系統是否偏好減少動態
+        function checkReducedMotion() {
+          return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        }
+
+        // 安全註冊計時器，方便 stop() 一併清空
+        function later(fn, ms) {
+          var id = window.setTimeout(function () {
+            timers = timers.filter(function (t) { return t !== id; });
+            if (alive) fn();
+          }, ms);
+          timers.push(id);
+          return id;
+        }
+
+        // 清空所有計時器
+        function clearTimers() {
+          for (var k = 0; k < timers.length; k++) {
+            window.clearTimeout(timers[k]);
+          }
+          timers = [];
+        }
+
+        // 關閉並釋放 Web Audio Context
+        function closeAudio() {
+          if (audioCtx) {
+            try { audioCtx.close(); } catch (err) {}
+            audioCtx = null;
+          }
+        }
+
+        // 簡單溫和的 Web Audio 提示音（預設關閉，需使用者開啟右下角喇叭）
+        function playTone(kind) {
+          if (!soundOn) return;
+          var AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return;
+          try {
+            if (!audioCtx) audioCtx = new AC();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            var now = audioCtx.currentTime;
+            var notes = kind === 'ok'
+              ? [523.25, 659.25, 783.99] // 輕快上揚和弦音
+              : kind === 'bad'
+                ? [349.23, 293.66]       // 溫和提醒兩音
+                : [587.33];              // 開關確認音
+            for (var n = 0; n < notes.length; n++) {
+              var osc = audioCtx.createOscillator();
+              var gain = audioCtx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(notes[n], now + n * 0.08);
+              gain.gain.setValueAtTime(0.001, now + n * 0.08);
+              gain.gain.linearRampToValueAtTime(0.07, now + n * 0.08 + 0.02);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + n * 0.08 + 0.16);
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.start(now + n * 0.08);
+              osc.stop(now + n * 0.08 + 0.18);
+            }
+          } catch (err) {}
+        }
+
+        // 取得目前寵物名稱（安全防呆）
+        function getPetName() {
+          var p = api.pet && api.pet();
+          return (p && p.name) ? p.name : '小雲';
+        }
+
+        // 計算目前已答對題數
+        function countRight() {
+          var c = 0;
+          for (var r = 0; r < review.length; r++) {
+            if (review[r].ok) c++;
+          }
+          return c;
+        }
+
+        // 繪製目前題目畫面
+        function renderQuestion() {
+          var lv = SCENE_CONFIG.LEVELS[levelIdx];
+          var Q = lv.questions[qIdx];
+          var total = lv.questions.length;
+          var petName = getPetName();
+          locked = false;
+
+          // 通知外殼更新頂欄進度
+          api.progress(qIdx + 1, total);
+
+          // 第一題用關卡開場語，其餘題帶入寵物視角
+          var bubbleText = qIdx === 0
+            ? petName + '戴上警徽囉！' + Q.petSay
+            : Q.petSay;
+
+          api.field.innerHTML =
+            '<div class="sc-wrap">' +
+              '<div class="sc-main">' +
+                '<div class="sc-mission">' +
+                  '<span class="sc-lv-pill">第 ' + (levelIdx + 1) + ' 關・' + lv.name + '</span>' +
+                  '<p class="sc-mission-text">' + lv.intro + '</p>' +
+                '</div>' +
+
+                '<div class="clay sc-case">' +
+                  '<div class="sc-art-frame">' + (PIC[Q.pic] || '') + '</div>' +
+                  '<div class="sc-case-body">' +
+                    '<div class="sc-case-meta">' +
+                      '<span class="sc-source-chip">' + Q.tag + '</span>' +
+                      '<span class="sc-case-num">案件 #' + (qIdx + 1) + ' / ' + total + '</span>' +
+                    '</div>' +
+                    '<p class="sc-question">' + Q.q + '</p>' +
+                    '<p class="sc-ask-line">請幫' + petName + '判斷：這個情況是安全還是危險？</p>' +
+                  '</div>' +
+                '</div>' +
+
+                '<div class="sc-choices">' +
+                  '<button type="button" class="sc-choice-btn sc-choice-safe" data-choice="0" aria-label="安全">' +
+                    UI_SVG.safe +
+                    '<span>' + Q.options[0].text + ' ✓</span>' +
+                    '<span class="sc-keyhint">1</span>' +
+                  '</button>' +
+                  '<button type="button" class="sc-choice-btn sc-choice-danger" data-choice="1" aria-label="危險">' +
+                    UI_SVG.danger +
+                    '<span>' + Q.options[1].text + ' ✗</span>' +
+                    '<span class="sc-keyhint">2</span>' +
+                  '</button>' +
+                '</div>' +
+              '</div>' +
+
+              '<div class="sc-petzone">' +
+                '<div class="sc-badge-bar" id="sc-badge">' +
+                  '<span class="sc-badge-icon">' + UI_SVG.badge + '</span>' +
+                  '<span class="sc-badge-text">小警察徽章</span>' +
+                  '<span class="sc-badge-score" id="sc-score">' + countRight() + ' / ' + total + '</span>' +
+                '</div>' +
+                '<div class="clay sc-bubble" id="sc-bubble">' + bubbleText + '</div>' +
+                '<div class="sc-pet-stage" id="sc-pet">' + api.petSVG('normal', { q: true }) + '</div>' +
+                '<div class="sc-pet-plate">實習警探・' + petName + '</div>' +
+              '</div>' +
+
+              '<button type="button" class="sc-sound-btn" id="sc-sound" aria-pressed="' + (soundOn ? 'true' : 'false') + '" aria-label="切換提示音效">' +
+                (soundOn ? UI_SVG.soundOn : UI_SVG.soundOff) +
+                '<span>' + (soundOn ? '音效開' : '音效關') + '</span>' +
+              '</button>' +
+            '</div>';
+        }
+
+        // 更新喇叭按鈕顯示
+        function updateSoundButton() {
+          var btn = api.field.querySelector('#sc-sound');
+          if (!btn) return;
+          btn.setAttribute('aria-pressed', soundOn ? 'true' : 'false');
+          btn.innerHTML = (soundOn ? UI_SVG.soundOn : UI_SVG.soundOff) +
+            '<span>' + (soundOn ? '音效開' : '音效關') + '</span>';
+        }
+
+        // 處理作答（立即鎖定選項，顯示寵物反應與警徽動畫，再呼叫共用回饋卡）
+        function submitChoice(choiceIdx) {
+          if (!alive || locked) return;
+          locked = true;
+
+          var lv = SCENE_CONFIG.LEVELS[levelIdx];
+          var Q = lv.questions[qIdx];
+          var total = lv.questions.length;
+          var ok = (choiceIdx === Q.ans);
+          var petName = getPetName();
+
+          review.push({ ok: ok, q: Q.q });
+
+          // 鎖住所有選項按鈕並標示已選項目
+          var btns = api.field.querySelectorAll('.sc-choice-btn');
+          for (var b = 0; b < btns.length; b++) {
+            btns[b].disabled = true;
+            if (Number(btns[b].getAttribute('data-choice')) === choiceIdx) {
+              btns[b].classList.add('sc-picked');
+            }
+          }
+
+          // 更新右側寵物表情、對話與警徽發亮
+          var petEl = api.field.querySelector('#sc-pet');
+          var bubbleEl = api.field.querySelector('#sc-bubble');
+          var badgeEl = api.field.querySelector('#sc-badge');
+          var scoreEl = api.field.querySelector('#sc-score');
+
+          if (scoreEl) scoreEl.textContent = countRight() + ' / ' + total;
+
+          if (ok) {
+            playTone('ok');
+            if (petEl) petEl.innerHTML = api.petSVG('happy', { spark: true });
+            if (bubbleEl) bubbleEl.textContent = '太棒了！' + petName + '的警察徽章發亮囉！';
+            if (badgeEl && !reducedMotion) {
+              badgeEl.classList.remove('sc-glow');
+              void badgeEl.offsetWidth;
+              badgeEl.classList.add('sc-glow');
+            }
+          } else {
+            playTone('bad');
+            if (petEl) {
+              petEl.innerHTML = api.petSVG('worried', { sweat: true });
+              if (!reducedMotion) {
+                petEl.classList.remove('sc-shake');
+                void petEl.offsetWidth;
+                petEl.classList.add('sc-shake');
+              }
+            }
+            if (bubbleEl) bubbleEl.textContent = '沒關係！' + petName + '陪你一起看懂這題！';
+          }
+
+          // 短暫呈現寵物即時反應後跳出共用回饋卡（答錯也能繼續，寬鬆過關）
+          var delay = reducedMotion ? 0 : 280;
+          later(function () {
+            api.feedback({
+              ok: ok,
+              explain: Q.explain,
+              zyExplain: false
+            }).then(function () {
+              if (!alive) return;
+              qIdx++;
+              if (qIdx < total) {
+                renderQuestion();
+                return;
+              }
+              // 整關完成：依規則計算星星並交給共用結算畫面
+              var right = countRight();
+              var stars = right >= SCENE_CONFIG.STARS.THREE ? 3
+                : right >= SCENE_CONFIG.STARS.TWO ? 2 : 1;
+              api.finish({
+                stars: stars,
+                review: review,
+                learned: lv.learned,
+                retry: right < total ? '答錯的情境再練習一次，會更有把握喔！' : ''
+              });
+            });
+          }, delay);
+        }
+
+        // 點擊事件代理（選項與音效開關）
+        function onFieldClick(e) {
+          if (!alive) return;
+          var soundBtn = e.target.closest('#sc-sound');
+          if (soundBtn) {
+            soundOn = !soundOn;
+            if (!soundOn) {
+              closeAudio();
+            } else {
+              playTone('toggle');
+            }
+            updateSoundButton();
+            return;
+          }
+          var choiceBtn = e.target.closest('.sc-choice-btn');
+          if (choiceBtn && !locked) {
+            submitChoice(Number(choiceBtn.getAttribute('data-choice')));
+          }
+        }
+
+        // 鍵盤快速作答（1 = 安全，2 = 危險），stop() 時會移除監聽
+        function onKeyDown(e) {
+          if (!alive || locked) return;
+          if (e.key === '1') submitChoice(0);
+          else if (e.key === '2') submitChoice(1);
+        }
+
+        return {
+          start: function (lv) {
+            // 先清乾淨前一次狀態，確保重複 start 從乾淨狀態開始
+            clearTimers();
+            closeAudio();
+            document.removeEventListener('keydown', onKeyDown);
+
+            alive = true;
+            locked = false;
+            levelIdx = (typeof lv === 'number' && SCENE_CONFIG.LEVELS[lv]) ? lv : 0;
+            qIdx = 0;
+            review = [];
+            soundOn = false; // 預設關閉音效
+            reducedMotion = checkReducedMotion();
+
+            api.field.innerHTML = '';
+            api.field.onclick = onFieldClick;
+            document.addEventListener('keydown', onKeyDown);
+
+            renderQuestion();
+          },
+          stop: function () {
+            alive = false;
+            locked = true;
+            clearTimers();
+            closeAudio();
+            api.field.onclick = null;
+            document.removeEventListener('keydown', onKeyDown);
+          }
+        };
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

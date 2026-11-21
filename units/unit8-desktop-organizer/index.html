@@ -1,1054 +1,1583 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>桌面整理大師 - 學會把檔案放到對的資料夾</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-<style>
-    :root {
-        --c: #eab308;
-        --c-dark: #ca8a04;
-        --c-deep: #a16207;
-        --ink: #78350f;
-        --ink-soft: #92400e;
-        --paper: #fffbeb;
-        --paper-2: #fef3c7;
-    }
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; min-height: 100%; }
-    body {
-        font-family: 'Noto Sans TC', sans-serif;
-        user-select: none;
-        -webkit-user-select: none;
-        background:
-            radial-gradient(circle at 20% 15%, #fef9c388 0%, transparent 55%),
-            radial-gradient(circle at 80% 85%, #fde68a88 0%, transparent 55%),
-            linear-gradient(180deg, #fffbeb 0%, #fef3c7 60%, #fde68a 100%);
-        color: var(--ink);
-        min-height: 100vh;
-    }
-    .screen {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    }
-    .hidden { display: none !important; }
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>寵物房間大整理 - 小常識島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Baloo+2:wght@700;800&display=swap">
+  <link rel="stylesheet" href="../../assets/css/smart-island.css">
+  <style>
+    /* ===== 本關場景樣式（一律以 sc- 開頭，不覆蓋共用 .sm- 樣式） ===== */
 
-    /* ===== Title ===== */
-    .title-emoji {
-        font-size: clamp(80px, 14vw, 140px);
-        animation: float 2.6s ease-in-out infinite;
-        filter: drop-shadow(0 6px 16px #eab30866);
-    }
-    @keyframes float {
-        0%, 100% { transform: translateY(0) rotate(-3deg); }
-        50% { transform: translateY(-10px) rotate(3deg); }
-    }
-    .title-text {
-        font-size: clamp(34px, 5.5vw, 52px);
-        font-weight: 900;
-        color: var(--ink);
-        text-shadow: 3px 3px 0 var(--c), 5px 5px 0 #fde68a;
-        margin: 8px 0 4px;
-        text-align: center;
-    }
-    .subtitle {
-        font-size: clamp(16px, 2vw, 22px);
-        color: var(--ink-soft);
-        font-weight: 700;
-        margin-bottom: 24px;
-        text-align: center;
-    }
-    .intro-card {
-        background: rgba(255,255,255,0.7);
-        border: 2px solid var(--c);
-        border-radius: 18px;
-        padding: 16px 20px;
-        max-width: 540px;
-        margin: 0 auto 24px;
-        text-align: left;
-        line-height: 1.9;
-        font-size: clamp(14px, 1.8vw, 17px);
-        color: var(--ink);
-        box-shadow: 0 6px 18px rgba(202,138,4,0.18);
-    }
-    .intro-card strong { color: var(--c-deep); }
-    .intro-card .pill {
-        display: inline-block;
-        background: var(--paper-2);
-        border: 1px solid var(--c);
-        border-radius: 8px;
-        padding: 2px 8px;
-        font-size: 0.95em;
-        font-weight: 900;
-        color: var(--ink);
-        margin: 0 2px;
+    /* 左側：寵物房間的黏土電腦螢幕 */
+    .sc-monitor {
+      position: absolute;
+      left: 24px;
+      top: 14px;
+      width: 976px;
+      height: 562px;
+      padding: 12px;
+      background: var(--card);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-sizing: border-box;
     }
 
-    /* ===== Big Button ===== */
-    .big-btn {
-        font-family: 'Noto Sans TC', sans-serif;
-        font-size: clamp(20px, 2.6vw, 28px);
-        font-weight: 900;
-        padding: 14px 32px;
-        background: linear-gradient(180deg, #fde047, var(--c));
-        color: var(--ink);
-        border: none;
-        border-radius: 999px;
-        box-shadow: 0 5px 0 var(--c-dark), 0 8px 20px rgba(202,138,4,0.35);
-        cursor: pointer;
-        transition: transform 0.1s;
-        text-shadow: 1px 1px 0 #fef9c3;
-        margin: 6px;
+    /* 螢幕頂部工作列：顯示關卡任務與剩餘檔案數 */
+    .sc-topbar {
+      height: 52px;
+      padding: 0 16px;
+      border-radius: 16px;
+      background: var(--lilac);
+      border: 2px solid #D9CBF2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
     }
-    .big-btn:hover { transform: translateY(-2px); }
-    .big-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--c-dark); }
-    .big-btn.gold {
-        background: linear-gradient(180deg, #fbbf24, #f59e0b);
-        box-shadow: 0 5px 0 #b45309;
-        color: white;
-        text-shadow: 2px 2px 0 #92400e;
+    .sc-dots {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-shrink: 0;
     }
-    .big-btn.gold:active { box-shadow: 0 2px 0 #b45309; }
-    .big-btn.gray {
-        background: linear-gradient(180deg, #e7e5e4, #d6d3d1);
-        color: var(--ink);
-        box-shadow: 0 5px 0 #a8a29e;
-        text-shadow: none;
+    .sc-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      border: 2px solid var(--ink);
     }
-    .big-btn.gray:active { box-shadow: 0 2px 0 #a8a29e; }
+    .sc-dot-a { background: var(--orange); }
+    .sc-dot-b { background: #FFD45A; }
+    .sc-dot-c { background: #6CD098; }
 
-    /* ===== Game Screen ===== */
-    #game-screen {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 10px 12px 16px;
-        gap: 10px;
+    .sc-task {
+      flex: 1;
+      margin: 0;
+      color: var(--ink);
+      font-size: 21px;
+      font-weight: 900;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .game-top {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        max-width: 1000px;
+    .sc-remain {
+      flex-shrink: 0;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 2px solid #D3C3EE;
+      color: var(--ink);
+      font-size: 17px;
+      font-weight: 900;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .info-box {
-        background: rgba(255,255,255,0.85);
-        padding: 6px 14px;
-        border-radius: 999px;
-        font-weight: 900;
-        font-size: clamp(13px, 1.6vw, 17px);
-        color: var(--ink);
-        border: 2px solid var(--c);
-    }
-    .top-back {
-        background: transparent;
-        border: 2px solid var(--c-dark);
-        color: var(--c-deep);
-        font-family: 'Noto Sans TC', sans-serif;
-        font-weight: 700;
-        font-size: 14px;
-        padding: 4px 14px;
-        border-radius: 999px;
-        cursor: pointer;
-        text-decoration: none;
-    }
-    .level-title {
-        text-align: center;
-        font-size: clamp(15px, 2vw, 19px);
-        font-weight: 900;
-        color: var(--ink-soft);
-        background: rgba(255,255,255,0.65);
-        padding: 6px 18px;
-        border-radius: 999px;
-        border: 2px dashed var(--c);
+    .sc-remain .sm-num {
+      font-size: 22px;
+      color: var(--violet);
     }
 
-    /* ===== Workspace ===== */
-    .workspace {
-        width: 100%;
-        max-width: 1100px;
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 14px;
-    }
-    @media (min-width: 720px) {
-        .workspace { grid-template-columns: 1.6fr 1fr; }
-    }
-
-    .desktop {
-        position: relative;
-        background:
-            repeating-linear-gradient(45deg, rgba(255,255,255,0.4) 0 2px, transparent 2px 14px),
-            linear-gradient(180deg, #fef9c3 0%, #fde68a 100%);
-        border: 3px solid var(--c);
-        border-radius: 22px;
-        padding: 18px;
-        min-height: clamp(320px, 56vh, 540px);
-        box-shadow: inset 0 0 0 4px #fffbeb, 0 8px 20px rgba(202,138,4,0.18);
-        overflow: hidden;
-    }
-    .desktop-label {
-        position: absolute;
-        top: 8px;
-        left: 14px;
-        font-weight: 900;
-        color: var(--c-deep);
-        font-size: 13px;
-        background: rgba(255,255,255,0.7);
-        padding: 2px 10px;
-        border-radius: 999px;
-        border: 1px solid var(--c);
-        letter-spacing: 1px;
+    /* 電腦桌面區域（上方散落檔案＋下方資料夾列） */
+    .sc-desk {
+      position: relative;
+      flex: 1;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #E5F1FC 0%, #F1ECFA 64%, #FBF2E6 64%, #F8EAD8 100%);
+      border: 3px solid #D6CEE8;
+      box-shadow: inset 0 4px 10px rgba(59, 35, 80, .06);
+      overflow: hidden;
     }
 
-    .file-icon {
-        position: absolute;
-        width: 78px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        cursor: grab;
-        touch-action: none;
-        transition: transform 0.2s, box-shadow 0.2s;
-        z-index: 5;
-    }
-    .file-icon:hover { transform: scale(1.06); }
-    .file-icon.dragging {
-        cursor: grabbing;
-        z-index: 100;
-        transition: none;
-        filter: drop-shadow(0 8px 16px rgba(120,53,15,0.35));
-    }
-    .file-icon.dragging .file-emoji { transform: scale(1.1); }
-    .file-icon .file-emoji {
-        font-size: 46px;
-        line-height: 1;
-        filter: drop-shadow(0 3px 4px rgba(120,53,15,0.25));
-        transition: transform 0.15s;
-    }
-    .file-icon .file-name {
-        margin-top: 2px;
-        font-size: 11px;
-        font-weight: 900;
-        color: var(--ink);
-        background: rgba(255,255,255,0.92);
-        padding: 2px 6px;
-        border-radius: 6px;
-        border: 1px solid var(--c);
-        max-width: 78px;
-        text-align: center;
-        line-height: 1.2;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        pointer-events: none;
-    }
-    .file-icon.shake { animation: shake 0.5s ease; }
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        15% { transform: translateX(-10px) rotate(-6deg); }
-        30% { transform: translateX(10px) rotate(6deg); }
-        45% { transform: translateX(-8px) rotate(-4deg); }
-        60% { transform: translateX(8px) rotate(4deg); }
-        80% { transform: translateX(-3px) rotate(-2deg); }
-    }
-    .file-icon.shake .file-name {
-        background: #fecaca;
-        border-color: #ef4444;
-        color: #991b1b;
-    }
-    .file-icon.flying {
-        transition: transform 0.55s cubic-bezier(0.5, -0.2, 0.7, 1.3), opacity 0.55s;
-        pointer-events: none;
-        z-index: 80;
+    /* 桌面分隔線與角落裝飾（低彩度不干擾視線） */
+    .sc-desk-line {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: 306px;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(106, 69, 201, .16);
+      pointer-events: none;
     }
 
-    /* ===== Folder Panel ===== */
-    .folder-panel {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        padding: 10px;
-        background: rgba(255,255,255,0.45);
-        border: 2px dashed var(--c-dark);
-        border-radius: 22px;
-    }
-    .folder {
-        position: relative;
-        background: linear-gradient(180deg, #fffbeb, #fef3c7);
-        border: 3px solid var(--c);
-        border-radius: 16px;
-        padding: 12px 14px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
-        box-shadow: 0 4px 0 var(--c-dark);
-    }
-    .folder.hover {
-        transform: translateY(-3px) scale(1.03);
-        background: linear-gradient(180deg, #fde047, #fbbf24);
-        box-shadow: 0 7px 0 var(--c-dark), 0 0 24px #fde68a;
-    }
-    .folder.received {
-        animation: folder-pop 0.45s ease-out;
-    }
-    @keyframes folder-pop {
-        0% { transform: scale(1); }
-        40% { transform: scale(1.08); background: #bef264; }
-        100% { transform: scale(1); }
-    }
-    .folder .folder-emoji {
-        font-size: 42px;
-        line-height: 1;
-        filter: drop-shadow(0 2px 3px rgba(120,53,15,0.25));
-    }
-    .folder .folder-info {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
-    .folder .folder-name {
-        font-size: clamp(15px, 1.9vw, 18px);
-        font-weight: 900;
-        color: var(--ink);
-    }
-    .folder .folder-count {
-        font-size: 12px;
-        color: var(--c-deep);
-        font-weight: 700;
+    /* 散落檔案圖層 */
+    .sc-files-layer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 940px;
+      height: 464px;
+      pointer-events: none;
     }
 
-    /* ===== Banner ===== */
-    .banner {
-        position: fixed; inset: 0;
-        background: rgba(120,53,15,0.55);
-        display: flex; align-items: center; justify-content: center;
-        z-index: 200;
-        animation: banner-fade 0.25s ease-out;
+    /* 單一可拖曳檔案卡（≥ 44px，實測 134×90px） */
+    .sc-file {
+      position: absolute;
+      width: 134px;
+      height: 90px;
+      padding: 5px 6px 4px;
+      border-radius: 18px;
+      background: var(--card);
+      border: 3px solid var(--edge);
+      box-shadow: 0 5px 0 #E5D0BE, 0 8px 14px rgba(59, 35, 80, .12);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      pointer-events: auto;
+      box-sizing: border-box;
+      z-index: 10;
+      transition: transform .16s ease-out, box-shadow .16s ease-out, border-color .16s ease-out;
     }
-    @keyframes banner-fade { from { opacity: 0; } to { opacity: 1; } }
-    .banner-card {
-        background: linear-gradient(180deg, #fffbeb, #fef3c7);
-        border: 3px solid var(--c);
-        padding: 26px 32px;
-        border-radius: 22px;
-        text-align: center;
-        max-width: 90%;
-        box-shadow: 0 12px 0 var(--c-dark), 0 16px 40px rgba(120,53,15,0.4);
-        color: var(--ink);
+    .sc-file:hover {
+      transform: translateY(-3px);
+      border-color: var(--violet);
     }
-    .banner-trophy { font-size: 64px; line-height: 1; }
-    .banner-title {
-        font-size: clamp(24px, 3.4vw, 34px);
-        font-weight: 900;
-        color: var(--ink);
-        margin: 10px 0 4px;
+    .sc-file:focus-visible {
+      outline: 4px solid var(--violet);
+      outline-offset: 3px;
     }
-    .banner-stars {
-        font-size: clamp(28px, 4vw, 40px);
-        letter-spacing: 6px;
-        margin: 8px 0;
+    .sc-file.is-selected {
+      border-color: var(--violet);
+      background: #F6F1FF;
+      box-shadow: 0 0 0 4px rgba(106, 69, 201, .22), 0 6px 0 #C8B5EE;
+      transform: translateY(-4px) scale(1.03);
+      z-index: 25;
     }
-    .banner-msg {
-        color: var(--ink-soft);
-        font-size: clamp(14px, 1.8vw, 17px);
-        font-weight: 700;
-        margin: 6px 0 4px;
+    .sc-file.is-drag {
+      cursor: grabbing;
+      border-color: var(--orange);
+      box-shadow: 0 14px 24px rgba(59, 35, 80, .24);
+      transform: scale(1.08) rotate(-2deg);
+      transition: none;
+      z-index: 50;
     }
-    .banner-actions {
-        margin-top: 16px;
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        justify-content: center;
+    .sc-file.is-returning {
+      transition: left .28s cubic-bezier(.22, 1.28, .36, 1), top .28s cubic-bezier(.22, 1.28, .36, 1), transform .24s ease-out;
+      z-index: 35;
     }
-
-    /* ===== Certificate ===== */
-    .certificate {
-        background: linear-gradient(180deg, #fffbeb, #fef3c7);
-        border: 6px double var(--c-deep);
-        border-radius: 24px;
-        padding: 36px 32px;
-        text-align: center;
-        max-width: 540px;
-        position: relative;
-        color: var(--ink);
-        box-shadow: 0 16px 40px rgba(120,53,15,0.25);
+    .sc-file.is-wrong {
+      border-color: var(--bad);
+      background: var(--bad-soft);
     }
-    .cert-corner { position: absolute; font-size: 36px; }
-    .cert-corner.tl { top: 8px; left: 12px; }
-    .cert-corner.tr { top: 8px; right: 12px; }
-    .cert-corner.bl { bottom: 8px; left: 12px; }
-    .cert-corner.br { bottom: 8px; right: 12px; }
-    .cert-title { font-size: clamp(28px, 4vw, 40px); font-weight: 900; color: var(--ink); margin-bottom: 8px; }
-    .cert-body { font-size: clamp(17px, 2vw, 21px); color: var(--ink-soft); line-height: 1.8; margin: 14px 0; }
-    .cert-stat {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        align-items: center;
-        margin: 10px 0;
+    .sc-file.is-flying {
+      transition: left .26s ease-in, top .26s ease-in, transform .26s ease-in, opacity .26s ease-in;
+      transform: scale(.25);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 45;
     }
-    .cert-stat .lvl-line {
-        display: flex;
-        gap: 8px;
-        font-size: clamp(15px, 1.8vw, 18px);
-        font-weight: 700;
-        color: var(--ink-soft);
+    .sc-file.is-done {
+      display: none;
     }
-    .cert-stat .lvl-label {
-        min-width: 64px;
-        text-align: right;
-        color: var(--c-deep);
+    .sc-file-ico {
+      width: 54px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
     }
-    .cert-rank { font-size: clamp(20px, 2.5vw, 28px); font-weight: 900; color: var(--ink); margin-top: 14px; }
-
-    /* ===== Print ===== */
-    @media print {
-        body { background: white; color: black; }
-        #start-screen, #game-screen, .banner { display: none !important; }
-        #end-screen { min-height: auto; padding: 0; }
-        #end-screen > div:not(.certificate) { display: none !important; }
-        .certificate { box-shadow: none; border-color: var(--c-deep); }
+    .sc-file-ico svg {
+      width: 54px;
+      height: 50px;
+      display: block;
+    }
+    .sc-file-name {
+      color: var(--ink);
+      font-size: 17px;
+      font-weight: 900;
+      line-height: 1.15;
+      white-space: nowrap;
+      pointer-events: none;
     }
 
-    /* ===== Hint ===== */
-    .hint-text {
-        text-align: center;
-        color: var(--ink-soft);
-        font-size: clamp(13px, 1.8vw, 16px);
-        font-weight: 700;
-        background: rgba(255,255,255,0.7);
-        padding: 6px 16px;
-        border-radius: 999px;
-        max-width: 540px;
-        margin: 0 auto;
-        border: 1px dashed var(--c-dark);
+    /* 桌面下方：資料夾停泊區 */
+    .sc-dock {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 156px;
+      padding: 6px 14px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      box-sizing: border-box;
+      z-index: 5;
     }
-</style>
-</head>
-<body>
 
-<!-- ===== Start Screen ===== -->
-<div id="start-screen" class="screen">
-    <div class="title-emoji">🖥️</div>
-    <h1 class="title-text">桌面整理大師</h1>
-    <p class="subtitle">學會把檔案放到正確的資料夾 📁</p>
-
-    <div class="intro-card">
-        <strong>📜 怎麼玩</strong><br>
-        1. 桌面上有很多 <span class="pill">📝</span> <span class="pill">🎵</span> <span class="pill">🖼️</span> 等檔案<br>
-        2. 用滑鼠或手指 <strong>拖曳</strong> 檔案到右邊的資料夾<br>
-        3. 放對了會 <span class="pill">✨ 飛進資料夾</span><br>
-        4. 放錯了會 <span class="pill">🔴 彈回來</span>，記得看圖示判斷喔！<br>
-        5. 把桌面整理乾淨就過關 🎉
-    </div>
-
-    <button class="big-btn" onclick="startGame()">🚀 開始整理</button>
-    <a href="../../index.html" class="big-btn gray" style="text-decoration:none; display:inline-block;">🏠 回首頁</a>
-</div>
-
-<!-- ===== Game Screen ===== -->
-<div id="game-screen" class="hidden">
-    <div class="game-top">
-        <a href="../../index.html" class="top-back">🏠 首頁</a>
-        <div class="info-box" id="level-info">第 1 關</div>
-        <div class="info-box" id="star-info">⭐ 0</div>
-        <div class="info-box" id="error-info">❌ 0</div>
-    </div>
-
-    <div class="level-title" id="level-title">一年級教室</div>
-
-    <div class="hint-text" id="hint-text">把檔案拖到對的資料夾就對啦！</div>
-
-    <div class="workspace">
-        <div class="desktop" id="desktop">
-            <div class="desktop-label">📺 桌面</div>
-            <!-- file icons injected here -->
-        </div>
-        <div class="folder-panel" id="folder-panel">
-            <!-- folders injected here -->
-        </div>
-    </div>
-</div>
-
-<!-- ===== End Screen ===== -->
-<div id="end-screen" class="screen hidden">
-    <div class="certificate">
-        <span class="cert-corner tl">📁</span>
-        <span class="cert-corner tr">🖥️</span>
-        <span class="cert-corner bl">📝</span>
-        <span class="cert-corner br">✨</span>
-        <div style="font-size: 64px;" id="cert-trophy">🏆</div>
-        <div class="cert-title">桌面整理認證書</div>
-        <div class="cert-body">
-            你已經學會<br>
-            <strong>把檔案放到正確的資料夾！</strong>
-        </div>
-        <div class="cert-stat" id="cert-stars"></div>
-        <div class="cert-rank" id="cert-rank">🥇 稱號：整潔小達人</div>
-        <div style="margin-top: 14px; font-size: 14px; color: var(--c-deep);" id="cert-date"></div>
-    </div>
-    <div style="margin-top: 18px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
-        <button class="big-btn" onclick="location.reload()">🔄 再玩一次</button>
-        <button class="big-btn gold" onclick="window.print()">🖨️ 列印證書</button>
-        <a href="../../index.html" class="big-btn gray" style="text-decoration:none; display:inline-block;">🏠 回首頁</a>
-    </div>
-</div>
-
-<script>
-'use strict';
-
-// ============================================================
-// Audio (Web Audio API)
-// ============================================================
-let audioCtx = null;
-function getAudio() {
-    if (!audioCtx) {
-        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    /* 單一資料夾目標區（2 個\u{E01E1}時 280×142px，4 個\u{E01E1}時 216×142px，皆 ≥ 140px） */
+    .sc-folder {
+      position: relative;
+      width: 216px;
+      height: 142px;
+      padding: 8px 10px 6px;
+      border-radius: 22px;
+      background: var(--card);
+      border: 3px solid var(--edge);
+      box-shadow: inset 0 3px 0 #fff, inset 0 -5px 0 rgba(233, 213, 196, .55), 0 6px 0 #E5D0BE;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      color: var(--ink);
+      box-sizing: border-box;
+      transition: transform .16s ease-out, border-color .16s ease-out, background-color .16s ease-out;
     }
-    return audioCtx;
-}
-function beep(freq, dur, type = 'square', vol = 0.1) {
-    try {
-        const ctx = getAudio(); if (!ctx) return;
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.type = type;
-        osc.frequency.value = freq;
-        g.gain.setValueAtTime(vol, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-        osc.connect(g).connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + dur);
-    } catch(e) {}
-}
-const SFX = {
-    click() { beep(520, 0.06, 'square', 0.07); },
-    pick() { beep(680, 0.08, 'sine', 0.08); },
-    correct() {
-        beep(660, 0.1, 'sine', 0.1);
-        setTimeout(() => beep(880, 0.12, 'sine', 0.1), 90);
-        setTimeout(() => beep(1100, 0.16, 'sine', 0.1), 180);
-    },
-    wrong() {
-        beep(220, 0.12, 'square', 0.12);
-        setTimeout(() => beep(160, 0.18, 'square', 0.12), 120);
-    },
-    clear() {
-        const notes = [523, 659, 784, 988, 1175];
-        notes.forEach((f, i) => setTimeout(() => beep(f, 0.14, 'triangle', 0.1), i * 110));
-    },
-    finale() {
-        const notes = [523, 659, 784, 1047, 1319, 1568];
-        notes.forEach((f, i) => setTimeout(() => beep(f, 0.2, 'triangle', 0.12), i * 130));
-    },
-};
-
-// ============================================================
-// Data
-// ============================================================
-const LEVELS = [
-    {
-        title: '一年級教室',
-        folders: [
-            { id: 'homework', emoji: '📁', name: '我的作業' },
-            { id: 'trash', emoji: '🗑️', name: '資源回收筒' },
-        ],
-        files: [
-            { emoji: '📝', name: '國語習作', target: 'homework' },
-            { emoji: '📝', name: '數學作業', target: 'homework' },
-            { emoji: '🍌', name: '香蕉皮', target: 'trash' },
-        ],
-        hint: '📝 是作業放「我的作業」，🍌 香蕉皮放「資源回收筒」',
-    },
-    {
-        title: '加入音樂與圖片',
-        folders: [
-            { id: 'homework', emoji: '📁', name: '我的作業' },
-            { id: 'music', emoji: '🎵', name: '音樂' },
-            { id: 'images', emoji: '🖼️', name: '圖片' },
-        ],
-        files: [
-            { emoji: '📝', name: '作文', target: 'homework' },
-            { emoji: '📝', name: '數學', target: 'homework' },
-            { emoji: '🎵', name: '生日快樂', target: 'music' },
-            { emoji: '🎵', name: '小蜜蜂', target: 'music' },
-            { emoji: '🖼️', name: '全家福', target: 'images' },
-        ],
-        hint: '🎵 是音樂，🖼️ 是圖片，照圖示分類就對了',
-    },
-    {
-        title: '加入回收筒',
-        folders: [
-            { id: 'homework', emoji: '📁', name: '我的作業' },
-            { id: 'music', emoji: '🎵', name: '音樂' },
-            { id: 'images', emoji: '🖼️', name: '圖片' },
-            { id: 'trash', emoji: '🗑️', name: '資源回收筒' },
-        ],
-        files: [
-            { emoji: '📝', name: '社會報告', target: 'homework' },
-            { emoji: '📝', name: '自然觀察', target: 'homework' },
-            { emoji: '🎵', name: '小星星', target: 'music' },
-            { emoji: '🖼️', name: '春天的花', target: 'images' },
-            { emoji: '🖼️', name: '運動會', target: 'images' },
-            { emoji: '🍌', name: '香蕉皮', target: 'trash' },
-            { emoji: '📰', name: '舊報紙', target: 'trash' },
-            { emoji: '📝', name: '英文單字', target: 'homework' },
-        ],
-        hint: '不要的東西（🍌🗑️📰）通通丟資源回收筒',
-    },
-    {
-        title: '看圖示不看檔名',
-        folders: [
-            { id: 'homework', emoji: '📁', name: '我的作業' },
-            { id: 'music', emoji: '🎵', name: '音樂' },
-            { id: 'images', emoji: '🖼️', name: '圖片' },
-            { id: 'trash', emoji: '🗑️', name: '資源回收筒' },
-        ],
-        files: [
-            { emoji: '🎵', name: '看起來像作業', target: 'music', tricky: true },
-            { emoji: '📝', name: '不是音樂喔', target: 'homework', tricky: true },
-            { emoji: '🍌', name: '香蕉皮', target: 'trash' },
-            { emoji: '🖼️', name: '日落照片', target: 'images' },
-            { emoji: '📝', name: '聯絡簿', target: 'homework' },
-            { emoji: '🎵', name: '小蜜蜂', target: 'music' },
-            { emoji: '🖼️', name: '貓咪', target: 'images' },
-            { emoji: '🗑️', name: '空垃圾袋', target: 'trash' },
-            { emoji: '📰', name: '舊報紙', target: 'trash' },
-        ],
-        hint: '⚠️ 檔名會騙人！要看「圖示」決定放哪',
-    },
-    {
-        title: 'BOSS：超亂桌面',
-        folders: [
-            { id: 'homework', emoji: '📁', name: '我的作業' },
-            { id: 'music', emoji: '🎵', name: '音樂' },
-            { id: 'images', emoji: '🖼️', name: '圖片' },
-            { id: 'trash', emoji: '🗑️', name: '資源回收筒' },
-        ],
-        files: [
-            { emoji: '📝', name: '考卷1', target: 'homework' },
-            { emoji: '📝', name: '考卷2', target: 'homework' },
-            { emoji: '📝', name: '學習單', target: 'homework' },
-            { emoji: '🎵', name: '兒歌', target: 'music' },
-            { emoji: '🎵', name: '校歌', target: 'music' },
-            { emoji: '🎵', name: '國歌', target: 'music' },
-            { emoji: '🖼️', name: '畢業照', target: 'images' },
-            { emoji: '🖼️', name: '畫的畫', target: 'images' },
-            { emoji: '🖼️', name: '寵物照', target: 'images' },
-            { emoji: '🍌', name: '香蕉皮', target: 'trash' },
-            { emoji: '📰', name: '舊報紙', target: 'trash' },
-            { emoji: '🗑️', name: '碎紙片', target: 'trash' },
-        ],
-        hint: '最後一關！12 個檔案整理完就是大宗師 👑',
-    },
-];
-
-// ============================================================
-// State
-// ============================================================
-const state = {
-    levelIdx: 0,
-    fileNodes: [],          // active file DOM nodes
-    folderRects: {},        // folder bounding rects cache (refreshed on use)
-    folderCounts: {},       // received counts per folder id
-    levelErrors: 0,
-    levelStars: [],
-    totalStars: 0,
-    drag: null,             // { node, file, offsetX, offsetY, originX, originY }
-};
-
-function $(id) { return document.getElementById(id); }
-
-// ============================================================
-// Layout helpers
-// ============================================================
-function getDesktop() { return $('desktop'); }
-
-function randomPositions(count, desktopRect) {
-    // Place file icons in a soft jittered grid so they don't overlap
-    const pad = 20;
-    const labelH = 36; // reserve space under the "📺 桌面" label
-    const iconW = 78;
-    const iconH = 78;
-    const usableW = Math.max(100, desktopRect.width - pad * 2);
-    const usableH = Math.max(100, desktopRect.height - pad * 2 - labelH);
-    const cols = Math.max(2, Math.floor(usableW / (iconW + 12)));
-    const rows = Math.max(2, Math.ceil(count / cols));
-    const cellW = usableW / cols;
-    const cellH = Math.min(iconH + 18, usableH / rows);
-    const positions = [];
-    for (let i = 0; i < count; i++) {
-        const r = Math.floor(i / cols);
-        const c = i % cols;
-        const baseX = pad + c * cellW + (cellW - iconW) / 2;
-        const baseY = pad + labelH + r * cellH + (cellH - iconH) / 2;
-        const jitterX = (Math.random() - 0.5) * 10;
-        const jitterY = (Math.random() - 0.5) * 8;
-        positions.push({
-            x: Math.max(pad, Math.min(desktopRect.width - iconW - pad, baseX + jitterX)),
-            y: Math.max(pad + labelH, Math.min(desktopRect.height - iconH - pad, baseY + jitterY)),
-        });
+    .sc-dock.is-two .sc-folder {
+      width: 280px;
     }
-    // Shuffle so visual order != logical order
-    for (let i = positions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [positions[i], positions[j]] = [positions[j], positions[i]];
+    .sc-folder:hover {
+      transform: translateY(-2px);
+      border-color: var(--violet);
     }
-    return positions;
-}
+    .sc-folder:focus-visible {
+      outline: 4px solid var(--violet);
+      outline-offset: 3px;
+    }
+    .sc-folder.is-over {
+      transform: translateY(-5px) scale(1.04);
+      border-color: var(--violet);
+      background: var(--lilac);
+      box-shadow: 0 0 0 4px rgba(106, 69, 201, .24), 0 8px 0 #C8B5EE;
+    }
+    .sc-folder.is-ok {
+      border-color: var(--ok);
+      background: var(--ok-soft);
+      animation: sc-pop .28s ease-out;
+    }
+    .sc-folder.is-shake {
+      border-color: var(--bad);
+      background: var(--bad-soft);
+      animation: sc-shake .32s ease-in-out;
+    }
+    .sc-folder-ico {
+      width: 74px;
+      height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .sc-folder-ico svg {
+      width: 74px;
+      height: 62px;
+      display: block;
+    }
+    .sc-folder-label {
+      color: var(--ink);
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1.25;
+      white-space: nowrap;
+      pointer-events: none;
+    }
 
-// ============================================================
-// Render
-// ============================================================
-function renderLevel() {
-    const level = LEVELS[state.levelIdx];
-    $('level-info').textContent = `第 ${state.levelIdx + 1} 關`;
-    $('level-title').textContent = level.title;
-    $('hint-text').textContent = level.hint;
-    $('star-info').textContent = `⭐ ${state.totalStars}`;
-    $('error-info').textContent = `❌ ${state.levelErrors}`;
+    /* 資料夾右上角：已放入數量徽章 */
+    .sc-fcount {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      min-width: 34px;
+      height: 34px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: var(--lilac);
+      border: 2px solid #C8B5EE;
+      color: var(--ink);
+      font-size: 20px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+    .sc-fcount.has-items {
+      background: var(--violet);
+      border-color: var(--violet-d);
+      color: #fff;
+    }
 
-    // Folders
-    const fp = $('folder-panel');
-    fp.innerHTML = '';
-    state.folderCounts = {};
-    level.folders.forEach(f => {
-        state.folderCounts[f.id] = 0;
-        const div = document.createElement('div');
-        div.className = 'folder';
-        div.dataset.folder = f.id;
-        div.innerHTML = `
-            <div class="folder-emoji">${f.emoji}</div>
-            <div class="folder-info">
-                <div class="folder-name">${f.name}</div>
-                <div class="folder-count" id="count-${f.id}">已收 0 個</div>
-            </div>
-        `;
-        fp.appendChild(div);
-    });
+    /* 放對時浮起的 +1 ✓ 提示 */
+    .sc-plus {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 3px 12px;
+      border-radius: 999px;
+      background: var(--ok);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 900;
+      white-space: nowrap;
+      pointer-events: none;
+      animation: sc-float .65s ease-out forwards;
+    }
 
-    // Files
-    const desktop = getDesktop();
-    // Clear old files but keep label
-    [...desktop.querySelectorAll('.file-icon')].forEach(n => n.remove());
-    state.fileNodes = [];
+    /* 右側：寵物陪伴區（泡泡＋280px 寵物＋狀態卡） */
+    .sc-petbox {
+      position: absolute;
+      left: 1018px;
+      top: 14px;
+      width: 324px;
+      height: 562px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      box-sizing: border-box;
+    }
 
-    // Wait one frame so desktop has correct size, then place
-    requestAnimationFrame(() => {
-        const rect = desktop.getBoundingClientRect();
-        const positions = randomPositions(level.files.length, rect);
-        level.files.forEach((file, i) => {
-            const node = document.createElement('div');
-            node.className = 'file-icon';
-            const pos = positions[i];
-            node.style.left = pos.x + 'px';
-            node.style.top = pos.y + 'px';
-            node.dataset.target = file.target;
-            node.innerHTML = `
-                <div class="file-emoji">${file.emoji}</div>
-                <div class="file-name">${file.name}</div>
-            `;
-            attachDragHandlers(node, file);
-            desktop.appendChild(node);
-            state.fileNodes.push(node);
-        });
-    });
-}
+    /* 寵物對話泡泡 */
+    .sc-bubble {
+      position: relative;
+      width: 100%;
+      min-height: 132px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-align: center;
+      box-sizing: border-box;
+      transition: background-color .18s ease-out, border-color .18s ease-out;
+    }
+    .sc-bubble::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: -14px;
+      width: 22px;
+      height: 22px;
+      margin-left: -11px;
+      background: inherit;
+      border-right: 3px solid var(--edge);
+      border-bottom: 3px solid var(--edge);
+      transform: rotate(45deg);
+    }
+    .sc-bubble.is-ok {
+      background: var(--ok-soft);
+      border-color: var(--ok);
+    }
+    .sc-bubble.is-ok::after {
+      border-right-color: var(--ok);
+      border-bottom-color: var(--ok);
+    }
+    .sc-bubble.is-bad {
+      background: var(--bad-soft);
+      border-color: var(--bad);
+    }
+    .sc-bubble.is-bad::after {
+      border-right-color: var(--bad);
+      border-bottom-color: var(--bad);
+    }
 
-function updateFolderCount(folderId) {
-    const el = $('count-' + folderId);
-    if (el) el.textContent = `已收 ${state.folderCounts[folderId]} 個`;
-}
+    .sc-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 12px;
+      border-radius: 999px;
+      font-size: 16px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .sc-badge-ok {
+      background: var(--ok);
+      color: #fff;
+    }
+    .sc-badge-bad {
+      background: var(--bad);
+      color: #fff;
+    }
+    .sc-badge-tip {
+      background: var(--butter);
+      color: var(--ink);
+      border: 2px solid #E5C87A;
+    }
 
-// ============================================================
-// Drag (Pointer Events)
-// ============================================================
-function attachDragHandlers(node, file) {
-    node.addEventListener('pointerdown', (e) => onPointerDown(e, node, file));
-}
+    .sc-speech {
+      margin: 0;
+      color: var(--ink);
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1.5;
+    }
 
-function onPointerDown(e, node, file) {
-    if (state.drag) return;
-    e.preventDefault();
-    try { node.setPointerCapture(e.pointerId); } catch(_) {}
-    const rect = node.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left;
-    const offsetY = e.clientY - rect.top;
-    const originX = parseFloat(node.style.left) || 0;
-    const originY = parseFloat(node.style.top) || 0;
+    /* 寵物本體舞台（280×280px，表情清楚） */
+    .sc-pet-stage {
+      position: relative;
+      width: 284px;
+      height: 292px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .sc-pet-rug {
+      position: absolute;
+      bottom: 8px;
+      width: 230px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(106, 69, 201, .12);
+    }
+    .sc-pet {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      z-index: 2;
+    }
+    .sc-pet svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    .sc-pet.is-hop {
+      animation: sc-hop .34s ease-out;
+    }
+    .sc-pet.is-wiggle {
+      animation: sc-shake .34s ease-in-out;
+    }
 
-    state.drag = {
-        node, file, offsetX, offsetY, originX, originY,
-        pointerId: e.pointerId,
-    };
-    node.classList.add('dragging');
-    // Make icon not capture elementFromPoint so we can detect folder under cursor
-    node.style.pointerEvents = 'none';
-    SFX.pick();
+    /* 右下角：簡潔進度與操作提示卡 */
+    .sc-status {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      box-sizing: border-box;
+    }
+    .sc-status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--ink);
+      font-size: 19px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .sc-status-row .sm-num {
+      font-size: 24px;
+      color: var(--violet);
+    }
+    .sc-hint-mini {
+      color: var(--ink2);
+      font-size: 16px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
 
-    document.addEventListener('pointermove', onPointerMove);
-    document.addEventListener('pointerup', onPointerUp);
-    document.addEventListener('pointercancel', onPointerUp);
-}
+    /* 單次回饋動畫（不連續閃爍） */
+    @keyframes sc-pop {
+      0% { transform: scale(1); }
+      45% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+    @keyframes sc-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-7px); }
+      65% { transform: translateX(7px); }
+    }
+    @keyframes sc-hop {
+      0%, 100% { transform: translateY(0); }
+      45% { transform: translateY(-12px); }
+    }
+    @keyframes sc-float {
+      0% { opacity: 0; transform: translate(-50%, 6px) scale(.85); }
+      25% { opacity: 1; transform: translate(-50%, -6px) scale(1.06); }
+      100% { opacity: 0; transform: translate(-50%, -26px) scale(1); }
+    }
 
-function onPointerMove(e) {
-    if (!state.drag) return;
-    e.preventDefault();
-    const desktop = getDesktop();
-    const deskRect = desktop.getBoundingClientRect();
-    // Move file icon — position is relative to desktop container.
-    // Allow it to roam visually outside (using fixed-ish trick): we keep absolute inside desktop,
-    // but compute coords relative to desktop's top-left.
-    const x = e.clientX - deskRect.left - state.drag.offsetX;
-    const y = e.clientY - deskRect.top - state.drag.offsetY;
-    state.drag.node.style.left = x + 'px';
-    state.drag.node.style.top = y + 'px';
+    /* 尊重系統減少動態偏好 */
+    @media (prefers-reduced-motion: reduce) {
+      .sc-file, .sc-folder, .sc-bubble, .sc-pet, .sc-plus {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/smart-pet.js"></script>
+  <script src="../../assets/js/smart-ui.js"></script>
+  <script>
+  (function () {
+    'use strict';
 
-    // Highlight folder under cursor
-    const folderEl = getFolderAtPoint(e.clientX, e.clientY);
-    document.querySelectorAll('.folder').forEach(f => {
-        if (f === folderEl) f.classList.add('hover');
-        else f.classList.remove('hover');
-    });
-}
+    /* =====================================================================
+     *  SCENE_CONFIG：本關所有題目、資料夾、星星門檻與台詞集中管理
+     *  - 順序寫死不洗牌，與題目檢核表完全對應
+     *  - 每個\u{E01E1}檔案為一題；ans 對應本關 folders 陣列的索引（0 起算）
+     * ===================================================================== */
+    var SCENE_CONFIG = {
+      // 桌面邏輯尺寸（用於縮放後座標換算）
+      DESK_W: 940,
+      DESK_H: 464,
 
-function getFolderAtPoint(x, y) {
-    const el = document.elementFromPoint(x, y);
-    if (!el) return null;
-    return el.closest('.folder');
-}
+      // 星星規則：0 次放錯 3 顆、1–2 次放錯 2 顆、3 次以上 1 顆
+      STARS: { THREE_MAX_WRONG: 0, TWO_MAX_WRONG: 2 },
 
-function onPointerUp(e) {
-    if (!state.drag) return;
-    const drag = state.drag;
-    document.removeEventListener('pointermove', onPointerMove);
-    document.removeEventListener('pointerup', onPointerUp);
-    document.removeEventListener('pointercancel', onPointerUp);
+      // 四種資料夾定義
+      FOLDERS: {
+        doc:   { key: 'doc',   label: '我的作業' },
+        music: { key: 'music', label: '我的音樂\u{E01E1}' },
+        image: { key: 'image', label: '我的圖片' },
+        trash: { key: 'trash', label: '資源回收筒' }
+      },
 
-    const folderEl = getFolderAtPoint(e.clientX, e.clientY);
-    document.querySelectorAll('.folder').forEach(f => f.classList.remove('hover'));
+      // 放對時的稱讚句（避開破音字，單行不折斷詞）
+      PRAISE: [
+        '放對了！你好棒！',
+        '對喔！桌面變整齊！',
+        '太厲害！認出圖示了！',
+        '答對了！繼續加油！'
+      ],
 
-    drag.node.classList.remove('dragging');
-    drag.node.style.pointerEvents = '';
+      // 放錯時的溫和正確觀念（依正確檔案類型＋是否為檔名陷阱題切換）
+      EXPLAIN: {
+        doc:   { normal: '這是格線文件喔！<br>拖進「我的作業」',   trap: '別被檔名騙了！<br>格線是「我的作業」' },
+        music: { normal: '圖示是音符喔！<br>拖進「我的音樂\u{E01E1}」',     trap: '別被檔名騙了！<br>音符是「我的音樂\u{E01E1}」' },
+        image: { normal: '圖示有山跟太陽！<br>拖進「我的圖片」',   trap: '別被檔名騙了！<br>山跟太陽是圖片' },
+        trash: { normal: '這是不要的垃圾！<br>丟進「資源回收筒」', trap: '別被檔名騙了！<br>垃圾丟「資源回收筒」' }
+      },
 
-    state.drag = null;
+      // 5 個關卡設定（保留舊版進程與所有舊版檔名）
+      LEVELS: [
+        /* ---------- 第 1 關：作業和回收筒（6 題；正解分布：1→3 次、2→3 次） ---------- */
+        {
+          name: '作業和回收筒',
+          task: '把檔案拖進「我的作業」或「資源回收筒」',
+          intro: '{pet}的桌面好亂！<br>幫我收好檔案吧！',
+          learned: '作業放進資料夾，垃圾丟進回收筒',
+          folders: ['doc', 'trash'],
+          items: [
+            {
+              q: '國語習作', type: 'doc', pic: 'doc', ans: 0, trap: false, x: 78, y: 30,
+              explain: '這是格線文件喔！拖進「我的作業」。',
+              options: [
+                { text: '我的作業', why: '正解' },
+                { text: '資源回收筒', why: '以為寫完的習作不用保留就可以丟掉' }
+              ]
+            },
+            {
+              q: '香蕉皮', type: 'trash', pic: 'trash_banana', ans: 1, trap: false, x: 388, y: 42,
+              explain: '這是不要的垃圾！丟進「資源回收筒」。',
+              options: [
+                { text: '我的作業', why: '沒看圖示就順手拖進第一個\u{E01E1}資料夾' },
+                { text: '資源回收筒', why: '正解' }
+              ]
+            },
+            {
+              q: '數學作業', type: 'doc', pic: 'doc', ans: 0, trap: false, x: 698, y: 26,
+              explain: '這是格線文件喔！拖進「我的作業」。',
+              options: [
+                { text: '我的作業', why: '正解' },
+                { text: '資源回收筒', why: '不喜歡數學作業而想丟進回收筒' }
+              ]
+            },
+            {
+              q: '空垃圾袋', type: 'trash', pic: 'trash_bag', ans: 1, trap: false, x: 158, y: 168,
+              explain: '這是不要的垃圾！丟進「資源回收筒」。',
+              options: [
+                { text: '我的作業', why: '以為空袋子以後還能裝檔案而放進資料夾' },
+                { text: '資源回收筒', why: '正解' }
+              ]
+            },
+            {
+              q: '舊報紙', type: 'trash', pic: 'trash_paper', ans: 1, trap: false, x: 468, y: 176,
+              explain: '這是不要的垃圾！丟進「資源回收筒」。',
+              options: [
+                { text: '我的作業', why: '看到報紙上有文字，誤以為跟習作一樣是作業' },
+                { text: '資源回收筒', why: '正解' }
+              ]
+            },
+            {
+              q: '自然觀察', type: 'doc', pic: 'doc', ans: 0, trap: false, x: 742, y: 164,
+              explain: '這是格線文件喔！拖進「我的作業」。',
+              options: [
+                { text: '我的作業', why: '正解' },
+                { text: '資源回收筒', why: '不確定觀察紀錄算不算作業而誤丟' }
+              ]
+            }
+          ]
+        },
 
-    if (folderEl) {
-        const folderId = folderEl.dataset.folder;
-        if (folderId === drag.file.target) {
-            handleCorrect(drag.node, drag.file, folderEl);
-        } else {
-            handleWrong(drag.node, drag.originX, drag.originY);
+        /* ---------- 第 2 關：音樂和圖片（6 題；正解分布：1→3 次、2→3 次） ---------- */
+        {
+          name: '音樂\u{E01E1}和圖片',
+          task: '把檔案拖進「我的音樂\u{E01E1}」或「我的圖片」',
+          intro: '有音符跟風景！<br>幫{pet}分好吧！',
+          learned: '音符圖示是音樂\u{E01E1}，風景圖示是圖片',
+          folders: ['music', 'image'],
+          items: [
+            {
+              q: '春天的花', type: 'image', pic: 'image_flower', ans: 1, trap: false, x: 84, y: 34,
+              explain: '圖示有山跟太陽！拖進「我的圖片」。',
+              options: [
+                { text: '我的音樂\u{E01E1}', why: '聯想到春天的歌而未確認圖片圖示' },
+                { text: '我的圖片', why: '正解' }
+              ]
+            },
+            {
+              q: '生日快樂', type: 'music', pic: 'music', ans: 0, trap: false, x: 396, y: 26,
+              explain: '圖示是音符喔！拖進「我的音樂\u{E01E1}」。',
+              options: [
+                { text: '我的音樂\u{E01E1}', why: '正解' },
+                { text: '我的圖片', why: '把生日快樂當成慶生照片或卡片圖' }
+              ]
+            },
+            {
+              q: '日落照片', type: 'image', pic: 'image_sunset', ans: 1, trap: false, x: 704, y: 38,
+              explain: '圖示有山跟太陽！拖進「我的圖片」。',
+              options: [
+                { text: '我的音樂\u{E01E1}', why: '沒先辨認風景框與音符圖示的差別' },
+                { text: '我的圖片', why: '正解' }
+              ]
+            },
+            {
+              q: '小星星', type: 'music', pic: 'music', ans: 0, trap: false, x: 152, y: 170,
+              explain: '圖示是音符喔！拖進「我的音樂\u{E01E1}」。',
+              options: [
+                { text: '我的音樂\u{E01E1}', why: '正解' },
+                { text: '我的圖片', why: '以為小星星是夜空星星的圖片' }
+              ]
+            },
+            {
+              q: '下課鐘聲', type: 'music', pic: 'music', ans: 0, trap: false, x: 462, y: 164,
+              explain: '圖示是音符喔！拖進「我的音樂\u{E01E1}」。',
+              options: [
+                { text: '我的音樂\u{E01E1}', why: '正解' },
+                { text: '我的圖片', why: '以為鐘聲不是歌曲所以不該放音樂\u{E01E1}資料夾' }
+              ]
+            },
+            {
+              q: '小狗合照', type: 'image', pic: 'image_flower', ans: 1, trap: false, x: 746, y: 174,
+              explain: '圖示有山跟太陽！拖進「我的圖片」。',
+              options: [
+                { text: '我的音樂\u{E01E1}', why: '誤以為是小狗叫聲而未看相片圖示' },
+                { text: '我的圖片', why: '正解' }
+              ]
+            }
+          ]
+        },
+
+        /* ---------- 第 3 關：四個\u{E01E1}資料夾（8 題；正解分布：1→2、2→2、3→2、4→2） ---------- */
+        {
+          name: '四個\u{E01E1}資料夾',
+          task: '先認圖示，再拖進對的資料夾！',
+          intro: '四個\u{E01E1}資料夾來了！<br>先認圖示再拖喔！',
+          learned: '先認檔案圖示，再放進對的資料夾',
+          folders: ['doc', 'music', 'image', 'trash'],
+          items: [
+            {
+              q: '社會報告', type: 'doc', pic: 'doc', ans: 0, trap: false, x: 44, y: 28,
+              explain: '這是格線文件喔！拖進「我的作業」。',
+              options: [
+                { text: '我的作業', why: '正解' },
+                { text: '我的圖片', why: '以為報告裡有插圖所以歸到圖片' }
+              ]
+            },
+            {
+              q: '春天的花', type: 'image', pic: 'image_flower', ans: 2, trap: false, x: 268, y: 38,
+              explain: '圖示有山跟太陽！拖進「我的圖片」。',
+              options: [
+                { text: '我的圖片', why: '正解' },
+                { text: '我的作業', why: '以為是自然課要交的花朵作業' }
+              ]
+            },
+            {
+              q: '生日快樂', type: 'music', pic: 'music', ans: 1, trap: false, x: 492, y: 24,
+              explain: '圖示是音符喔！拖進「我的音樂\u{E01E1}」。',
+              options: [
+                { text: '我的音樂\u{E01E1}', why: '正解' },
+                { text: '我的圖片', why: '把生日快樂聯想成慶生照片' }
+              ]
+            },
+            {
+              q: '香蕉皮', type: 'trash', pic: 'trash_banana', ans: 3, trap: false, x: 722, y: 36,
+              explain: '這是不要的垃圾！丟進「資源回收筒」。',
+              options: [
+                { text: '資源回收筒', why: '正解' },
+                { text: '我的圖片', why: '看到有畫香蕉皮就當成水果圖片' }
+              ]
+            },
+            {
+              q: '校外教學', type: 'image', pic: 'image_sunset', ans: 2, trap: false, x: 86, y: 168,
+              explain: '圖示有山跟太陽！拖進「我的圖片」。',
+              options: [
+                { text: '我的圖片', why: '正解' },
+                { text: '我的作業', why: '看到校外教學以為是學習單或心得作業' }
+              ]
+            },
+            {
+              q: '英文單字', type: 'doc', pic: 'doc', ans: 0, trap: false, x: 312, y: 178,
+              explain: '這是格線文件喔！拖進「我的作業」。',
+              options: [
+                { text: '我的作業', why: '正解' },
+                { text: '我的音樂\u{E01E1}', why: '聯想到聽英文單字發音而拖進音樂\u{E01E1}' }
+              ]
+            },
+            {
+              q: '空垃圾袋', type: 'trash', pic: 'trash_bag', ans: 3, trap: false, x: 540, y: 164,
+              explain: '這是不要的垃圾！丟進「資源回收筒」。',
+              options: [
+                { text: '資源回收筒', why: '正解' },
+                { text: '我的作業', why: '忽略垃圾圖示而誤放到第一個\u{E01E1}資料夾' }
+              ]
+            },
+            {
+              q: '小星星', type: 'music', pic: 'music', ans: 1, trap: false, x: 764, y: 174,
+              explain: '圖示是音符喔！拖進「我的音樂\u{E01E1}」。',
+              options: [
+                { text: '我的音樂\u{E01E1}', why: '正解' },
+                { text: '我的圖片', why: '只看檔名以為是星星的圖片' }
+              ]
+            }
+          ]
+        },
+
+        /* ---------- 第 4 關：看圖示不看檔名（8 題全陷阱；正解分布：1→2、2→2、3→2、4→2） ---------- */
+        {
+          name: '看圖示不看檔名',
+          task: '檔名會騙人！要看圖示再拖喔！',
+          intro: '小心檔名會騙人！<br>要看圖示才準喔！',
+          learned: '分類要看檔案圖示，不被檔名騙',
+          folders: ['doc', 'music', 'image', 'trash'],
+          items: [
+            {
+              q: '數學作業', type: 'music', pic: 'music', ans: 1, trap: true, x: 46, y: 30,
+              explain: '別被檔名騙了！音符是「我的音樂\u{E01E1}」。',
+              options: [
+                { text: '我的音樂\u{E01E1}', why: '正解' },
+                { text: '我的作業', why: '只看檔名「數學作業」沒看音符圖示' }
+              ]
+            },
+            {
+              q: '春天的花', type: 'trash', pic: 'trash_paper', ans: 3, trap: true, x: 272, y: 38,
+              explain: '別被檔名騙了！垃圾丟「資源回收筒」。',
+              options: [
+                { text: '資源回收筒', why: '正解' },
+                { text: '我的圖片', why: '只看檔名「春天的花」誤當成圖片' }
+              ]
+            },
+            {
+              q: '生日快樂', type: 'doc', pic: 'doc', ans: 0, trap: true, x: 498, y: 26,
+              explain: '別被檔名騙了！格線是「我的作業」。',
+              options: [
+                { text: '我的作業', why: '正解' },
+                { text: '我的音樂\u{E01E1}', why: '只看檔名「生日快樂」誤當成歌曲' }
+              ]
+            },
+            {
+              q: '國語習作', type: 'image', pic: 'image_flower', ans: 2, trap: true, x: 724, y: 36,
+              explain: '別被檔名騙了！山跟太陽是圖片。',
+              options: [
+                { text: '我的圖片', why: '正解' },
+                { text: '我的作業', why: '只看檔名「國語習作」忽略風景圖示' }
+              ]
+            },
+            {
+              q: '小星星', type: 'trash', pic: 'trash_banana', ans: 3, trap: true, x: 88, y: 170,
+              explain: '別被檔名騙了！垃圾丟「資源回收筒」。',
+              options: [
+                { text: '資源回收筒', why: '正解' },
+                { text: '我的音樂\u{E01E1}', why: '靠記憶把「小星星」直接拖進音樂\u{E01E1}' }
+              ]
+            },
+            {
+              q: '日落照片', type: 'music', pic: 'music', ans: 1, trap: true, x: 316, y: 178,
+              explain: '別被檔名騙了！音符是「我的音樂\u{E01E1}」。',
+              options: [
+                { text: '我的音樂\u{E01E1}', why: '正解' },
+                { text: '我的圖片', why: '看到檔名有「照片」就沒看音符圖示' }
+              ]
+            },
+            {
+              q: '香蕉皮', type: 'image', pic: 'image_sunset', ans: 2, trap: true, x: 544, y: 166,
+              explain: '別被檔名騙了！山跟太陽是圖片。',
+              options: [
+                { text: '我的圖片', why: '正解' },
+                { text: '資源回收筒', why: '看到「香蕉皮」直接當垃圾丟掉，沒看圖片圖示' }
+              ]
+            },
+            {
+              q: '空垃圾袋', type: 'doc', pic: 'doc', ans: 0, trap: true, x: 766, y: 174,
+              explain: '別被檔名騙了！格線是「我的作業」。',
+              options: [
+                { text: '我的作業', why: '正解' },
+                { text: '資源回收筒', why: '看到「垃圾袋」以為必丟回收筒，沒看文件圖示' }
+              ]
+            }
+          ]
+        },
+
+        /* ---------- 第 5 關：超亂桌面（12 題含 4 陷阱；正解分布：1→3、2→3、3→3、4→3） ---------- */
+        {
+          name: '超亂桌面',
+          task: '桌面超亂！看圖示收好全部檔案！',
+          intro: '十二個\u{E01E1}檔案好亂！<br>快幫{pet}整理！',
+          learned: '看圖示整理桌面，檔案整齊又好找',
+          folders: ['doc', 'music', 'image', 'trash'],
+          items: [
+            {
+              q: '日落照片', type: 'image', pic: 'image_sunset', ans: 2, trap: false, x: 36, y: 8,
+              explain: '圖示有山跟太陽！拖進「我的圖片」。',
+              options: [
+                { text: '我的圖片', why: '正解' },
+                { text: '我的作業', why: '桌面檔案多時急著放進最左邊資料夾' }
+              ]
+            },
+            {
+              q: '國語習作', type: 'doc', pic: 'doc', ans: 0, trap: false, x: 258, y: 14,
+              explain: '這是格線文件喔！拖進「我的作業」。',
+              options: [
+                { text: '我的作業', why: '正解' },
+                { text: '資源回收筒', why: '檔案太多不小心拖錯方向' }
+              ]
+            },
+            {
+              q: '香蕉皮', type: 'trash', pic: 'trash_banana', ans: 3, trap: false, x: 488, y: 6,
+              explain: '這是不要的垃圾！丟進「資源回收筒」。',
+              options: [
+                { text: '資源回收筒', why: '正解' },
+                { text: '我的圖片', why: '因為上一關有陷阱而過度懷疑正常圖示' }
+              ]
+            },
+            {
+              q: '生日快樂', type: 'music', pic: 'music', ans: 1, trap: false, x: 724, y: 12,
+              explain: '圖示是音符喔！拖進「我的音樂\u{E01E1}」。',
+              options: [
+                { text: '我的音樂\u{E01E1}', why: '正解' },
+                { text: '我的作業', why: '受前一關影響而沒看清楚音符圖示' }
+              ]
+            },
+            {
+              q: '自然觀察', type: 'doc', pic: 'doc', ans: 0, trap: false, x: 92, y: 108,
+              explain: '這是格線文件喔！拖進「我的作業」。',
+              options: [
+                { text: '我的作業', why: '正解' },
+                { text: '我的圖片', why: '以為自然觀察一定是戶外照片' }
+              ]
+            },
+            {
+              q: '春天的花', type: 'image', pic: 'image_flower', ans: 2, trap: false, x: 326, y: 112,
+              explain: '圖示有山跟太陽！拖進「我的圖片」。',
+              options: [
+                { text: '我的圖片', why: '正解' },
+                { text: '資源回收筒', why: '記得第 4 關是垃圾而沒重新確認圖示' }
+              ]
+            },
+            {
+              q: '下課鐘聲', type: 'music', pic: 'music', ans: 1, trap: false, x: 558, y: 106,
+              explain: '圖示是音符喔！拖進「我的音樂\u{E01E1}」。',
+              options: [
+                { text: '我的音樂\u{E01E1}', why: '正解' },
+                { text: '資源回收筒', why: '以為鐘聲不是歌曲不需要保留' }
+              ]
+            },
+            {
+              q: '舊報紙', type: 'trash', pic: 'trash_paper', ans: 3, trap: false, x: 782, y: 112,
+              explain: '這是不要的垃圾！丟進「資源回收筒」。',
+              options: [
+                { text: '資源回收筒', why: '正解' },
+                { text: '我的作業', why: '以為舊報紙是文字作業文件' }
+              ]
+            },
+            {
+              q: '社會報告', type: 'music', pic: 'music', ans: 1, trap: true, x: 44, y: 208,
+              explain: '別被檔名騙了！音符是「我的音樂\u{E01E1}」。',
+              options: [
+                { text: '我的音樂\u{E01E1}', why: '正解' },
+                { text: '我的作業', why: '連續做完正常題後放鬆，只看「社會報告」檔名' }
+              ]
+            },
+            {
+              q: '英文單字', type: 'trash', pic: 'trash_bag', ans: 3, trap: true, x: 274, y: 212,
+              explain: '別被檔名騙了！垃圾丟「資源回收筒」。',
+              options: [
+                { text: '資源回收筒', why: '正解' },
+                { text: '我的作業', why: '只看「英文單字」沒注意圖示是垃圾袋' }
+              ]
+            },
+            {
+              q: '數學作業', type: 'image', pic: 'image_flower', ans: 2, trap: true, x: 504, y: 206,
+              explain: '別被檔名騙了！山跟太陽是圖片。',
+              options: [
+                { text: '我的圖片', why: '正解' },
+                { text: '我的作業', why: '只看「數學作業」沒看風景相片圖示' }
+              ]
+            },
+            {
+              q: '小狗合照', type: 'doc', pic: 'doc', ans: 0, trap: true, x: 738, y: 210,
+              explain: '別被檔名騙了！格線是「我的作業」。',
+              options: [
+                { text: '我的作業', why: '正解' },
+                { text: '我的圖片', why: '看到「合照」直接歸到圖片，忽略格線文件圖示' }
+              ]
+            }
+          ]
         }
-    } else {
-        // Dropped on nothing — return to origin
-        returnToOrigin(drag.node, drag.originX, drag.originY);
-    }
-}
+      ]
+    };
 
-function returnToOrigin(node, x, y) {
-    node.style.transition = 'left 0.3s ease, top 0.3s ease';
-    node.style.left = x + 'px';
-    node.style.top = y + 'px';
-    setTimeout(() => { node.style.transition = ''; }, 320);
-}
+    /* =====================================================================
+     *  SVG 圖庫（全手工 inline SVG，線條統一 #3B2350，無 emoji、無外部圖）
+     * ===================================================================== */
 
-function handleWrong(node, originX, originY) {
-    SFX.wrong();
-    state.levelErrors++;
-    $('error-info').textContent = `❌ ${state.levelErrors}`;
-    node.classList.add('shake');
-    returnToOrigin(node, originX, originY);
-    setTimeout(() => node.classList.remove('shake'), 520);
-}
+    // 關卡卡片專用小圖示（40×40 viewBox，線條 #3B2350 粗 2.6）
+    var LEVEL_ICONS = [
+      // 1. 作業和回收筒
+      '<svg viewBox="0 0 40 40" fill="none">' +
+        '<rect x="4" y="7" width="15" height="24" rx="3" fill="#FFF9F2" stroke="#3B2350" stroke-width="2.6"/>' +
+        '<path d="M8 14h7M8 19h7M8 24h5" stroke="#FF8F3F" stroke-width="2.6" stroke-linecap="round"/>' +
+        '<path d="M23 14h13l-1.6 17H24.6L23 14Z" fill="#DDF3E6" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/>' +
+        '<path d="M21 14h17M27 10h5" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/>' +
+      '</svg>',
+      // 2. 音樂和圖片
+      '<svg viewBox="0 0 40 40" fill="none">' +
+        '<circle cx="10" cy="28" r="4" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.6"/>' +
+        '<path d="M14 28V11l8-2v7" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<rect x="19" y="18" width="17" height="14" rx="3" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.6"/>' +
+        '<path d="M21 30l4.5-5 3.5 3 2.5-2.5L34 30" stroke="#186B41" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<circle cx="31" cy="22.5" r="2" fill="#FFC233"/>' +
+      '</svg>',
+      // 3. 四個資料夾
+      '<svg viewBox="0 0 40 40" fill="none">' +
+        '<rect x="5" y="7" width="13" height="11" rx="2.5" fill="#FFE1CB" stroke="#3B2350" stroke-width="2.6"/>' +
+        '<rect x="22" y="7" width="13" height="11" rx="2.5" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.6"/>' +
+        '<rect x="5" y="22" width="13" height="11" rx="2.5" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.6"/>' +
+        '<rect x="22" y="22" width="13" height="11" rx="2.5" fill="#DDF3E6" stroke="#3B2350" stroke-width="2.6"/>' +
+      '</svg>',
+      // 4. 看圖示不看檔名（放大鏡找音符）
+      '<svg viewBox="0 0 40 40" fill="none">' +
+        '<circle cx="17" cy="17" r="11" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.6"/>' +
+        '<path d="M25.5 25.5L34 34" stroke="#3B2350" stroke-width="3.2" stroke-linecap="round"/>' +
+        '<circle cx="15" cy="20.5" r="2.6" fill="#6A45C9" stroke="#3B2350" stroke-width="2"/>' +
+        '<path d="M17.5 20.5V12l5-1.4" stroke="#3B2350" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '</svg>',
+      // 5. 超亂桌面
+      '<svg viewBox="0 0 40 40" fill="none">' +
+        '<rect x="4" y="6" width="32" height="22" rx="4" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.6"/>' +
+        '<path d="M15 28v5M25 28v5M12 33h16" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/>' +
+        '<rect x="8" y="10" width="8" height="8" rx="1.8" transform="rotate(-10 8 10)" fill="#FF8F3F" stroke="#3B2350" stroke-width="2"/>' +
+        '<rect x="20" y="9" width="8" height="8" rx="1.8" transform="rotate(12 20 9)" fill="#ECE3FA" stroke="#3B2350" stroke-width="2"/>' +
+        '<rect x="15" y="16" width="8" height="8" rx="1.8" transform="rotate(-6 15 16)" fill="#DDF3E6" stroke="#3B2350" stroke-width="2"/>' +
+      '</svg>'
+    ];
 
-function handleCorrect(node, file, folderEl) {
-    SFX.correct();
-    const folderId = folderEl.dataset.folder;
-    state.folderCounts[folderId]++;
-    updateFolderCount(folderId);
-    folderEl.classList.add('received');
-    setTimeout(() => folderEl.classList.remove('received'), 460);
+    // 檔案圖示 SVG（四大類外型與色調鮮明區隔，國小低年級一眼辨識）
+    var FILE_SVGS = {
+      // 作業：白紙折角＋橘色標題線＋清楚格線
+      doc:
+        '<svg viewBox="0 0 64 58" fill="none">' +
+          '<path d="M14 5h25l11 11v37a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3Z" fill="#FFFDF9" stroke="#3B2350" stroke-width="3.2" stroke-linejoin="round"/>' +
+          '<path d="M39 5v11h11" fill="#FFE1CB" stroke="#3B2350" stroke-width="3" stroke-linejoin="round"/>' +
+          '<rect x="18" y="14" width="14" height="5" rx="2.5" fill="#FF8F3F"/>' +
+          '<path d="M18 26h24M18 34h24M18 42h17" stroke="#5C4870" stroke-width="3.2" stroke-linecap="round"/>' +
+          '<path d="M41 44l9-9 4 4-9 9-5 1 1-5Z" fill="#FFC233" stroke="#3B2350" stroke-width="2.4" stroke-linejoin="round"/>' +
+        '</svg>',
 
-    // Fly the file icon toward folder
-    const deskRect = getDesktop().getBoundingClientRect();
-    const folderRect = folderEl.getBoundingClientRect();
-    const nodeRect = node.getBoundingClientRect();
-    const dx = (folderRect.left + folderRect.width / 2) - (nodeRect.left + nodeRect.width / 2);
-    const dy = (folderRect.top + folderRect.height / 2) - (nodeRect.top + nodeRect.height / 2);
+      // 音樂：淡紫音符卡＋醒目雙八分音符
+      music:
+        '<svg viewBox="0 0 64 58" fill="none">' +
+          '<rect x="8" y="6" width="48" height="46" rx="12" fill="#ECE3FA" stroke="#3B2350" stroke-width="3.2"/>' +
+          '<path d="M27 38V17l17-4v21" stroke="#3B2350" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<path d="M27 22l17-4" stroke="#6A45C9" stroke-width="4" stroke-linecap="round"/>' +
+          '<ellipse cx="22.5" cy="39.5" rx="6.5" ry="5" transform="rotate(-14 22.5 39.5)" fill="#6A45C9" stroke="#3B2350" stroke-width="2.8"/>' +
+          '<ellipse cx="39.5" cy="35.5" rx="6.5" ry="5" transform="rotate(-14 39.5 35.5)" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.8"/>' +
+          '<path d="M14 15c2-2 4-2 6 0" stroke="#6A45C9" stroke-width="2.5" stroke-linecap="round"/>' +
+        '</svg>',
 
-    node.classList.add('flying');
-    // Combine translate (delta) and scale + fade
-    node.style.transform = `translate(${dx}px, ${dy}px) scale(0.2) rotate(20deg)`;
-    node.style.opacity = '0';
+      // 圖片（山與太陽＋小雲朵）
+      image_flower:
+        '<svg viewBox="0 0 64 58" fill="none">' +
+          '<rect x="6" y="7" width="52" height="44" rx="9" fill="#FFFDF9" stroke="#3B2350" stroke-width="3.2"/>' +
+          '<rect x="11" y="12" width="42" height="32" rx="4" fill="#BCE3FA" stroke="#3B2350" stroke-width="2.2"/>' +
+          '<circle cx="43" cy="21" r="5.2" fill="#FFC233" stroke="#3B2350" stroke-width="2.2"/>' +
+          '<path d="M12 43l12-15 10 10 6-6 12 11H12Z" fill="#52B780" stroke="#3B2350" stroke-width="2.4" stroke-linejoin="round"/>' +
+          '<circle cx="21" cy="21" r="3" fill="#FFFDF9"/>' +
+          '<circle cx="25" cy="21" r="3.4" fill="#FFFDF9"/>' +
+        '</svg>',
 
-    setTimeout(() => {
-        node.remove();
-        state.fileNodes = state.fileNodes.filter(n => n !== node);
-        checkLevelComplete();
-    }, 560);
-}
+      // 圖片（日落暖陽＋雙山峰）
+      image_sunset:
+        '<svg viewBox="0 0 64 58" fill="none">' +
+          '<rect x="6" y="7" width="52" height="44" rx="9" fill="#FFFDF9" stroke="#3B2350" stroke-width="3.2"/>' +
+          '<rect x="11" y="12" width="42" height="32" rx="4" fill="#FFE4B8" stroke="#3B2350" stroke-width="2.2"/>' +
+          '<circle cx="32" cy="24" r="6" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.2"/>' +
+          '<path d="M12 43l13-14 9 9 7-8 11 13H12Z" fill="#4FA678" stroke="#3B2350" stroke-width="2.4" stroke-linejoin="round"/>' +
+        '</svg>',
 
-// ============================================================
-// Level flow
-// ============================================================
-function checkLevelComplete() {
-    if (state.fileNodes.length > 0) return;
-    levelClear();
-}
+      // 垃圾：香蕉皮
+      trash_banana:
+        '<svg viewBox="0 0 64 58" fill="none">' +
+          '<path d="M31 11c0-3 3-4 4-2l1 7" stroke="#3B2350" stroke-width="3.2" stroke-linecap="round"/>' +
+          '<path d="M32 16c-2 12-10 21-22 25 6 6 16 4 22-4 3 6 10 11 19 8-9-5-13-13-14-24" fill="#FFD954" stroke="#3B2350" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<path d="M34 18c1 9-1 19-9 27 8 4 17 0 21-9-6-3-9-9-10-18" fill="#FFE98A" stroke="#3B2350" stroke-width="2.8" stroke-linejoin="round"/>' +
+          '<path d="M29 14h6v5h-6Z" fill="#A8670E" stroke="#3B2350" stroke-width="2.2" stroke-linejoin="round"/>' +
+        '</svg>',
 
-function calcStars(errors) {
-    if (errors === 0) return 3;
-    if (errors <= 2) return 2;
-    return 1;
-}
+      // 垃圾：綁起來的空垃圾袋
+      trash_bag:
+        '<svg viewBox="0 0 64 58" fill="none">' +
+          '<path d="M25 14l-4-6 8 2 4-4 3 4 7-2-4 6" fill="#B8C4D4" stroke="#3B2350" stroke-width="2.8" stroke-linejoin="round"/>' +
+          '<path d="M24 16h16c8 6 12 16 10 27-1 6-6 9-18 9s-17-3-18-9c-2-11 2-21 10-27Z" fill="#C7D3E3" stroke="#3B2350" stroke-width="3.2" stroke-linejoin="round"/>' +
+          '<rect x="23" y="14" width="18" height="5" rx="2.5" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.4"/>' +
+          '<path d="M23 30c2 5 4 9 3 14M40 28c-1 5-2 9-1 14" stroke="#5C4870" stroke-width="2.4" stroke-linecap="round"/>' +
+        '</svg>',
 
-function levelClear() {
-    const stars = calcStars(state.levelErrors);
-    state.totalStars += stars;
-    state.levelStars[state.levelIdx] = stars;
-    SFX.clear();
+      // 垃圾：揉爛的舊報紙紙團
+      trash_paper:
+        '<svg viewBox="0 0 64 58" fill="none">' +
+          '<path d="M18 15l10-6 12 3 10 8-2 13 4 9-11 8-14 1-11-7 2-12-4-10 4-7Z" fill="#E8DFD5" stroke="#3B2350" stroke-width="3.2" stroke-linejoin="round"/>' +
+          '<path d="M22 22l10 6 12-5M20 35l11-4 11 7M32 28l-2 11" stroke="#5C4870" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<path d="M25 17l7 3M36 42l6-2" stroke="#9B8BA6" stroke-width="2.2" stroke-linecap="round"/>' +
+        '</svg>'
+    };
 
-    const isLast = state.levelIdx >= LEVELS.length - 1;
-    const errNote = state.levelErrors === 0
-        ? '<div style="font-size: 14px; color: var(--c-deep); margin-top: 4px;">完美整理！沒有放錯 ✨</div>'
-        : `<div style="font-size: 14px; color: var(--ink-soft); margin-top: 4px;">這關放錯了 ${state.levelErrors} 次</div>`;
+    // 下方資料夾大圖示 SVG（每個資料夾有清楚類別標記）
+    var FOLDER_SVGS = {
+      doc:
+        '<svg viewBox="0 0 80 66" fill="none">' +
+          '<path d="M8 16a6 6 0 0 1 6-6h18l6 7h28a6 6 0 0 1 6 6v31a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V16Z" fill="#FFBD73" stroke="#3B2350" stroke-width="3.4" stroke-linejoin="round"/>' +
+          '<path d="M8 24h64v30a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V24Z" fill="#FFD59E" stroke="#3B2350" stroke-width="3.4" stroke-linejoin="round"/>' +
+          '<rect x="28" y="30" width="24" height="22" rx="3" fill="#FFFDF9" stroke="#3B2350" stroke-width="2.6"/>' +
+          '<path d="M33 36h14M33 41h14M33 46h9" stroke="#C75F17" stroke-width="2.6" stroke-linecap="round"/>' +
+        '</svg>',
 
-    const banner = document.createElement('div');
-    banner.className = 'banner';
-    banner.id = 'banner';
-    banner.innerHTML = `
-        <div class="banner-card">
-            <div class="banner-trophy">🎉</div>
-            <div class="banner-title">${LEVELS[state.levelIdx].title} 整理完成！</div>
-            <div class="banner-stars">${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
-            <div class="banner-msg">獲得 ${stars} 顆星星</div>
-            ${errNote}
-            <div class="banner-actions">
-                ${isLast
-                    ? '<button class="big-btn gold" onclick="finishAllLevels()">🏆 領取證書</button>'
-                    : '<button class="big-btn" onclick="nextLevel()">▶ 下一關</button>'}
-            </div>
-        </div>
-    `;
-    document.body.appendChild(banner);
-}
+      music:
+        '<svg viewBox="0 0 80 66" fill="none">' +
+          '<path d="M8 16a6 6 0 0 1 6-6h18l6 7h28a6 6 0 0 1 6 6v31a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V16Z" fill="#BFA6F2" stroke="#3B2350" stroke-width="3.4" stroke-linejoin="round"/>' +
+          '<path d="M8 24h64v30a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V24Z" fill="#DDD0FA" stroke="#3B2350" stroke-width="3.4" stroke-linejoin="round"/>' +
+          '<path d="M37 48V32l14-3v15" stroke="#3B2350" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<circle cx="33.5" cy="49" r="4.2" fill="#6A45C9" stroke="#3B2350" stroke-width="2.4"/>' +
+          '<circle cx="47.5" cy="45.5" r="4.2" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.4"/>' +
+        '</svg>',
 
-function closeBanner() {
-    const b = $('banner');
-    if (b) b.remove();
-}
+      image:
+        '<svg viewBox="0 0 80 66" fill="none">' +
+          '<path d="M8 16a6 6 0 0 1 6-6h18l6 7h28a6 6 0 0 1 6 6v31a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V16Z" fill="#9BCBF7" stroke="#3B2350" stroke-width="3.4" stroke-linejoin="round"/>' +
+          '<path d="M8 24h64v30a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V24Z" fill="#C9E4FC" stroke="#3B2350" stroke-width="3.4" stroke-linejoin="round"/>' +
+          '<rect x="25" y="30" width="30" height="22" rx="4" fill="#FFFDF9" stroke="#3B2350" stroke-width="2.6"/>' +
+          '<circle cx="47" cy="36.5" r="3" fill="#FFC233"/>' +
+          '<path d="M28 49l7-9 6 6 4-4 7 7H28Z" fill="#4FA678" stroke="#3B2350" stroke-width="2" stroke-linejoin="round"/>' +
+        '</svg>',
 
-function nextLevel() {
-    closeBanner();
-    state.levelIdx++;
-    state.levelErrors = 0;
-    renderLevel();
-}
+      trash:
+        '<svg viewBox="0 0 80 66" fill="none">' +
+          '<path d="M21 16h38" stroke="#3B2350" stroke-width="3.6" stroke-linecap="round"/>' +
+          '<path d="M32 16v-4a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v4" fill="#A7DEC0" stroke="#3B2350" stroke-width="3.2"/>' +
+          '<path d="M24 16h32l-3.6 41a5 5 0 0 1-5 4.5H32.6a5 5 0 0 1-5-4.5L24 16Z" fill="#BFEAD3" stroke="#3B2350" stroke-width="3.4" stroke-linejoin="round"/>' +
+          '<path d="M35 30l5-6 5 6M48 44l-8 5-8-5" stroke="#186B41" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<path d="M40 24v12M32 44l4-7M48 44l-4-7" stroke="#186B41" stroke-width="2.8" stroke-linecap="round"/>' +
+        '</svg>'
+    };
 
-function finishAllLevels() {
-    closeBanner();
-    SFX.finale();
-    try {
-        const prev = parseInt(localStorage.getItem('edtech-unit8-score') || '0', 10);
-        if (state.totalStars > prev) localStorage.setItem('edtech-unit8-score', state.totalStars);
-    } catch(e) {}
+    /* =====================================================================
+     *  掛載至小常識島共用外殼（mount 欄位依本關設定一字不改）
+     * ===================================================================== */
+    SmartIsland.mount({
+      unit: 8,
+      title: '寵物房間大整理',
+      grade: '1–4 年級',
+      howto: '寵物的桌面好亂！把檔案拖進對的資料夾。',
+      zhuyin: true,
+      teach: '依檔案類型（圖示）分類整理｜資E8 認識基本的數位資源整理方法',
+      levels: SCENE_CONFIG.LEVELS.map(function (lv, idx) {
+        return { name: lv.name, icon: LEVEL_ICONS[idx] };
+      }),
 
-    $('game-screen').classList.add('hidden');
-    $('end-screen').classList.remove('hidden');
+      scene: function (api) {
+        var alive = false;        // 關卡是否進行中
+        var timers = [];          // 所有待清理的 setTimeout
+        var lvData = null;        // 目前關卡設定
+        var items = [];           // 目前關卡檔案執行狀態
+        var folderCounts = {};    // 各資料夾已放入數量
+        var placedCount = 0;      // 已放好數量
+        var mistakes = 0;         // 本關放錯次數
+        var praiseIdx = 0;        // 稱讚句輪播索引
+        var selectedId = null;    // 點選模式目前選中的檔案編號
+        var drag = null;          // 目前拖曳狀態
 
-    const maxStars = LEVELS.length * 3;
-    let starsHtml = '';
-    for (let i = 0; i < LEVELS.length; i++) {
-        const s = state.levelStars[i] || 0;
-        starsHtml += `<span class="lvl-line"><span class="lvl-label">第${i+1}關</span>${'⭐'.repeat(s)}${'☆'.repeat(3 - s)}</span>`;
-    }
-    $('cert-stars').innerHTML = starsHtml;
+        // 場景內常用 DOM 參考
+        var deskEl = null;
+        var filesLayerEl = null;
+        var dockEl = null;
+        var bubbleEl = null;
+        var petEl = null;
+        var remainNumEl = null;
+        var doneNumEl = null;
 
-    if (state.totalStars >= maxStars) {
-        $('cert-trophy').textContent = '👑';
-        $('cert-rank').textContent = '👑 稱號：桌面整理大宗師';
-    } else if (state.totalStars >= 13) {
-        $('cert-trophy').textContent = '🥇';
-        $('cert-rank').textContent = '🥇 稱號：整潔小達人';
-    } else if (state.totalStars >= 9) {
-        $('cert-trophy').textContent = '🥈';
-        $('cert-rank').textContent = '🥈 稱號：整理小幫手';
-    } else {
-        $('cert-trophy').textContent = '💪';
-        $('cert-rank').textContent = '💪 稱號：努力整理中';
-    }
+        // 安全排程：離開關卡時會統一取消
+        function later(fn, ms) {
+          var id = setTimeout(function () {
+            timers = timers.filter(function (t) { return t !== id; });
+            if (alive) fn();
+          }, ms);
+          timers.push(id);
+          return id;
+        }
 
-    const today = new Date();
-    $('cert-date').textContent = `${today.getFullYear() - 1911} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日 頒發`;
-}
+        // 清掉所有排程
+        function clearTimers() {
+          for (var i = 0; i < timers.length; i++) clearTimeout(timers[i]);
+          timers = [];
+        }
 
-// ============================================================
-// Flow
-// ============================================================
-function startGame() {
-    state.levelIdx = 0;
-    state.fileNodes = [];
-    state.folderCounts = {};
-    state.levelErrors = 0;
-    state.levelStars = [];
-    state.totalStars = 0;
-    $('start-screen').classList.add('hidden');
-    $('end-screen').classList.add('hidden');
-    $('game-screen').classList.remove('hidden');
-    renderLevel();
-    getAudio();
-}
+        // 取得寵物名稱（沒領養時外殼預設為訪客名字）
+        function petName() {
+          var p = api.pet ? api.pet() : null;
+          return (p && p.name) ? p.name : '小雲';
+        }
 
-// Re-layout on resize so files don't get stranded
-let resizeTimer = null;
-window.addEventListener('resize', () => {
-    if ($('game-screen').classList.contains('hidden')) return;
-    if (state.fileNodes.length === 0) return;
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-        // Re-distribute remaining files within new desktop bounds
-        const desktop = getDesktop();
-        const rect = desktop.getBoundingClientRect();
-        const positions = randomPositions(state.fileNodes.length, rect);
-        state.fileNodes.forEach((node, i) => {
-            const pos = positions[i];
-            node.style.left = pos.x + 'px';
-            node.style.top = pos.y + 'px';
-        });
-    }, 180);
-});
+        // 套入寵物名稱到台詞
+        function formatSpeech(tpl) {
+          return tpl.replace(/\{pet\}/g, petName());
+        }
 
-// Dev shortcut: F8 jump straight to certificate
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'F8') {
-        e.preventDefault();
-        state.levelStars = [3, 3, 2, 3, 2];
-        state.totalStars = 13;
-        $('start-screen').classList.add('hidden');
-        $('game-screen').classList.add('hidden');
-        finishAllLevels();
-    }
-});
+        // 更新寵物表情與對話泡泡（mood: happy / normal / worried / surprised）
+        function setPetState(mood, opts, textHtml, tone, animClass) {
+          if (!petEl || !bubbleEl) return;
+          petEl.innerHTML = api.petSVG(mood, opts || {});
+          petEl.classList.remove('is-hop', 'is-wiggle');
+          if (animClass) {
+            void petEl.offsetWidth;
+            petEl.classList.add(animClass);
+          }
 
-// Expose for inline onclick
-window.startGame = startGame;
-window.nextLevel = nextLevel;
-window.finishAllLevels = finishAllLevels;
-</script>
-<script defer src="../../assets/js/beacon.js"></script>
-</body>
-</html>
+          bubbleEl.classList.remove('is-ok', 'is-bad');
+          var badgeHtml = '';
+          if (tone === 'ok') {
+            bubbleEl.classList.add('is-ok');
+            badgeHtml = '<span class="sc-badge sc-badge-ok">✓ 放對了</span>';
+          } else if (tone === 'bad') {
+            bubbleEl.classList.add('is-bad');
+            badgeHtml = '<span class="sc-badge sc-badge-bad">✗ 再看圖示</span>';
+          } else {
+            badgeHtml = '<span class="sc-badge sc-badge-tip">' + petName() + '說</span>';
+          }
+
+          var zyCls = api.zy ? ' sm-zy' : '';
+          bubbleEl.innerHTML = badgeHtml + '<p class="sc-speech' + zyCls + '">' + textHtml + '</p>';
+        }
+
+        // 清除點選狀態
+        function clearSelection() {
+          if (selectedId === null) return;
+          var prev = items[selectedId];
+          if (prev && prev.el) prev.el.classList.remove('is-selected');
+          selectedId = null;
+        }
+
+        // 選取指定檔案（提供低年級點選輔助）
+        function selectItem(idx) {
+          var st = items[idx];
+          if (!st || st.placed) return;
+          if (selectedId === idx) {
+            clearSelection();
+            setPetState('normal', { q: true }, formatSpeech(lvData.intro), 'tip');
+            return;
+          }
+          clearSelection();
+          selectedId = idx;
+          st.el.classList.add('is-selected');
+          setPetState('normal', { q: true }, '要放進哪一格？<br>點資料夾就能放喔！', 'tip');
+        }
+
+        // 取得指標下對應的資料夾節點（加 10px 寬容邊界，更好放置）
+        function hitFolder(clientX, clientY) {
+          if (!dockEl) return null;
+          var list = dockEl.querySelectorAll('.sc-folder');
+          var pad = 10;
+          for (var i = 0; i < list.length; i++) {
+            var r = list[i].getBoundingClientRect();
+            if (clientX >= r.left - pad && clientX <= r.right + pad &&
+                clientY >= r.top - pad && clientY <= r.bottom + pad) {
+              return list[i];
+            }
+          }
+          return null;
+        }
+
+        // 清除所有資料夾的懸停高亮
+        function clearFolderHover() {
+          if (!dockEl) return;
+          var list = dockEl.querySelectorAll('.sc-folder.is-over');
+          for (var i = 0; i < list.length; i++) list[i].classList.remove('is-over');
+        }
+
+        // 將檔案平順彈回原本桌面座標
+        function bounceBack(st, markWrong) {
+          st.el.classList.remove('is-drag', 'is-selected');
+          st.el.classList.add('is-returning');
+          if (markWrong) st.el.classList.add('is-wrong');
+          st.el.style.left = st.origX + 'px';
+          st.el.style.top = st.origY + 'px';
+          later(function () {
+            if (!st.el) return;
+            st.el.classList.remove('is-returning', 'is-wrong');
+          }, 360);
+        }
+
+        // 計算資料夾中心在桌面邏輯座標中的位置（供飛入動畫使用）
+        function folderCenterInDesk(folderEl) {
+          var dr = deskEl.getBoundingClientRect();
+          var fr = folderEl.getBoundingClientRect();
+          var sx = dr.width / SCENE_CONFIG.DESK_W;
+          var sy = dr.height / SCENE_CONFIG.DESK_H;
+          return {
+            x: (fr.left + fr.width / 2 - dr.left) / sx - 67,
+            y: (fr.top + fr.height / 2 - dr.top) / sy - 45
+          };
+        }
+
+        // 嘗試將檔案放進某個資料夾（拖曳放下與點選放入共用）
+        function attemptDrop(st, folderEl) {
+          if (!alive || !st || st.placed || !folderEl) return;
+          var targetKey = folderEl.getAttribute('data-folder');
+          var ok = (targetKey === st.data.type);
+
+          if (ok) {
+            // 放對了！
+            st.placed = true;
+            clearSelection();
+            placedCount++;
+            folderCounts[targetKey] = (folderCounts[targetKey] || 0) + 1;
+
+            // 檔案飛進資料夾動畫
+            var dst = folderCenterInDesk(folderEl);
+            st.el.classList.remove('is-drag', 'is-selected', 'is-returning', 'is-wrong');
+            st.el.classList.add('is-flying');
+            st.el.style.left = dst.x + 'px';
+            st.el.style.top = dst.y + 'px';
+            later(function () {
+              if (st.el) st.el.classList.add('is-done');
+            }, 280);
+
+            // 更新資料夾計數＋彈出 +1 ✓
+            var countEl = folderEl.querySelector('.sc-fcount');
+            if (countEl) {
+              countEl.textContent = String(folderCounts[targetKey]);
+              countEl.classList.add('has-items');
+            }
+            folderEl.classList.remove('is-ok', 'is-shake');
+            void folderEl.offsetWidth;
+            folderEl.classList.add('is-ok');
+            var plus = document.createElement('span');
+            plus.className = 'sc-plus';
+            plus.textContent = '+1 ✓';
+            folderEl.appendChild(plus);
+            later(function () {
+              folderEl.classList.remove('is-ok');
+              if (plus.parentNode) plus.parentNode.removeChild(plus);
+            }, 680);
+
+            // 更新頂欄進度與桌面計數
+            var total = items.length;
+            api.progress(Math.min(placedCount + 1, total), total);   // 11-21 Claude 改：顯示「正在放第幾個」，不要出現第 0 題
+            if (remainNumEl) remainNumEl.textContent = String(total - placedCount);
+            if (doneNumEl) doneNumEl.textContent = String(placedCount);
+
+            // 寵物開心稱讚
+            if (placedCount === total) {
+              setPetState('happy', { spark: true }, '全部整理完畢！<br>桌面變好整齊！', 'ok', 'is-hop');
+              later(finishLevel, 720);
+            } else if (total - placedCount === 1) {
+              setPetState('happy', { spark: true }, '剩最後一個\u{E01E1}，加油！', 'ok', 'is-hop');
+            } else {
+              var msg = SCENE_CONFIG.PRAISE[praiseIdx % SCENE_CONFIG.PRAISE.length];
+              praiseIdx++;
+              setPetState('happy', { spark: true }, msg, 'ok', 'is-hop');
+            }
+          } else {
+            // 放錯了：不扣命、不重來，檔案彈回並給一句正確觀念
+            mistakes++;
+            st.everWrong = true;
+            bounceBack(st, true);
+
+            folderEl.classList.remove('is-ok', 'is-shake');
+            void folderEl.offsetWidth;
+            folderEl.classList.add('is-shake');
+            later(function () {
+              folderEl.classList.remove('is-shake');
+            }, 360);
+
+            var expGroup = SCENE_CONFIG.EXPLAIN[st.data.type];
+            var tipHtml = st.data.trap ? expGroup.trap : expGroup.normal;
+            setPetState('worried', { sweat: true }, tipHtml, 'bad', 'is-wiggle');
+          }
+        }
+
+        // 整關整理完成，結算星星與每題回顧
+        function finishLevel() {
+          if (!alive) return;
+          var stars = mistakes <= SCENE_CONFIG.STARS.THREE_MAX_WRONG ? 3
+                    : mistakes <= SCENE_CONFIG.STARS.TWO_MAX_WRONG   ? 2 : 1;
+          var review = items.map(function (st) {
+            return { ok: !st.everWrong, q: st.data.q };
+          });
+          api.finish({
+            stars: stars,
+            review: review,
+            learned: lvData.learned,
+            retry: mistakes > 0 ? '看清楚檔案圖示，再多試幾次喔！' : ''
+          });
+        }
+
+        /* ----- Pointer Events 拖曳處理（支援舞台等比縮放換算） ----- */
+        function onFilePointerDown(e) {
+          if (!alive) return;
+          if (e.button && e.button !== 0) return;
+          var fileEl = e.currentTarget;
+          var idx = Number(fileEl.getAttribute('data-idx'));
+          var st = items[idx];
+          if (!st || st.placed) return;
+
+          e.preventDefault();
+          var dr = deskEl.getBoundingClientRect();
+          var sx = dr.width / SCENE_CONFIG.DESK_W;
+          var sy = dr.height / SCENE_CONFIG.DESK_H;
+          var px = (e.clientX - dr.left) / sx;
+          var py = (e.clientY - dr.top) / sy;
+          var curX = parseFloat(fileEl.style.left) || st.origX;
+          var curY = parseFloat(fileEl.style.top) || st.origY;
+
+          drag = {
+            idx: idx,
+            st: st,
+            pointerId: e.pointerId,
+            startClientX: e.clientX,
+            startClientY: e.clientY,
+            offX: px - curX,
+            offY: py - curY,
+            moved: false
+          };
+
+          try { fileEl.setPointerCapture(e.pointerId); } catch (err) {}
+        }
+
+        function onFilePointerMove(e) {
+          if (!alive || !drag || e.pointerId !== drag.pointerId) return;
+          var dx = e.clientX - drag.startClientX;
+          var dy = e.clientY - drag.startClientY;
+
+          // 超過 6px 才進入拖曳模式（小於 6px 視為點選輔助）
+          if (!drag.moved) {
+            if (dx * dx + dy * dy < 36) return;
+            drag.moved = true;
+            clearSelection();
+            drag.st.el.classList.remove('is-returning', 'is-wrong');
+            drag.st.el.classList.add('is-drag');
+            setPetState('normal', { q: true }, '要放進哪一格？', 'tip');
+          }
+
+          var dr = deskEl.getBoundingClientRect();
+          var sx = dr.width / SCENE_CONFIG.DESK_W;
+          var sy = dr.height / SCENE_CONFIG.DESK_H;
+          var nx = (e.clientX - dr.left) / sx - drag.offX;
+          var ny = (e.clientY - dr.top) / sy - drag.offY;
+
+          // 限制在桌面範圍內，避免拖出畫面外
+          nx = Math.max(-10, Math.min(SCENE_CONFIG.DESK_W - 124, nx));
+          ny = Math.max(-10, Math.min(SCENE_CONFIG.DESK_H - 70, ny));
+          drag.st.el.style.left = nx + 'px';
+          drag.st.el.style.top = ny + 'px';
+
+          clearFolderHover();
+          var over = hitFolder(e.clientX, e.clientY);
+          if (over) over.classList.add('is-over');
+        }
+
+        function onFilePointerUp(e) {
+          if (!drag || e.pointerId !== drag.pointerId) return;
+          var cur = drag;
+          drag = null;
+
+          try { cur.st.el.releasePointerCapture(e.pointerId); } catch (err) {}
+          clearFolderHover();
+          if (!alive) return;
+
+          if (!cur.moved) {
+            // 輕點檔案：切換選取，方便孩子改用點資料夾放入
+            selectItem(cur.idx);
+            return;
+          }
+
+          var targetFolder = hitFolder(e.clientX, e.clientY);
+          if (targetFolder) {
+            attemptDrop(cur.st, targetFolder);
+          } else {
+            // 掉在桌面空白處不算錯，溫柔彈回原位
+            bounceBack(cur.st, false);
+            setPetState('normal', { q: true }, formatSpeech(lvData.intro), 'tip');
+          }
+        }
+
+        function onFileKeyDown(e) {
+          if (!alive) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            var idx = Number(e.currentTarget.getAttribute('data-idx'));
+            selectItem(idx);
+          }
+        }
+
+        // 點選資料夾（搭配點選檔案使用）
+        function onFolderClick(e) {
+          if (!alive || selectedId === null) return;
+          var folderEl = e.currentTarget;
+          attemptDrop(items[selectedId], folderEl);
+        }
+
+        // 建立整個遊戲場景畫面
+        function render() {
+          var zyCls = api.zy ? ' sm-zy' : '';
+          var total = lvData.items.length;
+          var twoCls = lvData.folders.length === 2 ? ' is-two' : '';
+
+          var foldersHtml = lvData.folders.map(function (fkey) {
+            var f = SCENE_CONFIG.FOLDERS[fkey];
+            return (
+              '<button type="button" class="sc-folder" data-folder="' + f.key + '" aria-label="' + f.label + '">' +
+                '<span class="sc-fcount sm-num">0</span>' +
+                '<div class="sc-folder-ico">' + FOLDER_SVGS[f.key] + '</div>' +
+                '<span class="sc-folder-label' + zyCls + '">' + f.label + '</span>' +
+              '</button>'
+            );
+          }).join('');
+
+          var filesHtml = lvData.items.map(function (it, idx) {
+            return (
+              '<div class="sc-file" role="button" tabindex="0" data-idx="' + idx + '" ' +
+                   'style="left:' + it.x + 'px;top:' + it.y + 'px" aria-label="檔案：' + it.q + '">' +
+                '<div class="sc-file-ico">' + FILE_SVGS[it.pic] + '</div>' +
+                '<span class="sc-file-name">' + it.q + '</span>' +
+              '</div>'
+            );
+          }).join('');
+
+          api.field.innerHTML =
+            '<div class="clay sc-monitor">' +
+              '<div class="sc-topbar">' +
+                '<div class="sc-dots" aria-hidden="true">' +
+                  '<span class="sc-dot sc-dot-a"></span>' +
+                  '<span class="sc-dot sc-dot-b"></span>' +
+                  '<span class="sc-dot sc-dot-c"></span>' +
+                '</div>' +
+                '<p class="sc-task' + zyCls + '">' + lvData.task + '</p>' +
+                '<div class="sc-remain">' +
+                  '<span>剩下</span><span class="sm-num" id="sc-remain-num">' + total + '</span><span>個\u{E01E1}</span>' +
+                '</div>' +
+              '</div>' +
+              '<div class="sc-desk">' +
+                '<div class="sc-desk-line" aria-hidden="true"></div>' +
+                '<div class="sc-dock' + twoCls + '">' + foldersHtml + '</div>' +
+                '<div class="sc-files-layer">' + filesHtml + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="sc-petbox">' +
+              '<div class="clay sc-bubble"></div>' +
+              '<div class="sc-pet-stage">' +
+                '<div class="sc-pet-rug" aria-hidden="true"></div>' +
+                '<div class="sc-pet"></div>' +
+              '</div>' +
+              '<div class="clay sc-status">' +
+                '<div class="sc-status-row">' +
+                  '<span>已放好</span>' +
+                  '<span class="sm-num" id="sc-done-num">0</span>' +
+                  '<span>／</span>' +
+                  '<span class="sm-num">' + total + '</span>' +
+                '</div>' +
+                '<div class="sc-hint-mini">拖曳檔案進資料夾，也可點選放入</div>' +
+              '</div>' +
+            '</div>';
+
+          // 綁定 DOM 參考與事件
+          deskEl = api.field.querySelector('.sc-desk');
+          filesLayerEl = api.field.querySelector('.sc-files-layer');
+          dockEl = api.field.querySelector('.sc-dock');
+          bubbleEl = api.field.querySelector('.sc-bubble');
+          petEl = api.field.querySelector('.sc-pet');
+          remainNumEl = api.field.querySelector('#sc-remain-num');
+          doneNumEl = api.field.querySelector('#sc-done-num');
+
+          var fileNodes = filesLayerEl.querySelectorAll('.sc-file');
+          items = lvData.items.map(function (it, idx) {
+            var el = fileNodes[idx];
+            el.addEventListener('pointerdown', onFilePointerDown);
+            el.addEventListener('pointermove', onFilePointerMove);
+            el.addEventListener('pointerup', onFilePointerUp);
+            el.addEventListener('pointercancel', onFilePointerUp);
+            el.addEventListener('keydown', onFileKeyDown);
+            return {
+              data: it,
+              el: el,
+              origX: it.x,
+              origY: it.y,
+              placed: false,
+              everWrong: false
+            };
+          });
+
+          var folderNodes = dockEl.querySelectorAll('.sc-folder');
+          for (var i = 0; i < folderNodes.length; i++) {
+            folderNodes[i].addEventListener('click', onFolderClick);
+          }
+
+          // 開場寵物情境帶入（ARCS-A 注意）
+          setPetState('normal', { q: true }, formatSpeech(lvData.intro), 'tip');
+        }
+
+        // 停止場景並清乾淨所有資源
+        function stopScene() {
+          alive = false;
+          clearTimers();
+          drag = null;
+          selectedId = null;
+          items = [];
+          folderCounts = {};
+          deskEl = filesLayerEl = dockEl = bubbleEl = petEl = remainNumEl = doneNumEl = null;
+          api.field.innerHTML = '';
+        }
+
+        return {
+          start: function (levelIndex) {
+            stopScene();
+            var idx = (typeof levelIndex === 'number' && SCENE_CONFIG.LEVELS[levelIndex]) ? levelIndex : 0;
+            lvData = SCENE_CONFIG.LEVELS[idx];
+            alive = true;
+            placedCount = 0;
+            mistakes = 0;
+            praiseIdx = 0;
+            folderCounts = {};
+            api.progress(1, lvData.items.length);
+            render();
+          },
+          stop: function () {
+            stopScene();
+          }
+        };
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

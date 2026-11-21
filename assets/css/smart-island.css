@@ -98,6 +98,10 @@ body { color: var(--ink); font-family: var(--f-ui); font-size: 18px; -webkit-fon
 .sm-lv .tx { display: flex; flex-direction: column; min-width: 0; width: 100%; }
 .sm-lv .n1 { font-size: 15px; font-weight: 700; color: var(--ink2); }
 .sm-lv .n2 { font-size: 21px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 5 關（舊兩關重做保留 5 關）時卡片變窄：縮小間距與字級，關卡名稱放得下 7 個字 */
+.sm-levels:has(> :nth-child(5)) { gap: 10px; }
+.sm-levels:has(> :nth-child(5)) .sm-lv { padding: 12px 10px; }
+.sm-levels:has(> :nth-child(5)) .sm-lv .n2 { font-size: 18px; letter-spacing: -0.5px; }
 .sm-lv .n3 { display: flex; align-items: center; gap: 2px; font-size: 15px; font-weight: 700; white-space: nowrap; color: var(--ink2); }
 .sm-lv .n3 .new { color: var(--violet); font-weight: 900; }
 .sm-lv.lock { background: #EFE7DE; cursor: not-allowed; }
