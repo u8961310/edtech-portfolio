@@ -37,8 +37,10 @@
   /** rec：{ unit, tier, lang, seat, name, acc, cpm, stars, min, time? } → QR 字串 */
   function encode(rec) {
     return [PREFIX, rec.unit, rec.tier || '-', rec.lang, rec.seat, cleanName(rec.name),
-      Math.round(rec.acc), Math.round(rec.cpm), rec.stars, rec.min, rec.time || stamp()].join('|');
+      Math.round(rec.acc), Math.round(rec.cpm), rec.stars, rec.min < 1 ? 0 : Math.round(rec.min), rec.time || stamp()].join('|');
   }
+  /** QR 的 min 欄：0＝30 秒功能測試（?test=1 才選得到），其他是分鐘 */
+  function minText(min) { return min === 0 ? '30 秒' : min + ' 分鐘'; }
 
   /** QR 字串 → rec；格式不對一律回 null（掃到別的 QR 不收） */
   function parse(str) {
@@ -46,7 +48,7 @@
     var f = str.trim().split('|');
     if (f.length !== 11 || f[0] !== PREFIX) return null;
     var unit = int(f[1], 1, 99), seat = int(f[4], 1, MAX_SEAT);
-    var acc = int(f[6], 0, 100), cpm = int(f[7], 0, 999), stars = int(f[8], 0, 3), min = int(f[9], 1, 120);
+    var acc = int(f[6], 0, 100), cpm = int(f[7], 0, 999), stars = int(f[8], 0, 3), min = int(f[9], 0, 120);
     if (!UNITS[unit] || !TIERS[f[2]] || !LANGS[f[3]] || seat == null || acc == null || cpm == null || stars == null || min == null) return null;
     if (!/^\d{12}$/.test(f[10])) return null;
     return { unit: unit, tier: f[2], lang: f[3], seat: seat, name: cleanName(f[5]), acc: acc, cpm: cpm, stars: stars, min: min, time: f[10] };
@@ -85,7 +87,7 @@
   function toCSV(list, expected, title) {
     var head = ['座號', '名字', '關卡', '階別', '打字', '正確率(%)', '每分鐘字數', '星等', '選擇分鐘', '日期', '時間', '備註'];
     var rows = list.slice().sort(function (a, b) { return a.seat - b.seat; }).map(function (r) {
-      return [r.seat, r.name, unitName(r.unit), TIERS[r.tier], LANGS[r.lang], r.acc, r.cpm, r.unit === 23 ? '' : r.stars, r.min, dateText(r.time), timeText(r.time),
+      return [r.seat, r.name, unitName(r.unit), TIERS[r.tier], LANGS[r.lang], r.acc, r.cpm, r.unit === 23 ? '' : r.stars, r.min === 0 ? 0.5 : r.min, dateText(r.time), timeText(r.time),
         expected && r.seat > expected ? '超過應到人數' : ''];
     });
     if (expected) missing(list, expected).forEach(function (s) { rows.push([s, '', '', '', '', '', '', '', '', '', '', '未交']); });
@@ -98,7 +100,7 @@
   var api = {
     PREFIX: PREFIX, UNITS: UNITS, TIERS: TIERS, LANGS: LANGS, MAX_SEAT: MAX_SEAT,
     encode: encode, parse: parse, upsert: upsert, missing: missing, toCSV: toCSV,
-    unitName: unitName, timeText: timeText, dateText: dateText, stamp: stamp
+    unitName: unitName, timeText: timeText, dateText: dateText, stamp: stamp, minText: minText
   };
 
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; return; }

@@ -197,6 +197,7 @@ button {
   cursor: not-allowed;
 }
 
+.chip[hidden] { display: none; }
 .chip {
   display: inline-flex;
   align-items: center;
@@ -1910,6 +1911,7 @@ input:focus-visible {
         <div class="opt-row">
           <b id="txt-opt-duration">時間</b>
           <div class="row" id="opt-duration-group">
+            <button type="button" class="chip" data-duration="30" id="opt-duration-test" hidden>30 秒</button>
             <button type="button" class="chip on" data-duration="600">10 分鐘</button>
             <button type="button" class="chip" data-duration="900">15 分鐘</button>
             <button type="button" class="chip" data-duration="1200">20 分鐘</button>
@@ -2789,6 +2791,7 @@ input:focus-visible {
     renderDomainChips(isHost);
     document.querySelectorAll('#opt-duration-group .chip').forEach(function (btn) {
       btn.classList.toggle('on', Number(btn.dataset.duration) === Number(state.settings.duration));
+      if (Number(btn.dataset.duration) === 30 && Number(state.settings.duration) === 30) btn.hidden = false;   // 房主選了 30 秒，來賓也看得到
       btn.disabled = !isHost;
     });
     const sw = $('opt-handicap-sw');
@@ -3559,7 +3562,7 @@ input:focus-visible {
     const subParts = [
       state.lastPassageDomain || TEXT.langLabels[state.settings.lang],
       state.lastPassageTitle ? '《' + state.lastPassageTitle + '》' : '',
-      Math.round(state.settings.duration / 60) + ' 分鐘',
+      state.settings.duration < 60 ? state.settings.duration + ' 秒' : Math.round(state.settings.duration / 60) + ' 分鐘',
       '讓分：' + (state.settings.handicap ? '開' : '關')
     ].filter(Boolean);
     $('res-sub').textContent = subParts.join('・');
@@ -3635,7 +3638,7 @@ input:focus-visible {
 
     // 給「交成績給老師」用（assets/js/class-scores.js）
     state.lastSubmit = { unit: 23, tier: '-', lang: langKey, acc: myAcc, cpm: myCpm, stars: 0, name: me.nick || state.nick,
-      min: Math.max(1, Math.round((state.settings.duration || 600) / 60)) };
+      min: (state.settings.duration || 600) / 60 };   // 30 秒測試 → 0.5，class-scores 編成 0
 
     lastAll[langKey] = { cpm: myCpm, acc: myAcc };
     safeWrite(STORAGE_KEYS.last, lastAll);
@@ -3776,6 +3779,8 @@ input:focus-visible {
         applyHostSetting({ grade: btn.dataset.grade });
       });
     });
+    // ?test=1：顯示 30 秒按鈕（功能測試用，學生畫面看不到）
+    if (/(^|[?&])test=1(&|$)/.test(location.search)) $('opt-duration-test').hidden = false;
     document.querySelectorAll('#opt-duration-group .chip').forEach(function (btn) {
       btn.addEventListener('click', function () {
         applyHostSetting({ duration: Number(btn.dataset.duration) });

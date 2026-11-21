@@ -26,6 +26,17 @@ t('網址參數：老師帶設定', () => {
   assert.deepStrictEqual(C.settingsFromQuery('?tier=t9&min=99'), {});
 });
 
+t('30 秒測試：只有 test 模式接受、1 回合 30 秒、顯示文字', () => {
+  assert.strictEqual(C.normalizeSettings({ minutes: 0.5 }).minutes, 10);
+  assert.strictEqual(C.normalizeSettings({ minutes: 0.5 }, { test: true }).minutes, 0.5);
+  assert.strictEqual(C.normalizeSettings({ minutes: 15 }, { test: true }).minutes, 15);
+  assert.deepStrictEqual(C.roundPlan(0.5), { rounds: 1, roundSec: 30 });
+  assert.strictEqual(C.settingsFromQuery('?min=0.5').minutes, 0.5);
+  assert.ok(C.isTestMode('?test=1') && C.isTestMode('?tier=t1&test=1') && !C.isTestMode('?test=10') && !C.isTestMode(''));
+  assert.strictEqual(C.minutesText(0.5), '30 秒');
+  assert.strictEqual(C.minutesText(20), '20 分鐘');
+});
+
 t('回合：10/15/20 分 → 4/5/6 回合', () => {
   assert.deepStrictEqual(C.roundPlan(10), { rounds: 4, roundSec: 150 });
   assert.deepStrictEqual(C.roundPlan(15), { rounds: 5, roundSec: 180 });

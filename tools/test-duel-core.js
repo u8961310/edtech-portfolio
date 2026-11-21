@@ -18,6 +18,11 @@ t('設定不合法時用預設值', () => {
   assert.deepStrictEqual(s, { lang: 'zh', grade: 'mid', domain: 'random', duration: 600, handicap: true });
 });
 
+t('30 秒測試時長合法（伺服器共用這份規則）', () => {
+  assert.strictEqual(R.normalizeSettings({ duration: 30 }).duration, 30);
+  assert.strictEqual(R.normalizeSettings({ duration: 31 }).duration, 600);
+});
+
 t('同 seed 文章順序相同、篩不到領域會退回同年級', () => {
   const s = { lang: 'zh', grade: 'mid', domain: '不存在' };
   assert.deepStrictEqual(R.pickSequence(PASSAGES, s, 42), R.pickSequence(PASSAGES, s, 42));

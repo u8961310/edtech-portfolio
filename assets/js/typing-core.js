@@ -18,7 +18,9 @@
     t3: { id: 't3', name: '高階', grades: '6 年級', zhuyin: 'optional', cpm: 35, enSet: '句子' }
   };
   // 時間 → 回合數（每回合約 2.5～3.3 分鐘，回合間有休息卡）
-  var ROUNDS = { 10: 4, 15: 5, 20: 6 };
+  // 0.5＝30 秒 1 回合，只給功能測試用：網址帶 ?test=1 才出現、才被接受（學生畫面看不到）
+  var ROUNDS = { 0.5: 1, 10: 4, 15: 5, 20: 6 };
+  var TEST_MINUTES = 0.5;
   var ZH_SETS = ['唐詩', '宋詞', '三字經'];
   var GOAL_ACCURACY = 90;      // 本局目標：正確率（%）
   var STAR2_ACCURACY = 85;     // ★★ 門檻
@@ -28,13 +30,26 @@
 
   var DEFAULTS = { lang: 'zh', tier: 't1', minutes: 10, set: 'random', zhuyin: true };
 
-  /** 把任何輸入整理成合法設定；初階、進階的注音一律開 */
-  function normalizeSettings(s) {
+  /** 合法的分鐘數？測試的 30 秒只有 test 模式才算 */
+  function okMinutes(m, test) {
+    m = Number(m);
+    return !!ROUNDS[m] && (m !== TEST_MINUTES || !!test);
+  }
+
+  /** ?test=1：功能測試模式（多一個 30 秒選項） */
+  function isTestMode(search) { return /(^|[?&])test=1(&|$)/.test(String(search || '')); }
+
+  /** 分鐘數 → 顯示文字：0.5 → 「30 秒」，10 → 「10 分鐘」 */
+  function minutesText(m) { return m < 1 ? Math.round(m * 60) + ' 秒' : m + ' 分鐘'; }
+
+  /** 把任何輸入整理成合法設定；初階、進階的注音一律開。opt.test＝允許 30 秒測試 */
+  function normalizeSettings(s, opt) {
     s = s || {};
+    var test = !!(opt && opt.test);
     var out = {
       lang: s.lang === 'en' ? 'en' : 'zh',
       tier: TIERS[s.tier] ? s.tier : DEFAULTS.tier,
-      minutes: ROUNDS[Number(s.minutes)] ? Number(s.minutes) : DEFAULTS.minutes,
+      minutes: okMinutes(s.minutes, test) ? Number(s.minutes) : DEFAULTS.minutes,
       set: ZH_SETS.indexOf(s.set) >= 0 ? s.set : 'random',
       zhuyin: s.zhuyin === undefined ? true : !!s.zhuyin
     };
@@ -327,7 +342,8 @@
   };
 
   root.TypingCore = {
-    TIERS: TIERS, ROUNDS: ROUNDS, ZH_SETS: ZH_SETS, RANKS: RANKS, LIVES: LIVES,
+    TIERS: TIERS, ROUNDS: ROUNDS, TEST_MINUTES: TEST_MINUTES, ZH_SETS: ZH_SETS, RANKS: RANKS, LIVES: LIVES,
+    isTestMode: isTestMode, minutesText: minutesText,
     GOAL_ACCURACY: GOAL_ACCURACY, KEYBOARD: KEYBOARD, BPMF_KEYS: BPMF_KEYS, KEY_BPMF: KEY_BPMF,
     normalizeSettings: normalizeSettings, settingsFromQuery: settingsFromQuery, roundPlan: roundPlan,
     pickSequence: pickSequence, createTracker: createTracker, displayChar: displayChar, isAuto: isAuto,

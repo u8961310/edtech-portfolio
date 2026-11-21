@@ -16,6 +16,14 @@ ok(CS.parse(CS.encode(Object.assign({}, rec, { name: '小|明\n' }))).name === '
 const duel = CS.parse(CS.encode({ unit: 23, tier: '-', lang: 'en', seat: 30, name: 'Amy', acc: 91, cpm: 34, stars: 2, min: 15 }));
 ok(duel && duel.tier === '-' && duel.unit === 23, '打字擂台 tier=-');
 
+// 30 秒功能測試：min 編成 0，解回 0，CSV 寫 0.5、文字「30 秒」
+const t30 = CS.encode(Object.assign({}, rec, { min: 0.5 }));
+ok(t30.split('|')[9] === '0', '30 秒編成 min=0');
+ok(CS.parse(t30) && CS.parse(t30).min === 0, '30 秒解得回來');
+ok(CS.minText(0) === '30 秒' && CS.minText(10) === '10 分鐘', 'minText');
+ok(CS.toCSV([CS.parse(t30)], 0, '').indexOf(',0.5,') > 0, 'CSV 選擇分鐘寫 0.5');
+ok(CS.parse(CS.encode(Object.assign({}, rec, { min: 15 }))).min === 15, '15 分鐘照舊');
+
 // 不是打字島的 QR 一律不收
 ['https://example.com', '', 'ETS1|12', 'ETS2|12|t2|zh|7|小明|96|28|3|10|202611211030',
   'ETS1|99|t2|zh|7|小明|96|28|3|10|202611211030',     // 沒有這關

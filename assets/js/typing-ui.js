@@ -71,7 +71,8 @@
     var langs = opts.langs && opts.langs.length ? opts.langs : ['zh'];
     var scoreKey = 'edtech-unit' + opts.unit + '-score';
     var saved = C.store.settings() || {};
-    var settings = C.normalizeSettings(Object.assign({ lang: langs[0] }, saved, C.settingsFromQuery(location.search)));
+    var TEST = C.isTestMode(location.search);   // ?test=1：多一個 30 秒選項，給功能測試用
+    var settings = C.normalizeSettings(Object.assign({ lang: langs[0] }, saved, C.settingsFromQuery(location.search)), { test: TEST });
     if (langs.indexOf(settings.lang) < 0) settings.lang = langs[0];
 
     var app = document.createElement('div');
@@ -97,7 +98,7 @@
           ? '<div class="ti-lock"><b>注音固定開著</b><span>' + T[s.tier].name + '一律顯示注音，幫你看清楚每個字怎麼唸</span></div>'
           : '<div class="ti-switch"><button class="ti-sw" role="switch" aria-checked="' + s.zhuyin + '" aria-label="顯示注音"></button><span>' + (s.zhuyin ? '顯示注音' : '不顯示注音（挑戰模式）') + '</span></div>');
       }
-      html += row('時間', '<div class="ti-opts">' + [10, 15, 20].map(function (m) { return opt('minutes', m, m + ' 分鐘', C.ROUNDS[m] + ' 回合'); }).join('') + '</div>');
+      html += row('時間', '<div class="ti-opts">' + (TEST ? [C.TEST_MINUTES] : []).concat([10, 15, 20]).map(function (m) { return opt('minutes', m, C.minutesText(m), C.ROUNDS[m] + ' 回合'); }).join('') + '</div>');
       html += s.lang === 'zh'
         ? row('文章', '<div class="ti-opts">' + C.ZH_SETS.map(function (z) { return opt('set', z, z); }).join('') + opt('set', 'random', '隨機') + '</div>')
         : row('內容', '<div class="ti-lock"><b>' + T[s.tier].enSet + '</b><span>' + ({ t1: '從基準列 F、J 開始練字母', t2: '顏色、動物、學校等常用單字', t3: '生活短句，要注意大寫和標點' })[s.tier] + '</span></div>');
@@ -108,7 +109,7 @@
         '<div class="g"><span class="big num">' + g.accuracy + '<small>%</small></span><span>正確率 ' + g.accuracy + '% 以上<br><small>慢慢打，打對最重要</small></span></div>' +
         '<div class="g"><span class="big num">' + C.ROUNDS[s.minutes] + '</span><span>打完 ' + C.ROUNDS[s.minutes] + ' 個回合<br><small>每回合中間可以休息眼睛</small></span></div>' +
         '<div class="g"><span class="big num">' + g.cpm + '</span><span>每分鐘 ' + g.cpm + ' 字<br><small>達到就有機會拿三顆星</small></span></div>';
-      $('.ti-start small', app).textContent = T[s.tier].name + '・' + (s.lang === 'zh' ? (s.set === 'random' ? '隨機文章' : s.set) : T[s.tier].enSet) + '・' + s.minutes + ' 分鐘';
+      $('.ti-start small', app).textContent = T[s.tier].name + '・' + (s.lang === 'zh' ? (s.set === 'random' ? '隨機文章' : s.set) : T[s.tier].enSet) + '・' + C.minutesText(s.minutes);
       app.classList.toggle('no-zy', s.lang === 'zh' && !s.zhuyin);
     }
     $('.ti-setup', app).addEventListener('click', function (e) {
@@ -116,7 +117,7 @@
       if (b) {
         var v = b.dataset.v;
         settings[b.dataset.k] = b.dataset.k === 'minutes' ? Number(v) : v;
-        settings = C.normalizeSettings(settings);
+        settings = C.normalizeSettings(settings, { test: TEST });
         C.store.saveSettings(settings);
         renderSetup();
         return;
