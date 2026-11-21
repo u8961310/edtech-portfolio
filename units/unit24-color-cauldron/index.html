@@ -1,0 +1,2009 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>調色魔法鍋 - 畫畫島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Fredoka:wght@600;700&display=swap">
+  <link rel="stylesheet" href="../../assets/css/art-island.css">
+  <style>
+    /* ===== 調色魔法鍋場景樣式（所有 class 以 sc- 開頭，不覆寫 .ai- 樣式） ===== */
+    .sc-wrap {
+      position: relative;
+      width: 1366px;
+      height: 595px;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* --- 左欄：森林小動物客人與對話 --- */
+    .sc-guest-col {
+      position: absolute;
+      left: 20px;
+      top: 10px;
+      width: 324px;
+      height: 569px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sc-order-card {
+      position: relative;
+      padding: 14px 16px;
+      min-height: 112px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+    }
+    .sc-order-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font: 700 16px var(--f-ui);
+      color: var(--ink-2);
+    }
+    .sc-order-line {
+      font-size: 22px;
+      line-height: 1.55;
+      color: var(--ink);
+      font-weight: 700;
+    }
+    /* 對話框指向下方客人的小尖角 */
+    .sc-order-tail {
+      position: absolute;
+      left: 148px;
+      bottom: -13px;
+      width: 20px;
+      height: 20px;
+      background: var(--card);
+      border-right: 3px solid var(--ink);
+      border-bottom: 3px solid var(--ink);
+      transform: rotate(45deg);
+    }
+    .sc-animal-box {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      min-height: 270px;
+    }
+    .sc-animal-svg {
+      width: 266px;
+      height: 266px;
+      display: block;
+      transform-origin: center bottom;
+    }
+    .sc-feedback {
+      min-height: 126px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      font: 700 18px/1.45 var(--f-ui);
+      color: var(--ink);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .sc-feedback.sc-ok {
+      background: var(--ok-soft);
+      border-color: var(--ok);
+      color: var(--ok-dk);
+    }
+    .sc-feedback.sc-bad {
+      background: var(--bad-soft);
+      border-color: var(--bad);
+      color: #8E1F29;
+    }
+    .sc-feedback.sc-info {
+      background: var(--blue-soft);
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+    .sc-fb-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font: 900 19px var(--f-title);
+      white-space: nowrap;
+    }
+    .sc-fb-mark {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font: 900 16px var(--f-ui);
+      flex-shrink: 0;
+    }
+    .sc-feedback.sc-ok .sc-fb-mark { background: var(--ok); color: #fff; }
+    .sc-feedback.sc-bad .sc-fb-mark { background: var(--bad); color: #fff; }
+    .sc-feedback.sc-info .sc-fb-mark { background: var(--blue); color: #fff; }
+    .sc-fb-body {
+      font: 700 18px/1.45 var(--f-ui);
+    }
+
+    /* --- 中欄：5 瓶顏料＋大魔法鍋＋配方小卡 --- */
+    .sc-pot-col {
+      position: absolute;
+      left: 362px;
+      top: 10px;
+      width: 524px;
+      height: 569px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sc-shelf {
+      height: 120px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 11px;
+      padding: 4px 0 0;
+    }
+    .sc-bottle {
+      width: 96px;
+      height: 114px;
+      background: var(--card);
+      border: 3px solid var(--ink);
+      border-radius: 16px;
+      box-shadow: 0 5px 0 var(--ink);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: grab;
+      touch-action: none;
+      padding: 4px 4px 6px;
+      position: relative;
+      transition: transform 0.14s ease, box-shadow 0.14s ease, background-color 0.14s ease;
+    }
+    .sc-bottle:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 0 var(--ink);
+    }
+    .sc-bottle:active,
+    .sc-bottle.sc-dragging {
+      cursor: grabbing;
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--ink);
+      background: var(--blue-soft);
+      border-color: var(--blue);
+    }
+    .sc-bottle svg {
+      width: 66px;
+      height: 70px;
+      pointer-events: none;
+    }
+    .sc-bottle-name {
+      font: 900 18px/1.1 var(--f-title);
+      color: var(--ink);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* 魔法鍋主舞台區 */
+    .sc-pot-stage {
+      position: relative;
+      height: 258px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sc-pot-drop {
+      position: relative;
+      width: 344px;
+      height: 252px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 28px;
+      transition: transform 0.16s ease;
+    }
+    .sc-pot-drop.sc-drop-ready {
+      background: rgba(220, 233, 251, 0.72);
+      box-shadow: 0 0 0 4px var(--blue);
+      transform: scale(1.03);
+    }
+    .sc-pot-svg {
+      width: 320px;
+      height: 248px;
+      display: block;
+      overflow: visible;
+    }
+    .sc-pot-fx {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 344px;
+      height: 252px;
+      pointer-events: none;
+    }
+    .sc-drop-hint {
+      position: absolute;
+      top: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--blue);
+      color: #fff;
+      font: 900 17px var(--f-title);
+      padding: 4px 14px;
+      border-radius: 999px;
+      border: 3px solid var(--ink);
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.14s ease;
+    }
+    .sc-pot-drop.sc-drop-ready .sc-drop-hint {
+      opacity: 1;
+    }
+
+    /* 泥巴怪彈出層 */
+    .sc-mud-monster {
+      position: absolute;
+      left: 50%;
+      top: 10px;
+      width: 150px;
+      height: 122px;
+      margin-left: -75px;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(34px) scale(0.5);
+      transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.22, 1.4, 0.36, 1);
+    }
+    .sc-mud-monster.sc-show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* 配方小卡與泥巴警示卡 */
+    .sc-recipe-card {
+      padding: 10px 16px;
+      min-height: 108px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+    }
+    .sc-recipe-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      font: 700 18px/1.35 var(--f-ui);
+      color: var(--ink);
+    }
+    .sc-recipe-label {
+      color: var(--ink-2);
+      white-space: nowrap;
+    }
+    .sc-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 9px;
+      background: #fff;
+      border: 2.5px solid var(--ink);
+      border-radius: 999px;
+      font: 700 17px var(--f-ui);
+      white-space: nowrap;
+    }
+    .sc-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--ink);
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .sc-mix-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      border: 3px solid var(--ink);
+      display: inline-block;
+      flex-shrink: 0;
+      background: #E8F1F2;
+    }
+    .sc-mix-name {
+      font: 900 20px var(--f-title);
+      color: var(--ink);
+    }
+    .sc-mud-alert {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--bad-soft);
+      border: 3px solid var(--bad);
+      border-radius: 16px;
+      box-shadow: 0 4px 0 var(--ink);
+      color: #8E1F29;
+      min-height: 108px;
+    }
+    .sc-mud-alert.sc-show {
+      display: flex;
+    }
+    .sc-mud-alert-x {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--bad);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font: 900 20px var(--f-ui);
+      flex-shrink: 0;
+    }
+    .sc-mud-alert .ai-zy {
+      font-size: 20px;
+      line-height: 1.5;
+      font-weight: 700;
+      color: #8E1F29;
+    }
+
+    /* 倒掉重來按鈕列 */
+    .sc-pot-actions {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 55px;
+    }
+    .sc-clear-btn {
+      min-height: 52px;
+      padding: 0 24px;
+      font: 900 20px var(--f-title);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .sc-clear-btn:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* --- 右欄：白畫布線稿＋倒到圖上按鈕 --- */
+    .sc-art-col {
+      position: absolute;
+      left: 904px;
+      top: 10px;
+      width: 442px;
+      height: 569px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .sc-art-board {
+      position: relative;
+      width: 442px;
+      height: 467px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 18px 16px 12px;
+    }
+    .sc-art-canvas {
+      width: 396px;
+      height: 396px;
+      display: block;
+    }
+    .sc-art-label {
+      margin-top: 4px;
+      font: 900 19px var(--f-title);
+      color: var(--ink-2);
+      white-space: nowrap;
+    }
+    .sc-pour-btn {
+      width: 100%;
+      height: 86px;
+      font: 900 30px var(--f-title);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      white-space: nowrap;
+    }
+    .sc-pour-btn svg,
+    .sc-clear-btn svg {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    /* 拖曳時的浮動顏料瓶 */
+    .sc-drag-ghost {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 84px;
+      height: 92px;
+      pointer-events: none;
+      z-index: 40;
+      transform-origin: center center;
+      filter: drop-shadow(0 6px 0 rgba(31, 42, 77, 0.35));
+    }
+
+    /* 回饋瞬間微動畫（只在觸發時加 class） */
+    @keyframes sc-shake {
+      0%, 100% { transform: translateX(0) rotate(0deg); }
+      20% { transform: translateX(-8px) rotate(-3deg); }
+      45% { transform: translateX(8px) rotate(3deg); }
+      70% { transform: translateX(-5px) rotate(-2deg); }
+      85% { transform: translateX(4px) rotate(1deg); }
+    }
+    @keyframes sc-dance {
+      0%, 100% { transform: translateY(0) scale(1); }
+      25% { transform: translateY(-14px) rotate(-4deg) scale(1.04); }
+      50% { transform: translateY(0) scale(0.98); }
+      75% { transform: translateY(-12px) rotate(4deg) scale(1.04); }
+    }
+    @keyframes sc-pot-pop {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.07, 0.94); }
+      70% { transform: scale(0.97, 1.04); }
+      100% { transform: scale(1); }
+    }
+    .sc-anim-shake { animation: sc-shake 0.45s ease; }
+    .sc-anim-dance { animation: sc-dance 0.65s ease 2; }
+    .sc-anim-pop { animation: sc-pot-pop 0.34s ease; }
+
+    /* 護眼：尊重系統降低動態設定 */
+    @media (prefers-reduced-motion: reduce) {
+      .sc-bottle,
+      .sc-pot-drop,
+      .sc-mud-monster,
+      .sc-feedback,
+      .sc-drop-hint {
+        transition: none !important;
+      }
+      .sc-anim-shake,
+      .sc-anim-dance,
+      .sc-anim-pop {
+        animation: none !important;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/art-ui.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    /* =========================================================================
+       集中常數設定（關卡資料、顏料色票、減色混色查表、星星門檻、動畫參數）
+       ========================================================================= */
+    var SCENE_CONFIG = {
+      STAGE_W: 1366,
+      STAGE_H: 595,
+      DROP_PADDING: 36,          // 拖放進鍋子的容錯外擴距離（px）
+      EXPORT_SIZE: 640,          // 完成作品輸出畫布尺寸
+      PREVIEW_SIZE: 396,         // 右側白畫布顯示尺寸
+      POUR_DURATION_MS: 420,     // 倒顏料上色動畫時間
+      FINISH_DELAY_MS: 1150,     // 答對慶祝後呼叫 api.finish 的延遲
+      FINISH_DELAY_REDUCED: 420, // 降低動態模式下的延遲
+      MAX_DROPS_PER_COLOR: 9,    // 單一顏料最多份數，避免數字過長
+
+      // 星星門檻：第一次就對 → 3 顆；錯 1–2 次 → 2 顆；錯 3 次以上 → 1 顆
+      STARS: {
+        THREE_MAX_WRONG: 0,
+        TWO_MAX_WRONG: 2
+      },
+
+      // 五瓶顏料設定
+      PIGMENTS: [
+        { key: 'red',    name: '紅', hex: '#E53935', cap: '#B71C1C', shine: '#FF8A80' },
+        { key: 'yellow', name: '黃', hex: '#FDD835', cap: '#F57F17', shine: '#FFF9C4' },
+        { key: 'blue',   name: '藍', hex: '#1E88E5', cap: '#0D47A1', shine: '#90CAF9' },
+        { key: 'white',  name: '白', hex: '#FFFFFF', cap: '#90A4AE', shine: '#FFFFFF' },
+        { key: 'black',  name: '黑', hex: '#263238', cap: '#11171A', shine: '#78909C' }
+      ],
+
+      // 減色混色查表（符合美術課顏料規則）
+      MIX_COLORS: {
+        empty:       '#D6ECEE',
+        red:         '#E53935',
+        yellow:      '#FDD835',
+        blue:        '#1E88E5',
+        white:       '#FFFFFF',
+        black:       '#263238',
+        orange:      '#FB8C00', // 紅 1 + 黃 1
+        redOrange:   '#F4511E', // 紅 2 + 黃 1
+        yellowOrange:'#FFB300', // 黃 2 + 紅 1
+        green:       '#43A047', // 黃 1 + 藍 1
+        yellowGreen: '#9CCC65', // 黃 2 + 藍 1
+        blueGreen:   '#00897B', // 藍 2 + 黃 1
+        purple:      '#8E24AA', // 紅 1 + 藍 1
+        redPurple:   '#C2185B', // 紅 2 + 藍 1
+        bluePurple:  '#5E35B1', // 藍 2 + 紅 1
+        lightBlue:   '#90CAF9', // 藍 1 + 白 1
+        lightRed:    '#F48FB1', // 紅 1 + 白 1
+        lightYellow: '#FFF59D', // 黃 1 + 白 1
+        gray:        '#90A4AE', // 白 1 + 黑 1
+        mud:         '#6D4C41'  // 三原色都有
+      },
+
+      // 四個關卡資料（台詞、名稱一字不改）
+      LEVELS: [
+        {
+          id: 'pumpkin',
+          name: '橘色南瓜',
+          artLabel: '客人的畫：南瓜',
+          quest: '第 1 關／共 4 關：煮出橘色塗在南瓜上',
+          guestType: 'bear',
+          guestName: '小熊客人',
+          orderLine: '我要橘色的南瓜！',
+          targetKey: 'orange',
+          targetColorName: '橘色',
+          praise: '紅和黃混成漂亮的橘色，南瓜好亮眼！'
+        },
+        {
+          id: 'frog',
+          name: '綠色青蛙',
+          artLabel: '客人的畫：青蛙',
+          quest: '第 2 關／共 4 關：煮出綠色塗在青蛙上',
+          guestType: 'rabbit',
+          guestName: '小兔客人',
+          orderLine: '我要綠色的青蛙！',
+          targetKey: 'green',
+          targetColorName: '綠色',
+          praise: '黃和藍混成清新的綠色，小青蛙好開心！'
+        },
+        {
+          id: 'grape',
+          name: '紫色葡萄',
+          artLabel: '客人的畫：葡萄',
+          quest: '第 3 關／共 4 關：煮出紫色塗在葡萄上',
+          guestType: 'fox',
+          guestName: '小狐狸客人',
+          orderLine: '我要紫色的葡萄！',
+          targetKey: 'purple',
+          targetColorName: '紫色',
+          praise: '紅和藍混成亮麗的紫色，葡萄好甜美！'
+        },
+        {
+          id: 'sky',
+          name: '淺藍天空',
+          artLabel: '客人的畫：天空',
+          quest: '第 4 關／共 4 關：煮出淺藍色塗在天空上',
+          guestType: 'bird',
+          guestName: '小鳥客人',
+          orderLine: '我要淺藍色的天空！',
+          targetKey: 'lightBlue',
+          targetColorName: '淺藍色',
+          praise: '藍加白變成溫柔的淺藍色，天空好舒服！'
+        }
+      ]
+    };
+
+    /* =========================================================================
+       工具函式：顏色解析、減色混色查表與內插、比例約分
+       ========================================================================= */
+    function isReducedMotion() {
+      return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+
+    function hexToRgb(hex) {
+      var h = hex.replace('#', '');
+      return [
+        parseInt(h.slice(0, 2), 16),
+        parseInt(h.slice(2, 4), 16),
+        parseInt(h.slice(4, 6), 16)
+      ];
+    }
+
+    function rgbToHex(r, g, b) {
+      var clamp = function (v) { return Math.max(0, Math.min(255, Math.round(v))); };
+      return '#' + [clamp(r), clamp(g), clamp(b)].map(function (v) {
+        var s = v.toString(16);
+        return s.length < 2 ? '0' + s : s;
+      }).join('').toUpperCase();
+    }
+
+    // 在兩個指定的美術色之間內插（僅用於兩色不等量偏移或明暗調整）
+    function lerpHex(hexA, hexB, t) {
+      var a = hexToRgb(hexA);
+      var b = hexToRgb(hexB);
+      var k = Math.max(0, Math.min(1, t));
+      return rgbToHex(
+        a[0] + (b[0] - a[0]) * k,
+        a[1] + (b[1] - a[1]) * k,
+        a[2] + (b[2] - a[2]) * k
+      );
+    }
+
+    function gcd(a, b) {
+      a = Math.abs(a);
+      b = Math.abs(b);
+      while (b) { var t = a % b; a = b; b = t; }
+      return a || 1;
+    }
+
+    // 依兩原色比例取得減色混色結果（等量取查表；不等量於等量色、2:1 偏色、主色間內插）
+    function mixTwoPrimaries(cntA, cntB, equalHex, biasAHex, biasBHex, pureAHex, pureBHex, equalName, nameA, nameB) {
+      if (cntA === cntB) {
+        return { hex: equalHex, name: equalName, isBalanced: true };
+      }
+      if (cntA > cntB) {
+        var tA = (cntA - cntB) / cntA; // 2:1 時 tA = 0.5
+        var hexA = tA <= 0.5
+          ? lerpHex(equalHex, biasAHex, tA / 0.5)
+          : lerpHex(biasAHex, pureAHex, (tA - 0.5) / 0.5);
+        return { hex: hexA, name: '偏' + nameA + '的' + equalName, isBalanced: false, heavy: nameA };
+      }
+      var tB = (cntB - cntA) / cntB;
+      var hexB = tB <= 0.5
+        ? lerpHex(equalHex, biasBHex, tB / 0.5)
+        : lerpHex(biasBHex, pureBHex, (tB - 0.5) / 0.5);
+      return { hex: hexB, name: '偏' + nameB + '的' + equalName, isBalanced: false, heavy: nameB };
+    }
+
+    // 核心混色函式：完全按比例計算（1:1 與 2:2 結果一致）
+    function mixPigments(counts) {
+      var C = SCENE_CONFIG.MIX_COLORS;
+      var r = counts.red || 0;
+      var y = counts.yellow || 0;
+      var b = counts.blue || 0;
+      var w = counts.white || 0;
+      var k = counts.black || 0;
+      var total = r + y + b + w + k;
+
+      if (total === 0) {
+        return { hex: C.empty, name: '還沒煮出顏色', key: 'empty', isMud: false, isEmpty: true };
+      }
+
+      // 規則 1：三原色都有 → 一律是泥巴色
+      if (r > 0 && y > 0 && b > 0) {
+        return { hex: C.mud, name: '泥巴色', key: 'mud', isMud: true, isEmpty: false };
+      }
+
+      // 先依比例約分（確保紅 2 黃 2 與紅 1 黃 1 走完全相同判斷）
+      var g = [r, y, b, w, k].reduce(function (acc, v) { return v > 0 ? (acc ? gcd(acc, v) : v) : acc; }, 0) || 1;
+      var rr = r / g, yy = y / g, bb = b / g, ww = w / g, kk = k / g;
+      var pSum = rr + yy + bb;
+
+      // 規則 2：完全沒有三原色，只有白或黑
+      if (pSum === 0) {
+        if (ww > 0 && kk === 0) return { hex: C.white, name: '白色', key: 'white', isMud: false, isEmpty: false };
+        if (kk > 0 && ww === 0) return { hex: C.black, name: '黑色', key: 'black', isMud: false, isEmpty: false };
+        if (ww === kk) return { hex: C.gray, name: '灰色', key: 'gray', isMud: false, isEmpty: false };
+        if (ww > kk) {
+          var tW = (ww - kk) / ww;
+          return { hex: lerpHex(C.gray, '#ECEFF1', tW * 0.85), name: '淺灰色', key: 'lightGray', isMud: false, isEmpty: false };
+        }
+        var tK = (kk - ww) / kk;
+        return { hex: lerpHex(C.gray, '#37474F', tK * 0.85), name: '深灰色', key: 'darkGray', isMud: false, isEmpty: false };
+      }
+
+      // 規則 3：計算原色基底（單原色或兩原色減色混色）
+      var baseHex = C.red;
+      var baseName = '紅色';
+      var baseKey = 'custom';
+
+      if (rr > 0 && yy === 0 && bb === 0) {
+        baseHex = C.red; baseName = '紅色'; baseKey = 'red';
+      } else if (yy > 0 && rr === 0 && bb === 0) {
+        baseHex = C.yellow; baseName = '黃色'; baseKey = 'yellow';
+      } else if (bb > 0 && rr === 0 && yy === 0) {
+        baseHex = C.blue; baseName = '藍色'; baseKey = 'blue';
+      } else if (rr > 0 && yy > 0) {
+        var mRY = mixTwoPrimaries(rr, yy, C.orange, C.redOrange, C.yellowOrange, C.red, C.yellow, '橘色', '紅', '黃');
+        baseHex = mRY.hex; baseName = mRY.name; baseKey = mRY.isBalanced ? 'orange' : 'orangeBias';
+      } else if (yy > 0 && bb > 0) {
+        var mYB = mixTwoPrimaries(yy, bb, C.green, C.yellowGreen, C.blueGreen, C.yellow, C.blue, '綠色', '黃', '藍');
+        baseHex = mYB.hex; baseName = mYB.name; baseKey = mYB.isBalanced ? 'green' : 'greenBias';
+      } else if (rr > 0 && bb > 0) {
+        var mRB = mixTwoPrimaries(rr, bb, C.purple, C.redPurple, C.bluePurple, C.red, C.blue, '紫色', '紅', '藍');
+        baseHex = mRB.hex; baseName = mRB.name; baseKey = mRB.isBalanced ? 'purple' : 'purpleBias';
+      }
+
+      // 沒加白也沒加黑 → 直接回傳基底色
+      if (ww === 0 && kk === 0) {
+        return { hex: baseHex, name: baseName, key: baseKey, isMud: false, isEmpty: false };
+      }
+
+      // 規則 4：只加白（變淺）
+      if (ww > 0 && kk === 0) {
+        // 查表特例：1:1 藍＋白 = 淺藍 #90CAF9
+        if (baseKey === 'blue' && bb === ww) {
+          return { hex: C.lightBlue, name: '淺藍色', key: 'lightBlue', isMud: false, isEmpty: false };
+        }
+        if (baseKey === 'red' && rr === ww) {
+          return { hex: C.lightRed, name: '淺紅色（粉紅）', key: 'lightRed', isMud: false, isEmpty: false };
+        }
+        if (baseKey === 'yellow' && yy === ww) {
+          return { hex: C.lightYellow, name: '淺黃色', key: 'lightYellow', isMud: false, isEmpty: false };
+        }
+        var whiteRatio = ww / (pSum + ww); // 0..1
+        var lightHex = baseKey === 'blue'
+          ? (whiteRatio < 0.5
+              ? lerpHex(C.blue, C.lightBlue, whiteRatio / 0.5)
+              : lerpHex(C.lightBlue, '#E3F2FD', (whiteRatio - 0.5) / 0.5))
+          : lerpHex(baseHex, '#FFFFFF', 0.22 + whiteRatio * 0.62);
+        var lightName = baseName.indexOf('偏') === 0
+          ? '淺淺的' + baseName
+          : (whiteRatio > 0.62 ? '很淺的' + baseName : '淺' + baseName);
+        return { hex: lightHex, name: lightName, key: 'tinted', isMud: false, isEmpty: false };
+      }
+
+      // 規則 5：只加黑（變深）
+      if (kk > 0 && ww === 0) {
+        var blackRatio = kk / (pSum + kk);
+        var darkHex = lerpHex(baseHex, C.black, 0.24 + blackRatio * 0.58);
+        var darkName = baseName.indexOf('偏') === 0 ? '暗暗的' + baseName : '深' + baseName;
+        return { hex: darkHex, name: darkName, key: 'shaded', isMud: false, isEmpty: false };
+      }
+
+      // 規則 6：同時加白與黑（濁色）
+      var mixGray = lerpHex(baseHex, C.gray, (ww + kk) / (pSum + ww + kk) * 0.72);
+      if (ww > kk) mixGray = lerpHex(mixGray, '#FFFFFF', 0.22);
+      else if (kk > ww) mixGray = lerpHex(mixGray, C.black, 0.26);
+      return { hex: mixGray, name: '灰灰的' + baseName, key: 'toned', isMud: false, isEmpty: false };
+    }
+
+    // 判斷鍋子是否剛好煮出本關目標色
+    function isTargetMatch(level, mix) {
+      return !mix.isEmpty && !mix.isMud && mix.key === level.targetKey;
+    }
+
+    // 做錯時依目前鍋裡配方給出具體好懂的引導句（不讓人挫折）
+    function getWrongHint(level, counts, mix) {
+      if (mix.isMud) {
+        return '鍋裡變成泥巴色了！按「倒掉重來」再煮一鍋吧。';
+      }
+      var r = counts.red, y = counts.yellow, b = counts.blue, w = counts.white, k = counts.black;
+      if (level.targetKey === 'orange') {
+        if (k > 0 || w > 0 || b > 0) return '這鍋加到別的顏料了！按倒掉重來，只用紅和黃試試。';
+        if (r > 0 && y === 0) return '現在只有紅色，拖一瓶黃色進鍋子看看！';
+        if (y > 0 && r === 0) return '現在只有黃色，拖一瓶紅色進鍋子看看！';
+        if (r > y) return '有點太偏紅囉！再加 ' + (r - y) + ' 份黃色就剛剛好！';
+        if (y > r) return '有點太偏黃囉！再加 ' + (y - r) + ' 份紅色就剛剛好！';
+      }
+      if (level.targetKey === 'green') {
+        if (k > 0 || w > 0 || r > 0) return '這鍋加到別的顏料了！按倒掉重來，只用黃和藍試試。';
+        if (y > 0 && b === 0) return '現在只有黃色，拖一瓶藍色進鍋子看看！';
+        if (b > 0 && y === 0) return '現在只有藍色，拖一瓶黃色進鍋子看看！';
+        if (y > b) return '有點太偏黃囉！再加 ' + (y - b) + ' 份藍色就剛剛好！';
+        if (b > y) return '有點太偏藍囉！再加 ' + (b - y) + ' 份黃色就剛剛好！';
+      }
+      if (level.targetKey === 'purple') {
+        if (k > 0 || w > 0 || y > 0) return '這鍋加到別的顏料了！按倒掉重來，只用紅和藍試試。';
+        if (r > 0 && b === 0) return '現在只有紅色，拖一瓶藍色進鍋子看看！';
+        if (b > 0 && r === 0) return '現在只有藍色，拖一瓶紅色進鍋子看看！';
+        if (r > b) return '有點太偏紅囉！再加 ' + (r - b) + ' 份藍色就剛剛好！';
+        if (b > r) return '有點太偏藍囉！再加 ' + (b - r) + ' 份紅色就剛剛好！';
+      }
+      if (level.targetKey === 'lightBlue') {
+        if (r > 0 || y > 0 || k > 0) return '這鍋混到別的顏色了！倒掉重來，用藍色加白色試試。';
+        if (b > 0 && w === 0) return '這是原本的藍色，加 1 份白色就會變淺喔！';
+        if (w > 0 && b === 0) return '這是純白色，要再加藍色才會變淺藍喔！';
+        if (b > w) return '還不夠淺喔！再加 ' + (b - w) + ' 份白色看看！';
+        if (w > b) return '有一點點太淡了，再加 ' + (w - b) + ' 份藍色試試！';
+      }
+      return '顏色還不太一樣喔！可以再加顏料，或按倒掉重來。';
+    }
+
+    /* =========================================================================
+       Inline SVG 圖案：主角大鍋（hero & 場景共用同造型）、4 關縮圖、小動物、顏料瓶
+       ========================================================================= */
+
+    // 共用大魔法鍋 SVG（開始畫面 hero 與場景大鍋是同一個角色）
+    function buildCauldronSvg(opts) {
+      var isHero = opts.isHero;
+      var liquidHex = opts.liquidHex || '#FB8C00';
+      var mood = opts.mood || 'smile'; // smile | open | happy | mud
+      var vb = isHero ? '0 0 380 360' : '0 0 320 248';
+      var offsetX = isHero ? 30 : 0;
+      var offsetY = isHero ? 64 : 6;
+
+      // 表情嘴巴
+      var mouthSvg = '<path d="M144 176 Q160 190 176 176" fill="none" stroke="#FFFBEF" stroke-width="5" stroke-linecap="round"/>';
+      if (mood === 'open') {
+        mouthSvg = '<ellipse cx="160" cy="180" rx="13" ry="11" fill="#FFB627" stroke="#1F2A4D" stroke-width="3.5"/>';
+      } else if (mood === 'happy') {
+        mouthSvg = '<path d="M142 174 Q160 196 178 174 Z" fill="#FF8A80" stroke="#FFFBEF" stroke-width="3.5" stroke-linejoin="round"/>';
+      } else if (mood === 'mud') {
+        mouthSvg = '<path d="M143 182 Q151 174 160 182 Q169 190 177 182" fill="none" stroke="#FFFBEF" stroke-width="4.5" stroke-linecap="round"/>';
+      }
+
+      // 眼睛
+      var eyesSvg = mood === 'happy'
+        ? '<path d="M118 158 Q128 146 138 158" fill="none" stroke="#FFFBEF" stroke-width="5" stroke-linecap="round"/>' +
+          '<path d="M182 158 Q192 146 202 158" fill="none" stroke="#FFFBEF" stroke-width="5" stroke-linecap="round"/>'
+        : '<circle cx="128" cy="156" r="10.5" fill="#FFFBEF"/>' +
+          '<circle cx="131" cy="155" r="5" fill="#1F2A4D"/>' +
+          '<circle cx="133" cy="152" r="2.2" fill="#FFFFFF"/>' +
+          '<circle cx="192" cy="156" r="10.5" fill="#FFFBEF"/>' +
+          '<circle cx="189" cy="155" r="5" fill="#1F2A4D"/>' +
+          '<circle cx="191" cy="152" r="2.2" fill="#FFFFFF"/>';
+
+      // 開始畫面專屬裝飾（飄浮彩色泡泡、小星星、三小瓶迷你顏料）
+      var heroExtras = isHero ? (
+        '<g stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round">' +
+          '<circle cx="124" cy="48" r="16" fill="#E53935"/><circle cx="119" cy="43" r="4" fill="#FFCDD2" stroke="none"/>' +
+          '<circle cx="192" cy="34" r="20" fill="#FDD835"/><circle cx="186" cy="28" r="5" fill="#FFFDE7" stroke="none"/>' +
+          '<circle cx="258" cy="54" r="15" fill="#1E88E5"/><circle cx="253" cy="49" r="3.5" fill="#BBDEFB" stroke="none"/>' +
+          '<path d="M74 88 l5 -12 5 12 12 5 -12 5 -5 12 -5 -12 -12 -5 Z" fill="#FFB627"/>' +
+          '<path d="M302 96 l4 -10 4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 Z" fill="#FFB627"/>' +
+        '</g>' +
+        '<g transform="translate(14, 246)" stroke="#1F2A4D" stroke-width="4">' +
+          '<rect x="10" y="22" width="42" height="54" rx="12" fill="#E53935"/>' +
+          '<rect x="18" y="8" width="26" height="14" rx="5" fill="#FFB627"/>' +
+          '<rect x="18" y="34" width="26" height="18" rx="5" fill="#FFFBEF" stroke-width="3"/>' +
+        '</g>' +
+        '<g transform="translate(308, 246)" stroke="#1F2A4D" stroke-width="4">' +
+          '<rect x="6" y="22" width="42" height="54" rx="12" fill="#1E88E5"/>' +
+          '<rect x="14" y="8" width="26" height="14" rx="5" fill="#FDD835"/>' +
+          '<rect x="14" y="34" width="26" height="18" rx="5" fill="#FFFBEF" stroke-width="3"/>' +
+        '</g>'
+      ) : '';
+
+      return '<svg viewBox="' + vb + '" class="' + (isHero ? '' : 'sc-pot-svg') + '" aria-hidden="true">' +
+        heroExtras +
+        '<g transform="translate(' + offsetX + ',' + offsetY + ')">' +
+          // 鍋底暖色小火光與地面陰影
+          '<ellipse cx="160" cy="232" rx="108" ry="12" fill="#B5D3D4"/>' +
+          '<path d="M132 224 Q142 204 152 224 Q160 198 168 224 Q178 206 188 224 Z" fill="#FFB627" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>' +
+          // 左右小鍋腳
+          '<ellipse cx="104" cy="216" rx="20" ry="13" fill="#2B3654" stroke="#1F2A4D" stroke-width="5"/>' +
+          '<ellipse cx="216" cy="216" rx="20" ry="13" fill="#2B3654" stroke="#1F2A4D" stroke-width="5"/>' +
+          // 左右圓耳
+          '<circle cx="46" cy="126" r="24" fill="none" stroke="#1F2A4D" stroke-width="11"/>' +
+          '<circle cx="46" cy="126" r="24" fill="none" stroke="#475882" stroke-width="4"/>' +
+          '<circle cx="274" cy="126" r="24" fill="none" stroke="#1F2A4D" stroke-width="11"/>' +
+          '<circle cx="274" cy="126" r="24" fill="none" stroke="#475882" stroke-width="4"/>' +
+          // 胖胖鍋身
+          '<path d="M56 88 C42 152 68 220 160 220 C252 220 278 152 264 88 Z" fill="#3B4B72" stroke="#1F2A4D" stroke-width="6" stroke-linejoin="round"/>' +
+          // 鍋身左側亮面高光
+          '<path d="M74 120 C70 154 84 188 106 198" fill="none" stroke="#5D709E" stroke-width="10" stroke-linecap="round" opacity="0.7"/>' +
+          // 鍋口外緣
+          '<ellipse cx="160" cy="86" rx="112" ry="30" fill="#4E608D" stroke="#1F2A4D" stroke-width="6"/>' +
+          // 鍋內顏料液面
+          '<ellipse class="sc-pot-liquid" cx="160" cy="86" rx="95" ry="21" fill="' + liquidHex + '" stroke="#1F2A4D" stroke-width="4"/>' +
+          '<ellipse cx="132" cy="81" rx="28" ry="6" fill="#FFFFFF" opacity="0.32"/>' +
+          // 可愛腮紅與臉
+          '<ellipse cx="104" cy="172" rx="12" ry="7.5" fill="#FF8A80" opacity="0.82"/>' +
+          '<ellipse cx="216" cy="172" rx="12" ry="7.5" fill="#FF8A80" opacity="0.82"/>' +
+          '<g class="sc-pot-face">' + eyesSvg + mouthSvg + '</g>' +
+        '</g>' +
+      '</svg>';
+    }
+
+    // 泥巴怪做鬼臉 SVG（三原色混出泥巴色時從鍋裡跳出來）
+    function buildMudMonsterSvg() {
+      return '<svg viewBox="0 0 150 122" aria-hidden="true">' +
+        '<g stroke="#1F2A4D" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">' +
+          '<circle cx="48" cy="24" r="10" fill="#8D6E63"/>' +
+          '<circle cx="108" cy="28" r="8" fill="#6D4C41"/>' +
+          '<path d="M24 108 C20 62 36 30 75 30 C114 30 130 62 126 108 C112 116 94 104 75 112 C56 104 38 116 24 108 Z" fill="#6D4C41"/>' +
+          '<path d="M44 48 Q56 38 72 44" fill="none" stroke="#8D6E63" stroke-width="6"/>' +
+          // 大小搞笑眼
+          '<circle cx="56" cy="68" r="14" fill="#FFFBEF"/>' +
+          '<circle cx="60" cy="68" r="5.5" fill="#1F2A4D" stroke="none"/>' +
+          '<circle cx="94" cy="66" r="10" fill="#FFFBEF"/>' +
+          '<circle cx="91" cy="67" r="4.5" fill="#1F2A4D" stroke="none"/>' +
+          // 吐舌做鬼臉
+          '<path d="M58 90 Q75 98 92 88" fill="none" stroke="#1F2A4D" stroke-width="5"/>' +
+          '<path d="M70 93 C70 112 86 112 86 91 Z" fill="#FF708D"/>' +
+          '<line x1="78" y1="94" x2="78" y2="103" stroke="#1F2A4D" stroke-width="3"/>' +
+        '</g>' +
+      '</svg>';
+    }
+
+    // 森林小動物客人 SVG（依關卡切換小熊／小兔／小狐狸／小鳥，並支援 4 種表情）
+    function buildAnimalSvg(type, mood) {
+      var faceY = 144;
+      var eyes = '';
+      var mouth = '';
+
+      if (mood === 'happy') {
+        eyes = '<path d="M96 138 Q106 125 116 138" fill="none" stroke="#1F2A4D" stroke-width="5.5" stroke-linecap="round"/>' +
+               '<path d="M144 138 Q154 125 164 138" fill="none" stroke="#1F2A4D" stroke-width="5.5" stroke-linecap="round"/>';
+        mouth = '<path d="M116 158 Q130 176 144 158 Z" fill="#FF8A80" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>';
+      } else if (mood === 'wrong') {
+        eyes = '<path d="M97 131 L113 143 M113 131 L97 143" stroke="#1F2A4D" stroke-width="5" stroke-linecap="round"/>' +
+               '<circle cx="154" cy="137" r="7.5" fill="#1F2A4D"/>' +
+               '<circle cx="156" cy="134" r="2.5" fill="#FFFFFF"/>';
+        mouth = '<path d="M116 164 Q123 157 130 164 Q137 171 144 164" fill="none" stroke="#1F2A4D" stroke-width="4.5" stroke-linecap="round"/>';
+      } else if (mood === 'mud') {
+        eyes = '<circle cx="106" cy="136" r="11" fill="#FFFFFF" stroke="#1F2A4D" stroke-width="4"/>' +
+               '<circle cx="106" cy="136" r="4" fill="#1F2A4D"/>' +
+               '<circle cx="154" cy="136" r="11" fill="#FFFFFF" stroke="#1F2A4D" stroke-width="4"/>' +
+               '<circle cx="154" cy="136" r="4" fill="#1F2A4D"/>';
+        mouth = '<ellipse cx="130" cy="164" rx="10" ry="12" fill="#1F2A4D"/>';
+      } else {
+        eyes = '<circle cx="106" cy="136" r="7.5" fill="#1F2A4D"/><circle cx="109" cy="133" r="2.8" fill="#FFFFFF"/>' +
+               '<circle cx="154" cy="136" r="7.5" fill="#1F2A4D"/><circle cx="157" cy="133" r="2.8" fill="#FFFFFF"/>';
+        mouth = '<path d="M118 158 Q130 169 142 158" fill="none" stroke="#1F2A4D" stroke-width="4.5" stroke-linecap="round"/>';
+      }
+
+      // 慶祝小星星（答對時出現在客人頭上）
+      var cheerStars = mood === 'happy'
+        ? '<g fill="#FFB627" stroke="#1F2A4D" stroke-width="3.5" stroke-linejoin="round">' +
+            '<path d="M48 64 l5 -12 5 12 12 5 -12 5 -5 12 -5 -12 -12 -5 Z"/>' +
+            '<path d="M208 58 l4 -10 4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 Z"/>' +
+          '</g>'
+        : '';
+
+      // 嚇到汗滴（泥巴色或倒錯時）
+      var sweat = (mood === 'mud' || mood === 'wrong')
+        ? '<path d="M204 100 C204 100 216 116 216 123 A12 12 0 1 1 192 123 C192 116 204 100 204 100 Z" fill="#90CAF9" stroke="#1F2A4D" stroke-width="3.5"/>'
+        : '';
+
+      var bodySvg = '';
+      if (type === 'bear') {
+        bodySvg =
+          '<ellipse cx="130" cy="222" rx="64" ry="38" fill="#C58B59" stroke="#1F2A4D" stroke-width="5.5"/>' +
+          '<ellipse cx="130" cy="228" rx="34" ry="22" fill="#F7E3C6"/>' +
+          '<circle cx="72" cy="84" r="26" fill="#C58B59" stroke="#1F2A4D" stroke-width="5.5"/>' +
+          '<circle cx="72" cy="84" r="13" fill="#F2B8A2"/>' +
+          '<circle cx="188" cy="84" r="26" fill="#C58B59" stroke="#1F2A4D" stroke-width="5.5"/>' +
+          '<circle cx="188" cy="84" r="13" fill="#F2B8A2"/>' +
+          '<circle cx="130" cy="142" r="68" fill="#C58B59" stroke="#1F2A4D" stroke-width="5.5"/>' +
+          '<ellipse cx="130" cy="158" rx="28" ry="21" fill="#F7E3C6"/>' +
+          '<ellipse cx="130" cy="148" rx="10" ry="7" fill="#1F2A4D"/>';
+      } else if (type === 'rabbit') {
+        bodySvg =
+          '<ellipse cx="130" cy="224" rx="60" ry="36" fill="#FFF8EE" stroke="#1F2A4D" stroke-width="5.5"/>' +
+          '<ellipse cx="94" cy="64" rx="20" ry="48" transform="rotate(-10 94 64)" fill="#FFF8EE" stroke="#1F2A4D" stroke-width="5.5"/>' +
+          '<ellipse cx="95" cy="68" rx="10" ry="32" transform="rotate(-10 95 68)" fill="#F6B8C6"/>' +
+          '<ellipse cx="166" cy="64" rx="20" ry="48" transform="rotate(10 166 64)" fill="#FFF8EE" stroke="#1F2A4D" stroke-width="5.5"/>' +
+          '<ellipse cx="165" cy="68" rx="10" ry="32" transform="rotate(10 165 68)" fill="#F6B8C6"/>' +
+          '<circle cx="130" cy="146" r="64" fill="#FFF8EE" stroke="#1F2A4D" stroke-width="5.5"/>' +
+          '<polygon points="124,148 136,148 130,155" fill="#F06292" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/>';
+      } else if (type === 'fox') {
+        bodySvg =
+          '<ellipse cx="130" cy="224" rx="60" ry="36" fill="#E68A47" stroke="#1F2A4D" stroke-width="5.5"/>' +
+          '<ellipse cx="130" cy="230" rx="30" ry="22" fill="#FFF8EE"/>' +
+          '<polygon points="62,118 74,48 122,94" fill="#E68A47" stroke="#1F2A4D" stroke-width="5.5" stroke-linejoin="round"/>' +
+          '<polygon points="74,104 80,68 108,94" fill="#FFF8EE"/>' +
+          '<polygon points="198,118 186,48 138,94" fill="#E68A47" stroke="#1F2A4D" stroke-width="5.5" stroke-linejoin="round"/>' +
+          '<polygon points="186,104 180,68 152,94" fill="#FFF8EE"/>' +
+          '<ellipse cx="130" cy="144" rx="68" ry="60" fill="#E68A47" stroke="#1F2A4D" stroke-width="5.5"/>' +
+          '<path d="M64 152 Q98 144 130 174 Q162 144 196 152 C190 186 164 204 130 204 C96 204 70 186 64 152 Z" fill="#FFF8EE"/>' +
+          '<ellipse cx="130" cy="149" rx="9" ry="6.5" fill="#1F2A4D"/>';
+      } else {
+        // 森林小黃鳥
+        bodySvg =
+          '<ellipse cx="64" cy="186" rx="22" ry="34" transform="rotate(24 64 186)" fill="#F3C44F" stroke="#1F2A4D" stroke-width="5.5"/>' +
+          '<ellipse cx="196" cy="186" rx="22" ry="34" transform="rotate(-24 196 186)" fill="#F3C44F" stroke="#1F2A4D" stroke-width="5.5"/>' +
+          '<path d="M122 82 Q130 56 140 80 Q150 64 148 86" fill="#F7D774" stroke="#1F2A4D" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<ellipse cx="130" cy="166" rx="72" ry="82" fill="#F7D774" stroke="#1F2A4D" stroke-width="5.5"/>' +
+          '<ellipse cx="130" cy="204" rx="46" ry="36" fill="#FFF8DF"/>' +
+          '<polygon points="118,148 142,148 130,164" fill="#FB8C00" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>';
+        mouth = mood === 'happy'
+          ? '<path d="M120 165 Q130 176 140 165" fill="none" stroke="#1F2A4D" stroke-width="4" stroke-linecap="round"/>'
+          : '';
+      }
+
+      return '<svg viewBox="0 0 260 260" class="sc-animal-svg" aria-hidden="true">' +
+        '<ellipse cx="130" cy="248" rx="76" ry="10" fill="#B9D7D8"/>' +
+        bodySvg +
+        '<ellipse cx="86" cy="' + (faceY + 12) + '" rx="12" ry="7" fill="#FF8A80" opacity="0.72"/>' +
+        '<ellipse cx="174" cy="' + (faceY + 12) + '" rx="12" ry="7" fill="#FF8A80" opacity="0.72"/>' +
+        eyes + mouth + cheerStars + sweat +
+      '</svg>';
+    }
+
+    // 顏料瓶 SVG（瓶身托盤與拖曳幽靈共用）
+    function buildBottleSvg(p) {
+      var bodyStroke = '#1F2A4D';
+      var liquidFill = p.hex;
+      var innerBorder = p.key === 'white'
+        ? '<rect x="18" y="28" width="44" height="52" rx="12" fill="#F4F8FA" stroke="#B0BEC5" stroke-width="2"/>'
+        : '';
+      return '<svg viewBox="0 0 80 88" aria-hidden="true">' +
+        '<g stroke="' + bodyStroke + '" stroke-width="4.5" stroke-linejoin="round">' +
+          '<rect x="26" y="4" width="28" height="14" rx="5" fill="' + p.cap + '"/>' +
+          '<rect x="22" y="16" width="36" height="10" rx="4" fill="#FFFBEF"/>' +
+          '<rect x="14" y="24" width="52" height="58" rx="14" fill="' + liquidFill + '"/>' +
+        '</g>' +
+        innerBorder +
+        '<path d="M24 34 L24 68" stroke="' + p.shine + '" stroke-width="5" stroke-linecap="round" opacity="0.75"/>' +
+        '<rect x="24" y="42" width="32" height="22" rx="6" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="3"/>' +
+        '<circle cx="40" cy="53" r="6" fill="' + p.hex + '" stroke="#1F2A4D" stroke-width="2.5"/>' +
+      '</svg>';
+    }
+
+    // 四關 120×120 正方形縮圖（給開始畫面關卡卡片用）
+    var LEVEL_THUMBS = {
+      pumpkin:
+        '<svg viewBox="0 0 120 120">' +
+          '<path d="M60 32 C62 18 72 14 78 18" fill="none" stroke="#1F2A4D" stroke-width="6" stroke-linecap="round"/>' +
+          '<path d="M62 28 C76 16 94 22 88 34 C80 38 68 35 62 28 Z" fill="#43A047" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>' +
+          '<ellipse cx="38" cy="70" rx="22" ry="30" fill="#FB8C00" stroke="#1F2A4D" stroke-width="5"/>' +
+          '<ellipse cx="82" cy="70" rx="22" ry="30" fill="#FB8C00" stroke="#1F2A4D" stroke-width="5"/>' +
+          '<ellipse cx="60" cy="71" rx="22" ry="33" fill="#FB8C00" stroke="#1F2A4D" stroke-width="5"/>' +
+          '<circle cx="51" cy="68" r="3.8" fill="#1F2A4D"/><circle cx="69" cy="68" r="3.8" fill="#1F2A4D"/>' +
+          '<path d="M51 79 Q60 87 69 79" fill="none" stroke="#1F2A4D" stroke-width="4" stroke-linecap="round"/>' +
+        '</svg>',
+      frog:
+        '<svg viewBox="0 0 120 120">' +
+          '<ellipse cx="60" cy="96" rx="44" ry="12" fill="#81C784" stroke="#1F2A4D" stroke-width="4.5"/>' +
+          '<circle cx="38" cy="36" r="15" fill="#43A047" stroke="#1F2A4D" stroke-width="5"/>' +
+          '<circle cx="82" cy="36" r="15" fill="#43A047" stroke="#1F2A4D" stroke-width="5"/>' +
+          '<ellipse cx="60" cy="68" rx="38" ry="30" fill="#43A047" stroke="#1F2A4D" stroke-width="5"/>' +
+          '<ellipse cx="60" cy="78" rx="22" ry="15" fill="#FFF9C4"/>' +
+          '<circle cx="38" cy="36" r="8" fill="#FFFFFF" stroke="#1F2A4D" stroke-width="3.5"/><circle cx="38" cy="36" r="3.8" fill="#1F2A4D"/>' +
+          '<circle cx="82" cy="36" r="8" fill="#FFFFFF" stroke="#1F2A4D" stroke-width="3.5"/><circle cx="82" cy="36" r="3.8" fill="#1F2A4D"/>' +
+          '<path d="M44 62 Q60 74 76 62" fill="none" stroke="#1F2A4D" stroke-width="4.5" stroke-linecap="round"/>' +
+        '</svg>',
+      grape:
+        '<svg viewBox="0 0 120 120">' +
+          '<path d="M60 18 L60 36" stroke="#6D4C41" stroke-width="6" stroke-linecap="round"/>' +
+          '<path d="M60 28 C76 14 96 20 88 34 C78 38 66 34 60 28 Z" fill="#43A047" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>' +
+          '<g fill="#8E24AA" stroke="#1F2A4D" stroke-width="4.5">' +
+            '<circle cx="42" cy="48" r="13"/><circle cx="60" cy="48" r="13"/><circle cx="78" cy="48" r="13"/>' +
+            '<circle cx="48" cy="67" r="13"/><circle cx="72" cy="67" r="13"/>' +
+            '<circle cx="60" cy="86" r="13"/>' +
+          '</g>' +
+          '<circle cx="38" cy="44" r="3" fill="#E1BEE7"/><circle cx="56" cy="44" r="3" fill="#E1BEE7"/><circle cx="74" cy="44" r="3" fill="#E1BEE7"/>' +
+        '</svg>',
+      sky:
+        '<svg viewBox="0 0 120 120">' +
+          '<rect x="10" y="14" width="100" height="92" rx="18" fill="#90CAF9" stroke="#1F2A4D" stroke-width="5"/>' +
+          '<circle cx="36" cy="38" r="14" fill="#FDD835" stroke="#1F2A4D" stroke-width="4"/>' +
+          '<path d="M46 80 H88 A12 12 0 0 0 88 56 A18 18 0 0 0 54 52 A14 14 0 0 0 46 80 Z" fill="#FFFFFF" stroke="#1F2A4D" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<path d="M22 86 H48 A9 9 0 0 0 48 68 A12 12 0 0 0 26 66 A10 10 0 0 0 22 86 Z" fill="#FFFFFF" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>' +
+        '</svg>'
+    };
+
+    // 介面線條 SVG 小圖示（絕不使用 emoji）
+    var ICONS = {
+      pour: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L14 4 L22 12 L13 20 Z"/><path d="M22 15 C22 15 26 20 26 22.5 A4 4 0 1 1 18 22.5 C18 20 22 15 22 15 Z" fill="currentColor"/></svg>',
+      reset: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 14 A9 9 0 1 1 8 21"/><polyline points="4 8 5 14 11 13"/></svg>',
+      spark: '<svg viewBox="0 0 22 22" width="18" height="18" fill="#FFB627" stroke="#1F2A4D" stroke-width="2" stroke-linejoin="round"><path d="M11 2 L13.6 8.2 L20 11 L13.6 13.8 L11 20 L8.4 13.8 L2 11 L8.4 8.2 Z"/></svg>'
+    };
+
+    /* =========================================================================
+       物件線稿與上色 Canvas 繪製（同時供白畫布顯示與 api.finish 輸出高畫質作品圖）
+       ========================================================================= */
+    function drawArtwork(ctx, size, artId, fillHex, fillProgress) {
+      var s = size / 400; // 以 400×400 為設計基準，自動縮放到預覽或 640 匯出尺寸
+      var INK = '#1F2A4D';
+      var prog = fillHex ? Math.max(0, Math.min(1, fillProgress)) : 0;
+
+      ctx.save();
+      ctx.scale(s, s);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // 純白畫紙底
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, 400, 400);
+
+      // 輔助函式：先填純白（未上色時可畫淡虛紋），再依進度從上往下填上鍋裡的顏色
+      function paintShape(definePathFn) {
+        ctx.save();
+        definePathFn();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        if (fillHex && prog > 0) {
+          ctx.save();
+          ctx.clip();
+          ctx.fillStyle = fillHex;
+          ctx.fillRect(0, 0, 400, 400 * prog);
+          ctx.restore();
+        } else {
+          // 尚未上色時加上非常淡的斜線提示「這裡等著上色」
+          ctx.save();
+          ctx.clip();
+          ctx.strokeStyle = '#E5EEF0';
+          ctx.lineWidth = 4;
+          for (var d = -400; d < 800; d += 24) {
+            ctx.beginPath();
+            ctx.moveTo(d, 0);
+            ctx.lineTo(d + 400, 400);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 9;
+        definePathFn();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (artId === 'pumpkin') {
+        // 地面淡影
+        ctx.fillStyle = '#EAF3F4';
+        ctx.beginPath();
+        ctx.ellipse(200, 344, 132, 18, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 捲鬚與綠葉配件
+        ctx.strokeStyle = '#2E7D32';
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.moveTo(188, 102);
+        ctx.bezierCurveTo(150, 74, 126, 94, 142, 114);
+        ctx.stroke();
+
+        ctx.fillStyle = '#66BB6A';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(206, 96);
+        ctx.bezierCurveTo(246, 56, 304, 72, 286, 112);
+        ctx.bezierCurveTo(260, 124, 226, 116, 206, 96);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 南瓜蒂頭
+        ctx.fillStyle = '#6D4C41';
+        ctx.beginPath();
+        ctx.moveTo(184, 122);
+        ctx.quadraticCurveTo(188, 66, 218, 56);
+        ctx.lineTo(228, 74);
+        ctx.quadraticCurveTo(208, 86, 212, 122);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 三瓣大南瓜（主要上色區）
+        paintShape(function () {
+          ctx.beginPath();
+          ctx.ellipse(130, 228, 72, 104, -0.06, 0, Math.PI * 2);
+        });
+        paintShape(function () {
+          ctx.beginPath();
+          ctx.ellipse(270, 228, 72, 104, 0.06, 0, Math.PI * 2);
+        });
+        paintShape(function () {
+          ctx.beginPath();
+          ctx.ellipse(200, 232, 74, 112, 0, 0, Math.PI * 2);
+        });
+
+        // 高光與可愛微笑臉
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        ctx.arc(178, 224, 52, Math.PI * 1.12, Math.PI * 1.42);
+        ctx.stroke();
+
+        ctx.fillStyle = INK;
+        ctx.beginPath(); ctx.arc(174, 224, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(226, 224, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath(); ctx.arc(177, 221, 3.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(229, 221, 3.2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,138,128,0.75)';
+        ctx.beginPath(); ctx.ellipse(152, 242, 13, 8, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(248, 242, 13, 8, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 7.5;
+        ctx.beginPath();
+        ctx.moveTo(178, 250);
+        ctx.quadraticCurveTo(200, 272, 222, 250);
+        ctx.stroke();
+      } else if (artId === 'frog') {
+        // 荷葉底座
+        ctx.fillStyle = '#A5D6A7';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.ellipse(200, 326, 152, 34, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 青蛙後腿（主要上色區）
+        paintShape(function () {
+          ctx.beginPath();
+          ctx.ellipse(98, 286, 46, 32, -0.22, 0, Math.PI * 2);
+        });
+        paintShape(function () {
+          ctx.beginPath();
+          ctx.ellipse(302, 286, 46, 32, 0.22, 0, Math.PI * 2);
+        });
+
+        // 青蛙大眼睛外框＋圓胖身體（主要上色區）
+        paintShape(function () {
+          ctx.beginPath();
+          ctx.arc(132, 128, 46, 0, Math.PI * 2);
+        });
+        paintShape(function () {
+          ctx.beginPath();
+          ctx.arc(268, 128, 46, 0, Math.PI * 2);
+        });
+        paintShape(function () {
+          ctx.beginPath();
+          ctx.ellipse(200, 232, 122, 96, 0, 0, Math.PI * 2);
+        });
+
+        // 奶黃小肚皮
+        ctx.fillStyle = '#FFF9C4';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 6.5;
+        ctx.beginPath();
+        ctx.ellipse(200, 266, 72, 48, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 眼白與瞳孔
+        [132, 268].forEach(function (cx) {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.strokeStyle = INK;
+          ctx.lineWidth = 7;
+          ctx.beginPath(); ctx.arc(cx, 128, 27, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = INK;
+          ctx.beginPath(); ctx.arc(cx, 128, 13, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath(); ctx.arc(cx + 5, 122, 4.8, 0, Math.PI * 2); ctx.fill();
+        });
+
+        // 腮紅與大微笑
+        ctx.fillStyle = 'rgba(255,138,128,0.72)';
+        ctx.beginPath(); ctx.ellipse(122, 206, 17, 10, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(278, 206, 17, 10, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(148, 198);
+        ctx.quadraticCurveTo(200, 234, 252, 198);
+        ctx.stroke();
+      } else if (artId === 'grape') {
+        // 淡影
+        ctx.fillStyle = '#EAF3F4';
+        ctx.beginPath();
+        ctx.ellipse(200, 358, 96, 15, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 果梗與葡萄葉
+        ctx.strokeStyle = '#6D4C41';
+        ctx.lineWidth = 12;
+        ctx.beginPath();
+        ctx.moveTo(200, 48);
+        ctx.lineTo(200, 124);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#43A047';
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.moveTo(192, 86);
+        ctx.bezierCurveTo(140, 56, 108, 76, 126, 102);
+        ctx.stroke();
+
+        ctx.fillStyle = '#66BB6A';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(202, 86);
+        ctx.bezierCurveTo(244, 34, 314, 52, 294, 102);
+        ctx.bezierCurveTo(266, 118, 224, 108, 202, 86);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 10 顆葡萄果實（主要上色區）
+        var berries = [
+          [128, 152], [176, 146], [224, 146], [272, 152],
+          [150, 204], [200, 200], [250, 204],
+          [174, 256], [226, 256],
+          [200, 306]
+        ];
+        berries.forEach(function (pt) {
+          paintShape(function () {
+            ctx.beginPath();
+            ctx.arc(pt[0], pt[1], 36, 0, Math.PI * 2);
+          });
+          // 每顆小高光
+          ctx.fillStyle = 'rgba(255,255,255,0.62)';
+          ctx.beginPath();
+          ctx.arc(pt[0] - 12, pt[1] - 12, 8, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // 中央那顆葡萄畫張可愛小笑臉
+        ctx.fillStyle = INK;
+        ctx.beginPath(); ctx.arc(189, 198, 4.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(211, 198, 4.5, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(191, 209);
+        ctx.quadraticCurveTo(200, 218, 209, 209);
+        ctx.stroke();
+      } else {
+        // 淺藍天空：大圓角天空畫框（主要上色區）
+        paintShape(function () {
+          var x = 28, y = 34, w = 344, h = 332, r = 34;
+          ctx.beginPath();
+          ctx.moveTo(x + r, y);
+          ctx.lineTo(x + w - r, y);
+          ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+          ctx.lineTo(x + w, y + h - r);
+          ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+          ctx.lineTo(x + r, y + h);
+          ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+          ctx.lineTo(x, y + r);
+          ctx.quadraticCurveTo(x, y, x + r, y);
+          ctx.closePath();
+        });
+
+        // 暖黃小太陽與光芒
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 7;
+        for (var a = 0; a < 8; a++) {
+          var rad = a * Math.PI / 4;
+          ctx.beginPath();
+          ctx.moveTo(116 + Math.cos(rad) * 48, 122 + Math.sin(rad) * 48);
+          ctx.lineTo(116 + Math.cos(rad) * 62, 122 + Math.sin(rad) * 62);
+          ctx.stroke();
+        }
+        ctx.fillStyle = '#FDD835';
+        ctx.beginPath();
+        ctx.arc(116, 122, 38, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = INK;
+        ctx.beginPath(); ctx.arc(104, 118, 4.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(128, 118, 4.5, 0, Math.PI * 2); ctx.fill();
+        ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(106, 132); ctx.quadraticCurveTo(116, 141, 126, 132); ctx.stroke();
+
+        // 遠方小海鷗
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(222, 110); ctx.quadraticCurveTo(234, 96, 246, 110);
+        ctx.quadraticCurveTo(258, 96, 270, 110);
+        ctx.stroke();
+
+        // 兩朵蓬鬆大白雲
+        function drawCloud(cx, cy, scale) {
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.scale(scale, scale);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.strokeStyle = INK;
+          ctx.lineWidth = 8 / scale;
+          ctx.beginPath();
+          ctx.moveTo(-66, 28);
+          ctx.lineTo(66, 28);
+          ctx.arc(64, 4, 24, Math.PI * 0.5, -Math.PI * 0.45, true);
+          ctx.arc(22, -16, 36, -Math.PI * 0.05, Math.PI * 1.15, true);
+          ctx.arc(-28, -8, 28, -Math.PI * 0.25, Math.PI * 1.05, true);
+          ctx.arc(-62, 6, 22, -Math.PI * 0.65, Math.PI * 0.5, true);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+        }
+        drawCloud(254, 238, 1.05);
+        drawCloud(124, 294, 0.78);
+      }
+
+      ctx.restore();
+    }
+
+    // 匯出 640×640 乾淨上色成品 canvas（傳給 api.finish 的 image）
+    function exportArtworkCanvas(artId, fillHex) {
+      var out = document.createElement('canvas');
+      out.width = SCENE_CONFIG.EXPORT_SIZE;
+      out.height = SCENE_CONFIG.EXPORT_SIZE;
+      var ctx = out.getContext('2d');
+      drawArtwork(ctx, SCENE_CONFIG.EXPORT_SIZE, artId, fillHex, 1);
+      return out;
+    }
+
+    /* =========================================================================
+       掛載畫畫島共用外殼（mount 欄位完全照本關設定一字不改）
+       ========================================================================= */
+    ArtIsland.mount({
+      unit: 24,
+      title: '調色魔法鍋',
+      grade: '1–2 年級',
+      howto: '把紅、黃、藍顏料拖進大鍋，煮出客人點的顏色！',
+      zhuyin: true,
+      teach: '三原色混色、深淺變化｜生活課程 2-I-1',
+      submit: true,
+      hero: buildCauldronSvg({ isHero: true, liquidHex: '#FB8C00', mood: 'happy' }),
+      levels: SCENE_CONFIG.LEVELS.map(function (lv) {
+        return { name: lv.name, thumb: LEVEL_THUMBS[lv.id] };
+      }),
+
+      scene: function (api) {
+        // 場景執行期狀態與資源登記（stop 時全部歸零）
+        var rafId = 0;
+        var lastTs = 0;
+        var timers = [];
+        var cleanups = [];
+
+        var level = null;
+        var counts = null;
+        var wrongTries = 0;
+        var locked = false;
+        var drag = null;
+        var bubbles = [];
+        var starsFx = [];
+        var pourAnim = null;     // { hex, startTs, duration, onDone }
+        var paintedHex = null;   // 目前塗在右邊畫布上的顏色
+
+        // DOM 參考
+        var els = {};
+
+        function addTimer(fn, ms) {
+          var id = window.setTimeout(function () {
+            timers = timers.filter(function (t) { return t !== id; });
+            fn();
+          }, ms);
+          timers.push(id);
+          return id;
+        }
+
+        function on(target, type, handler, opts) {
+          target.addEventListener(type, handler, opts);
+          cleanups.push(function () {
+            target.removeEventListener(type, handler, opts);
+          });
+        }
+
+        function stopAll() {
+          if (rafId) {
+            window.cancelAnimationFrame(rafId);
+            rafId = 0;
+          }
+          timers.forEach(function (id) { window.clearTimeout(id); });
+          timers = [];
+          cleanups.forEach(function (fn) { fn(); });
+          cleanups = [];
+          if (drag && drag.ghost && drag.ghost.parentNode) {
+            drag.ghost.parentNode.removeChild(drag.ghost);
+          }
+          drag = null;
+          bubbles = [];
+          starsFx = [];
+          pourAnim = null;
+          els = {};
+        }
+
+        function resetCounts() {
+          counts = { red: 0, yellow: 0, blue: 0, white: 0, black: 0 };
+        }
+
+        // 把螢幕指標座標換算回舞台 1366×595 內部座標
+        function toStagePoint(clientX, clientY) {
+          var rect = api.field.getBoundingClientRect();
+          var sx = api.field.offsetWidth / (rect.width || 1);
+          var sy = api.field.offsetHeight / (rect.height || 1);
+          return {
+            x: (clientX - rect.left) * sx,
+            y: (clientY - rect.top) * sy
+          };
+        }
+
+        // 判斷指標是否在魔法鍋投放區內（含容錯邊距）
+        function isOverPot(clientX, clientY) {
+          if (!els.potDrop) return false;
+          var rect = els.potDrop.getBoundingClientRect();
+          var fieldRect = api.field.getBoundingClientRect();
+          var scale = (fieldRect.width || SCENE_CONFIG.STAGE_W) / SCENE_CONFIG.STAGE_W;
+          var pad = SCENE_CONFIG.DROP_PADDING * scale;
+          return clientX >= rect.left - pad &&
+                 clientX <= rect.right + pad &&
+                 clientY >= rect.top - pad &&
+                 clientY <= rect.bottom + pad;
+        }
+
+        // 觸發一次性的 CSS 回饋動畫
+        function triggerAnim(el, cls) {
+          if (!el || isReducedMotion()) return;
+          el.classList.remove(cls);
+          void el.offsetWidth;
+          el.classList.add(cls);
+        }
+
+        // 更新客人角色表情
+        function setGuestMood(mood) {
+          if (!els.animalBox) return;
+          els.animalBox.innerHTML = buildAnimalSvg(level.guestType, mood);
+          var svg = els.animalBox.querySelector('.sc-animal-svg');
+          if (mood === 'happy') triggerAnim(svg, 'sc-anim-dance');
+          else if (mood === 'wrong' || mood === 'mud') triggerAnim(svg, 'sc-anim-shake');
+        }
+
+        // 更新客人回饋卡片（同時使用 ✓／✗ 符號與文字，不只靠顏色）
+        function setFeedback(kind, title, body) {
+          if (!els.feedback) return;
+          els.feedback.className = 'ai-panel sc-feedback' + (kind ? ' sc-' + kind : '');
+          var mark = kind === 'ok' ? '✓' : (kind === 'bad' ? '✗' : '!');
+          els.feedback.innerHTML =
+            '<div class="sc-fb-head"><span class="sc-fb-mark" aria-hidden="true">' + mark + '</span><span>' + title + '</span></div>' +
+            '<div class="sc-fb-body">' + body + '</div>';
+        }
+
+        // 產生加顏料瞬間的泡泡粒子
+        function spawnBubbles(hex, count) {
+          if (isReducedMotion()) return;
+          for (var i = 0; i < count; i++) {
+            bubbles.push({
+              x: 92 + Math.random() * 160,
+              y: 92 + Math.random() * 14,
+              vx: (Math.random() - 0.5) * 24,
+              vy: -(48 + Math.random() * 54),
+              r: 6 + Math.random() * 9,
+              life: 0,
+              maxLife: 0.65 + Math.random() * 0.55,
+              hex: hex
+            });
+          }
+          ensureRaf();
+        }
+
+        // 產生答對慶祝星星粒子
+        function spawnStars() {
+          if (isReducedMotion()) return;
+          var colors = ['#FFB627', '#FDD835', '#FB8C00', '#43A047', '#2160C4'];
+          for (var i = 0; i < 14; i++) {
+            var angle = -Math.PI * (0.15 + Math.random() * 0.7);
+            var speed = 90 + Math.random() * 130;
+            starsFx.push({
+              x: 172 + (Math.random() - 0.5) * 60,
+              y: 88,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              size: 8 + Math.random() * 7,
+              rot: Math.random() * Math.PI,
+              vrot: (Math.random() - 0.5) * 6,
+              life: 0,
+              maxLife: 0.9 + Math.random() * 0.4,
+              hex: colors[i % colors.length]
+            });
+          }
+          ensureRaf();
+        }
+
+        // 啟動 rAF 迴圈（只在有動畫進行時才運轉，節省資源且護眼）
+        function ensureRaf() {
+          if (rafId) return;
+          lastTs = window.performance.now();
+          rafId = window.requestAnimationFrame(tick);
+        }
+
+        function tick(now) {
+          rafId = 0;
+          var dt = Math.min(0.05, Math.max(0.001, (now - lastTs) / 1000));
+          lastTs = now;
+
+          var needMore = false;
+
+          // 1. 畫魔法鍋泡泡與慶祝星星
+          if (els.potFx) {
+            var ctx = els.potFx.getContext('2d');
+            ctx.clearRect(0, 0, els.potFx.width, els.potFx.height);
+
+            if (bubbles.length > 0) {
+              var nextBubbles = [];
+              for (var i = 0; i < bubbles.length; i++) {
+                var b = bubbles[i];
+                b.life += dt;
+                if (b.life >= b.maxLife) continue;
+                b.x += b.vx * dt;
+                b.y += b.vy * dt;
+                var alpha = 1 - b.life / b.maxLife;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = b.hex;
+                ctx.strokeStyle = '#1F2A4D';
+                ctx.lineWidth = 2.6;
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(b.x - b.r * 0.3, b.y - b.r * 0.3, Math.max(1.8, b.r * 0.28), 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                nextBubbles.push(b);
+              }
+              bubbles = nextBubbles;
+              if (bubbles.length > 0) needMore = true;
+            }
+
+            if (starsFx.length > 0) {
+              var nextStars = [];
+              for (var j = 0; j < starsFx.length; j++) {
+                var st = starsFx[j];
+                st.life += dt;
+                if (st.life >= st.maxLife) continue;
+                st.vy += 170 * dt;
+                st.x += st.vx * dt;
+                st.y += st.vy * dt;
+                st.rot += st.vrot * dt;
+                var a = 1 - st.life / st.maxLife;
+                ctx.save();
+                ctx.globalAlpha = a;
+                ctx.translate(st.x, st.y);
+                ctx.rotate(st.rot);
+                ctx.fillStyle = st.hex;
+                ctx.strokeStyle = '#1F2A4D';
+                ctx.lineWidth = 2.2;
+                ctx.beginPath();
+                for (var k = 0; k < 10; k++) {
+                  var rad = k * Math.PI / 5;
+                  var rr = k % 2 === 0 ? st.size : st.size * 0.45;
+                  if (k === 0) ctx.moveTo(Math.cos(rad) * rr, Math.sin(rad) * rr);
+                  else ctx.lineTo(Math.cos(rad) * rr, Math.sin(rad) * rr);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+                nextStars.push(st);
+              }
+              starsFx = nextStars;
+              if (starsFx.length > 0) needMore = true;
+            }
+          }
+
+          // 2. 右側畫布倒顏料填色動畫
+          if (pourAnim && els.artCanvas) {
+            var elapsed = now - pourAnim.startTs;
+            var prog = Math.min(1, elapsed / pourAnim.duration);
+            var eased = 1 - Math.pow(1 - prog, 3);
+            var artCtx = els.artCanvas.getContext('2d');
+            drawArtwork(artCtx, els.artCanvas.width, level.id, pourAnim.hex, eased);
+            if (prog < 1) {
+              needMore = true;
+            } else {
+              var doneFn = pourAnim.onDone;
+              pourAnim = null;
+              if (doneFn) doneFn();
+            }
+          }
+
+          if (needMore) {
+            rafId = window.requestAnimationFrame(tick);
+          }
+        }
+
+        // 重繪魔法鍋外觀、泥巴怪與配方小卡
+        function renderPotState(potMoodOverride) {
+          var mix = mixPigments(counts);
+          var mood = potMoodOverride || (mix.isMud ? 'mud' : (mix.isEmpty ? 'smile' : 'happy'));
+          els.potMount.innerHTML = buildCauldronSvg({
+            isHero: false,
+            liquidHex: mix.hex,
+            mood: mood
+          });
+
+          // 泥巴怪與泥巴色提示卡
+          if (mix.isMud) {
+            els.mudMonster.classList.add('sc-show');
+            els.mudAlert.classList.add('sc-show');
+            els.recipeCard.style.display = 'none';
+          } else {
+            els.mudMonster.classList.remove('sc-show');
+            els.mudAlert.classList.remove('sc-show');
+            els.recipeCard.style.display = 'flex';
+          }
+
+          // 組合「鍋裡加了：紅 1、黃 1」
+          var parts = [];
+          SCENE_CONFIG.PIGMENTS.forEach(function (p) {
+            var n = counts[p.key];
+            if (n > 0) {
+              parts.push(
+                '<span class="sc-chip"><i class="sc-dot" style="background:' + p.hex + '"></i>' +
+                p.name + ' <b class="ai-num">' + n + '</b></span>'
+              );
+            }
+          });
+          els.addedList.innerHTML = parts.length > 0
+            ? parts.join('<span>、</span>')
+            : '<span style="color:var(--ink-2)">還沒放顏料</span>';
+
+          els.mixSwatch.style.background = mix.hex;
+          els.mixName.textContent = mix.name;
+          els.clearBtn.disabled = mix.isEmpty || locked;
+        }
+
+        // 加一份指定顏料進大鍋
+        function addPigment(key) {
+          if (locked) return;
+          var p = SCENE_CONFIG.PIGMENTS.filter(function (x) { return x.key === key; })[0];
+          if (!p) return;
+
+          if (counts[key] >= SCENE_CONFIG.MAX_DROPS_PER_COLOR) {
+            setFeedback('info', '這瓶加很多了', p.name + '色已經放了 ' + SCENE_CONFIG.MAX_DROPS_PER_COLOR + ' 份，可以換別的顏色或倒掉重來！');
+            return;
+          }
+
+          counts[key] += 1;
+          var mix = mixPigments(counts);
+          renderPotState();
+          triggerAnim(els.potDrop, 'sc-anim-pop');
+          spawnBubbles(mix.hex, mix.isMud ? 10 : 8);
+
+          if (mix.isMud) {
+            setGuestMood('mud');
+            setFeedback('bad', '煮出泥巴色了', '紅、黃、藍三種都放進去會變泥巴色！按「倒掉重來」試試。');
+          } else {
+            setGuestMood('wait');
+            setFeedback('info', '加入 ' + p.name + '色 1 份', '現在鍋裡混出來是「' + mix.name + '」，好了就按右邊的「倒到圖上」！');
+          }
+        }
+
+        // 清空鍋子重來
+        function handleClearPot() {
+          if (locked) return;
+          resetCounts();
+          renderPotState('smile');
+          setGuestMood('wait');
+          setFeedback('info', '鍋子洗乾淨了', '把上面的顏料瓶按住，拖進大魔法鍋裡吧！');
+        }
+
+        // 按下「倒到圖上」
+        function handlePour() {
+          if (locked) return;
+          var mix = mixPigments(counts);
+
+          // 空鍋不算錯，溫和提醒即可
+          if (mix.isEmpty) {
+            triggerAnim(els.potDrop, 'sc-anim-shake');
+            setFeedback('info', '鍋子還是空的喔', '先把上面的顏料瓶拖進大鍋，再按「倒到圖上」！');
+            return;
+          }
+
+          locked = true;
+          els.pourBtn.disabled = true;
+          els.clearBtn.disabled = true;
+          paintedHex = mix.hex;
+
+          var finishEvaluation = function () {
+            if (isTargetMatch(level, mix)) {
+              // 答對：客人開心跳舞道謝＋冒星星＋呼叫 api.finish
+              setGuestMood('happy');
+              renderPotState('happy');
+              spawnStars();
+              setFeedback('ok', '太棒了，謝謝你！', level.praise);
+
+              var stars = wrongTries <= SCENE_CONFIG.STARS.THREE_MAX_WRONG
+                ? 3
+                : (wrongTries <= SCENE_CONFIG.STARS.TWO_MAX_WRONG ? 2 : 1);
+              var exportImg = exportArtworkCanvas(level.id, mix.hex);
+              var delay = isReducedMotion() ? SCENE_CONFIG.FINISH_DELAY_REDUCED : SCENE_CONFIG.FINISH_DELAY_MS;
+
+              addTimer(function () {
+                api.finish({
+                  stars: stars,
+                  image: exportImg,
+                  praise: level.praise,
+                  caption: level.name
+                });
+              }, delay);
+            } else {
+              // 顏色不對也過關（老師 11-21 要求畫畫島寬鬆）：客人照樣收下，給 1 顆星，稱讚句說出正確配方讓孩子學到
+              wrongTries += 1;
+              setGuestMood('happy');
+              var recipe = { orange: '紅＋黃', green: '黃＋藍', purple: '紅＋藍', lightBlue: '藍＋白' }[level.targetKey] || '';
+              var kindPraise = '這個顏色也很特別，客人收下了！' + (recipe ? level.targetColorName + '是「' + recipe + '」，下次試試看！' : '');
+              setFeedback('info', '客人收下了！', kindPraise);
+              var wrongImg = exportArtworkCanvas(level.id, mix.hex);
+              addTimer(function () {
+                api.finish({ stars: 1, image: wrongImg, praise: kindPraise, caption: level.name });
+              }, isReducedMotion() ? SCENE_CONFIG.FINISH_DELAY_REDUCED : SCENE_CONFIG.FINISH_DELAY_MS);
+            }
+          };
+
+          if (isReducedMotion()) {
+            var artCtx = els.artCanvas.getContext('2d');
+            drawArtwork(artCtx, els.artCanvas.width, level.id, mix.hex, 1);
+            finishEvaluation();
+          } else {
+            pourAnim = {
+              hex: mix.hex,
+              startTs: window.performance.now(),
+              duration: SCENE_CONFIG.POUR_DURATION_MS,
+              onDone: finishEvaluation
+            };
+            ensureRaf();
+          }
+        }
+
+        // 綁定顏料瓶 Pointer Events 拖曳
+        function bindBottleDrag(bottleEl, pigment) {
+          on(bottleEl, 'pointerdown', function (e) {
+            if (locked || drag) return;
+            if (e.button !== undefined && e.button !== 0 && e.pointerType === 'mouse') return;
+            e.preventDefault();
+
+            try { bottleEl.setPointerCapture(e.pointerId); } catch (err) {}
+            bottleEl.classList.add('sc-dragging');
+
+            var ghost = document.createElement('div');
+            ghost.className = 'sc-drag-ghost';
+            ghost.innerHTML = buildBottleSvg(pigment);
+            els.wrap.appendChild(ghost);
+
+            var pt = toStagePoint(e.clientX, e.clientY);
+            ghost.style.transform = 'translate(' + (pt.x - 42) + 'px,' + (pt.y - 46) + 'px) rotate(-18deg) scale(1.08)';
+
+            drag = {
+              pointerId: e.pointerId,
+              pigment: pigment,
+              bottleEl: bottleEl,
+              ghost: ghost,
+              startX: e.clientX,
+              startY: e.clientY,
+              moved: false,
+              over: false
+            };
+          });
+
+          on(bottleEl, 'pointermove', function (e) {
+            if (!drag || drag.pointerId !== e.pointerId) return;
+            e.preventDefault();
+            var dx = e.clientX - drag.startX;
+            var dy = e.clientY - drag.startY;
+            if (dx * dx + dy * dy > 36) drag.moved = true;
+
+            var pt = toStagePoint(e.clientX, e.clientY);
+            var over = isOverPot(e.clientX, e.clientY);
+            var tilt = over ? -42 : -18;
+            drag.ghost.style.transform = 'translate(' + (pt.x - 42) + 'px,' + (pt.y - 46) + 'px) rotate(' + tilt + 'deg) scale(1.08)';
+
+            if (over !== drag.over) {
+              drag.over = over;
+              els.potDrop.classList.toggle('sc-drop-ready', over);
+              renderPotState(over ? 'open' : null);
+            }
+          });
+
+          function endDrag(e, cancelled) {
+            if (!drag || drag.pointerId !== e.pointerId) return;
+            var cur = drag;
+            drag = null;
+
+            try { cur.bottleEl.releasePointerCapture(e.pointerId); } catch (err) {}
+            cur.bottleEl.classList.remove('sc-dragging');
+            els.potDrop.classList.remove('sc-drop-ready');
+            if (cur.ghost && cur.ghost.parentNode) {
+              cur.ghost.parentNode.removeChild(cur.ghost);
+            }
+
+            if (cancelled) {
+              renderPotState();
+              return;
+            }
+
+            if (isOverPot(e.clientX, e.clientY)) {
+              addPigment(cur.pigment.key);
+            } else {
+              renderPotState();
+              if (!cur.moved) {
+                // 輕點時引導孩子練習拖曳放開
+                setFeedback('info', '按住拖進大鍋喔！', '按住「' + cur.pigment.name + '」顏料瓶，拖到中間大魔法鍋上放開！');
+              }
+            }
+          }
+
+          on(bottleEl, 'pointerup', function (e) { endDrag(e, false); });
+          on(bottleEl, 'pointercancel', function (e) { endDrag(e, true); });
+          on(bottleEl, 'lostpointercapture', function (e) { endDrag(e, true); });
+        }
+
+        /* =====================================================================
+           scene.start(levelIndex) 與 scene.stop()
+           ===================================================================== */
+        return {
+          start: function (levelIndex) {
+            stopAll();
+
+            level = SCENE_CONFIG.LEVELS[levelIndex] || SCENE_CONFIG.LEVELS[0];
+            resetCounts();
+            wrongTries = 0;
+            locked = false;
+            paintedHex = null;
+
+            api.quest(level.quest);
+
+            var bottlesHtml = SCENE_CONFIG.PIGMENTS.map(function (p) {
+              return '<button type="button" class="sc-bottle" data-pigment="' + p.key + '" aria-label="拖曳' + p.name + '色顏料">' +
+                buildBottleSvg(p) +
+                '<span class="sc-bottle-name">' + p.name + '</span>' +
+              '</button>';
+            }).join('');
+
+            api.field.innerHTML =
+              '<div class="sc-wrap">' +
+                // 左欄：小動物客人點單與回饋
+                '<div class="sc-guest-col">' +
+                  '<div class="ai-panel sc-order-card">' +
+                    '<div class="sc-order-tag">' + ICONS.spark + '<span>' + level.guestName + '說：</span></div>' +
+                    '<div class="ai-zy sc-order-line">' + level.orderLine + '</div>' +
+                    '<span class="sc-order-tail" aria-hidden="true"></span>' +
+                  '</div>' +
+                  '<div class="sc-animal-box"></div>' +
+                  '<div class="ai-panel sc-feedback sc-info" role="status" aria-live="polite"></div>' +
+                '</div>' +
+
+                // 中欄：5 瓶顏料＋大魔法鍋＋配方卡＋倒掉重來
+                '<div class="sc-pot-col">' +
+                  '<div class="sc-shelf" aria-label="顏料架">' + bottlesHtml + '</div>' +
+                  '<div class="sc-pot-stage">' +
+                    '<div class="sc-pot-drop">' +
+                      '<div class="sc-drop-hint">放開加入鍋裡</div>' +
+                      '<div class="sc-pot-mount"></div>' +
+                      '<div class="sc-mud-monster">' + buildMudMonsterSvg() + '</div>' +
+                      '<canvas class="sc-pot-fx" width="344" height="252"></canvas>' +
+                    '</div>' +
+                  '</div>' +
+                  '<div class="ai-panel sc-recipe-card">' +
+                    '<div class="sc-recipe-row"><span class="sc-recipe-label">鍋裡加了：</span><span class="sc-added-list"></span></div>' +
+                    '<div class="sc-recipe-row"><span class="sc-recipe-label">混出來是：</span><i class="sc-mix-swatch"></i><span class="sc-mix-name"></span></div>' +
+                  '</div>' +
+                  '<div class="sc-mud-alert" role="alert">' +
+                    '<span class="sc-mud-alert-x" aria-hidden="true">✗</span>' +
+                    '<div class="ai-zy">哎呀，煮出泥巴色了！倒掉再試一次。</div>' +
+                  '</div>' +
+                  '<div class="sc-pot-actions">' +
+                    '<button type="button" class="ai-btn sc-clear-btn">' + ICONS.reset + '<span>倒掉重來</span></button>' +
+                  '</div>' +
+                '</div>' +
+
+                // 右欄：白畫布線稿與倒到圖上大按鈕
+                '<div class="sc-art-col">' +
+                  '<div class="ai-board sc-art-board">' +
+                    '<span class="ai-tape" style="left:64px;top:-11px;transform:rotate(-5deg)"></span>' +
+                    '<span class="ai-tape" style="right:64px;top:-11px;transform:rotate(4deg)"></span>' +
+                    '<canvas class="sc-art-canvas" width="396" height="396"></canvas>' +
+                    '<div class="sc-art-label">' + level.artLabel + '</div>' +
+                  '</div>' +
+                  '<button type="button" class="ai-btn go sc-pour-btn">' + ICONS.pour + '<span>倒到圖上</span></button>' +
+                '</div>' +
+              '</div>';
+
+            // 取得 DOM 參考
+            els.wrap = api.field.querySelector('.sc-wrap');
+            els.animalBox = api.field.querySelector('.sc-animal-box');
+            els.feedback = api.field.querySelector('.sc-feedback');
+            els.potDrop = api.field.querySelector('.sc-pot-drop');
+            els.potMount = api.field.querySelector('.sc-pot-mount');
+            els.potFx = api.field.querySelector('.sc-pot-fx');
+            els.mudMonster = api.field.querySelector('.sc-mud-monster');
+            els.recipeCard = api.field.querySelector('.sc-recipe-card');
+            els.mudAlert = api.field.querySelector('.sc-mud-alert');
+            els.addedList = api.field.querySelector('.sc-added-list');
+            els.mixSwatch = api.field.querySelector('.sc-mix-swatch');
+            els.mixName = api.field.querySelector('.sc-mix-name');
+            els.clearBtn = api.field.querySelector('.sc-clear-btn');
+            els.artCanvas = api.field.querySelector('.sc-art-canvas');
+            els.pourBtn = api.field.querySelector('.sc-pour-btn');
+
+            // 初始畫面繪製
+            setGuestMood('wait');
+            renderPotState('smile');
+            setFeedback('info', '開始調色吧！', '按住上面的顏料瓶，拖進中間大魔法鍋裡！');
+            drawArtwork(els.artCanvas.getContext('2d'), els.artCanvas.width, level.id, null, 0);
+
+            // 綁定 5 瓶顏料拖曳與按鈕事件
+            var bottleNodes = api.field.querySelectorAll('.sc-bottle');
+            for (var i = 0; i < bottleNodes.length; i++) {
+              bindBottleDrag(bottleNodes[i], SCENE_CONFIG.PIGMENTS[i]);
+            }
+            on(els.clearBtn, 'click', handleClearPot);
+            on(els.pourBtn, 'click', handlePour);
+          },
+
+          stop: function () {
+            stopAll();
+          }
+        };
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

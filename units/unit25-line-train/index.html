@@ -1,0 +1,2211 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>線條小火車 - 畫畫島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Fredoka:wght@600;700&display=swap">
+  <link rel="stylesheet" href="../../assets/css/art-island.css">
+  <style>
+    /* ===== 場景專屬樣式（全數以 sc- 開頭，不動 .ai- 共用樣式） ===== */
+    .sc-tools {
+      position: absolute;
+      left: 20px;
+      top: 12px;
+      width: 174px;
+      height: 562px;
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-sizing: border-box;
+    }
+    .sc-sec-title {
+      margin: 0;
+      font: 700 16px var(--f-ui);
+      color: var(--ink-2);
+      letter-spacing: 0.02em;
+    }
+    .sc-brush-card {
+      background: var(--blue-soft);
+      border: 3px solid var(--blue);
+      box-shadow: 0 0 0 2px var(--blue);
+      border-radius: 14px;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+    }
+    .sc-brush-check {
+      position: absolute;
+      top: -9px;
+      right: -9px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--blue);
+      border: 2px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sc-brush-name {
+      font: 700 17px var(--f-ui);
+      color: var(--blue);
+      white-space: nowrap;
+    }
+    .sc-tool-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sc-tool-btn {
+      width: 100%;
+      min-height: 52px;
+      padding: 0 10px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .sc-tool-btn:disabled {
+      background: #DDE3EA;
+      border-color: #4B5578;
+      box-shadow: 0 3px 0 #7C86A6;
+      color: #3A4568;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .sc-legend {
+      margin-top: auto;
+      padding: 10px;
+      border-radius: 12px;
+      background: var(--lagoon);
+      border: 2px dashed var(--ink-2);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .sc-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font: 700 16px var(--f-ui);
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    /* 中間白畫布舞台 */
+    .sc-board {
+      position: absolute;
+      left: 212px;
+      top: 12px;
+      width: 808px;
+      height: 562px;
+      box-sizing: border-box;
+    }
+    .sc-canvas-stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 5px;
+      touch-action: none;
+    }
+    .sc-canvas-stage canvas {
+      display: block;
+      touch-action: none;
+    }
+    .sc-fx-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      touch-action: none;
+    }
+
+    /* 右側線條說明、火車回饋與完成按鈕 */
+    .sc-side {
+      position: absolute;
+      left: 1038px;
+      right: 20px;
+      top: 12px;
+      height: 562px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-sizing: border-box;
+    }
+    .sc-line-card {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sc-line-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .sc-line-badge {
+      font-size: 18px;
+      padding: 4px 12px;
+      white-space: nowrap;
+    }
+    .sc-line-preview {
+      width: 112px;
+      height: 36px;
+      background: var(--canvas);
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .sc-feel {
+      margin: 0;
+      font-size: 21px;
+      line-height: 1.55;
+      color: var(--ink);
+    }
+
+    .sc-status-card {
+      padding: 14px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+    }
+    .sc-face-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sc-face-box {
+      width: 58px;
+      height: 52px;
+      border-radius: 12px;
+      background: var(--sun-soft);
+      border: 3px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .sc-state-pill {
+      padding: 5px 12px;
+      border-radius: 999px;
+      border: 2.5px solid var(--ink);
+      font: 700 17px var(--f-ui);
+      background: var(--card);
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .sc-state-pill.sc-ok {
+      background: var(--ok-soft);
+      border-color: var(--ok);
+      color: var(--ok-dk);
+    }
+    .sc-state-pill.sc-warn {
+      background: var(--sun-soft);
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+    .sc-msg-box {
+      background: var(--canvas);
+      border: 2.5px solid var(--ink);
+      border-radius: 12px;
+      padding: 10px 12px;
+      min-height: 76px;
+      display: flex;
+      align-items: center;
+    }
+    .sc-msg {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.5;
+      color: var(--ink);
+    }
+
+    /* 覆蓋率與星級進度 */
+    .sc-meter-wrap {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sc-meter-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font: 700 16px var(--f-ui);
+      color: var(--ink-2);
+    }
+    .sc-meter-val {
+      font-size: 20px;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .sc-bar {
+      position: relative;
+      height: 18px;
+      background: #E8EEF2;
+      border: 2.5px solid var(--ink);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .sc-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--ok);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+    .sc-bar-mark {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2.5px;
+      background: var(--ink);
+      opacity: 0.45;
+    }
+    .sc-stars-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 2px;
+    }
+    .sc-stars-icons {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .sc-stars-hint {
+      font: 700 16px var(--f-ui);
+      color: var(--ink-2);
+      white-space: nowrap;
+    }
+
+    /* 第 4 關自由軌道檢核晶片 */
+    .sc-free-checks {
+      margin-top: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .sc-chip {
+      min-height: 46px;
+      padding: 6px 8px;
+      border-radius: 12px;
+      border: 2.5px solid var(--ink);
+      background: var(--card);
+      color: var(--ink-2);
+      font: 700 16px var(--f-ui);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .sc-chip.sc-chip-ok {
+      background: var(--ok-soft);
+      border-color: var(--ok);
+      color: var(--ok-dk);
+    }
+
+    /* 右下角「完成」大按鈕 */
+    .sc-done {
+      height: 78px;
+      font: 900 30px var(--f-title);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+    .sc-done:disabled {
+      background: #DDE3EA;
+      border-color: #4B5578;
+      box-shadow: 0 5px 0 #7C86A6;
+      color: #3A4568;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .sc-pop {
+      animation: scPop 0.45s cubic-bezier(0.22, 1.35, 0.36, 1);
+    }
+    .sc-shake {
+      animation: scShake 0.4s ease;
+    }
+    @keyframes scPop {
+      0% { transform: scale(0.92); }
+      55% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+    @keyframes scShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px) rotate(-2deg); }
+      65% { transform: translateX(5px) rotate(2deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sc-pop, .sc-shake { animation: none; }
+      .sc-bar-fill { transition: none; }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/art-ui.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    // 注音破音字：接在字後面讓注音粉圓畫輕聲（教育部辭典「房子」「沒關係」末字輕聲）（整合時加，2026-11-21）
+    var ZY_LIGHT = String.fromCodePoint(0xE01E1);
+
+    /* =====================================================================
+     * 集中常數設定：畫布尺寸、筆刷、容錯門檻、星級規則、色票、四關資料
+     * ===================================================================== */
+    var SCENE_CONFIG = {
+      // 畫布實際繪圖尺寸（對應 .sc-board 808×562 扣除 3px×2 邊框）
+      CANVAS_W: 802,
+      CANVAS_H: 556,
+
+      // 筆刷設定：深棕色 14px 鐵軌畫筆
+      BRUSH_COLOR: '#6D4C41',
+      BRUSH_SIZE: 14,
+
+      // 起點月台與終點小房子位置
+      START_X: 78,
+      START_Y: 288,
+      GUIDE_START_X: 126,
+      GUIDE_END_X: 676,
+      END_X: 726,
+      END_Y: 288,
+
+      // 容錯與判定門檻（一年級手不穩，給予寬容範圍）
+      TOLERANCE_PX: 28,        // 虛線取樣點 28px 以內即算畫到；超過 28px 晃一下不扣分
+      GUIDE_SAMPLE_STEP: 12,   // 虛線每 12px 取樣一點
+      DENSE_STEP: 6,           // 筆畫細分間隔，避免滑太快漏判
+      STATION_RADIUS: 68,      // 起點月台與終點小房子判定半徑
+      LINK_GAP_MAX: 48,        // 自由軌道多筆連通判定容許空隙
+      MIN_TRACK_LEN: 110,      // 有效軌道最短長度（避免在終點點一下就過關）
+
+      // 星級覆蓋率門檻
+      STAR_3_COV: 0.75,
+      STAR_2_COV: 0.50,
+
+      // 小火車行駛與沿線花草參數
+      TRAIN_SPEED: 235,        // 正常行駛速度（px/秒）
+      WOBBLE_SPEED_FACTOR: 0.58, // 偏離虛線超過 28px 時放慢比例
+      SCENERY_STEP: 48,        // 每隔 48px 長一株花、草或小樹
+      SLEEPER_STEP: 22,        // 鐵軌枕木間距
+
+      // 畫布繪製顏色
+      COLORS: {
+        ink: '#1F2A4D',
+        inkSoft: '#43507A',
+        guide: 'rgba(67, 80, 122, 0.34)',
+        guideHit: 'rgba(27, 127, 69, 0.22)',
+        railSleeper: '#4E342E',
+        railHighlight: '#A1887F',
+        trainRed: '#E53935',
+        trainRoof: '#FFB627',
+        trainWindow: '#B3E5FC',
+        trainCheek: '#FF8A80',
+        platformRoof: '#2160C4',
+        platformBody: '#FFFBEF',
+        houseWall: '#FFF3D1',
+        houseRoof: '#E85D4A',
+        houseDoor: '#8D6E63',
+        flowerPalette: ['#F06292', '#FFB627', '#4FC3F7', '#BA68C8', '#FF7043'],
+        leafLight: '#81C784',
+        leafDark: '#43A047',
+        trunk: '#795548'
+      },
+
+      // 四關資料
+      LEVELS: [
+        {
+          id: 'straight',
+          name: '直直的線',
+          lineName: '直線',
+          quest: '第 1 關：沿著虛線，畫一條直直的鐵軌！',
+          feel: '像大馬路一樣平平穩穩的！',
+          hasGuide: true,
+          guideType: 'straight',
+          previewPath: 'M12 18 L100 18',
+          praise: {
+            3: '直直的鐵軌畫得好穩，小火車一路順順開到站！',
+            2: '小火車沿著直線開到小房子了，路邊開滿花草！',
+            1: '你成功畫出連接小房子的直線鐵軌囉！'
+          }
+        },
+        {
+          id: 'wave',
+          name: '彎彎的波浪線',
+          lineName: '波浪線',
+          quest: '第 2 關：沿著虛線，畫一條彎彎的波浪鐵軌！',
+          feel: '像海浪一樣彎彎又溫柔！',
+          hasGuide: true,
+          guideType: 'wave',
+          previewPath: 'M10 18 Q25 4 40 18 T70 18 T100 18',
+          praise: {
+            3: '彎彎的波浪鐵軌好柔順，像海浪一樣美！',
+            2: '你畫出彎彎的波浪線，帶小火車安全到站了！',
+            1: '小火車坐著你的波浪鐵軌開進小房子囉！'
+          }
+        },
+        {
+          id: 'zigzag',
+          name: '尖尖的鋸齒線',
+          lineName: '鋸齒線',
+          quest: '第 3 關：沿著虛線，畫一條尖尖的鋸齒鐵軌！',
+          feel: '像閃電一樣尖尖又有力！',
+          hasGuide: true,
+          guideType: 'zigzag',
+          previewPath: 'M10 24 L28 8 L46 28 L64 8 L82 28 L100 14',
+          praise: {
+            3: '尖尖的鋸齒線畫得好有力，像閃電一樣帥氣！',
+            2: '你轉過好多尖尖的彎，把小火車送到終點了！',
+            1: '小火車成功挑戰鋸齒鐵軌，開到小房子囉！'
+          }
+        },
+        {
+          id: 'free',
+          name: '自由軌道',
+          lineName: '自由軌道',
+          quest: '第 4 關：沒有虛線囉！從月台畫一條軌道到小房子！',
+          feel: '自己設計路線，愛怎麼彎都可以！',
+          hasGuide: false,
+          guideType: 'free',
+          previewPath: 'M10 24 C28 4 46 32 64 14 C78 2 88 26 100 18',
+          praise: {
+            3: '你自己設計的專屬鐵軌好有創意，小火車玩得好開心！',
+            2: '你自己設計的專屬鐵軌好有創意，小火車玩得好開心！',
+            1: '你自己設計的專屬鐵軌好有創意，小火車玩得好開心！'
+          }
+        }
+      ]
+    };
+
+    /* =====================================================================
+     * 開始畫面主角插圖（約 380×360，粗墨藍輪廓 #1F2A4D，Q 版微笑小火車）
+     * ===================================================================== */
+    var HERO_SVG =
+      '<svg viewBox="0 0 380 360" width="380" height="360" aria-hidden="true">' +
+        // 柔和底圈與小花點綴
+        '<circle cx="195" cy="196" r="134" fill="#FFF0C2" stroke="#1F2A4D" stroke-width="5" stroke-dasharray="14 10"/>' +
+        // 彎彎鐵軌底座
+        '<path d="M24 282 Q120 250 195 278 T358 268" fill="none" stroke="#6D4C41" stroke-width="16" stroke-linecap="round"/>' +
+        '<path d="M24 282 Q120 250 195 278 T358 268" fill="none" stroke="#1F2A4D" stroke-width="18" stroke-linecap="round" opacity="0.18"/>' +
+        '<g stroke="#1F2A4D" stroke-width="4" stroke-linecap="round">' +
+          '<line x1="48" y1="268" x2="54" y2="286"/>' +
+          '<line x1="94" y1="258" x2="98" y2="277"/>' +
+          '<line x1="142" y1="260" x2="142" y2="279"/>' +
+          '<line x1="238" y1="274" x2="236" y2="293"/>' +
+          '<line x1="286" y1="270" x2="288" y2="289"/>' +
+          '<line x1="332" y1="261" x2="338" y2="279"/>' +
+        '</g>' +
+        // 冒出的蓬鬆白煙
+        '<g fill="#FFFFFF" stroke="#1F2A4D" stroke-width="5">' +
+          '<circle cx="246" cy="96" r="20"/>' +
+          '<circle cx="272" cy="70" r="26"/>' +
+          '<circle cx="308" cy="56" r="22"/>' +
+          '<circle cx="294" cy="84" r="18"/>' +
+        '</g>' +
+        // 小星星點綴
+        '<path d="M74 96 l6 12 13 2 -9 9 2 13 -12 -6 -12 6 2 -13 -9 -9 13 -2z" fill="#FFB627" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>' +
+        '<path d="M332 142 l4 9 10 1 -7 7 2 10 -9 -5 -9 5 2 -10 -7 -7 10 -1z" fill="#FFB627" stroke="#1F2A4D" stroke-width="3.5" stroke-linejoin="round"/>' +
+        // 路邊小花與小草
+        '<g stroke="#1F2A4D" stroke-width="4" stroke-linecap="round">' +
+          '<path d="M62 296 Q54 282 48 286" fill="none" stroke="#43A047" stroke-width="5"/>' +
+          '<path d="M62 296 Q70 282 76 286" fill="none" stroke="#43A047" stroke-width="5"/>' +
+          '<circle cx="322" cy="296" r="11" fill="#F06292"/>' +
+          '<circle cx="322" cy="296" r="5" fill="#FFB627"/>' +
+        '</g>' +
+        // 小火車車身（左側駕駛室＋右側鍋爐車頭）
+        '<g>' +
+          // 煙囪
+          '<path d="M222 148 L216 116 L254 116 L248 148 Z" fill="#1F2A4D" stroke="#1F2A4D" stroke-width="5" stroke-linejoin="round"/>' +
+          '<rect x="210" y="108" width="50" height="14" rx="7" fill="#FFB627" stroke="#1F2A4D" stroke-width="5"/>' +
+          // 駕駛室
+          '<rect x="86" y="114" width="96" height="122" rx="18" fill="#2160C4" stroke="#1F2A4D" stroke-width="6"/>' +
+          '<rect x="76" y="102" width="116" height="22" rx="11" fill="#FFB627" stroke="#1F2A4D" stroke-width="6"/>' +
+          // 駕駛窗
+          '<rect x="104" y="136" width="60" height="44" rx="10" fill="#B3E5FC" stroke="#1F2A4D" stroke-width="5"/>' +
+          '<path d="M114 146 L124 170" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>' +
+          // 車頭主體
+          '<rect x="166" y="146" width="128" height="90" rx="22" fill="#E53935" stroke="#1F2A4D" stroke-width="6"/>' +
+          // 黃色腰帶與前保險桿
+          '<rect x="82" y="218" width="218" height="24" rx="12" fill="#FFB627" stroke="#1F2A4D" stroke-width="6"/>' +
+          '<path d="M294 218 L318 242 L294 242 Z" fill="#43507A" stroke="#1F2A4D" stroke-width="5" stroke-linejoin="round"/>' +
+          // 可愛笑臉（在車頭上）
+          '<circle cx="212" cy="182" r="9" fill="#1F2A4D"/>' +
+          '<circle cx="215" cy="179" r="3" fill="#FFFFFF"/>' +
+          '<circle cx="256" cy="182" r="9" fill="#1F2A4D"/>' +
+          '<circle cx="259" cy="179" r="3" fill="#FFFFFF"/>' +
+          '<ellipse cx="196" cy="197" rx="9" ry="5.5" fill="#FF8A80"/>' +
+          '<ellipse cx="272" cy="197" rx="9" ry="5.5" fill="#FF8A80"/>' +
+          '<path d="M222 197 Q234 212 246 197" fill="none" stroke="#1F2A4D" stroke-width="5" stroke-linecap="round"/>' +
+          // 三個大車輪
+          '<circle cx="122" cy="248" r="26" fill="#43507A" stroke="#1F2A4D" stroke-width="6"/>' +
+          '<circle cx="122" cy="248" r="10" fill="#FFB627" stroke="#1F2A4D" stroke-width="4"/>' +
+          '<circle cx="198" cy="252" r="22" fill="#43507A" stroke="#1F2A4D" stroke-width="6"/>' +
+          '<circle cx="198" cy="252" r="8" fill="#FFB627" stroke="#1F2A4D" stroke-width="4"/>' +
+          '<circle cx="264" cy="252" r="22" fill="#43507A" stroke="#1F2A4D" stroke-width="6"/>' +
+          '<circle cx="264" cy="252" r="8" fill="#FFB627" stroke="#1F2A4D" stroke-width="4"/>' +
+        '</g>' +
+      '</svg>';
+
+    /* =====================================================================
+     * 四關 120×120 正方形縮圖（inline SVG）
+     * ===================================================================== */
+    function makeThumbSvg(type) {
+      var bg = '<rect x="4" y="4" width="112" height="112" rx="18" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="4"/>';
+      var miniPlatform = '<rect x="12" y="54" width="16" height="22" rx="3" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="3"/><path d="M10 54 L20 44 L30 54 Z" fill="#2160C4" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/>';
+      var miniHouse = '<rect x="92" y="54" width="16" height="22" rx="2" fill="#FFF0C2" stroke="#1F2A4D" stroke-width="3"/><path d="M89 55 L100 43 L111 55 Z" fill="#E85D4A" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/>';
+      var content = '';
+      if (type === 'straight') {
+        content =
+          '<line x1="28" y1="68" x2="92" y2="68" stroke="#6D4C41" stroke-width="9" stroke-linecap="round"/>' +
+          '<line x1="28" y1="68" x2="92" y2="68" stroke="#FFFBEF" stroke-width="3" stroke-dasharray="5 7"/>' +
+          '<rect x="44" y="34" width="32" height="22" rx="7" fill="#E53935" stroke="#1F2A4D" stroke-width="3.5"/>' +
+          '<rect x="48" y="26" width="14" height="10" rx="3" fill="#FFB627" stroke="#1F2A4D" stroke-width="3"/>' +
+          '<circle cx="53" cy="58" r="5" fill="#1F2A4D"/><circle cx="67" cy="58" r="5" fill="#1F2A4D"/>';
+      } else if (type === 'wave') {
+        content =
+          '<path d="M26 68 Q43 34 60 68 T94 68" fill="none" stroke="#6D4C41" stroke-width="9" stroke-linecap="round"/>' +
+          '<path d="M26 68 Q43 34 60 68 T94 68" fill="none" stroke="#DCE9FB" stroke-width="3" stroke-dasharray="5 6"/>' +
+          '<path d="M28 92 Q44 82 60 92 T92 92" fill="none" stroke="#2160C4" stroke-width="4" stroke-linecap="round"/>' +
+          '<circle cx="44" cy="34" r="6" fill="#F06292" stroke="#1F2A4D" stroke-width="2.5"/>';
+      } else if (type === 'zigzag') {
+        content =
+          '<polyline points="26,68 42,38 58,86 76,38 94,68" fill="none" stroke="#6D4C41" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<polyline points="26,68 42,38 58,86 76,38 94,68" fill="none" stroke="#FFF0C2" stroke-width="3" stroke-dasharray="4 6"/>' +
+          '<path d="M62 16 L54 30 L63 30 L57 42 L72 26 L63 26 Z" fill="#FFB627" stroke="#1F2A4D" stroke-width="2.5" stroke-linejoin="round"/>';
+      } else {
+        content =
+          '<path d="M26 70 C36 24 58 98 66 44 C72 18 82 82 94 66" fill="none" stroke="#6D4C41" stroke-width="8" stroke-linecap="round"/>' +
+          '<path d="M56 18 l3 7 7 1 -5 5 1 7 -6 -3 -6 3 1 -7 -5 -5 7 -1z" fill="#FFB627" stroke="#1F2A4D" stroke-width="2.5" stroke-linejoin="round"/>' +
+          '<circle cx="42" cy="88" r="6" fill="#81C784" stroke="#1F2A4D" stroke-width="2.5"/>' +
+          '<circle cx="80" cy="32" r="5" fill="#F06292" stroke="#1F2A4D" stroke-width="2.5"/>';
+      }
+      return '<svg viewBox="0 0 120 120" width="120" height="120" aria-hidden="true">' + bg + content + miniPlatform + miniHouse + '</svg>';
+    }
+
+    /* =====================================================================
+     * 共用小圖示 SVG（不使用 emoji）
+     * ===================================================================== */
+    var ICONS = {
+      checkWhite: '<svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true"><path d="M4 10.5 L8.2 14.5 L16 6" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      checkOk: '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 10.5 L8.2 14.5 L16 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      undo: '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 14 L4 9 L9 4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9 H14.5 A5.5 5.5 0 0 1 14.5 20 H11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>',
+      clear: '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 7 H20 M9 7 V4 H15 V7 M6 7 L7 20 H17 L18 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      replay: '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><polygon points="6,5 19,12 6,19" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+      platformMini: '<svg viewBox="0 0 28 24" width="24" height="22" aria-hidden="true"><path d="M2 10 L14 3 L26 10 Z" fill="#2160C4" stroke="#1F2A4D" stroke-width="2.2" stroke-linejoin="round"/><rect x="5" y="10" width="18" height="11" rx="2" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="2.2"/></svg>',
+      houseMini: '<svg viewBox="0 0 28 24" width="24" height="22" aria-hidden="true"><path d="M2 11 L14 2 L26 11 Z" fill="#E85D4A" stroke="#1F2A4D" stroke-width="2.2" stroke-linejoin="round"/><rect x="5" y="11" width="18" height="11" rx="2" fill="#FFF0C2" stroke="#1F2A4D" stroke-width="2.2"/><rect x="11" y="15" width="6" height="7" fill="#8D6E63" stroke="#1F2A4D" stroke-width="1.8"/></svg>',
+      brushSample: '<svg viewBox="0 0 110 26" width="110" height="26" aria-hidden="true"><line x1="12" y1="13" x2="98" y2="13" stroke="#6D4C41" stroke-width="12" stroke-linecap="round"/><g stroke="#1F2A4D" stroke-width="2.5" stroke-linecap="round"><line x1="24" y1="5" x2="24" y2="21"/><line x1="44" y1="5" x2="44" y2="21"/><line x1="64" y1="5" x2="64" y2="21"/><line x1="84" y1="5" x2="84" y2="21"/></g></svg>'
+    };
+
+    function starSvg(filled) {
+      return '<svg viewBox="0 0 28 28" width="24" height="24" aria-hidden="true">' +
+        '<path d="M14 3 l3.2 6.6 7.3 1 -5.3 5.1 1.3 7.2 L14 19.4 7.5 22.9 l1.3 -7.2 -5.3 -5.1 7.3 -1z" ' +
+        'fill="' + (filled ? '#FFB627' : '#E8EEF2') + '" stroke="#1F2A4D" stroke-width="2.4" stroke-linejoin="round"/></svg>';
+    }
+
+    // 右側狀態卡用的小火車表情頭像（依情緒切換）
+    function trainFaceSvg(mood) {
+      var eyes = '<circle cx="19" cy="21" r="3.2" fill="#1F2A4D"/><circle cx="33" cy="21" r="3.2" fill="#1F2A4D"/>';
+      var mouth = '<path d="M21 29 Q26 34 31 29" fill="none" stroke="#1F2A4D" stroke-width="2.8" stroke-linecap="round"/>';
+      var extra = '';
+      if (mood === 'happy') {
+        eyes = '<path d="M15 22 Q19 16 23 22" fill="none" stroke="#1F2A4D" stroke-width="2.8" stroke-linecap="round"/>' +
+               '<path d="M29 22 Q33 16 37 22" fill="none" stroke="#1F2A4D" stroke-width="2.8" stroke-linecap="round"/>';
+        mouth = '<path d="M20 28 Q26 35 32 28" fill="none" stroke="#1F2A4D" stroke-width="2.8" stroke-linecap="round"/>';
+      } else if (mood === 'wobble') {
+        mouth = '<circle cx="26" cy="30" r="3.5" fill="#1F2A4D"/>';
+        extra = '<path d="M43 13 Q47 18 43 22" fill="none" stroke="#2160C4" stroke-width="2.4" stroke-linecap="round"/>';
+      } else if (mood === 'honk') {
+        mouth = '<ellipse cx="26" cy="30" rx="4.5" ry="3.5" fill="#FFB627" stroke="#1F2A4D" stroke-width="2.2"/>';
+        extra = '<path d="M43 15 L48 12 M44 21 L49 21" stroke="#E53935" stroke-width="2.4" stroke-linecap="round"/>';
+      }
+      return '<svg viewBox="0 0 52 44" width="48" height="40" aria-hidden="true">' +
+        '<rect x="8" y="8" width="36" height="30" rx="10" fill="#E53935" stroke="#1F2A4D" stroke-width="3"/>' +
+        '<rect x="14" y="3" width="24" height="8" rx="4" fill="#FFB627" stroke="#1F2A4D" stroke-width="2.6"/>' +
+        '<circle cx="14" cy="27" r="3.2" fill="#FF8A80"/><circle cx="38" cy="27" r="3.2" fill="#FF8A80"/>' +
+        eyes + mouth + extra + '</svg>';
+    }
+
+    /* =====================================================================
+     * 幾何與路徑輔助函式
+     * ===================================================================== */
+    function dist(a, b) {
+      var dx = a.x - b.x;
+      var dy = a.y - b.y;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // 跨瀏覽器圓角矩形路徑
+    function roundRectPath(ctx, x, y, w, h, r) {
+      var rr = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rr, y);
+      ctx.lineTo(x + w - rr, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+      ctx.lineTo(x + w, y + h - rr);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+      ctx.lineTo(x + rr, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+      ctx.lineTo(x, y + rr);
+      ctx.quadraticCurveTo(x, y, x + rr, y);
+      ctx.closePath();
+    }
+
+    // 把折線點陣列依固定間隔均勻取樣
+    function resamplePolyline(pts, step) {
+      if (!pts || pts.length === 0) return [];
+      if (pts.length === 1) return [{ x: pts[0].x, y: pts[0].y }];
+      var out = [{ x: pts[0].x, y: pts[0].y }];
+      var carry = 0;
+      for (var i = 1; i < pts.length; i++) {
+        var p0 = pts[i - 1];
+        var p1 = pts[i];
+        var seg = dist(p0, p1);
+        if (seg < 0.001) continue;
+        var pos = step - carry;
+        while (pos <= seg) {
+          var t = pos / seg;
+          out.push({ x: p0.x + (p1.x - p0.x) * t, y: p0.y + (p1.y - p0.y) * t });
+          pos += step;
+        }
+        carry = seg - (pos - step);
+      }
+      var last = pts[pts.length - 1];
+      if (dist(out[out.length - 1], last) > step * 0.35) {
+        out.push({ x: last.x, y: last.y });
+      }
+      return out;
+    }
+
+    // 產生各關虛線的取樣點
+    function buildGuideSamples(guideType) {
+      var x0 = SCENE_CONFIG.GUIDE_START_X;
+      var x1 = SCENE_CONFIG.GUIDE_END_X;
+      var midY = SCENE_CONFIG.START_Y;
+      var raw = [];
+      var i, t;
+
+      if (guideType === 'straight') {
+        raw = [{ x: x0, y: midY }, { x: x1, y: midY }];
+      } else if (guideType === 'wave') {
+        var steps = 90;
+        for (i = 0; i <= steps; i++) {
+          t = i / steps;
+          raw.push({
+            x: x0 + (x1 - x0) * t,
+            y: midY - Math.sin(t * Math.PI * 3) * 96
+          });
+        }
+      } else if (guideType === 'zigzag') {
+        var span = (x1 - x0) / 5;
+        raw = [
+          { x: x0, y: midY },
+          { x: x0 + span * 1, y: midY - 118 },
+          { x: x0 + span * 2, y: midY + 118 },
+          { x: x0 + span * 3, y: midY - 118 },
+          { x: x0 + span * 4, y: midY + 118 },
+          { x: x1, y: midY }
+        ];
+      } else {
+        return [];
+      }
+
+      return resamplePolyline(raw, SCENE_CONFIG.GUIDE_SAMPLE_STEP).map(function (p) {
+        return { x: p.x, y: p.y, hit: false };
+      });
+    }
+
+    // 判斷兩筆筆畫間的最短距離（用於連通檢查）
+    function minStrokeGap(ptsA, ptsB) {
+      var best = Infinity;
+      for (var i = 0; i < ptsA.length; i++) {
+        for (var j = 0; j < ptsB.length; j++) {
+          var d = dist(ptsA[i], ptsB[j]);
+          if (d < best) best = d;
+        }
+      }
+      return best;
+    }
+
+    // 依序串接多筆筆畫成為一條連續軌道（支援自動反轉補畫與微距接軌）
+    function buildTrackFromStrokes(strokeList, startPt, endPt) {
+      var ordered = [];
+      for (var s = 0; s < strokeList.length; s++) {
+        var raw = strokeList[s];
+        if (!raw || raw.length === 0) continue;
+        var pts = raw.slice();
+        if (ordered.length === 0) {
+          // 第一筆若明顯從右邊終點往左邊起點畫，反轉方向讓火車從月台往小房子開
+          if (pts.length >= 2) {
+            var headToEnd = dist(pts[0], endPt);
+            var tailToStart = dist(pts[pts.length - 1], startPt);
+            var headToStart = dist(pts[0], startPt);
+            if (headToEnd < headToStart && tailToStart < headToStart) {
+              pts.reverse();
+            }
+          }
+        } else {
+          // 後續筆畫：若尾端比頭端更靠近上一筆尾巴，則反轉接上
+          var prevTail = ordered[ordered.length - 1];
+          var dHead = dist(prevTail, pts[0]);
+          var dTail = dist(prevTail, pts[pts.length - 1]);
+          if (dTail + 18 < dHead) {
+            pts.reverse();
+          }
+          // 兩筆之間若有空隙，補上平滑連線點讓火車順暢開過去
+          var gap = dist(prevTail, pts[0]);
+          if (gap > 4) {
+            var segs = Math.max(2, Math.ceil(gap / 10));
+            for (var k = 1; k < segs; k++) {
+              var f = k / segs;
+              ordered.push({
+                x: prevTail.x + (pts[0].x - prevTail.x) * f,
+                y: prevTail.y + (pts[0].y - prevTail.y) * f
+              });
+            }
+          }
+        }
+        for (var j = 0; j < pts.length; j++) {
+          if (ordered.length === 0 || dist(ordered[ordered.length - 1], pts[j]) >= 2.5) {
+            ordered.push({ x: pts[j].x, y: pts[j].y });
+          }
+        }
+      }
+
+      // 加上累積距離與切線方向
+      var total = 0;
+      for (var i = 0; i < ordered.length; i++) {
+        if (i > 0) total += dist(ordered[i - 1], ordered[i]);
+        ordered[i].dist = total;
+      }
+      return { points: ordered, totalLen: total };
+    }
+
+    // 依距離在軌道上做等速插值，回傳 { x, y, angle }
+    function sampleTrackAt(points, targetDist) {
+      if (!points || points.length === 0) {
+        return { x: SCENE_CONFIG.START_X + 34, y: SCENE_CONFIG.START_Y, angle: 0 };
+      }
+      if (points.length === 1) {
+        return { x: points[0].x, y: points[0].y, angle: 0 };
+      }
+      var maxD = points[points.length - 1].dist;
+      var d = Math.max(0, Math.min(targetDist, maxD));
+
+      // 二分搜尋所在線段
+      var lo = 0;
+      var hi = points.length - 1;
+      while (lo < hi - 1) {
+        var mid = (lo + hi) >> 1;
+        if (points[mid].dist <= d) lo = mid;
+        else hi = mid;
+      }
+      var p0 = points[lo];
+      var p1 = points[hi];
+      var span = p1.dist - p0.dist;
+      var t = span > 0.001 ? (d - p0.dist) / span : 0;
+      var x = p0.x + (p1.x - p0.x) * t;
+      var y = p0.y + (p1.y - p0.y) * t;
+
+      // 用稍前後兩點平滑切線角度，避免手抖造成車頭狂轉
+      var back = points[Math.max(0, lo - 2)];
+      var ahead = points[Math.min(points.length - 1, hi + 2)];
+      var angle = Math.atan2(ahead.y - back.y, ahead.x - back.x);
+      return { x: x, y: y, angle: angle };
+    }
+
+    /* =====================================================================
+     * Canvas 繪製函式（虛線、枕木、月台、小房子、花草小樹、小火車）
+     * ===================================================================== */
+    function drawGuideLine(ctx, guideSamples, isFree) {
+      var W = SCENE_CONFIG.CANVAS_W;
+      var H = SCENE_CONFIG.CANVAS_H;
+
+      // 極淡的地景參考點綴，維持白畫布主角地位
+      ctx.save();
+      ctx.strokeStyle = 'rgba(195, 222, 223, 0.45)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 12]);
+      ctx.beginPath();
+      ctx.moveTo(28, H - 36);
+      ctx.lineTo(W - 28, H - 36);
+      ctx.stroke();
+      ctx.restore();
+
+      if (isFree) {
+        // 第 4 關：沒有虛線，只畫極淡的方向提示箭頭
+        ctx.save();
+        ctx.strokeStyle = 'rgba(67, 80, 122, 0.2)';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.setLineDash([10, 14]);
+        ctx.beginPath();
+        ctx.moveTo(150, SCENE_CONFIG.START_Y);
+        ctx.lineTo(255, SCENE_CONFIG.START_Y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(242, SCENE_CONFIG.START_Y - 12);
+        ctx.lineTo(258, SCENE_CONFIG.START_Y);
+        ctx.lineTo(242, SCENE_CONFIG.START_Y + 12);
+        ctx.stroke();
+        ctx.restore();
+        return;
+      }
+
+      if (!guideSamples || guideSamples.length < 2) return;
+
+      // 粗虛線主體
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 14;
+      ctx.setLineDash([18, 16]);
+      ctx.strokeStyle = SCENE_CONFIG.COLORS.guide;
+      ctx.beginPath();
+      ctx.moveTo(guideSamples[0].x, guideSamples[0].y);
+      for (var i = 1; i < guideSamples.length; i++) {
+        ctx.lineTo(guideSamples[i].x, guideSamples[i].y);
+      }
+      ctx.stroke();
+
+      // 沿虛線畫小小前進方向箭頭（每 14 個取樣點一個）
+      ctx.setLineDash([]);
+      ctx.strokeStyle = 'rgba(67, 80, 122, 0.42)';
+      ctx.lineWidth = 3;
+      for (var j = 6; j < guideSamples.length - 4; j += 14) {
+        var a = guideSamples[j - 1];
+        var b = guideSamples[j + 1];
+        var ang = Math.atan2(b.y - a.y, b.x - a.x);
+        ctx.save();
+        ctx.translate(guideSamples[j].x, guideSamples[j].y);
+        ctx.rotate(ang);
+        ctx.beginPath();
+        ctx.moveTo(-5, -6);
+        ctx.lineTo(4, 0);
+        ctx.lineTo(-5, 6);
+        ctx.stroke();
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    // 在小朋友畫出的深棕色筆跡上加上可愛枕木與鐵軌高光
+    function drawRailSleepers(ctx, trackPoints) {
+      if (!trackPoints || trackPoints.length < 2) return;
+      var total = trackPoints[trackPoints.length - 1].dist;
+      ctx.save();
+      ctx.strokeStyle = SCENE_CONFIG.COLORS.railSleeper;
+      ctx.lineWidth = 3.5;
+      ctx.lineCap = 'round';
+      for (var d = 10; d < total; d += SCENE_CONFIG.SLEEPER_STEP) {
+        var s = sampleTrackAt(trackPoints, d);
+        var nx = -Math.sin(s.angle);
+        var ny = Math.cos(s.angle);
+        ctx.beginPath();
+        ctx.moveTo(s.x - nx * 9, s.y - ny * 9);
+        ctx.lineTo(s.x + nx * 9, s.y + ny * 9);
+        ctx.stroke();
+      }
+      // 中央淺色高光虛線，讓軌道更有立體感
+      ctx.strokeStyle = SCENE_CONFIG.COLORS.railHighlight;
+      ctx.lineWidth = 2.4;
+      ctx.setLineDash([8, 10]);
+      ctx.beginPath();
+      ctx.moveTo(trackPoints[0].x, trackPoints[0].y);
+      for (var i = 1; i < trackPoints.length; i++) {
+        ctx.lineTo(trackPoints[i].x, trackPoints[i].y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 畫起點「月台」
+    function drawPlatform(ctx, x, y, highlight) {
+      ctx.save();
+      ctx.translate(x, y);
+
+      // 未開始畫時的柔和引導圈
+      if (highlight) {
+        ctx.beginPath();
+        ctx.arc(44, 0, 16, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 182, 39, 0.35)';
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#1F2A4D';
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // 底部站台石磚
+      roundRectPath(ctx, -44, 16, 88, 22, 7);
+      ctx.fillStyle = '#D7CCC8';
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = SCENE_CONFIG.COLORS.ink;
+      ctx.stroke();
+
+      // 兩根柱子
+      ctx.fillStyle = SCENE_CONFIG.COLORS.platformBody;
+      roundRectPath(ctx, -30, -24, 10, 42, 3);
+      ctx.fill();
+      ctx.stroke();
+      roundRectPath(ctx, 20, -24, 10, 42, 3);
+      ctx.fill();
+      ctx.stroke();
+
+      // 藍色遮雨棚屋頂
+      ctx.beginPath();
+      ctx.moveTo(-48, -20);
+      ctx.lineTo(0, -52);
+      ctx.lineTo(48, -20);
+      ctx.closePath();
+      ctx.fillStyle = SCENE_CONFIG.COLORS.platformRoof;
+      ctx.fill();
+      ctx.stroke();
+
+      // 站牌「出發」
+      roundRectPath(ctx, -34, -14, 68, 26, 8);
+      ctx.fillStyle = '#FFFBEF';
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = SCENE_CONFIG.COLORS.ink;
+      ctx.font = '700 16px "Noto Sans TC", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('出發月台', 0, -1);
+
+      // 接軌起點小圓點
+      ctx.beginPath();
+      ctx.arc(46, 0, 7, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFB627';
+      ctx.fill();
+      ctx.lineWidth = 2.8;
+      ctx.strokeStyle = SCENE_CONFIG.COLORS.ink;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // 畫終點「小房子」
+    function drawHouse(ctx, x, y, arrived, needHint) {
+      ctx.save();
+      ctx.translate(x, y);
+
+      // 沒畫到終點時用柔和金圈提示小房子位置
+      if (needHint && !arrived) {
+        ctx.beginPath();
+        ctx.arc(0, 0, 56, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 182, 39, 0.22)';
+        ctx.fill();
+        ctx.lineWidth = 2.8;
+        ctx.strokeStyle = '#FFB627';
+        ctx.setLineDash([7, 6]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // 到站慶祝光環與小星星
+      if (arrived) {
+        ctx.beginPath();
+        ctx.arc(0, -6, 56, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(216, 241, 223, 0.55)';
+        ctx.fill();
+      }
+
+      // 煙囪
+      roundRectPath(ctx, 18, -56, 14, 26, 3);
+      ctx.fillStyle = '#8D6E63';
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = SCENE_CONFIG.COLORS.ink;
+      ctx.stroke();
+
+      // 牆面
+      roundRectPath(ctx, -38, -16, 76, 54, 10);
+      ctx.fillStyle = SCENE_CONFIG.COLORS.houseWall;
+      ctx.fill();
+      ctx.stroke();
+
+      // 紅屋頂
+      ctx.beginPath();
+      ctx.moveTo(-48, -12);
+      ctx.lineTo(0, -56);
+      ctx.lineTo(48, -12);
+      ctx.closePath();
+      ctx.fillStyle = SCENE_CONFIG.COLORS.houseRoof;
+      ctx.fill();
+      ctx.stroke();
+
+      // 可愛小門與圓窗
+      roundRectPath(ctx, -12, 8, 24, 30, 6);
+      ctx.fillStyle = SCENE_CONFIG.COLORS.houseDoor;
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(6, 24, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFB627';
+      ctx.fill();
+
+      // 小屋微笑窗戶
+      ctx.beginPath();
+      ctx.arc(0, -28, 9, 0, Math.PI * 2);
+      ctx.fillStyle = '#B3E5FC';
+      ctx.fill();
+      ctx.stroke();
+
+      // 門牌文字
+      roundRectPath(ctx, -30, 42, 60, 22, 8);
+      ctx.fillStyle = arrived ? '#D8F1DF' : '#FFFBEF';
+      ctx.fill();
+      ctx.lineWidth = 2.4;
+      ctx.strokeStyle = arrived ? '#1B7F45' : SCENE_CONFIG.COLORS.ink;
+      ctx.stroke();
+      ctx.fillStyle = arrived ? '#166B3A' : SCENE_CONFIG.COLORS.ink;
+      ctx.font = '700 14px "Noto Sans TC", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(arrived ? '到站囉' : '小房子', 0, 53);
+
+      // 接軌終點小圓點
+      ctx.beginPath();
+      ctx.arc(-48, 0, 7, 0, Math.PI * 2);
+      ctx.fillStyle = arrived ? '#1B7F45' : '#FFB627';
+      ctx.fill();
+      ctx.lineWidth = 2.8;
+      ctx.strokeStyle = SCENE_CONFIG.COLORS.ink;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // 畫單株沿線長出的花、草或小樹
+    function drawSceneryItem(ctx, item, scale) {
+      if (scale <= 0.02) return;
+      ctx.save();
+      ctx.translate(item.x, item.y);
+      ctx.scale(scale, scale);
+      ctx.lineWidth = 2.6;
+      ctx.strokeStyle = SCENE_CONFIG.COLORS.ink;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      if (item.kind === 'flower') {
+        // 莖與兩片小葉
+        ctx.beginPath();
+        ctx.moveTo(0, 12);
+        ctx.lineTo(0, 0);
+        ctx.strokeStyle = SCENE_CONFIG.COLORS.leafDark;
+        ctx.lineWidth = 3.5;
+        ctx.stroke();
+
+        ctx.strokeStyle = SCENE_CONFIG.COLORS.ink;
+        ctx.lineWidth = 2.2;
+        ctx.fillStyle = item.color;
+        for (var p = 0; p < 5; p++) {
+          var a = (p * Math.PI * 2) / 5;
+          ctx.beginPath();
+          ctx.arc(Math.cos(a) * 6.5, -4 + Math.sin(a) * 6.5, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.arc(0, -4, 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFB627';
+        ctx.fill();
+        ctx.stroke();
+      } else if (item.kind === 'grass') {
+        // 可愛三葉嫩草
+        ctx.fillStyle = SCENE_CONFIG.COLORS.leafLight;
+        ctx.beginPath();
+        ctx.moveTo(-9, 10);
+        ctx.quadraticCurveTo(-11, -5, -4, -9);
+        ctx.quadraticCurveTo(-1, -1, 0, 10);
+        ctx.quadraticCurveTo(0, -8, 4, -12);
+        ctx.quadraticCurveTo(8, -2, 6, 10);
+        ctx.quadraticCurveTo(10, -2, 13, -4);
+        ctx.quadraticCurveTo(12, 6, 9, 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        // 圓滾滾小樹
+        roundRectPath(ctx, -4, 0, 8, 15, 2);
+        ctx.fillStyle = SCENE_CONFIG.COLORS.trunk;
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = SCENE_CONFIG.COLORS.leafDark;
+        ctx.beginPath();
+        ctx.arc(-7, -3, 10, 0, Math.PI * 2);
+        ctx.arc(7, -3, 10, 0, Math.PI * 2);
+        ctx.arc(0, -12, 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 樹冠小高光果實
+        ctx.fillStyle = '#FFB627';
+        ctx.beginPath();
+        ctx.arc(-4, -9, 2.5, 0, Math.PI * 2);
+        ctx.arc(5, -4, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // 畫冒煙、有臉、會轉輪子的 Q 版小火車
+    function drawTrain(ctx, x, y, angle, wheelPhase, mood, wobbleRad, honkPulse) {
+      ctx.save();
+      ctx.translate(x, y);
+
+      // 若方向往左（角度超過 ±90°），水平翻轉保持車輪朝下不倒吊
+      var flip = Math.cos(angle) < 0;
+      if (flip) {
+        ctx.rotate(angle + Math.PI);
+        ctx.scale(-1, 1);
+      } else {
+        ctx.rotate(angle);
+      }
+
+      if (wobbleRad) {
+        ctx.rotate(wobbleRad);
+        ctx.translate(0, -Math.abs(wobbleRad) * 14);
+      }
+
+      // 微往上抬，讓車輪剛好踩在鐵軌中心線上
+      ctx.translate(0, -18);
+
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = SCENE_CONFIG.COLORS.ink;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+
+      // 煙囪
+      ctx.fillStyle = SCENE_CONFIG.COLORS.ink;
+      roundRectPath(ctx, 8, -22, 10, 12, 3);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = SCENE_CONFIG.COLORS.trainRoof;
+      roundRectPath(ctx, 5, -26, 16, 6, 3);
+      ctx.fill();
+      ctx.stroke();
+
+      // 駕駛室（後段）
+      ctx.fillStyle = '#2160C4';
+      roundRectPath(ctx, -28, -20, 24, 30, 6);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = SCENE_CONFIG.COLORS.trainRoof;
+      roundRectPath(ctx, -31, -24, 30, 7, 3.5);
+      ctx.fill();
+      ctx.stroke();
+
+      // 駕駛窗
+      ctx.fillStyle = SCENE_CONFIG.COLORS.trainWindow;
+      roundRectPath(ctx, -23, -14, 14, 11, 3);
+      ctx.fill();
+      ctx.stroke();
+
+      // 紅色車頭（前段）
+      ctx.fillStyle = SCENE_CONFIG.COLORS.trainRed;
+      roundRectPath(ctx, -6, -12, 34, 22, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // 黃色底盤
+      ctx.fillStyle = SCENE_CONFIG.COLORS.trainRoof;
+      roundRectPath(ctx, -29, 7, 58, 7, 3.5);
+      ctx.fill();
+      ctx.stroke();
+
+      // 可愛小臉（畫在紅色車頭上）
+      ctx.fillStyle = SCENE_CONFIG.COLORS.trainCheek;
+      ctx.beginPath();
+      ctx.arc(3, 1, 2.6, 0, Math.PI * 2);
+      ctx.arc(21, 1, 2.6, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (mood === 'happy') {
+        ctx.beginPath();
+        ctx.arc(7, -3, 3, Math.PI, 0);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(17, -3, 3, Math.PI, 0);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(12, 1, 4, 0.15 * Math.PI, 0.85 * Math.PI);
+        ctx.stroke();
+      } else if (mood === 'wobble') {
+        ctx.fillStyle = SCENE_CONFIG.COLORS.ink;
+        ctx.beginPath();
+        ctx.arc(7, -3, 2.4, 0, Math.PI * 2);
+        ctx.arc(17, -3, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(12, 2.5, 2.6, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = SCENE_CONFIG.COLORS.ink;
+        ctx.beginPath();
+        ctx.arc(7, -3, 2.4, 0, Math.PI * 2);
+        ctx.arc(17, -3, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(12, 1, 3.5, 0.15 * Math.PI, 0.85 * Math.PI);
+        ctx.stroke();
+      }
+
+      // 兩個會轉動的車輪
+      var wheelXs = [-16, 14];
+      for (var w = 0; w < wheelXs.length; w++) {
+        var wx = wheelXs[w];
+        ctx.save();
+        ctx.translate(wx, 15);
+        ctx.fillStyle = '#43507A';
+        ctx.beginPath();
+        ctx.arc(0, 0, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.rotate(wheelPhase);
+        ctx.beginPath();
+        ctx.moveTo(-4.5, 0);
+        ctx.lineTo(4.5, 0);
+        ctx.strokeStyle = '#FFB627';
+        ctx.lineWidth = 2.4;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 沒到終點按喇叭時的可愛音波線
+      if (honkPulse > 0) {
+        ctx.strokeStyle = '#FFB627';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(32, -6, 7 + honkPulse * 6, -0.7, 0.7);
+        ctx.stroke();
+        ctx.strokeStyle = '#E53935';
+        ctx.beginPath();
+        ctx.arc(34, -6, 13 + honkPulse * 8, -0.65, 0.65);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    /* =====================================================================
+     * 掛載「畫畫島」第 25 關：線條小火車
+     * ===================================================================== */
+    ArtIsland.mount({
+      unit: 25,
+      title: '線條小火車',
+      grade: '1–2 年級',
+      howto: '按住滑鼠，跟虛線畫一條鐵軌。',
+      zhuyin: true,
+      teach: '線條的種類與感覺、按住拖曳｜生活課程 4-I-1',
+      submit: true,
+      hero: HERO_SVG,
+      levels: SCENE_CONFIG.LEVELS.map(function (lv) {
+        return { name: lv.name, thumb: makeThumbSvg(lv.guideType) };
+      }),
+
+      scene: function (api) {
+        // 場景執行期狀態（每次 start 重置、stop 徹底清除）
+        var active = false;
+        var cv = null;
+        var fxCanvas = null;
+        var fxCtx = null;
+        var levelCfg = null;
+
+        var guideSamples = [];
+        var strokeList = [];      // 每一筆原始點陣列，與 api.canvas 的 undo 同步
+        var track = { points: [], totalLen: 0 };
+        var scenery = [];         // 沿線會長出的花、草、小樹
+        var puffs = [];           // 火車煙囪冒出的白煙粒子
+        var sparkles = [];        // 到站慶祝小星星
+
+        // 火車動畫狀態
+        var rafId = 0;
+        var timers = [];
+        var lastTs = 0;
+        var trainDist = 0;
+        var trainMoving = false;
+        var trainMood = 'idle';   // idle | run | wobble | honk | happy
+        var wobbleTime = 0;
+        var honkUntil = 0;
+        var smokeAcc = 0;
+        var reducedMotion = false;
+
+        // 關卡判定狀態
+        var coverage = 0;
+        var reachedStart = false;
+        var reachedEnd = false;
+        var connected = false;
+        var arrived = false;
+        var everWobbled = false;
+
+        // DOM 參考
+        var els = {};
+
+        function addTimer(fn, ms) {
+          var id = window.setTimeout(function () {
+            timers = timers.filter(function (t) { return t !== id; });
+            if (active) fn();
+          }, ms);
+          timers.push(id);
+          return id;
+        }
+
+        function clearAllTimers() {
+          for (var i = 0; i < timers.length; i++) {
+            window.clearTimeout(timers[i]);
+          }
+          timers = [];
+        }
+
+        function stopLoop() {
+          if (rafId) {
+            window.cancelAnimationFrame(rafId);
+            rafId = 0;
+          }
+          lastTs = 0;
+        }
+
+        function startLoop() {
+          if (!active || rafId) return;
+          lastTs = 0;
+          rafId = window.requestAnimationFrame(tick);
+        }
+
+        // 計算星數（完全依本關規則）
+        function calcStars() {
+          if (!arrived) return 0;
+          if (!levelCfg.hasGuide) return 3; // 第 4 關自由軌道連到就 3 顆
+          if (coverage >= SCENE_CONFIG.STAR_3_COV) return 3;
+          if (coverage >= SCENE_CONFIG.STAR_2_COV) return 2;
+          return 1;
+        }
+
+        // 計算某點到虛線取樣點的最短距離（用於判斷是否偏離 > 28px）
+        function distToGuide(pt) {
+          if (!levelCfg.hasGuide || guideSamples.length === 0) return 0;
+          var best = Infinity;
+          var startPt = { x: SCENE_CONFIG.START_X + 34, y: SCENE_CONFIG.START_Y };
+          var endPt = { x: SCENE_CONFIG.END_X - 34, y: SCENE_CONFIG.END_Y };
+          var dStart = dist(pt, startPt);
+          var dEnd = dist(pt, endPt);
+          if (dStart < best) best = dStart;
+          if (dEnd < best) best = dEnd;
+          for (var i = 0; i < guideSamples.length; i++) {
+            var d = dist(pt, guideSamples[i]);
+            if (d < best) best = d;
+          }
+          return best;
+        }
+
+        // 評估覆蓋率與起終點連通狀況
+        function evaluateTrack() {
+          var startPt = { x: SCENE_CONFIG.START_X + 26, y: SCENE_CONFIG.START_Y };
+          var endPt = { x: SCENE_CONFIG.END_X - 26, y: SCENE_CONFIG.END_Y };
+
+          // 1. 細分全部筆畫點，計算覆蓋率
+          var densePerStroke = [];
+          var allDense = [];
+          for (var s = 0; s < strokeList.length; s++) {
+            var dPts = resamplePolyline(strokeList[s], SCENE_CONFIG.DENSE_STEP);
+            densePerStroke.push(dPts);
+            for (var k = 0; k < dPts.length; k++) allDense.push(dPts[k]);
+          }
+
+          if (levelCfg.hasGuide && guideSamples.length > 0) {
+            var hits = 0;
+            for (var g = 0; g < guideSamples.length; g++) {
+              var gp = guideSamples[g];
+              gp.hit = false;
+              for (var a = 0; a < allDense.length; a++) {
+                if (dist(gp, allDense[a]) <= SCENE_CONFIG.TOLERANCE_PX) {
+                  gp.hit = true;
+                  hits++;
+                  break;
+                }
+              }
+            }
+            coverage = hits / guideSamples.length;
+          } else {
+            coverage = 0;
+          }
+
+          // 2. 檢查每筆是否碰到起點月台與終點小房子，並用 BFS 檢查多筆是否相連
+          var touchStart = [];
+          var touchEnd = [];
+          reachedStart = false;
+          reachedEnd = false;
+
+          for (var i = 0; i < densePerStroke.length; i++) {
+            var arr = densePerStroke[i];
+            var hs = false;
+            var he = false;
+            for (var p = 0; p < arr.length; p++) {
+              if (!hs && dist(arr[p], startPt) <= SCENE_CONFIG.STATION_RADIUS) hs = true;
+              if (!he && dist(arr[p], endPt) <= SCENE_CONFIG.STATION_RADIUS) he = true;
+            }
+            touchStart.push(hs);
+            touchEnd.push(he);
+            if (hs) reachedStart = true;
+            if (he) reachedEnd = true;
+          }
+
+          connected = false;
+          if (reachedStart && reachedEnd && densePerStroke.length > 0) {
+            var visited = {};
+            var queue = [];
+            for (var m = 0; m < densePerStroke.length; m++) {
+              if (touchStart[m]) {
+                visited[m] = true;
+                queue.push(m);
+              }
+            }
+            while (queue.length > 0) {
+              var cur = queue.shift();
+              if (touchEnd[cur]) {
+                connected = true;
+                break;
+              }
+              for (var nxt = 0; nxt < densePerStroke.length; nxt++) {
+                if (!visited[nxt] && minStrokeGap(densePerStroke[cur], densePerStroke[nxt]) <= SCENE_CONFIG.LINK_GAP_MAX) {
+                  visited[nxt] = true;
+                  queue.push(nxt);
+                }
+              }
+            }
+          }
+        }
+
+        // 重建沿線花草種子（保留原本已經長出來的花草狀態）
+        function rebuildScenery(resetSprout) {
+          var oldMap = {};
+          if (!resetSprout) {
+            for (var i = 0; i < scenery.length; i++) {
+              if (scenery[i].sprouted) {
+                oldMap[Math.round(scenery[i].dist / 10)] = scenery[i];
+              }
+            }
+          }
+          var next = [];
+          if (track.totalLen < 40) {
+            scenery = next;
+            return;
+          }
+          var idx = 0;
+          var startPt = { x: SCENE_CONFIG.START_X, y: SCENE_CONFIG.START_Y };
+          var endPt = { x: SCENE_CONFIG.END_X, y: SCENE_CONFIG.END_Y };
+          var kinds = ['flower', 'grass', 'tree', 'flower', 'grass'];
+          var palette = SCENE_CONFIG.COLORS.flowerPalette;
+
+          for (var d = 38; d < track.totalLen - 26; d += SCENE_CONFIG.SCENERY_STEP) {
+            var s = sampleTrackAt(track.points, d);
+            var side = (idx % 2 === 0) ? 1 : -1;
+            var offset = 28 + ((idx * 13) % 16);
+            var nx = -Math.sin(s.angle) * side;
+            var ny = Math.cos(s.angle) * side;
+            var sx = s.x + nx * offset;
+            var sy = s.y + ny * offset;
+
+            // 避開畫布邊界、月台與小房子
+            if (sx > 28 && sx < SCENE_CONFIG.CANVAS_W - 28 &&
+                sy > 28 && sy < SCENE_CONFIG.CANVAS_H - 28 &&
+                dist({ x: sx, y: sy }, startPt) > 68 &&
+                dist({ x: sx, y: sy }, endPt) > 68) {
+              var key = Math.round(d / 10);
+              var prev = oldMap[key];
+              next.push({
+                dist: d,
+                x: sx,
+                y: sy,
+                kind: kinds[idx % kinds.length],
+                color: palette[idx % palette.length],
+                sprouted: prev ? true : false,
+                bornAt: prev ? prev.bornAt : 0
+              });
+            }
+            idx++;
+          }
+          scenery = next;
+        }
+
+        // 更新右側狀態卡片與按鈕可按狀態
+        function updateUI(customMsg, customPill, customType) {
+          var hasStrokes = strokeList.length > 0;
+          els.undo.disabled = !hasStrokes;
+          els.clear.disabled = !hasStrokes;
+          els.replay.disabled = track.totalLen < 16;
+
+          // 完成按鈕：畫過一筆就能按（老師 11-21 要求寬鬆，不用等火車到站）；到站時再跳一下提醒
+          var wasDisabled = els.done.disabled;
+          els.done.disabled = !(arrived || hasStrokes);
+          if (wasDisabled && arrived && !reducedMotion) {
+            els.done.classList.remove('sc-pop');
+            void els.done.offsetWidth;
+            els.done.classList.add('sc-pop');
+          }
+
+          // 火車頭像表情
+          els.face.innerHTML = trainFaceSvg(trainMood);
+
+          // 狀態文字與標籤
+          var pillText = customPill;
+          var pillClass = 'sc-state-pill';
+          var msg = customMsg;
+
+          if (!pillText) {
+            if (arrived) {
+              pillText = ICONS.checkOk + ' 到站囉！';
+              pillClass += ' sc-ok';
+              msg = '太棒了！小火車到站囉，按「完成」看星星！';
+            } else if (trainMoving) {
+              pillText = trainMood === 'wobble' ? '晃了一下！' : '噗噗出發中';
+              pillClass += ' sc-warn';
+              msg = trainMood === 'wobble'
+                ? '哈哈，小火車晃了一下，沒關係' + ZY_LIGHT + '繼續開！'
+                : '小火車沿著你的鐵軌開過去囉！';
+            } else if (trainMood === 'honk') {
+              pillText = '叭叭！還沒到';
+              pillClass += ' sc-warn';
+              if (!levelCfg.hasGuide && reachedEnd && !reachedStart) {
+                msg = '起點還沒接到月台喔！再補一筆連起來！';
+              } else if (!levelCfg.hasGuide && reachedStart && reachedEnd && !connected) {
+                msg = '中間斷掉囉！把兩段鐵軌接起來吧！';
+              } else {
+                msg = '還沒到小房子' + ZY_LIGHT + '喔！可以接著再畫一筆！';
+              }
+            } else {
+              pillText = '準備出發';
+              msg = levelCfg.hasGuide
+                ? '按住滑鼠，從月台沿著虛線畫到小房子' + ZY_LIGHT + '！'
+                : '按住滑鼠，從月台自由畫一條路到小房子' + ZY_LIGHT + '！';
+            }
+          } else {
+            if (customType === 'ok') pillClass += ' sc-ok';
+            else if (customType === 'warn') pillClass += ' sc-warn';
+          }
+
+          els.pill.className = pillClass;
+          els.pill.innerHTML = pillText;
+          els.msg.textContent = msg;
+
+          // 更新進度條（第 1–3 關）或檢核晶片（第 4 關）
+          if (levelCfg.hasGuide) {
+            var pct = Math.round(coverage * 100);
+            els.pct.textContent = pct + '%';
+            els.barFill.style.width = pct + '%';
+            var starsNow = calcStars();
+            var previewStars = arrived
+              ? starsNow
+              : (coverage >= SCENE_CONFIG.STAR_3_COV ? 3 : coverage >= SCENE_CONFIG.STAR_2_COV ? 2 : hasStrokes ? 1 : 0);
+            els.stars.innerHTML = starSvg(previewStars >= 1) + starSvg(previewStars >= 2) + starSvg(previewStars >= 3);
+            els.starsHint.textContent = arrived
+              ? ('可得 ' + starsNow + ' 顆星')
+              : (pct >= 75 ? '滿分路線！' : pct >= 50 ? '很棒喔！' : '慢慢畫沒關係');
+          } else {
+            els.chipStart.className = 'sc-chip' + (reachedStart ? ' sc-chip-ok' : '');
+            els.chipStart.innerHTML = (reachedStart ? ICONS.checkOk : '') + '月台' + (reachedStart ? ' 連到' : '');
+            els.chipEnd.className = 'sc-chip' + (reachedEnd ? ' sc-chip-ok' : '');
+            els.chipEnd.innerHTML = (reachedEnd ? ICONS.checkOk : '') + '小房子' + (reachedEnd ? ' 連到' : '');
+          }
+        }
+
+        // 重繪上方動態畫布（虛線、枕木、花草、月台、小房子、小火車、煙霧與星星）
+        function renderOverlay(now) {
+          if (!fxCtx) return;
+          var W = SCENE_CONFIG.CANVAS_W;
+          var H = SCENE_CONFIG.CANVAS_H;
+          fxCtx.clearRect(0, 0, W, H);
+
+          // 1. 虛線引導
+          drawGuideLine(fxCtx, guideSamples, !levelCfg.hasGuide);
+
+          // 2. 鐵軌枕木裝飾
+          drawRailSleepers(fxCtx, track.points);
+
+          // 3. 沿線長出的花、草、小樹
+          for (var i = 0; i < scenery.length; i++) {
+            var item = scenery[i];
+            if (!item.sprouted) continue;
+            var sc = 1;
+            if (!reducedMotion && item.bornAt > 0) {
+              var age = (now - item.bornAt) / 320;
+              if (age < 1) {
+                sc = age < 0.7 ? (age / 0.7) * 1.18 : 1.18 - ((age - 0.7) / 0.3) * 0.18;
+              }
+            }
+            drawSceneryItem(fxCtx, item, sc);
+          }
+
+          // 4. 起點月台與終點小房子
+          drawPlatform(fxCtx, SCENE_CONFIG.START_X, SCENE_CONFIG.START_Y, strokeList.length === 0);
+          drawHouse(fxCtx, SCENE_CONFIG.END_X, SCENE_CONFIG.END_Y, arrived, trainMood === 'honk');
+
+          // 5. 白煙粒子
+          for (var p = 0; p < puffs.length; p++) {
+            var pf = puffs[p];
+            fxCtx.save();
+            fxCtx.globalAlpha = Math.max(0, pf.alpha);
+            fxCtx.fillStyle = '#FFFFFF';
+            fxCtx.strokeStyle = SCENE_CONFIG.COLORS.ink;
+            fxCtx.lineWidth = 2.2;
+            fxCtx.beginPath();
+            fxCtx.arc(pf.x, pf.y, pf.r, 0, Math.PI * 2);
+            fxCtx.fill();
+            fxCtx.stroke();
+            fxCtx.restore();
+          }
+
+          // 6. 小火車本體
+          var pose = track.points.length >= 2
+            ? sampleTrackAt(track.points, trainDist)
+            : { x: SCENE_CONFIG.START_X + 34, y: SCENE_CONFIG.START_Y, angle: 0 };
+          var wobRad = (trainMood === 'wobble' && !reducedMotion)
+            ? Math.sin(wobbleTime * 24) * 0.24
+            : 0;
+          var honkPulse = (now < honkUntil && !reducedMotion)
+            ? ((honkUntil - now) % 360) / 360
+            : (now < honkUntil ? 0.4 : 0);
+
+          drawTrain(
+            fxCtx,
+            pose.x,
+            pose.y,
+            pose.angle,
+            trainDist * 0.11,
+            trainMood,
+            wobRad,
+            honkPulse
+          );
+
+          // 7. 到站慶祝小星星
+          for (var k = 0; k < sparkles.length; k++) {
+            var sp = sparkles[k];
+            fxCtx.save();
+            fxCtx.globalAlpha = Math.max(0, sp.alpha);
+            fxCtx.translate(sp.x, sp.y);
+            fxCtx.fillStyle = sp.color;
+            fxCtx.strokeStyle = SCENE_CONFIG.COLORS.ink;
+            fxCtx.lineWidth = 2;
+            fxCtx.beginPath();
+            var r1 = sp.size;
+            var r2 = sp.size * 0.46;
+            for (var v = 0; v < 10; v++) {
+              var a = (v * Math.PI) / 5 - Math.PI / 2;
+              var rr = (v % 2 === 0) ? r1 : r2;
+              if (v === 0) fxCtx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
+              else fxCtx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+            }
+            fxCtx.closePath();
+            fxCtx.fill();
+            fxCtx.stroke();
+            fxCtx.restore();
+          }
+        }
+
+        // 產生到站慶祝星星
+        function spawnArriveSparkles() {
+          sparkles = [];
+          if (reducedMotion) return;
+          var cx = SCENE_CONFIG.END_X;
+          var cy = SCENE_CONFIG.END_Y - 12;
+          var colors = ['#FFB627', '#F06292', '#4FC3F7', '#81C784'];
+          for (var i = 0; i < 12; i++) {
+            var ang = (i / 12) * Math.PI * 2;
+            var spd = 45 + (i % 3) * 28;
+            sparkles.push({
+              x: cx,
+              y: cy,
+              vx: Math.cos(ang) * spd,
+              vy: Math.sin(ang) * spd - 26,
+              size: 7 + (i % 3) * 2,
+              color: colors[i % colors.length],
+              alpha: 1
+            });
+          }
+        }
+
+        // 火車跑完整條目前軌道時做收尾判定
+        function onTrainReachedTrackEnd(now) {
+          trainMoving = false;
+          var isGoalReached = levelCfg.hasGuide
+            ? (reachedEnd && track.totalLen >= SCENE_CONFIG.MIN_TRACK_LEN)
+            : (reachedStart && reachedEnd && connected && track.totalLen >= SCENE_CONFIG.MIN_TRACK_LEN);
+
+          if (isGoalReached) {
+            arrived = true;
+            trainMood = 'happy';
+            spawnArriveSparkles();
+            updateUI();
+          } else {
+            arrived = false;
+            trainMood = 'honk';
+            honkUntil = now + 1100;
+            if (!reducedMotion && els.faceBox) {
+              els.faceBox.classList.remove('sc-shake');
+              void els.faceBox.offsetWidth;
+              els.faceBox.classList.add('sc-shake');
+            }
+            updateUI();
+          }
+        }
+
+        // requestAnimationFrame 主迴圈（使用時間差計算）
+        function tick(now) {
+          if (!active) return;
+          rafId = 0;
+
+          if (!lastTs) lastTs = now;
+          var dt = Math.min(0.05, Math.max(0, (now - lastTs) / 1000));
+          lastTs = now;
+
+          var needMore = false;
+
+          // 更新小火車前進
+          if (trainMoving && track.totalLen > 1) {
+            var poseNow = sampleTrackAt(track.points, trainDist);
+            var offTrack = levelCfg.hasGuide && distToGuide(poseNow) > SCENE_CONFIG.TOLERANCE_PX;
+            var speed = offTrack
+              ? SCENE_CONFIG.TRAIN_SPEED * SCENE_CONFIG.WOBBLE_SPEED_FACTOR
+              : SCENE_CONFIG.TRAIN_SPEED;
+
+            var prevMood = trainMood;
+            trainMood = offTrack ? 'wobble' : 'run';
+            if (offTrack) {
+              wobbleTime += dt;
+              everWobbled = true;
+            }
+            if (prevMood !== trainMood) {
+              updateUI();
+            }
+
+            trainDist += speed * dt;
+
+            // 火車經過的地方沿線長出花、草、小樹
+            for (var i = 0; i < scenery.length; i++) {
+              if (!scenery[i].sprouted && trainDist >= scenery[i].dist) {
+                scenery[i].sprouted = true;
+                scenery[i].bornAt = now;
+              }
+            }
+
+            // 冒白煙（減動態模式不生成連續粒子）
+            if (!reducedMotion) {
+              smokeAcc += dt;
+              if (smokeAcc >= 0.14) {
+                smokeAcc = 0;
+                var pPose = sampleTrackAt(track.points, trainDist);
+                puffs.push({
+                  x: pPose.x + Math.cos(pPose.angle) * 12,
+                  y: pPose.y - 34,
+                  vx: -14 + (Math.random() - 0.5) * 14,
+                  vy: -32 - Math.random() * 14,
+                  r: 5 + Math.random() * 3,
+                  alpha: 0.9
+                });
+              }
+            }
+
+            if (trainDist >= track.totalLen) {
+              trainDist = track.totalLen;
+              // 補長尾端花草
+              for (var j = 0; j < scenery.length; j++) {
+                if (!scenery[j].sprouted) {
+                  scenery[j].sprouted = true;
+                  scenery[j].bornAt = now;
+                }
+              }
+              onTrainReachedTrackEnd(now);
+            } else {
+              needMore = true;
+            }
+          }
+
+          // 更新白煙粒子
+          for (var p = puffs.length - 1; p >= 0; p--) {
+            var pf = puffs[p];
+            pf.x += pf.vx * dt;
+            pf.y += pf.vy * dt;
+            pf.r += 10 * dt;
+            pf.alpha -= 0.95 * dt;
+            if (pf.alpha <= 0) puffs.splice(p, 1);
+            else needMore = true;
+          }
+
+          // 更新慶祝星星
+          for (var k = sparkles.length - 1; k >= 0; k--) {
+            var sp = sparkles[k];
+            sp.x += sp.vx * dt;
+            sp.y += sp.vy * dt;
+            sp.vy += 65 * dt;
+            sp.alpha -= 0.85 * dt;
+            if (sp.alpha <= 0) sparkles.splice(k, 1);
+            else needMore = true;
+          }
+
+          // 花草長大動畫或按喇叭動畫還在跑時持續繪製
+          if (now < honkUntil) needMore = true;
+          if (!reducedMotion) {
+            for (var s = 0; s < scenery.length; s++) {
+              if (scenery[s].sprouted && scenery[s].bornAt > 0 && now - scenery[s].bornAt < 340) {
+                needMore = true;
+                break;
+              }
+            }
+          }
+
+          renderOverlay(now);
+
+          if (needMore && active) {
+            rafId = window.requestAnimationFrame(tick);
+          }
+        }
+
+        // 啟動火車出發（fromStart = true 從起點重跑；false 接續目前位置跑向新線尾）
+        function launchTrain(fromStart) {
+          if (track.totalLen < 12) {
+            trainMoving = false;
+            trainMood = 'honk';
+            honkUntil = performance.now() + 900;
+            updateUI('按住拖曳，畫出一條長長的鐵軌喔！', '再長一點喔', 'warn');
+            startLoop();
+            return;
+          }
+          if (fromStart) {
+            trainDist = 0;
+            puffs = [];
+            sparkles = [];
+            arrived = false;
+            rebuildScenery(true);
+          } else {
+            if (trainDist >= track.totalLen - 4) {
+              trainDist = Math.max(0, track.totalLen - 8);
+            }
+          }
+          trainMoving = true;
+          trainMood = 'run';
+          honkUntil = 0;
+          updateUI();
+          startLoop();
+        }
+
+        // 輸出給畫廊、下載、列印的合成作品圖（白底＋孩子畫的鐵軌＋枕木＋花草＋月台＋小房子＋微笑小火車）
+        function exportArtworkCanvas() {
+          var out = document.createElement('canvas');
+          out.width = SCENE_CONFIG.CANVAS_W;
+          out.height = SCENE_CONFIG.CANVAS_H;
+          var ctx = out.getContext('2d');
+
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, out.width, out.height);
+
+          // 畫極淡的虛線底圖
+          ctx.save();
+          ctx.globalAlpha = 0.45;
+          drawGuideLine(ctx, guideSamples, !levelCfg.hasGuide);
+          ctx.restore();
+
+          // 貼上孩子親手畫的鐵軌筆跡
+          if (cv && cv.el) {
+            ctx.drawImage(cv.el, 0, 0);
+          }
+
+          // 疊上枕木、花草小樹、月台、小房子與終點開心小火車
+          drawRailSleepers(ctx, track.points);
+          for (var i = 0; i < scenery.length; i++) {
+            if (scenery[i].sprouted) {
+              drawSceneryItem(ctx, scenery[i], 1);
+            }
+          }
+          drawPlatform(ctx, SCENE_CONFIG.START_X, SCENE_CONFIG.START_Y, false);
+          drawHouse(ctx, SCENE_CONFIG.END_X, SCENE_CONFIG.END_Y, true, false);
+
+          var endPose = track.points.length >= 2
+            ? sampleTrackAt(track.points, track.totalLen)
+            : { x: SCENE_CONFIG.END_X - 42, y: SCENE_CONFIG.END_Y, angle: 0 };
+          drawTrain(ctx, endPose.x, endPose.y, endPose.angle, track.totalLen * 0.11, 'happy', 0, 0);
+          return out;
+        }
+
+        // 清理目前關卡的所有計時器、動畫與監聽
+        function cleanup() {
+          active = false;
+          stopLoop();
+          clearAllTimers();
+          if (api.field) {
+            api.field.onclick = null;
+          }
+          cv = null;
+          fxCanvas = null;
+          fxCtx = null;
+          els = {};
+          strokeList = [];
+          track = { points: [], totalLen: 0 };
+          scenery = [];
+          puffs = [];
+          sparkles = [];
+          trainDist = 0;
+          trainMoving = false;
+          trainMood = 'idle';
+          wobbleTime = 0;
+          honkUntil = 0;
+          coverage = 0;
+          reachedStart = false;
+          reachedEnd = false;
+          connected = false;
+          arrived = false;
+          everWobbled = false;
+        }
+
+        return {
+          start: function (levelIndex) {
+            cleanup();
+            active = true;
+            reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+            var idx = Math.max(0, Math.min(levelIndex, SCENE_CONFIG.LEVELS.length - 1));
+            levelCfg = SCENE_CONFIG.LEVELS[idx];
+            guideSamples = buildGuideSamples(levelCfg.guideType);
+
+            api.quest(levelCfg.quest);
+
+            // 依關卡建置右側進度區（第 1–3 關覆蓋率條；第 4 關月台／小房子連通晶片）
+            var progressHtml = levelCfg.hasGuide
+              ? '<div class="sc-meter-wrap">' +
+                  '<div class="sc-meter-top"><span>沿著虛線畫</span><b class="ai-num sc-meter-val">0%</b></div>' +
+                  '<div class="sc-bar">' +
+                    '<div class="sc-bar-fill"></div>' +
+                    '<span class="sc-bar-mark" style="left:50%" title="2 顆星門檻"></span>' +
+                    '<span class="sc-bar-mark" style="left:75%" title="3 顆星門檻"></span>' +
+                  '</div>' +
+                  '<div class="sc-stars-row">' +
+                    '<div class="sc-stars-icons">' + starSvg(false) + starSvg(false) + starSvg(false) + '</div>' +
+                    '<span class="sc-stars-hint">慢慢畫沒關係</span>' +
+                  '</div>' +
+                '</div>'
+              : '<div class="sc-free-checks">' +
+                  '<div class="sc-chip sc-chip-start">月台</div>' +
+                  '<div class="sc-chip sc-chip-end">小房子</div>' +
+                '</div>';
+
+            api.field.innerHTML =
+              // 左側工具面板
+              '<div class="ai-panel sc-tools">' +
+                '<h3 class="sc-sec-title">鐵軌畫筆</h3>' +
+                '<div class="sc-brush-card">' +
+                  '<span class="sc-brush-check">' + ICONS.checkWhite + '</span>' +
+                  ICONS.brushSample +
+                  '<span class="sc-brush-name">深棕粗鐵軌</span>' +
+                '</div>' +
+                '<h3 class="sc-sec-title">小幫手</h3>' +
+                '<div class="sc-tool-stack">' +
+                  '<button type="button" class="ai-btn sc-tool-btn sc-undo" disabled>' + ICONS.undo + '<span>復原</span></button>' +
+                  '<button type="button" class="ai-btn sc-tool-btn sc-clear" disabled>' + ICONS.clear + '<span>清除</span></button>' +
+                  '<button type="button" class="ai-btn sc-tool-btn sc-replay" disabled>' + ICONS.replay + '<span>再跑一次</span></button>' +
+                '</div>' +
+                '<div class="sc-legend">' +
+                  '<div class="sc-legend-item">' + ICONS.platformMini + '<span>起點：月台</span></div>' +
+                  '<div class="sc-legend-item">' + ICONS.houseMini + '<span>終點：小房子</span></div>' +
+                '</div>' +
+              '</div>' +
+
+              // 中間白畫布（主角最大，貼兩條斜膠帶）
+              '<div class="ai-board sc-board">' +
+                '<span class="ai-tape" style="left:138px;top:-11px;transform:rotate(-3deg)"></span>' +
+                '<span class="ai-tape" style="right:138px;top:-11px;transform:rotate(2.5deg)"></span>' +
+                '<div class="sc-canvas-stage">' +
+                  '<canvas class="sc-fx-layer" width="' + SCENE_CONFIG.CANVAS_W + '" height="' + SCENE_CONFIG.CANVAS_H + '"></canvas>' +
+                '</div>' +
+              '</div>' +
+
+              // 右側線條認識、火車說話與完成鈕
+              '<div class="sc-side">' +
+                '<div class="ai-panel sc-line-card">' +
+                  '<div class="sc-line-head">' +
+                    '<span class="ai-badge sc-line-badge">' + levelCfg.lineName + '</span>' +
+                    '<div class="sc-line-preview">' +
+                      '<svg viewBox="0 0 112 36" width="112" height="36" aria-hidden="true">' +
+                        '<path d="' + levelCfg.previewPath + '" fill="none" stroke="#6D4C41" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>' +
+                      '</svg>' +
+                    '</div>' +
+                  '</div>' +
+                  '<p class="ai-zy sc-feel">' + levelCfg.feel + '</p>' +
+                '</div>' +
+
+                '<div class="ai-panel sc-status-card">' +
+                  '<div class="sc-face-row">' +
+                    '<div class="sc-face-box">' + trainFaceSvg('idle') + '</div>' +
+                    '<div class="sc-state-pill">準備出發</div>' +
+                  '</div>' +
+                  '<div class="sc-msg-box"><p class="ai-zy sc-msg"></p></div>' +
+                  progressHtml +
+                '</div>' +
+
+                '<button type="button" class="ai-btn go sc-done" disabled>' + ICONS.checkOk + '<span>完成</span></button>' +
+              '</div>';
+
+            // 取得 DOM 節點參考
+            var stage = api.field.querySelector('.sc-canvas-stage');
+            fxCanvas = api.field.querySelector('.sc-fx-layer');
+            fxCtx = fxCanvas.getContext('2d');
+
+            els = {
+              undo: api.field.querySelector('.sc-undo'),
+              clear: api.field.querySelector('.sc-clear'),
+              replay: api.field.querySelector('.sc-replay'),
+              done: api.field.querySelector('.sc-done'),
+              faceBox: api.field.querySelector('.sc-face-box'),
+              face: api.field.querySelector('.sc-face-box'),
+              pill: api.field.querySelector('.sc-state-pill'),
+              msg: api.field.querySelector('.sc-msg'),
+              pct: api.field.querySelector('.sc-meter-val'),
+              barFill: api.field.querySelector('.sc-bar-fill'),
+              stars: api.field.querySelector('.sc-stars-icons'),
+              starsHint: api.field.querySelector('.sc-stars-hint'),
+              chipStart: api.field.querySelector('.sc-chip-start'),
+              chipEnd: api.field.querySelector('.sc-chip-end')
+            };
+
+            // 建立共用自由畫布（插入在 fxCanvas 下方，使虛線與小火車浮在最上層且不擋操作）
+            cv = api.canvas(stage, {
+              width: SCENE_CONFIG.CANVAS_W,
+              height: SCENE_CONFIG.CANVAS_H,
+              color: SCENE_CONFIG.BRUSH_COLOR,
+              size: SCENE_CONFIG.BRUSH_SIZE
+            });
+            stage.insertBefore(cv.el, fxCanvas);
+
+            // 每畫完一筆，更新軌道並讓小火車沿著孩子畫的線開過去
+            cv.onStroke(function (stroke) {
+              if (!active || !stroke || !Array.isArray(stroke.path) || stroke.path.length === 0) return;
+
+              var prevTotal = track.totalLen;
+              var wasFirst = strokeList.length === 0;
+              strokeList.push(stroke.path.map(function (p) { return { x: p.x, y: p.y }; }));
+
+              var startPt = { x: SCENE_CONFIG.START_X + 26, y: SCENE_CONFIG.START_Y };
+              var endPt = { x: SCENE_CONFIG.END_X - 26, y: SCENE_CONFIG.END_Y };
+              track = buildTrackFromStrokes(strokeList, startPt, endPt);
+              evaluateTrack();
+              rebuildScenery(false);
+
+              // 若為第一筆從頭出發；否則接續上一筆尾端繼續開
+              if (wasFirst) {
+                launchTrain(true);
+              } else {
+                if (!trainMoving && trainDist > prevTotal) {
+                  trainDist = prevTotal;
+                }
+                launchTrain(false);
+              }
+            });
+
+            // 按鈕事件委派（留在 api.field 上，stop 時清除）
+            api.field.onclick = function (e) {
+              if (!active) return;
+              if (e.target.closest('.sc-undo')) {
+                if (strokeList.length === 0) return;
+                stopLoop();
+                clearAllTimers();
+                cv.undo();
+                var keep = typeof cv.strokes === 'function' ? cv.strokes() : Math.max(0, strokeList.length - 1);
+                strokeList = strokeList.slice(0, keep);
+
+                var startPt = { x: SCENE_CONFIG.START_X + 26, y: SCENE_CONFIG.START_Y };
+                var endPt = { x: SCENE_CONFIG.END_X - 26, y: SCENE_CONFIG.END_Y };
+                track = buildTrackFromStrokes(strokeList, startPt, endPt);
+                evaluateTrack();
+                rebuildScenery(true);
+                puffs = [];
+                sparkles = [];
+                trainMoving = false;
+                trainDist = track.totalLen;
+
+                // 若復原後仍有軌道，把已走過區域的花草補顯示出來
+                for (var i = 0; i < scenery.length; i++) {
+                  scenery[i].sprouted = true;
+                  scenery[i].bornAt = 0;
+                }
+
+                var stillGoal = levelCfg.hasGuide
+                  ? (reachedEnd && track.totalLen >= SCENE_CONFIG.MIN_TRACK_LEN)
+                  : (reachedStart && reachedEnd && connected && track.totalLen >= SCENE_CONFIG.MIN_TRACK_LEN);
+                arrived = stillGoal;
+                trainMood = strokeList.length === 0 ? 'idle' : (arrived ? 'happy' : 'honk');
+                honkUntil = 0;
+                updateUI();
+                renderOverlay(performance.now());
+              } else if (e.target.closest('.sc-clear')) {
+                if (strokeList.length === 0) return;
+                stopLoop();
+                clearAllTimers();
+                cv.clear();
+                strokeList = [];
+                track = { points: [], totalLen: 0 };
+                scenery = [];
+                puffs = [];
+                sparkles = [];
+                evaluateTrack();
+                trainDist = 0;
+                trainMoving = false;
+                trainMood = 'idle';
+                arrived = false;
+                honkUntil = 0;
+                updateUI();
+                renderOverlay(performance.now());
+              } else if (e.target.closest('.sc-replay')) {
+                if (track.totalLen < 16) return;
+                launchTrain(true);
+              } else if (e.target.closest('.sc-done')) {
+                if (!arrived && strokeList.length === 0) return;   // 寬鬆：畫過就能完成，沒到站給 1 顆星
+                stopLoop();
+                clearAllTimers();
+                var stars = Math.max(1, calcStars());
+                var artwork = exportArtworkCanvas();
+                api.finish({
+                  stars: stars,
+                  image: artwork,
+                  praise: arrived ? (levelCfg.praise[stars] || levelCfg.praise[1])
+                    : '鐵軌鋪好一段了，小火車很開心！下次試著一路畫到小房子喔！',
+                  caption: levelCfg.name
+                });
+              }
+            };
+
+            // 初始畫面與靜態繪製
+            updateUI();
+            renderOverlay(performance.now());
+          },
+
+          stop: function () {
+            cleanup();
+          }
+        };
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

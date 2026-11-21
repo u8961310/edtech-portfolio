@@ -14,6 +14,7 @@
  *     hero: '<svg …>',                       // 開始畫面左側主角插圖（inline SVG 字串）
  *     levels: [{ name: '橘色南瓜', thumb: '<svg …>' }, …],   // 最多 4 關一排；第 1 關一定開，之後要前一關有星星才開
  *     submit: true,                          // 完成畫面要不要出現「交成績給老師」（自由畫畫的關設 false）
+ *     allOpen: false,                        // true＝所有關卡一開始就能選（自由創作的關）
  *     scene: function (api) { return { start: function (levelIndex) {}, stop: function () {} }; }
  *   });
  *
@@ -217,7 +218,8 @@
       if (name === 'gallery') api.quest('');
       if (name !== 'gallery') prevScreen = name;
     }
-    function unlocked(i, prog) { return i === 0 || (prog[i - 1] || 0) > 0; }
+    // opts.allOpen：所有關卡一開始就能選（自由創作的關，例如魔法畫畫屋的主題卡）
+    function unlocked(i, prog) { return opts.allOpen || i === 0 || (prog[i - 1] || 0) > 0; }
     function nextOpen() {
       var prog = store.progress(opts.unit);
       for (var i = 0; i < levels.length; i++) if (!(prog[i] > 0)) return unlocked(i, prog) ? i : Math.max(0, i - 1);
@@ -254,7 +256,8 @@
     // ---------------- 完成
     function finish(r) {
       r = r || {};
-      var stars = Math.max(0, Math.min(3, Math.round(r.stars || 0)));
+      // 畫畫島寬鬆原則（老師 11-21）：只要完成就至少 1 顆星，下一關一定解鎖；星星多寡才反映做得好不好
+      var stars = Math.max(1, Math.min(3, Math.round(r.stars || 0)));
       var url = toURL(r.image);
       var prog = store.saveStars(opts.unit, cur, stars);
       var total = prog.reduce(function (a, b) { return a + (b || 0); }, 0);

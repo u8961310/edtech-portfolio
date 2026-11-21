@@ -1,807 +1,1925 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>魔法簡約畫畫屋 - 兒童聲光畫圖板 4.0</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Playful Rounded Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
-    
-    <style>
-        body {
-            font-family: 'Quicksand', 'Microsoft JhengHei', sans-serif;
-            background: linear-gradient(135deg, #ffe4e6 0%, #fef08a 100%);
-            overscroll-behavior: none; /* 防止手機拉動重新整理 */
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>魔法畫畫屋 - 畫畫島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Fredoka:wght@600;700&display=swap">
+  <link rel="stylesheet" href="../../assets/css/art-island.css">
+  <style>
+    /* ===== 魔法畫畫屋場景樣式（一律以 sc- 開頭，不覆寫 .ai- 共用樣式） ===== */
+    .sc-tools {
+      position: absolute;
+      left: 20px;
+      top: 8px;
+      width: 244px;
+      bottom: 16px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      box-sizing: border-box;
+    }
+    .sc-sec-title {
+      margin: 0;
+      font: 700 16px/1.2 var(--f-ui);
+      color: var(--ink-2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* 筆刷粗細按鈕 */
+    .sc-sizes {
+      display: flex;
+      gap: 8px;
+    }
+    .sc-size {
+      position: relative;
+      flex: 1;
+      height: 48px;
+      background: var(--card);
+      border: 3px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: 0 4px 0 var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      transition: transform 0.08s ease;
+    }
+    .sc-size:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--ink);
+    }
+    .sc-size i {
+      display: block;
+      border-radius: 50%;
+      background: var(--ink);
+    }
+
+    /* 畫筆／彩虹筆／橡皮擦模式鈕 */
+    .sc-modes {
+      display: flex;
+      gap: 7px;
+    }
+    .sc-mode {
+      position: relative;
+      flex: 1;
+      height: 58px;
+      background: var(--card);
+      border: 3px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: 0 4px 0 var(--ink);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: pointer;
+      padding: 4px 2px;
+      color: var(--ink);
+      font: 700 16px/1 var(--f-ui);
+      white-space: nowrap;
+      transition: transform 0.08s ease;
+    }
+    .sc-mode:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--ink);
+    }
+    .sc-mode svg {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    /* 彩虹筆視覺識別條 */
+    .sc-mode-rainbow {
+      background: linear-gradient(180deg, var(--card) 72%, #FFE8EC 100%);
+    }
+
+    /* 選中狀態：淺藍底＋藍框＋外圈 2px 藍＋右上角 ✓ 小圓 */
+    .sc-on {
+      background: var(--blue-soft) !important;
+      border-color: var(--blue) !important;
+      color: var(--blue) !important;
+      box-shadow: 0 0 0 2px var(--blue), 0 4px 0 var(--ink) !important;
+    }
+    .sc-on::after {
+      content: "✓";
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #FFFFFF;
+      border: 2px solid #FFFFFF;
+      font: 900 13px/18px var(--f-ui);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    /* 12 色色盤（4×3，每顆 46×46px） */
+    .sc-colors {
+      display: grid;
+      grid-template-columns: repeat(4, 46px);
+      gap: 7px;
+      justify-content: space-between;
+    }
+    .sc-sw {
+      position: relative;
+      width: 46px;
+      height: 46px;
+      border-radius: 11px;
+      border: 3px solid var(--ink);
+      box-shadow: 0 3px 0 var(--ink);
+      cursor: pointer;
+      padding: 0;
+      transition: transform 0.08s ease;
+    }
+    .sc-sw:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 var(--ink);
+    }
+    /* 色塊選中保留原本顏料色，加白藍外圈＋右上角 ✓ */
+    .sc-sw.sc-sw-on {
+      box-shadow: 0 0 0 3px #FFFFFF, 0 0 0 6px var(--blue);
+    }
+    .sc-sw.sc-sw-on::after {
+      content: "✓";
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #FFFFFF;
+      border: 2px solid #FFFFFF;
+      font: 900 12px/16px var(--f-ui);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    /* 復原／清除按鈕列 */
+    .sc-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+    }
+    .sc-actions .ai-btn {
+      flex: 1;
+      min-height: 50px;
+      padding: 0 6px;
+      font-size: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .sc-actions .ai-btn svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .sc-clear-arm {
+      background: var(--bad-soft) !important;
+      border-color: var(--bad) !important;
+      color: #8E1F29 !important;
+    }
+
+    /* 中央大白畫布（主角最大） */
+    .sc-board {
+      position: absolute;
+      left: 280px;
+      top: 8px;
+      width: 772px;
+      height: 472px;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    .sc-board .ai-tape {
+      pointer-events: none;
+      z-index: 6;
+    }
+    .sc-canvas-hidden {
+      visibility: hidden;
+    }
+    .sc-fx-canvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 766px;
+      height: 466px;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .sc-stamp-layer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 766px;
+      height: 466px;
+      z-index: 4;
+      display: none;
+      touch-action: none;
+      cursor: crosshair;
+    }
+    .sc-stamp-layer.sc-active {
+      display: block;
+    }
+
+    /* 畫布下方主題印章列 */
+    .sc-stamps-bar {
+      position: absolute;
+      left: 280px;
+      top: 492px;
+      width: 772px;
+      height: 87px;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-sizing: border-box;
+    }
+    .sc-stamps-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 82px;
+      gap: 2px;
+      color: var(--ink-2);
+      font: 700 17px/1.2 var(--f-ui);
+      white-space: nowrap;
+    }
+    .sc-stamps-label svg {
+      width: 26px;
+      height: 26px;
+    }
+    .sc-stamps-list {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .sc-stamp-btn {
+      position: relative;
+      height: 64px;
+      background: var(--card);
+      border: 3px solid var(--ink);
+      border-radius: 14px;
+      box-shadow: 0 4px 0 var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 0 12px;
+      cursor: pointer;
+      color: var(--ink);
+      font: 700 20px/1 var(--f-title);
+      white-space: nowrap;
+      transition: transform 0.08s ease;
+    }
+    .sc-stamp-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--ink);
+    }
+    .sc-stamp-btn svg {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+    }
+
+    /* 右側面板：小精靈提示＋變魔法＋完成 */
+    .sc-side {
+      position: absolute;
+      left: 1070px;
+      right: 20px;
+      top: 8px;
+      bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sc-guide {
+      flex: 1;
+      padding: 14px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 8px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    .sc-theme-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--sun-soft);
+      border: 2.5px solid var(--ink);
+      font: 700 17px/1.2 var(--f-title);
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .sc-mascot {
+      width: 112px;
+      height: 98px;
+      flex-shrink: 0;
+    }
+    .sc-mascot svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .sc-guide-msg {
+      margin: 0;
+      width: 100%;
+      min-height: 76px;
+      padding: 8px 6px;
+      border-radius: 12px;
+      background: var(--lagoon);
+      border: 2.5px solid var(--ink);
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1.5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+    .sc-stats {
+      margin-top: auto;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font: 700 17px/1.2 var(--f-ui);
+      color: var(--ink-2);
+      white-space: nowrap;
+    }
+    .sc-stats .ai-num {
+      font-size: 20px;
+      color: var(--blue);
+    }
+
+    /* 變魔法大按鈕 */
+    .sc-magic {
+      height: 88px;
+      padding: 0 14px;
+      background: var(--blue-soft);
+      color: var(--ink);
+      border-color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font: 900 28px/1 var(--f-title);
+      white-space: nowrap;
+    }
+    .sc-magic svg {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+    }
+    .sc-magic.sc-magic-playing {
+      background: var(--blue);
+      color: #FFFFFF;
+      border-color: var(--ink);
+    }
+
+    /* 完成大按鈕 */
+    .sc-done {
+      height: 82px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font: 900 30px/1 var(--f-title);
+      white-space: nowrap;
+    }
+    .sc-done svg {
+      width: 34px;
+      height: 34px;
+      flex-shrink: 0;
+    }
+
+    /* 瞬間回饋小動畫（護眼不閃爍，reduced-motion 時停用） */
+    @keyframes sc-hop {
+      0%, 100% { transform: translateY(0) scale(1); }
+      45% { transform: translateY(-9px) scale(1.05); }
+    }
+    @keyframes sc-wiggle {
+      0%, 100% { transform: translateX(0) rotate(0deg); }
+      25% { transform: translateX(-6px) rotate(-4deg); }
+      75% { transform: translateX(6px) rotate(4deg); }
+    }
+    .sc-anim-hop {
+      animation: sc-hop 0.42s ease-out 1;
+    }
+    .sc-anim-wiggle {
+      animation: sc-wiggle 0.36s ease-in-out 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sc-anim-hop,
+      .sc-anim-wiggle {
+        animation: none !important;
+      }
+      .sc-size,
+      .sc-mode,
+      .sc-sw,
+      .sc-stamp-btn {
+        transition: none !important;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/art-ui.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    // 注音破音字：接在字後面讓注音粉圓改畫第 2 個讀音（子→˙ㄗ、地→˙ㄉㄜ、答→ㄉㄚ，依教育部辭典）（整合時加，2026-11-21）
+    var ZY2 = String.fromCodePoint(0xE01E1);
+
+
+    /* =====================================================================
+     * 集中設定常數 SCENE_CONFIG（畫布大小、筆刷、色盤、印章、動畫、主題卡）
+     * ===================================================================== */
+    var SCENE_CONFIG = {
+      CANVAS_W: 766,
+      CANVAS_H: 466,
+      BRUSH_SIZES: [
+        { label: '細筆', px: 5, dot: 8 },
+        { label: '中筆', px: 12, dot: 16 },
+        { label: '粗筆', px: 22, dot: 26 }
+      ],
+      DEFAULT_SIZE_INDEX: 1,
+      DEFAULT_COLOR_INDEX: 11,
+      ERASER_SCALE: 1.7,
+      ERASER_MIN_PX: 18,
+      RAINBOW_STEP_DEG: 5,
+      MAGIC_DURATION_MS: 3000,
+      MAGIC_REDUCED_MS: 1600,
+      STAMP_POP_MS: 360,
+      STAMP_BASE_SIZE: 88,
+      CLEAR_CONFIRM_THRESHOLD: 3,
+      CLEAR_ARM_TIMEOUT_MS: 2500,
+      FINISH_STARS: 1, // 本關不評分，固定給 1 顆星解鎖下一張主題卡
+      COLORS: [
+        { name: '紅色', hex: '#E53935' },
+        { name: '橘色', hex: '#FB8C00' },
+        { name: '黃色', hex: '#FDD835' },
+        { name: '草綠', hex: '#7CB342' },
+        { name: '深綠', hex: '#2E7D32' },
+        { name: '天藍', hex: '#29B6F6' },
+        { name: '藍色', hex: '#1E88E5' },
+        { name: '紫色', hex: '#8E24AA' },
+        { name: '粉紅', hex: '#F06292' },
+        { name: '咖啡', hex: '#795548' },
+        { name: '暖橘膚', hex: '#FFCC80' },
+        { name: '墨藍', hex: '#1F2A4D' }
+      ],
+      THEMES: [
+        {
+          name: '我的家',
+          quest: '主題卡 1／4：我的家',
+          prompt: '畫出你溫暖的家！',
+          magicMsg: '哇！你的家動起來了！',
+          praiseBase: '好溫暖的家！顏色畫得好豐富，住進去一定很開心！',
+          stamps: [
+            { id: 'house', label: '房子' },
+            { id: 'tree', label: '大樹' },
+            { id: 'sun', label: '太陽' }
+          ]
+        },
+        {
+          name: '最喜歡的動物',
+          quest: '主題卡 2／4：最喜歡的動物',
+          prompt: '畫你最喜歡的動物！',
+          magicMsg: '小動物開心地' + ZY2 + '跳起來了！',
+          praiseBase: '這隻小動物好可愛！你把喜歡的心情都畫出來了！',
+          stamps: [
+            { id: 'cat', label: '小貓' },
+            { id: 'dog', label: '小狗' },
+            { id: 'rabbit', label: '小兔' }
+          ]
+        },
+        {
+          name: '下雨天',
+          quest: '主題卡 3／4：下雨天',
+          prompt: '畫一場好玩的雨吧！',
+          magicMsg: '滴答' + ZY2 + '答' + ZY2 + '！雨天變魔法了！',
+          praiseBase: '好有氣氛的下雨天！撐起小傘聽雨聲真有趣！',
+          stamps: [
+            { id: 'cloud', label: '白雲' },
+            { id: 'umbrella', label: '雨傘' },
+            { id: 'drop', label: '水滴' }
+          ]
+        },
+        {
+          name: '海底世界',
+          quest: '主題卡 4／4：海底世界',
+          prompt: '畫神祕的海底世界！',
+          magicMsg: '咕嚕嚕！海底全活起來了！',
+          praiseBase: '好熱鬧的海底世界！小魚和泡泡都在為你拍手！',
+          stamps: [
+            { id: 'fish', label: '小魚' },
+            { id: 'seaweed', label: '海草' },
+            { id: 'bubble', label: '泡泡' }
+          ]
         }
+      ]
+    };
 
-        /* 畫布彩虹外框 */
-        .canvas-frame {
-            border: 8px solid;
-            border-image: linear-gradient(to right, #ff6b6b, #feca57, #1dd1a1, #54a0ff, #5f27cd) 1;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        }
+    /* =====================================================================
+     * 角色與關卡縮圖 SVG（粗墨藍輪廓 #1F2A4D，可愛貼紙畫冊風格，不用 emoji）
+     * ===================================================================== */
+    var HERO_SVG =
+      '<svg viewBox="0 0 380 360" xmlns="http://www.w3.org/2000/svg">' +
+      '<ellipse cx="185" cy="326" rx="132" ry="18" fill="#C3DEDF"/>' +
+      /* 飄浮裝飾小星星 */
+      '<path d="M56 76l7 16 17 2-13 11 4 17-15-9-15 9 4-17-13-11 17-2z" fill="#FFB627" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>' +
+      '<path d="M322 64l5 12 13 2-10 8 3 13-11-7-11 7 3-13-10-8 13-2z" fill="#FFB627" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>' +
+      '<circle cx="72" cy="146" r="7" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="3.5"/>' +
+      '<circle cx="332" cy="134" r="8" fill="#FFF0C2" stroke="#1F2A4D" stroke-width="3.5"/>' +
+      /* 屋身煙囪與彩虹煙 */
+      '<path d="M256 124c14-18 32-24 44-12" fill="none" stroke="#29B6F6" stroke-width="7" stroke-linecap="round"/>' +
+      '<path d="M262 114c12-22 36-30 50-16" fill="none" stroke="#FFB627" stroke-width="6" stroke-linecap="round"/>' +
+      '<rect x="234" y="114" width="32" height="52" rx="6" fill="#FB8C00" stroke="#1F2A4D" stroke-width="5.5"/>' +
+      /* 可愛胖胖小屋主體 */
+      '<rect x="86" y="168" width="188" height="148" rx="28" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="6"/>' +
+      /* 魔法巫師帽屋頂 */
+      '<path d="M60 184 Q180 144 300 184 Q282 146 244 128 L200 42 Q186 24 166 44 L116 128 Q78 146 60 184 Z" fill="#2160C4" stroke="#1F2A4D" stroke-width="6" stroke-linejoin="round"/>' +
+      /* 帽沿金色綁帶與大星星 */
+      '<path d="M96 158 Q180 132 264 158" fill="none" stroke="#FFB627" stroke-width="11" stroke-linecap="round"/>' +
+      '<path d="M180 86l6 13 14 2-10 9 3 14-13-7-13 7 3-14-10-9 14-2z" fill="#FFB627" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>' +
+      /* 魔法屋笑臉 */
+      '<circle cx="144" cy="218" r="12" fill="#1F2A4D"/>' +
+      '<circle cx="140" cy="214" r="4" fill="#FFFFFF"/>' +
+      '<circle cx="216" cy="218" r="12" fill="#1F2A4D"/>' +
+      '<circle cx="212" cy="214" r="4" fill="#FFFFFF"/>' +
+      '<ellipse cx="122" cy="236" rx="12" ry="7" fill="#F06292" opacity="0.65"/>' +
+      '<ellipse cx="238" cy="236" rx="12" ry="7" fill="#F06292" opacity="0.65"/>' +
+      '<path d="M164 236 Q180 254 196 236" fill="none" stroke="#1F2A4D" stroke-width="5.5" stroke-linecap="round"/>' +
+      /* 小圓木門 */
+      '<path d="M158 316v-40a22 22 0 0 1 44 0v40z" fill="#FFB627" stroke="#1F2A4D" stroke-width="5.5"/>' +
+      '<circle cx="190" cy="292" r="4.5" fill="#1F2A4D"/>' +
+      /* 旁邊會微笑的魔法畫筆 */
+      '<g transform="translate(292,232) rotate(18)">' +
+        '<path d="M-12 74 L-12 -22 L12 -22 L12 74 Q0 86 -12 74 Z" fill="#FFB627" stroke="#1F2A4D" stroke-width="5" stroke-linejoin="round"/>' +
+        '<rect x="-13" y="-34" width="26" height="16" rx="4" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="4.5"/>' +
+        '<path d="M-12 -34 C-14 -56 -4 -74 4 -80 C16 -68 18 -46 12 -34 Z" fill="#F06292" stroke="#1F2A4D" stroke-width="5" stroke-linejoin="round"/>' +
+        '<path d="M-4 -46 C-2 -60 2 -68 4 -73 C8 -64 10 -52 6 -44 Z" fill="#29B6F6"/>' +
+        '<circle cx="-5" cy="14" r="3" fill="#1F2A4D"/>' +
+        '<circle cx="6" cy="14" r="3" fill="#1F2A4D"/>' +
+        '<path d="M-4 24 Q1 29 6 24" fill="none" stroke="#1F2A4D" stroke-width="3.5" stroke-linecap="round"/>' +
+      '</g>' +
+      /* 左側小調色盤 */
+      '<g transform="translate(64,264) rotate(-14)">' +
+        '<path d="M-36 4 C-38 -24 -12 -36 14 -30 C36 -25 42 0 28 20 C20 32 4 30 0 20 C-4 12 -14 14 -16 24 C-20 34 -34 26 -36 4 Z" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="5"/>' +
+        '<circle cx="-18" cy="-10" r="6.5" fill="#E53935" stroke="#1F2A4D" stroke-width="2.5"/>' +
+        '<circle cx="0" cy="-16" r="6.5" fill="#FFB627" stroke="#1F2A4D" stroke-width="2.5"/>' +
+        '<circle cx="18" cy="-8" r="6.5" fill="#29B6F6" stroke="#1F2A4D" stroke-width="2.5"/>' +
+        '<circle cx="16" cy="10" r="6.5" fill="#7CB342" stroke="#1F2A4D" stroke-width="2.5"/>' +
+      '</g>' +
+      '</svg>';
 
-        /* 超大泡泡按鈕特效 */
-        .giant-btn {
-            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .giant-btn:active {
-            transform: scale(0.88);
-        }
-        .giant-btn.active {
-            transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(236, 72, 153, 0.6);
-            border-color: #ec4899 !important;
-        }
+    var LEVEL_THUMBS = [
+      /* 1. 我的家 */
+      '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">' +
+      '<circle cx="94" cy="26" r="14" fill="#FFB627" stroke="#1F2A4D" stroke-width="4"/>' +
+      '<rect x="18" y="68" width="12" height="32" rx="4" fill="#795548" stroke="#1F2A4D" stroke-width="3.5"/>' +
+      '<circle cx="24" cy="56" r="18" fill="#7CB342" stroke="#1F2A4D" stroke-width="4"/>' +
+      '<rect x="44" y="56" width="56" height="44" rx="6" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="4.5"/>' +
+      '<polygon points="36,60 72,28 108,60" fill="#FB8C00" stroke="#1F2A4D" stroke-width="4.5" stroke-linejoin="round"/>' +
+      '<rect x="64" y="74" width="16" height="26" rx="4" fill="#E53935" stroke="#1F2A4D" stroke-width="3.5"/>' +
+      '<rect x="84" y="66" width="10" height="10" rx="2" fill="#29B6F6" stroke="#1F2A4D" stroke-width="3"/>' +
+      '</svg>',
+      /* 2. 最喜歡的動物 */
+      '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">' +
+      /* 小白兔 */
+      '<ellipse cx="78" cy="30" rx="8" ry="20" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="4"/>' +
+      '<ellipse cx="96" cy="30" rx="8" ry="20" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="4"/>' +
+      '<ellipse cx="78" cy="32" rx="3.5" ry="11" fill="#F06292"/>' +
+      '<ellipse cx="96" cy="32" rx="3.5" ry="11" fill="#F06292"/>' +
+      '<circle cx="86" cy="64" r="24" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="4.5"/>' +
+      '<circle cx="79" cy="61" r="3.2" fill="#1F2A4D"/>' +
+      '<circle cx="93" cy="61" r="3.2" fill="#1F2A4D"/>' +
+      '<path d="M82 70q4 4 8 0" fill="none" stroke="#1F2A4D" stroke-width="3" stroke-linecap="round"/>' +
+      /* 小橘貓 */
+      '<polygon points="20,56 24,34 42,46" fill="#FB8C00" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>' +
+      '<polygon points="62,56 58,34 40,46" fill="#FB8C00" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>' +
+      '<circle cx="42" cy="74" r="25" fill="#FFCC80" stroke="#1F2A4D" stroke-width="4.5"/>' +
+      '<circle cx="34" cy="70" r="3.5" fill="#1F2A4D"/>' +
+      '<circle cx="50" cy="70" r="3.5" fill="#1F2A4D"/>' +
+      '<polygon points="39,77 45,77 42,81" fill="#F06292"/>' +
+      '<path d="M35 83q7 6 14 0" fill="none" stroke="#1F2A4D" stroke-width="3.2" stroke-linecap="round"/>' +
+      '</svg>',
+      /* 3. 下雨天 */
+      '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M26 48a14 14 0 0 1 6-26 18 18 0 0 1 34-4 14 14 0 0 1 18 14 13 13 0 0 1-4 24H30a12 12 0 0 1-4-8z" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="4.5" stroke-linejoin="round"/>' +
+      '<path d="M30 82a30 26 0 0 1 60 0z" fill="#FFB627" stroke="#1F2A4D" stroke-width="4.5" stroke-linejoin="round"/>' +
+      '<path d="M46 82a14 24 0 0 1 28 0z" fill="#F06292" stroke="#1F2A4D" stroke-width="3.5"/>' +
+      '<path d="M60 82v18a6 6 0 0 1-12 0" fill="none" stroke="#1F2A4D" stroke-width="4.5" stroke-linecap="round"/>' +
+      '<path d="M24 66c0 5-4 8-4 8s-4-3-4-8 4-9 4-9 4 4 4 9z" fill="#29B6F6" stroke="#1F2A4D" stroke-width="3"/>' +
+      '<path d="M104 68c0 5-4 8-4 8s-4-3-4-8 4-9 4-9 4 4 4 9z" fill="#29B6F6" stroke="#1F2A4D" stroke-width="3"/>' +
+      '</svg>',
+      /* 4. 海底世界 */
+      '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M22 106c-6-16 8-28 0-44 8 10 14 26 8 44z" fill="#7CB342" stroke="#1F2A4D" stroke-width="3.8" stroke-linejoin="round"/>' +
+      '<path d="M98 106c6-16-8-26 0-42-8 10-14 24-8 42z" fill="#2E7D32" stroke="#1F2A4D" stroke-width="3.8" stroke-linejoin="round"/>' +
+      '<polygon points="80,62 102,48 102,76" fill="#FFB627" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>' +
+      '<ellipse cx="56" cy="62" rx="28" ry="20" fill="#FB8C00" stroke="#1F2A4D" stroke-width="4.5"/>' +
+      '<path d="M58 43v38" stroke="#FFFBEF" stroke-width="7"/>' +
+      '<circle cx="42" cy="58" r="4.5" fill="#1F2A4D"/>' +
+      '<circle cx="41" cy="56.5" r="1.6" fill="#FFFFFF"/>' +
+      '<circle cx="30" cy="30" r="8" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="3.5"/>' +
+      '<circle cx="48" cy="20" r="5" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="3"/>' +
+      '</svg>'
+    ];
 
-        /* 魔法動起來按鈕特殊霓虹呼吸光芒 */
-        .magic-glowing-btn {
-            animation: glowPulse 1.5s infinite alternate;
-        }
-        @keyframes glowPulse {
-            0% {
-                box-shadow: 0 0 5px #ec4899, 0 0 10px #f43f5e;
-            }
-            100% {
-                box-shadow: 0 0 20px #a855f7, 0 0 25px #ec4899;
-                transform: scale(1.03);
-            }
-        }
+    /* 介面圖示（線條 SVG，stroke 2.4、圓角端點，絕不使用 emoji） */
+    var UI_ICONS = {
+      pen: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 4.5l5 5-12 12-6.5 1.5 1.5-6.5z"/><path d="M15.5 7.5l5 5"/></svg>',
+      rainbow: '<svg viewBox="0 0 28 28" fill="none" stroke-width="3" stroke-linecap="round"><path d="M4 21a10 10 0 0 1 20 0" stroke="#E53935"/><path d="M7.5 21a6.5 6.5 0 0 1 13 0" stroke="#FFB627"/><path d="M11 21a3 3 0 0 1 6 0" stroke="#1E88E5"/></svg>',
+      eraser: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 5l7 7-9 10H8l-4-4z"/><path d="M11 10l7 7"/><path d="M14 22h10"/></svg>',
+      undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7L4 12l5 5"/><path d="M5 12h9a6 6 0 1 1 0 12h-2" transform="translate(0,-3)"/></svg>',
+      clear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></svg>',
+      stamp: '<svg viewBox="0 0 28 28" fill="none" stroke="#1F2A4D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4a4 4 0 0 0-3 6.7c.7.8 1 1.8.8 3.3h4.4c-.2-1.5.1-2.5.8-3.3A4 4 0 0 0 14 4z" fill="#FFB627"/><rect x="5" y="14" width="18" height="6" rx="2.5" fill="#DCE9FB"/><path d="M4 23h20"/></svg>',
+      wand: '<svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 36L24 20" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M27 6l3 7.5 8 1-6.2 5.2 2 7.8-6.8-4.2-6.8 4.2 2-7.8-6.2-5.2 8-1z" fill="#FFB627" stroke="#1F2A4D" stroke-width="2.8" stroke-linejoin="round"/><circle cx="37" cy="28" r="2.6" fill="#FFB627" stroke="#1F2A4D" stroke-width="1.8"/><circle cx="14" cy="12" r="2.6" fill="#FFB627" stroke="#1F2A4D" stroke-width="1.8"/></svg>',
+      check: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 17l7 7 13-15"/></svg>'
+    };
 
-        /* 隱藏預設的觸控反饋，確保繪圖流暢 */
-        canvas {
-            touch-action: none;
-        }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col justify-between p-3 select-none">
-<a href="../../index.html" class="kogao-home-btn" style="position:fixed;top:10px;left:10px;z-index:99999;background:rgba(255,255,255,.92);border:2px solid #f59e0b;color:#b45309;font-family:'Noto Sans TC',sans-serif;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.15)">🏠 首頁</a>
+    /* 12 款主題印章按鈕預覽 SVG */
+    var STAMP_SVGS = {
+      house: '<svg viewBox="0 0 60 60"><rect x="13" y="27" width="34" height="25" rx="4" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="3.2"/><polygon points="8,30 30,10 52,30" fill="#FB8C00" stroke="#1F2A4D" stroke-width="3.2" stroke-linejoin="round"/><rect x="24" y="37" width="12" height="15" rx="3" fill="#E53935" stroke="#1F2A4D" stroke-width="2.8"/></svg>',
+      tree: '<svg viewBox="0 0 60 60"><rect x="25" y="33" width="10" height="20" rx="3" fill="#795548" stroke="#1F2A4D" stroke-width="3"/><circle cx="30" cy="24" r="16" fill="#7CB342" stroke="#1F2A4D" stroke-width="3.2"/><circle cx="24" cy="22" r="3" fill="#E53935"/><circle cx="36" cy="27" r="3" fill="#E53935"/></svg>',
+      sun: '<svg viewBox="0 0 60 60"><g stroke="#1F2A4D" stroke-width="3.2" stroke-linecap="round"><line x1="30" y1="6" x2="30" y2="12"/><line x1="30" y1="48" x2="30" y2="54"/><line x1="6" y1="30" x2="12" y2="30"/><line x1="48" y1="30" x2="54" y2="30"/><line x1="13" y1="13" x2="17" y2="17"/><line x1="43" y1="43" x2="47" y2="47"/><line x1="47" y1="13" x2="43" y2="17"/><line x1="17" y1="43" x2="13" y2="47"/></g><circle cx="30" cy="30" r="14" fill="#FFB627" stroke="#1F2A4D" stroke-width="3.2"/><circle cx="25" cy="28" r="2.2" fill="#1F2A4D"/><circle cx="35" cy="28" r="2.2" fill="#1F2A4D"/><path d="M25 34q5 4 10 0" fill="none" stroke="#1F2A4D" stroke-width="2.5" stroke-linecap="round"/></svg>',
+      cat: '<svg viewBox="0 0 60 60"><polygon points="14,27 17,11 29,19" fill="#FB8C00" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/><polygon points="46,27 43,11 31,19" fill="#FB8C00" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/><circle cx="30" cy="34" r="17" fill="#FFCC80" stroke="#1F2A4D" stroke-width="3.2"/><circle cx="24" cy="32" r="2.5" fill="#1F2A4D"/><circle cx="36" cy="32" r="2.5" fill="#1F2A4D"/><polygon points="28,36 32,36 30,39" fill="#F06292"/><path d="M25 41q5 4 10 0" fill="none" stroke="#1F2A4D" stroke-width="2.4" stroke-linecap="round"/></svg>',
+      dog: '<svg viewBox="0 0 60 60"><ellipse cx="14" cy="33" rx="7" ry="13" fill="#795548" stroke="#1F2A4D" stroke-width="3"/><ellipse cx="46" cy="33" rx="7" ry="13" fill="#795548" stroke="#1F2A4D" stroke-width="3"/><circle cx="30" cy="32" r="16" fill="#FFCC80" stroke="#1F2A4D" stroke-width="3.2"/><circle cx="24" cy="29" r="2.5" fill="#1F2A4D"/><circle cx="36" cy="29" r="2.5" fill="#1F2A4D"/><ellipse cx="30" cy="35" rx="4" ry="3" fill="#1F2A4D"/><path d="M27 40a3 4 0 0 0 6 0" fill="#F06292" stroke="#1F2A4D" stroke-width="2"/></svg>',
+      rabbit: '<svg viewBox="0 0 60 60"><ellipse cx="23" cy="17" rx="5.5" ry="13" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="3"/><ellipse cx="37" cy="17" rx="5.5" ry="13" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="3"/><ellipse cx="23" cy="18" rx="2.4" ry="7" fill="#F06292"/><ellipse cx="37" cy="18" rx="2.4" ry="7" fill="#F06292"/><circle cx="30" cy="38" r="15" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="3.2"/><circle cx="24" cy="36" r="2.3" fill="#1F2A4D"/><circle cx="36" cy="36" r="2.3" fill="#1F2A4D"/><path d="M26 42q4 3 8 0" fill="none" stroke="#1F2A4D" stroke-width="2.4" stroke-linecap="round"/></svg>',
+      cloud: '<svg viewBox="0 0 60 60"><path d="M16 42a10 10 0 0 1 1-20 13 13 0 0 1 25-2 10 10 0 0 1 4 22z" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="3.2" stroke-linejoin="round"/><circle cx="25" cy="32" r="2.2" fill="#1F2A4D"/><circle cx="35" cy="32" r="2.2" fill="#1F2A4D"/><path d="M26 37q4 3 8 0" fill="none" stroke="#1F2A4D" stroke-width="2.4" stroke-linecap="round"/></svg>',
+      umbrella: '<svg viewBox="0 0 60 60"><path d="M10 32a20 18 0 0 1 40 0z" fill="#FFB627" stroke="#1F2A4D" stroke-width="3.2" stroke-linejoin="round"/><path d="M21 32a9 17 0 0 1 18 0z" fill="#F06292" stroke="#1F2A4D" stroke-width="2.8"/><path d="M30 32v15a5 5 0 0 1-10 0" fill="none" stroke="#1F2A4D" stroke-width="3.4" stroke-linecap="round"/></svg>',
+      drop: '<svg viewBox="0 0 60 60"><path d="M30 10 C42 26 45 34 45 40 A15 15 0 0 1 15 40 C15 34 18 26 30 10 Z" fill="#29B6F6" stroke="#1F2A4D" stroke-width="3.2" stroke-linejoin="round"/><circle cx="25" cy="38" r="2.2" fill="#1F2A4D"/><circle cx="35" cy="38" r="2.2" fill="#1F2A4D"/><path d="M26 43q4 3 8 0" fill="none" stroke="#1F2A4D" stroke-width="2.4" stroke-linecap="round"/></svg>',
+      fish: '<svg viewBox="0 0 60 60"><polygon points="41,30 53,20 53,40" fill="#FFB627" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/><ellipse cx="27" cy="30" rx="17" ry="12" fill="#FB8C00" stroke="#1F2A4D" stroke-width="3.2"/><path d="M29 19v22" stroke="#FFFBEF" stroke-width="5"/><circle cx="19" cy="28" r="2.8" fill="#1F2A4D"/></svg>',
+      seaweed: '<svg viewBox="0 0 60 60"><path d="M22 52c-6-12 6-22 0-36 7 8 11 22 6 36z" fill="#7CB342" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/><path d="M38 52c6-12-6-20 0-32-7 8-11 20-6 32z" fill="#2E7D32" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/></svg>',
+      bubble: '<svg viewBox="0 0 60 60"><circle cx="24" cy="36" r="14" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="3"/><circle cx="19" cy="31" r="3.5" fill="#FFFFFF"/><circle cx="42" cy="22" r="9" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="2.8"/><circle cx="39" cy="19" r="2.2" fill="#FFFFFF"/></svg>'
+    };
 
-    <header class="w-full max-w-4xl mx-auto flex justify-between items-center bg-white/90 p-3 rounded-2xl shadow-sm border-2 border-orange-200 mb-2">
-        <div class="flex items-center space-x-2">
-            <span class="text-3xl animate-bounce">🎨</span>
-            <div>
-                <h1 class="text-xl md:text-2xl font-extrabold text-pink-500 font-['Fredoka_One']">魔法畫畫屋</h1>
-                <p id="sub-title-desc" class="text-[10px] text-slate-500">點顏色畫畫、蓋印章，還可以讓畫作動起來喔！🌟</p>
-            </div>
-        </div>
+    /* 右側小精靈頭像（三種表情：normal 一般微笑、magic 魔法閃亮眼、curious 歪頭提醒） */
+    function getMascotSvg(mood) {
+      var eyes =
+        mood === 'magic'
+          ? '<path d="M40 52l3 6 6 1-4.5 4 1.2 6-5.7-3.2-5.7 3.2 1.2-6-4.5-4 6-1z" fill="#FFB627" stroke="#1F2A4D" stroke-width="2.2" stroke-linejoin="round"/>' +
+            '<path d="M72 52l3 6 6 1-4.5 4 1.2 6-5.7-3.2-5.7 3.2 1.2-6-4.5-4 6-1z" fill="#FFB627" stroke="#1F2A4D" stroke-width="2.2" stroke-linejoin="round"/>'
+          : mood === 'curious'
+          ? '<circle cx="42" cy="59" r="5" fill="#1F2A4D"/><circle cx="40.5" cy="57" r="1.8" fill="#FFFFFF"/>' +
+            '<circle cx="70" cy="59" r="5" fill="#1F2A4D"/><circle cx="68.5" cy="57" r="1.8" fill="#FFFFFF"/>'
+          : '<circle cx="42" cy="59" r="5.5" fill="#1F2A4D"/><circle cx="40.2" cy="57" r="2" fill="#FFFFFF"/>' +
+            '<circle cx="70" cy="59" r="5.5" fill="#1F2A4D"/><circle cx="68.2" cy="57" r="2" fill="#FFFFFF"/>';
+      var mouth =
+        mood === 'magic'
+          ? '<path d="M46 71 Q56 84 66 71 Z" fill="#F06292" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/>'
+          : mood === 'curious'
+          ? '<circle cx="56" cy="74" r="4.5" fill="none" stroke="#1F2A4D" stroke-width="3.2"/>'
+          : '<path d="M48 71 Q56 79 64 71" fill="none" stroke="#1F2A4D" stroke-width="3.5" stroke-linecap="round"/>';
+      return (
+        '<svg viewBox="0 0 112 98" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect x="20" y="38" width="72" height="52" rx="18" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="4.2"/>' +
+        '<path d="M12 44 Q56 26 100 44 L76 22 L56 4 L36 22 Z" fill="#2160C4" stroke="#1F2A4D" stroke-width="4.2" stroke-linejoin="round"/>' +
+        '<path d="M26 35 Q56 25 86 35" fill="none" stroke="#FFB627" stroke-width="6" stroke-linecap="round"/>' +
+        '<circle cx="56" cy="21" r="4.5" fill="#FFB627" stroke="#1F2A4D" stroke-width="2.2"/>' +
+        '<ellipse cx="32" cy="68" rx="6" ry="3.8" fill="#F06292" opacity="0.6"/>' +
+        '<ellipse cx="80" cy="68" rx="6" ry="3.8" fill="#F06292" opacity="0.6"/>' +
+        eyes + mouth +
+        '</svg>'
+      );
+    }
 
-        <div class="flex items-center space-x-1.5 md:space-x-2">
-            <!-- 核心亮點：魔法動起來按鈕 -->
-            <button id="btn-magic-move" onclick="toggleMagicMove()" class="magic-glowing-btn giant-btn bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white font-extrabold px-3 py-2 rounded-xl text-sm flex items-center space-x-1 shadow-lg">
-                <span id="magic-btn-emoji">✨</span> <span id="magic-btn-text">魔法動起來</span>
-            </button>
-            <button id="btn-clear" onclick="clearCanvas()" class="giant-btn bg-red-400 border-b-4 border-red-600 text-white font-extrabold px-3 py-2 rounded-xl text-sm flex items-center space-x-1 shadow">
-                <span>🗑️</span> <span class="hidden md:inline">重畫</span>
-            </button>
-            <button id="btn-save" onclick="saveArt()" class="giant-btn bg-emerald-400 border-b-4 border-emerald-600 text-white font-extrabold px-3 py-2 rounded-xl text-sm flex items-center space-x-1 shadow">
-                <span>📸</span> <span class="hidden md:inline">儲存</span>
-            </button>
-        </div>
-    </header>
+    /* =====================================================================
+     * 工具函式：色彩轉換、座標換算、筆畫與印章繪製
+     * ===================================================================== */
+    function hslToHex(h, s, l) {
+      h = ((h % 360) + 360) % 360;
+      s /= 100;
+      l /= 100;
+      var c = (1 - Math.abs(2 * l - 1)) * s;
+      var x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+      var m = l - c / 2;
+      var r = 0, g = 0, b = 0;
+      if (h < 60) { r = c; g = x; }
+      else if (h < 120) { r = x; g = c; }
+      else if (h < 180) { g = c; b = x; }
+      else if (h < 240) { g = x; b = c; }
+      else if (h < 300) { r = x; b = c; }
+      else { r = c; b = x; }
+      var toHex = function (v) {
+        var s2 = Math.round((v + m) * 255).toString(16);
+        return s2.length === 1 ? '0' + s2 : s2;
+      };
+      return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
 
-    <main class="w-full max-w-4xl mx-auto flex-grow flex flex-col justify-center items-center relative my-2">
-        <div class="canvas-frame w-full aspect-[4/3] rounded-2xl overflow-hidden relative bg-white">
-            <!-- 真正的塗鴉 canvas -->
-            <canvas id="paint-canvas" class="absolute inset-0 w-full h-full z-0"></canvas>
-            <!-- 特效 overlay canvas (畫星星粒子等) -->
-            <canvas id="particle-canvas" class="absolute inset-0 w-full h-full z-10 pointer-events-none"></canvas>
-        </div>
-    </main>
+    /* 依舞台實際縮放比例，把指標座標精準換算回畫布 px */
+    function getCanvasPoint(el, e) {
+      var rect = el.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) * (SCENE_CONFIG.CANVAS_W / rect.width),
+        y: (e.clientY - rect.top) * (SCENE_CONFIG.CANVAS_H / rect.height)
+      };
+    }
 
-    <footer class="w-full max-w-4xl mx-auto bg-white/95 p-3 rounded-3xl border-2 border-orange-200 shadow-lg space-y-3">
-        
-        <!-- 當魔法啟動時，顯示的超萌提示 -->
-        <div id="magic-instructions" class="hidden text-center py-2 bg-purple-50 rounded-xl border border-purple-200 animate-pulse">
-            <p class="text-sm font-extrabold text-purple-600">✨ 哇！你的畫作復活了！點擊畫面可以「召喚」更多分身喔！ 🦖🎈</p>
-        </div>
+    /* 計算單一筆畫的幾何中心（作為魔法彈跳搖擺的支點） */
+    function computePathCenter(path) {
+      var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      for (var i = 0; i < path.length; i++) {
+        if (path[i].x < minX) minX = path[i].x;
+        if (path[i].x > maxX) maxX = path[i].x;
+        if (path[i].y < minY) minY = path[i].y;
+        if (path[i].y > maxY) maxY = path[i].y;
+      }
+      return { cx: (minX + maxX) / 2, cy: (minY + maxY) / 2 };
+    }
 
-        <div id="drawing-tools-container" class="space-y-3 transition-opacity duration-300">
-            <!-- 第一排：超大顏色選擇與畫筆 -->
-            <div class="flex flex-wrap justify-center items-center gap-2">
-                <span class="text-xs font-bold text-slate-400 mr-1">畫筆：</span>
-                
-                <!-- 繽紛 9 色調色盤 -->
-                <button onclick="selectColor('#ef4444')" class="color-btn giant-btn w-9 h-9 md:w-11 md:h-11 rounded-full border-4 border-slate-200 active" style="background-color: #ef4444;" title="紅色"></button>
-                <button onclick="selectColor('#f97316')" class="color-btn giant-btn w-9 h-9 md:w-11 md:h-11 rounded-full border-4 border-slate-200" style="background-color: #f97316;" title="橘色"></button>
-                <button onclick="selectColor('#eab308')" class="color-btn giant-btn w-9 h-9 md:w-11 md:h-11 rounded-full border-4 border-slate-200" style="background-color: #eab308;" title="黃色"></button>
-                <button onclick="selectColor('#22c55e')" class="color-btn giant-btn w-9 h-9 md:w-11 md:h-11 rounded-full border-4 border-slate-200" style="background-color: #22c55e;" title="綠色"></button>
-                <button onclick="selectColor('#3b82f6')" class="color-btn giant-btn w-9 h-9 md:w-11 md:h-11 rounded-full border-4 border-slate-200" style="background-color: #3b82f6;" title="藍色"></button>
-                <button onclick="selectColor('#a855f7')" class="color-btn giant-btn w-9 h-9 md:w-11 md:h-11 rounded-full border-4 border-slate-200" style="background-color: #a855f7;" title="紫色"></button>
-                <button onclick="selectColor('#ec4899')" class="color-btn giant-btn w-9 h-9 md:w-11 md:h-11 rounded-full border-4 border-slate-200" style="background-color: #ec4899;" title="粉色"></button>
-                <button onclick="selectColor('#78350f')" class="color-btn giant-btn w-9 h-9 md:w-11 md:h-11 rounded-full border-4 border-slate-200" style="background-color: #78350f;" title="咖啡色"></button>
-                <button onclick="selectColor('#1e293b')" class="color-btn giant-btn w-9 h-9 md:w-11 md:h-11 rounded-full border-4 border-slate-200" style="background-color: #1e293b;" title="黑色"></button>
-                
-                <!-- 魔法筆 -->
-                <button id="brush-rainbow" onclick="selectBrush('rainbow')" class="brush-btn giant-btn px-3 py-2 bg-slate-100 rounded-xl border-2 border-slate-200 text-sm font-extrabold flex items-center space-x-1">
-                    <span>🌈</span> <span>七彩</span>
-                </button>
-                <button id="brush-sparkle" onclick="selectBrush('sparkle')" class="brush-btn giant-btn px-3 py-2 bg-slate-100 rounded-xl border-2 border-slate-200 text-sm font-extrabold flex items-center space-x-1">
-                    <span>✨</span> <span>星星</span>
-                </button>
-                
-                <!-- 橡皮擦 -->
-                <button id="btn-eraser" onclick="selectEraser()" class="color-btn giant-btn w-9 h-9 md:w-11 md:h-11 rounded-full bg-slate-100 border-4 border-slate-200 flex items-center justify-center text-xl shadow-inner" title="擦布">🧹</button>
-            </div>
+    /* 畫出單筆筆畫（支援一般畫筆、橡皮擦、彩虹漸變筆） */
+    function drawStrokeItem(ctx, item, hueShift) {
+      var path = item.path;
+      if (!path || !path.length) return;
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = item.size;
 
-            <!-- 第二排：筆刷粗細與貼紙 -->
-            <div class="flex flex-wrap justify-between items-center border-t border-dashed border-orange-200 pt-2 gap-2">
-                
-                <!-- 粗細：小貓、小狗、大熊 -->
-                <div class="flex items-center space-x-1">
-                    <span class="text-xs font-bold text-slate-400 mr-1">大小：</span>
-                    <button id="size-small" onclick="selectSize(8, 'small')" class="size-btn giant-btn px-2.5 py-1 bg-pink-50 text-pink-600 rounded-lg text-xs font-bold border border-pink-200">
-                        🐱 細
-                    </button>
-                    <button id="size-medium" onclick="selectSize(18, 'medium')" class="size-btn giant-btn px-2.5 py-1 bg-pink-100 text-pink-700 rounded-lg text-xs font-bold border border-pink-300 active">
-                        🐶 中
-                    </button>
-                    <button id="size-large" onclick="selectSize(36, 'large')" class="size-btn giant-btn px-2.5 py-1 bg-pink-50 text-pink-600 rounded-lg text-xs font-bold border border-pink-200">
-                        🐻 粗
-                    </button>
-                </div>
-
-                <!-- 貼紙：三個最愛 -->
-                <div class="flex items-center space-x-1">
-                    <span class="text-xs font-bold text-slate-400 mr-1">貼紙：</span>
-                    <button onclick="selectStamp('🦖')" class="stamp-btn giant-btn w-10 h-10 bg-orange-50 hover:bg-orange-100 rounded-xl text-2xl flex items-center justify-center border border-orange-200">🦖</button>
-                    <button onclick="selectStamp('💖')" class="stamp-btn giant-btn w-10 h-10 bg-orange-50 hover:bg-orange-100 rounded-xl text-2xl flex items-center justify-center border border-orange-200">💖</button>
-                    <button onclick="selectStamp('⭐')" class="stamp-btn giant-btn w-10 h-10 bg-orange-50 hover:bg-orange-100 rounded-xl text-2xl flex items-center justify-center border border-orange-200">⭐</button>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- 彈出通知層 -->
-    <div id="popup-notice" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-pink-500 border-4 border-white text-white px-6 py-3 rounded-2xl font-bold text-base z-50 shadow-lg pointer-events-none opacity-0 transition-opacity duration-300">
-        儲存成功囉！✨
-    </div>
-
-    <script>
-        // --- 1. 極簡 Web Audio API 音樂鋼琴聲系統 ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        function playNote(frequency, type = 'sine', duration = 0.3, volume = 0.1) {
-            try {
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                
-                osc.type = type;
-                osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-                
-                gain.gain.setValueAtTime(volume, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-                
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
-            } catch (err) {
-                console.log("Audio deferred", err);
-            }
-        }
-
-        // 溫柔和諧的五聲音階 (Do Re Mi Sol La)
-        const PENTATONIC = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
-        
-        function playSoundByY(y, height) {
-            const ratio = 1 - (y / height); // 越往上音越高
-            const index = Math.floor(ratio * PENTATONIC.length);
-            const clamped = Math.max(0, Math.min(PENTATONIC.length - 1, index));
-            playNote(PENTATONIC[clamped], 'sine', 0.2, 0.05);
-        }
-
-        // --- 2. 畫布繪製狀態與初始化 ---
-        const canvas = document.getElementById('paint-canvas');
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        const pCanvas = document.getElementById('particle-canvas');
-        const pCtx = pCanvas.getContext('2d');
-
-        let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
-
-        // 當前配置
-        let config = {
-            mode: 'draw',      // 'draw' 或是 'animate' 魔法動起來模式
-            brush: 'normal',   // normal, rainbow, sparkle
-            color: '#ef4444',  // 當前顏色
-            eraser: false,     // 擦布模式
-            size: 18,          // 預設中等
-            stamp: null        // 貼紙
-        };
-
-        // 粒子系統 (星星特效)
-        let particles = [];
-        
-        // 魔法動畫專用：儲存原圖、裁剪圖片及分身物件
-        let backupCanvas = null; // 備份原圖用的 offscreen canvas
-        let croppedDrawing = null; // 裁剪並去背後的小貼圖 canvas
-        let bouncingClones = []; // 所有分身
-        let magicSummonCount = 0; // 召喚分身數（給首頁徽章分數）
-
-        // 核心：自適應大小並保持畫作
-        function resizeCanvas() {
-            // 如果是在動畫模式下，不希望重新定義大小打亂狀態
-            if (config.mode === 'animate') return;
-
-            const rect = canvas.getBoundingClientRect();
-            
-            if (canvas.width === 0) {
-                canvas.width = rect.width;
-                canvas.height = rect.height;
-                pCanvas.width = rect.width;
-                pCanvas.height = rect.height;
-                clearCanvasDirectly();
-            } else {
-                // 調整視窗，先備份原本的畫作
-                const tempCanvas = document.createElement('canvas');
-                const tempCtx = tempCanvas.getContext('2d');
-                tempCanvas.width = canvas.width;
-                tempCanvas.height = canvas.height;
-                tempCtx.drawImage(canvas, 0, 0);
-
-                canvas.width = rect.width;
-                canvas.height = rect.height;
-                pCanvas.width = rect.width;
-                pCanvas.height = rect.height;
-
-                // 重新塗白並還原畫作
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height);
-            }
-        }
-
-        function clearCanvasDirectly() {
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        function clearCanvas() {
-            if (config.mode === 'animate') {
-                // 如果在動畫中，重畫會回到畫畫模式
-                toggleMagicMove();
-            }
-            clearCanvasDirectly();
-            playNote(180, 'sawtooth', 0.3, 0.1); // 可愛清除聲
-            showNotice("畫板乾淨溜溜囉！✨");
-        }
-
-        // --- STREAMING_CHUNK: Pointer Events 萬能觸控與滑鼠事件處理 ---
-        function getCoordinates(e) {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            return { x, y };
-        }
-
-        function startDrawing(e) {
-            e.preventDefault();
-            canvas.setPointerCapture(e.pointerId); // 鎖定觸控焦點
-
-            const coords = getCoordinates(e);
-
-            // 【特殊情況】如果是魔法動起來模式，點擊就是「召喚新分身」
-            if (config.mode === 'animate') {
-                spawnCloneAt(coords.x, coords.y);
-                return;
-            }
-
-            // 如果選了貼紙，點擊就是貼上
-            if (config.stamp) {
-                placeStamp(coords.x, coords.y);
-                return;
-            }
-
-            isDrawing = true;
-            lastX = coords.x;
-            lastY = coords.y;
-
-            playSoundByY(coords.y, canvas.height);
-            draw(e);
-        }
-
-        function draw(e) {
-            if (!isDrawing || config.mode === 'animate') return;
-            e.preventDefault();
-
-            const coords = getCoordinates(e);
-            const x = coords.x;
-            const y = coords.y;
-
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
-            ctx.lineWidth = config.size;
-
-            if (config.eraser) {
-                ctx.strokeStyle = '#ffffff'; // 擦布就是塗白色
-            } else if (config.brush === 'rainbow') {
-                const hue = (Date.now() / 8) % 360;
-                ctx.strokeStyle = `hsl(${hue}, 90%, 60%)`;
-            } else {
-                ctx.strokeStyle = config.color;
-            }
-
+      if (item.isRainbow) {
+        var baseHue = (item.startHue || 0) + (hueShift || 0);
+        if (path.length === 1) {
+          ctx.fillStyle = hslToHex(baseHue, 92, 52);
+          ctx.beginPath();
+          ctx.arc(path[0].x, path[0].y, item.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          for (var i = 1; i < path.length; i++) {
+            var segHue = baseHue + i * SCENE_CONFIG.RAINBOW_STEP_DEG;
+            ctx.strokeStyle = hslToHex(segHue, 92, 52);
             ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(x, y);
+            ctx.moveTo(path[i - 1].x, path[i - 1].y);
+            ctx.lineTo(path[i].x, path[i].y);
             ctx.stroke();
+          }
+        }
+      } else {
+        var col = item.tool === 'eraser' ? '#FFFFFF' : item.color;
+        if (path.length === 1) {
+          ctx.fillStyle = col;
+          ctx.beginPath();
+          ctx.arc(path[0].x, path[0].y, item.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.strokeStyle = col;
+          ctx.beginPath();
+          ctx.moveTo(path[0].x, path[0].y);
+          for (var j = 1; j < path.length; j++) {
+            ctx.lineTo(path[j].x, path[j].y);
+          }
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
 
-            if (config.brush === 'sparkle' && !config.eraser) {
-                createSparkle(x, y, config.color);
-            }
+    /* 畫出 12 款主題印章（支援魔法動畫時的眨眼 blink 與微動態 t） */
+    function drawStampItem(ctx, stampId, x, y, opts) {
+      opts = opts || {};
+      var size = opts.size || SCENE_CONFIG.STAMP_BASE_SIZE;
+      var s = size / 100;
+      var blink = !!opts.blink;
+      var t = opts.t || 0;
+      var ink = '#1F2A4D';
 
-            if (Math.abs(x - lastX) > 15 || Math.abs(y - lastY) > 15) {
-                playSoundByY(y, canvas.height);
-            }
+      ctx.save();
+      ctx.translate(x, y);
+      if (opts.dx || opts.dy) ctx.translate(opts.dx || 0, opts.dy || 0);
+      if (opts.rot) ctx.rotate(opts.rot);
+      if (opts.scale && opts.scale !== 1) ctx.scale(opts.scale, opts.scale);
+      ctx.scale(s, s);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
 
-            lastX = x;
-            lastY = y;
+      /* 共用可愛眼睛（支援眨眼） */
+      function drawEye(ex, ey, r) {
+        if (blink) {
+          ctx.strokeStyle = ink;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(ex, ey + 2, r + 1.5, Math.PI * 1.1, Math.PI * 1.9);
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = ink;
+          ctx.beginPath();
+          ctx.arc(ex, ey, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.arc(ex - r * 0.3, ey - r * 0.35, r * 0.36, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      if (stampId === 'house') {
+        /* 房子＋煙囪 */
+        ctx.fillStyle = '#795548';
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 5;
+        ctx.fillRect(16, -42, 14, 24);
+        ctx.strokeRect(16, -42, 14, 24);
+        /* 牆面 */
+        ctx.fillStyle = '#FFFBEF';
+        ctx.beginPath();
+        ctx.roundRect(-34, -6, 68, 46, 8);
+        ctx.fill();
+        ctx.stroke();
+        /* 屋頂 */
+        ctx.fillStyle = '#FB8C00';
+        ctx.beginPath();
+        ctx.moveTo(-44, -2);
+        ctx.lineTo(0, -42);
+        ctx.lineTo(44, -2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        /* 紅門與藍窗 */
+        ctx.fillStyle = '#E53935';
+        ctx.beginPath();
+        ctx.roundRect(-10, 12, 20, 28, 5);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#29B6F6';
+        ctx.fillRect(14, 6, 13, 13);
+        ctx.strokeRect(14, 6, 13, 13);
+        /* 魔法時飄出小圓煙 */
+        if (t > 0) {
+          var smY = -52 - ((t * 18) % 18);
+          ctx.fillStyle = '#DCE9FB';
+          ctx.beginPath();
+          ctx.arc(24 + Math.sin(t * 5) * 4, smY, 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+      } else if (stampId === 'tree') {
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 5;
+        ctx.fillStyle = '#795548';
+        ctx.beginPath();
+        ctx.roundRect(-10, 8, 20, 34, 5);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#7CB342';
+        ctx.beginPath();
+        ctx.arc(0, -10, 28, 0, Math.PI * 2);
+        ctx.arc(-18, 2, 18, 0, Math.PI * 2);
+        ctx.arc(18, 2, 18, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(0, -6, 30, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#E53935';
+        ctx.beginPath();
+        ctx.arc(-11, -12, 5, 0, Math.PI * 2);
+        ctx.arc(12, -2, 5, 0, Math.PI * 2);
+        ctx.arc(-4, 6, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (stampId === 'sun') {
+        ctx.save();
+        ctx.rotate(t * 0.9);
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 5.5;
+        for (var a = 0; a < 8; a++) {
+          var rad = (a * Math.PI) / 4;
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(rad) * 30, Math.sin(rad) * 30);
+          ctx.lineTo(Math.cos(rad) * 43, Math.sin(rad) * 43);
+          ctx.stroke();
+        }
+        ctx.restore();
+        ctx.fillStyle = '#FFB627';
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        drawEye(-9, -3, 3.6);
+        drawEye(9, -3, 3.6);
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 4, 8, 0.2 * Math.PI, 0.8 * Math.PI);
+        ctx.stroke();
+      } else if (stampId === 'cat') {
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 5;
+        ctx.fillStyle = '#FB8C00';
+        ctx.beginPath();
+        ctx.moveTo(-30, -8); ctx.lineTo(-26, -38); ctx.lineTo(-4, -22); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(30, -8); ctx.lineTo(26, -38); ctx.lineTo(4, -22); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#FFCC80';
+        ctx.beginPath();
+        ctx.arc(0, 4, 31, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        drawEye(-11, 0, 4);
+        drawEye(11, 0, 4);
+        ctx.fillStyle = '#F06292';
+        ctx.beginPath();
+        ctx.moveTo(-4, 7); ctx.lineTo(4, 7); ctx.lineTo(0, 12); ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.arc(0, 11, 8, 0.2 * Math.PI, 0.8 * Math.PI);
+        ctx.moveTo(-26, 6); ctx.lineTo(-38, 4);
+        ctx.moveTo(-26, 12); ctx.lineTo(-37, 15);
+        ctx.moveTo(26, 6); ctx.lineTo(38, 4);
+        ctx.moveTo(26, 12); ctx.lineTo(37, 15);
+        ctx.stroke();
+      } else if (stampId === 'dog') {
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 5;
+        ctx.fillStyle = '#795548';
+        ctx.beginPath();
+        ctx.ellipse(-28, 6, 12, 24, 0.2, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(28, 6, 12, 24, -0.2, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#FFCC80';
+        ctx.beginPath();
+        ctx.arc(0, 2, 29, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        drawEye(-10, -4, 4);
+        drawEye(10, -4, 4);
+        ctx.fillStyle = ink;
+        ctx.beginPath();
+        ctx.ellipse(0, 7, 7, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#F06292';
+        ctx.beginPath();
+        ctx.arc(0, 15, 6, 0, Math.PI);
+        ctx.fill(); ctx.stroke();
+      } else if (stampId === 'rabbit') {
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 5;
+        ctx.fillStyle = '#FFFBEF';
+        ctx.beginPath();
+        ctx.ellipse(-13, -24, 10, 23, -0.1, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(13, -24, 10, 23, 0.1, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#F06292';
+        ctx.beginPath();
+        ctx.ellipse(-13, -22, 4.5, 13, -0.1, 0, Math.PI * 2);
+        ctx.ellipse(13, -22, 4.5, 13, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#FFFBEF';
+        ctx.beginPath();
+        ctx.arc(0, 12, 27, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        drawEye(-10, 8, 3.8);
+        drawEye(10, 8, 3.8);
+        ctx.fillStyle = '#F06292';
+        ctx.beginPath();
+        ctx.arc(-18, 16, 4.5, 0, Math.PI * 2);
+        ctx.arc(18, 16, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.arc(0, 16, 6.5, 0.2 * Math.PI, 0.8 * Math.PI);
+        ctx.stroke();
+      } else if (stampId === 'cloud') {
+        ctx.fillStyle = '#DCE9FB';
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(-20, 6, 18, Math.PI * 0.5, Math.PI * 1.5);
+        ctx.arc(-6, -12, 20, Math.PI, Math.PI * 1.9);
+        ctx.arc(18, -6, 18, Math.PI * 1.2, Math.PI * 0.4);
+        ctx.lineTo(-20, 24);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        drawEye(-8, 4, 3.5);
+        drawEye(10, 4, 3.5);
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.arc(1, 10, 6.5, 0.2 * Math.PI, 0.8 * Math.PI);
+        ctx.stroke();
+      } else if (stampId === 'umbrella') {
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 5;
+        ctx.fillStyle = '#FFB627';
+        ctx.beginPath();
+        ctx.arc(0, 4, 38, Math.PI, 0);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#F06292';
+        ctx.beginPath();
+        ctx.ellipse(0, 4, 16, 37, 0, Math.PI, 0);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, 4);
+        ctx.lineTo(0, 32);
+        ctx.arc(-8, 32, 8, 0, Math.PI);
+        ctx.stroke();
+      } else if (stampId === 'drop') {
+        ctx.fillStyle = '#29B6F6';
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(0, -36);
+        ctx.bezierCurveTo(22, -6, 28, 6, 28, 16);
+        ctx.arc(0, 16, 28, 0, Math.PI);
+        ctx.bezierCurveTo(-28, 6, -22, -6, 0, -36);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.ellipse(-11, 2, 4, 9, 0.35, 0, Math.PI * 2);
+        ctx.fill();
+        drawEye(-8, 16, 3.5);
+        drawEye(8, 16, 3.5);
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.arc(0, 22, 6, 0.2 * Math.PI, 0.8 * Math.PI);
+        ctx.stroke();
+      } else if (stampId === 'fish') {
+        var tailWag = Math.sin(t * 9) * 5;
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 5;
+        ctx.fillStyle = '#FFB627';
+        ctx.beginPath();
+        ctx.moveTo(18, 0);
+        ctx.lineTo(42, -18 + tailWag);
+        ctx.lineTo(42, 18 + tailWag);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#FB8C00';
+        ctx.beginPath();
+        ctx.ellipse(-4, 0, 30, 21, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#FFFBEF';
+        ctx.fillRect(-2, -19, 9, 38);
+        ctx.strokeRect(-2, -19, 9, 38);
+        drawEye(-16, -4, 4);
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.arc(-20, 6, 6, 0.1 * Math.PI, 0.7 * Math.PI);
+        ctx.stroke();
+      } else if (stampId === 'seaweed') {
+        var sway = Math.sin(t * 4.5) * 7;
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 4.8;
+        ctx.fillStyle = '#7CB342';
+        ctx.beginPath();
+        ctx.moveTo(-14, 38);
+        ctx.quadraticCurveTo(-28 + sway, 8, -14 + sway, -34);
+        ctx.quadraticCurveTo(2 + sway, 4, -2, 38);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#2E7D32';
+        ctx.beginPath();
+        ctx.moveTo(14, 38);
+        ctx.quadraticCurveTo(26 - sway, 10, 14 - sway, -24);
+        ctx.quadraticCurveTo(-2 - sway, 8, 4, 38);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+      } else if (stampId === 'bubble') {
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 4.5;
+        ctx.fillStyle = '#DCE9FB';
+        ctx.beginPath();
+        ctx.arc(-10, 10, 22, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(-18, 2, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#DCE9FB';
+        ctx.beginPath();
+        ctx.arc(20, -14, 14, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(15, -19, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    /* =====================================================================
+     * 掛載畫畫島關卡（欄位與【本關設定】一字不差）
+     * ===================================================================== */
+    ArtIsland.mount({
+      unit: 18,
+      title: '魔法畫畫屋',
+      grade: '1–2 年級',
+      howto: '選一張主題卡，畫完按魔法，畫就會動起來！',
+      zhuyin: true,
+      teach: '用圖畫表達想法、感受創作樂趣｜生活課程 4-I-2',
+      submit: false,
+      allOpen: true,   // 主題卡不用一張張解鎖（整合時加，2026-11-21）
+      hero: HERO_SVG,
+      levels: SCENE_CONFIG.THEMES.map(function (th, idx) {
+        return { name: th.name, thumb: LEVEL_THUMBS[idx] };
+      }),
+      scene: function (api) {
+        /* 場景執行期狀態（每次 start 與 stop 皆會歸零清理） */
+        var cv = null;
+        var fxCanvas = null;
+        var fxCtx = null;
+        var stampLayer = null;
+        var currentTheme = null;
+        var items = []; // 記錄全部筆畫與印章，支援精準復原與魔法動畫
+        var mode = 'pen'; // 'pen' | 'rainbow' | 'eraser' | 'stamp'
+        var selectedSizeIdx = SCENE_CONFIG.DEFAULT_SIZE_INDEX;
+        var selectedColorIdx = SCENE_CONFIG.DEFAULT_COLOR_INDEX;
+        var activeStampId = null;
+        var rainbowHue = 0;
+
+        /* 彩虹筆即時預覽狀態 */
+        var isRainbowDrawing = false;
+        var rainbowStartHue = 0;
+        var rainbowLivePath = [];
+
+        /* 魔法與印章動畫／計時器句柄 */
+        var isMagicPlaying = false;
+        var magicRafId = 0;
+        var popRafId = 0;
+        var magicReducedTimer = 0;
+        var clearArmTimer = 0;
+        var clearArmed = false;
+        var stampHoverPos = null;
+
+        /* 預先綁定的全域收尾事件（stop 時必移除） */
+        var docUpHandler = null;
+        var docMoveHandler = null;
+        var reducedMotion = false;
+
+        /* 讀取系統減少動態設定 */
+        function checkReducedMotion() {
+          return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
         }
 
-        function stopDrawing(e) {
-            if (isDrawing) {
-                isDrawing = false;
-                canvas.releasePointerCapture(e.pointerId);
-            }
+        /* 清除全部動畫、計時器與 document 監聽 */
+        function clearTimersAndListeners() {
+          if (magicRafId) { cancelAnimationFrame(magicRafId); magicRafId = 0; }
+          if (popRafId) { cancelAnimationFrame(popRafId); popRafId = 0; }
+          if (magicReducedTimer) { clearTimeout(magicReducedTimer); magicReducedTimer = 0; }
+          if (clearArmTimer) { clearTimeout(clearArmTimer); clearArmTimer = 0; }
+          if (docUpHandler) {
+            document.removeEventListener('pointerup', docUpHandler);
+            document.removeEventListener('pointercancel', docUpHandler);
+            docUpHandler = null;
+          }
+          if (docMoveHandler) {
+            document.removeEventListener('pointermove', docMoveHandler);
+            docMoveHandler = null;
+          }
         }
 
-        canvas.addEventListener('pointerdown', startDrawing);
-        canvas.addEventListener('pointermove', draw);
-        canvas.addEventListener('pointerup', stopDrawing);
-        canvas.addEventListener('pointercancel', stopDrawing);
+        /* 把 items 完整重繪到主畫布（確保彩虹筆、橡皮擦、印章順序一致） */
+        function redrawMainCanvas() {
+          if (!cv || !cv.ctx) return;
+          var ctx = cv.ctx;
+          ctx.save();
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+          ctx.restore();
+          for (var i = 0; i < items.length; i++) {
+            var it = items[i];
+            if (it.type === 'stroke') {
+              drawStrokeItem(ctx, it, 0);
+            } else if (it.type === 'stamp') {
+              drawStampItem(ctx, it.stampId, it.x, it.y, { size: it.size });
+            }
+          }
+        }
 
-        // --- STREAMING_CHUNK: 可愛星星特效引擎 ---
-        function createSparkle(x, y, color) {
-            for (let i = 0; i < 2; i++) {
-                particles.push({
-                    x: x,
-                    y: y,
-                    size: Math.random() * 8 + 4,
-                    vx: (Math.random() - 0.5) * 4,
-                    vy: (Math.random() - 0.5) * 4,
-                    color: color,
-                    alpha: 1
+        /* 更新右側計數與小精靈狀態 */
+        function updateStats() {
+          var strokeCount = 0;
+          var stampCount = 0;
+          for (var i = 0; i < items.length; i++) {
+            if (items[i].type === 'stroke') strokeCount++;
+            else if (items[i].type === 'stamp') stampCount++;
+          }
+          var sEl = api.field.querySelector('.sc-stat-strokes');
+          var tEl = api.field.querySelector('.sc-stat-stamps');
+          if (sEl) sEl.textContent = String(strokeCount);
+          if (tEl) tEl.textContent = String(stampCount);
+        }
+
+        function setGuide(text, mood, animClass) {
+          var msgEl = api.field.querySelector('.sc-guide-msg');
+          var masEl = api.field.querySelector('.sc-mascot');
+          if (msgEl && text) msgEl.textContent = text;
+          if (masEl) {
+            if (mood) masEl.innerHTML = getMascotSvg(mood);
+            if (animClass && !reducedMotion) {
+              masEl.classList.remove('sc-anim-hop', 'sc-anim-wiggle');
+              void masEl.offsetWidth;
+              masEl.classList.add(animClass);
+            }
+          }
+        }
+
+        /* 解除「再按清除」二次確認狀態 */
+        function resetClearArm() {
+          if (clearArmTimer) { clearTimeout(clearArmTimer); clearArmTimer = 0; }
+          clearArmed = false;
+          var btn = api.field.querySelector('.sc-clear');
+          if (btn) {
+            btn.classList.remove('sc-clear-arm');
+            btn.innerHTML = UI_ICONS.clear + '<span>清除</span>';
+          }
+        }
+
+        /* 同步目前工具設定到 api.canvas 與按鈕高亮狀態 */
+        function applyToolState() {
+          if (!cv) return;
+          var sizePx = SCENE_CONFIG.BRUSH_SIZES[selectedSizeIdx].px;
+          var colorHex = SCENE_CONFIG.COLORS[selectedColorIdx].hex;
+
+          if (mode === 'stamp') {
+            stampLayer.classList.add('sc-active');
+          } else {
+            stampLayer.classList.remove('sc-active');
+            stampHoverPos = null;
+            if (!isMagicPlaying && fxCtx) {
+              fxCtx.clearRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+            }
+          }
+
+          if (mode === 'eraser') {
+            cv.setTool('eraser');
+            cv.setSize(Math.max(Math.round(sizePx * SCENE_CONFIG.ERASER_SCALE), SCENE_CONFIG.ERASER_MIN_PX));
+          } else if (mode === 'rainbow') {
+            cv.setTool('pen');
+            cv.setSize(sizePx);
+            cv.setColor(hslToHex(rainbowHue, 92, 52));
+          } else {
+            cv.setTool('pen');
+            cv.setSize(sizePx);
+            cv.setColor(colorHex);
+          }
+
+          /* 更新左側工具按鈕選中外觀 */
+          api.field.querySelectorAll('.sc-size').forEach(function (b, idx) {
+            var on = idx === selectedSizeIdx;
+            b.classList.toggle('sc-on', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          });
+          api.field.querySelectorAll('.sc-mode').forEach(function (b) {
+            var on = b.dataset.mode === mode;
+            b.classList.toggle('sc-on', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          });
+          api.field.querySelectorAll('.sc-sw').forEach(function (b, idx) {
+            var on = mode === 'pen' && idx === selectedColorIdx;
+            b.classList.toggle('sc-sw-on', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          });
+          api.field.querySelectorAll('.sc-stamp-btn').forEach(function (b) {
+            var on = mode === 'stamp' && b.dataset.stamp === activeStampId;
+            b.classList.toggle('sc-on', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          });
+        }
+
+        /* 停止魔法動畫並恢復原畫顯示（原畫完全不變） */
+        function stopMagic(restorePrompt) {
+          if (magicRafId) { cancelAnimationFrame(magicRafId); magicRafId = 0; }
+          if (magicReducedTimer) { clearTimeout(magicReducedTimer); magicReducedTimer = 0; }
+          if (!isMagicPlaying) return;
+          isMagicPlaying = false;
+          if (cv && cv.el) cv.el.classList.remove('sc-canvas-hidden');
+          if (fxCtx) fxCtx.clearRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+          var magicBtn = api.field.querySelector('.sc-magic');
+          if (magicBtn) {
+            magicBtn.classList.remove('sc-magic-playing');
+            magicBtn.innerHTML = UI_ICONS.wand + '<span>變魔法！</span>';
+          }
+          if (restorePrompt && currentTheme) {
+            setGuide('再畫幾筆或再變一次！', 'normal');
+          }
+        }
+
+        /* 蓋印章瞬間的可愛「波！」小星星回饋 */
+        function playStampPop(x, y, stampId) {
+          if (reducedMotion || !fxCtx || isMagicPlaying) return;
+          if (popRafId) { cancelAnimationFrame(popRafId); popRafId = 0; }
+          var startTs = performance.now();
+          var sparks = [];
+          for (var k = 0; k < 6; k++) {
+            var ang = (k / 6) * Math.PI * 2 + 0.3;
+            sparks.push({ ang: ang, dist: 38 + (k % 2) * 14, col: k % 2 === 0 ? '#FFB627' : '#2160C4' });
+          }
+          function step(now) {
+            var p = (now - startTs) / SCENE_CONFIG.STAMP_POP_MS;
+            fxCtx.clearRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+            if (p >= 1) {
+              popRafId = 0;
+              if (mode === 'stamp' && stampHoverPos) drawStampGhost();
+              return;
+            }
+            var ease = 1 - Math.pow(1 - p, 3);
+            var alpha = 1 - p;
+            fxCtx.save();
+            fxCtx.globalAlpha = alpha;
+            for (var i = 0; i < sparks.length; i++) {
+              var sx = x + Math.cos(sparks[i].ang) * sparks[i].dist * ease;
+              var sy = y + Math.sin(sparks[i].ang) * sparks[i].dist * ease;
+              drawMiniStar(fxCtx, sx, sy, 8 * (1 - p * 0.4), sparks[i].col);
+            }
+            fxCtx.restore();
+            /* 印章本身微微放大彈跳一次 */
+            var popScale = 1 + Math.sin(p * Math.PI) * 0.16;
+            drawStampItem(fxCtx, stampId, x, y, { size: SCENE_CONFIG.STAMP_BASE_SIZE, scale: popScale });
+            popRafId = requestAnimationFrame(step);
+          }
+          popRafId = requestAnimationFrame(step);
+        }
+
+        /* 畫一顆小五角星（供魔法粒子與蓋印章特效用） */
+        function drawMiniStar(ctx, x, y, r, color) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.fillStyle = color;
+          ctx.strokeStyle = '#1F2A4D';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (var i = 0; i < 10; i++) {
+            var rad = (i * Math.PI) / 5 - Math.PI / 2;
+            var rr = i % 2 === 0 ? r : r * 0.48;
+            if (i === 0) ctx.moveTo(Math.cos(rad) * rr, Math.sin(rad) * rr);
+            else ctx.lineTo(Math.cos(rad) * rr, Math.sin(rad) * rr);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        /* 滑鼠移動時在印章層顯示半透明對準預覽 */
+        function drawStampGhost() {
+          if (!fxCtx || isMagicPlaying || popRafId || mode !== 'stamp' || !activeStampId || !stampHoverPos) return;
+          fxCtx.clearRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+          fxCtx.save();
+          fxCtx.globalAlpha = 0.45;
+          drawStampItem(fxCtx, activeStampId, stampHoverPos.x, stampHoverPos.y, { size: SCENE_CONFIG.STAMP_BASE_SIZE });
+          fxCtx.restore();
+        }
+
+        /* 施展魔法：另用透明 fxCanvas 重畫每一筆與印章並加上生動動畫，3 秒後停回原畫 */
+        function triggerMagic() {
+          resetClearArm();
+          if (isMagicPlaying) {
+            stopMagic(true);
+            return;
+          }
+          if (items.length === 0) {
+            setGuide('先畫一筆再變魔法喔！', 'curious', 'sc-anim-wiggle');
+            return;
+          }
+          if (popRafId) { cancelAnimationFrame(popRafId); popRafId = 0; }
+          isMagicPlaying = true;
+
+          var magicBtn = api.field.querySelector('.sc-magic');
+          if (magicBtn) {
+            magicBtn.classList.add('sc-magic-playing');
+            magicBtn.innerHTML = UI_ICONS.wand + '<span>魔法中…</span>';
+          }
+          setGuide(currentTheme.magicMsg, 'magic', 'sc-anim-hop');
+
+          /* 若開啟減少動態，只呈現溫和靜態小星星點綴後結束 */
+          if (reducedMotion) {
+            fxCtx.clearRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+            for (var r = 0; r < 10; r++) {
+              drawMiniStar(
+                fxCtx,
+                70 + ((r * 73) % (SCENE_CONFIG.CANVAS_W - 140)),
+                50 + ((r * 89) % (SCENE_CONFIG.CANVAS_H - 100)),
+                11,
+                r % 2 === 0 ? '#FFB627' : '#2160C4'
+              );
+            }
+            magicReducedTimer = setTimeout(function () {
+              magicReducedTimer = 0;
+              stopMagic(true);
+            }, SCENE_CONFIG.MAGIC_REDUCED_MS);
+            return;
+          }
+
+          /* 動畫進行中暫時隱藏原畫（不修改原畫），由上方透明 fxCanvas 演出動畫 */
+          cv.el.classList.add('sc-canvas-hidden');
+
+          /* 預先建立 16 顆溫柔升起旋轉的魔法小星星 */
+          var particles = [];
+          for (var p = 0; p < 16; p++) {
+            particles.push({
+              x: 48 + Math.random() * (SCENE_CONFIG.CANVAS_W - 96),
+              y: 60 + Math.random() * (SCENE_CONFIG.CANVAS_H - 90),
+              vy: 16 + Math.random() * 24,
+              sway: (Math.random() - 0.5) * 28,
+              r: 7 + Math.random() * 6,
+              phase: Math.random() * Math.PI * 2,
+              col: p % 3 === 0 ? '#FFB627' : (p % 3 === 1 ? '#29B6F6' : '#F06292')
+            });
+          }
+
+          var startTs = performance.now();
+          var duration = SCENE_CONFIG.MAGIC_DURATION_MS;
+
+          function animate(now) {
+            var elapsed = now - startTs;
+            var progress = elapsed / duration;
+            if (progress >= 1) {
+              magicRafId = 0;
+              stopMagic(true);
+              return;
+            }
+            var t = elapsed / 1000;
+            /* 頭尾 0.35 秒平滑進出包絡線，結束瞬間無縫對齊原畫位置 */
+            var env = 1;
+            if (t < 0.35) env = t / 0.35;
+            else if (t > 2.65) env = Math.max(0, (3 - t) / 0.35);
+
+            fxCtx.clearRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+
+            /* 逐筆重畫孩子的筆畫與印章並加入對應動畫 */
+            for (var i = 0; i < items.length; i++) {
+              var it = items[i];
+              var phase = i * 1.15;
+              if (it.type === 'stroke') {
+                if (it.tool === 'eraser') {
+                  drawStrokeItem(fxCtx, it, 0);
+                } else {
+                  var bounceY = -Math.abs(Math.sin(t * 3.8 + phase)) * 13 * env;
+                  var swayRot = Math.sin(t * 3.1 + phase) * 0.065 * env;
+                  var breathe = 1 + Math.sin(t * 4.4 + phase) * 0.035 * env;
+                  fxCtx.save();
+                  fxCtx.translate(it.cx, it.cy + bounceY);
+                  fxCtx.rotate(swayRot);
+                  fxCtx.scale(breathe, breathe);
+                  fxCtx.translate(-it.cx, -it.cy);
+                  drawStrokeItem(fxCtx, it, it.isRainbow ? t * 140 : 0);
+                  fxCtx.restore();
+                }
+              } else if (it.type === 'stamp') {
+                /* 依印章類型給予專屬動態：游動、眨眼、彈跳、搖擺、飄浮 */
+                var blinkNow = ((t + phase * 0.25) % 1.35) > 1.18;
+                var dx = 0, dy = 0, rot = 0, sc = 1;
+                if (it.stampId === 'fish') {
+                  dx = Math.sin(t * 3.2 + phase) * 26 * env;
+                  dy = Math.sin(t * 5.2 + phase) * 7 * env;
+                  rot = Math.cos(t * 3.2 + phase) * 0.09 * env;
+                } else if (it.stampId === 'seaweed') {
+                  rot = Math.sin(t * 4.0 + phase) * 0.14 * env;
+                } else if (it.stampId === 'bubble' || it.stampId === 'cloud') {
+                  dx = Math.sin(t * 2.2 + phase) * 14 * env;
+                  dy = Math.sin(t * 3.0 + phase) * 10 * env;
+                  sc = 1 + Math.sin(t * 3.6 + phase) * 0.06 * env;
+                } else if (it.stampId === 'drop') {
+                  dy = Math.sin(t * 4.8 + phase) * 14 * env;
+                } else if (it.stampId === 'umbrella' || it.stampId === 'tree') {
+                  rot = Math.sin(t * 3.6 + phase) * 0.13 * env;
+                  dy = -Math.abs(Math.sin(t * 3.6 + phase)) * 7 * env;
+                } else if (it.stampId === 'sun') {
+                  rot = Math.sin(t * 3.0 + phase) * 0.12 * env;
+                  sc = 1 + Math.sin(t * 4.2 + phase) * 0.06 * env;
+                } else {
+                  /* 房子、貓、狗、兔：開心彈跳＋微搖 */
+                  dy = -Math.abs(Math.sin(t * 4.2 + phase)) * 16 * env;
+                  rot = Math.sin(t * 4.2 + phase) * 0.08 * env;
+                }
+                drawStampItem(fxCtx, it.stampId, it.x, it.y, {
+                  size: it.size,
+                  dx: dx,
+                  dy: dy,
+                  rot: rot,
+                  scale: sc,
+                  blink: blinkNow,
+                  t: t * env
                 });
+              }
             }
+
+            /* 溫柔飄起的魔法小星星 */
+            for (var sIdx = 0; sIdx < particles.length; sIdx++) {
+              var pt = particles[sIdx];
+              var px = pt.x + Math.sin(t * 2.2 + pt.phase) * pt.sway;
+              var py = pt.y - pt.vy * t;
+              var pAlpha = Math.sin(progress * Math.PI) * 0.9;
+              fxCtx.save();
+              fxCtx.globalAlpha = Math.max(0, pAlpha);
+              drawMiniStar(fxCtx, px, py, pt.r * (0.85 + 0.2 * Math.sin(t * 4 + pt.phase)), pt.col);
+              fxCtx.restore();
+            }
+
+            magicRafId = requestAnimationFrame(animate);
+          }
+
+          magicRafId = requestAnimationFrame(animate);
         }
 
-        function drawParticles() {
-            pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
-
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.alpha -= 0.03;
-
-                if (p.alpha <= 0) {
-                    particles.splice(i, 1);
-                    continue;
-                }
-
-                pCtx.save();
-                pCtx.globalAlpha = p.alpha;
-                pCtx.fillStyle = p.color;
-
-                // 繪製閃爍四角星
-                pCtx.beginPath();
-                pCtx.moveTo(p.x, p.y - p.size);
-                pCtx.quadraticCurveTo(p.x, p.y, p.x + p.size, p.y);
-                pCtx.quadraticCurveTo(p.x, p.y, p.x, p.y + p.size);
-                pCtx.quadraticCurveTo(p.x, p.y, p.x - p.size, p.y);
-                pCtx.quadraticCurveTo(p.x, p.y, p.x, p.y - p.size);
-                pCtx.fill();
-                pCtx.restore();
-            }
-
-            requestAnimationFrame(drawParticles);
+        /* 組合個人化稱讚句子（強調孩子的創作與想法，不評像不像） */
+        function buildPraise() {
+          var hasRainbow = false;
+          var stampCount = 0;
+          for (var i = 0; i < items.length; i++) {
+            if (items[i].type === 'stroke' && items[i].isRainbow) hasRainbow = true;
+            if (items[i].type === 'stamp') stampCount++;
+          }
+          if (items.length === 0) {
+            return '謝謝你來到魔法畫畫屋！下次也可以多畫幾筆喔！';
+          }
+          if (hasRainbow && stampCount > 0) {
+            return '你用了彩虹筆又蓋了可愛印章，這張「' + currentTheme.name + '」充滿魔法！';
+          }
+          if (hasRainbow) {
+            return '閃亮的彩虹筆讓「' + currentTheme.name + '」變得像童話故事一樣棒！';
+          }
+          if (stampCount >= 3) {
+            return '你幫「' + currentTheme.name + '」排了好多可愛印章，畫面好熱鬧！';
+          }
+          return currentTheme.praiseBase;
         }
 
-        drawParticles();
+        return {
+          start: function (levelIndex) {
+            /* 每次進入關卡先清空殘留狀態 */
+            clearTimersAndListeners();
+            reducedMotion = checkReducedMotion();
+            currentTheme = SCENE_CONFIG.THEMES[levelIndex] || SCENE_CONFIG.THEMES[0];
+            items = [];
+            mode = 'pen';
+            selectedSizeIdx = SCENE_CONFIG.DEFAULT_SIZE_INDEX;
+            selectedColorIdx = SCENE_CONFIG.DEFAULT_COLOR_INDEX;
+            activeStampId = null;
+            rainbowHue = 0;
+            isRainbowDrawing = false;
+            rainbowLivePath = [];
+            isMagicPlaying = false;
+            clearArmed = false;
+            stampHoverPos = null;
 
-        // --- STREAMING_CHUNK: 貼紙蓋章功能 ---
-        function selectStamp(emoji) {
-            if (config.mode === 'animate') {
-                toggleMagicMove(); // 如果在動畫中，切換成貼紙會自動結束動畫
-            }
-            config.stamp = emoji;
-            config.eraser = false;
+            api.quest(currentTheme.quest);
 
-            document.querySelectorAll('.stamp-btn').forEach(btn => {
-                if (btn.innerText === emoji) {
-                    btn.classList.add('border-pink-500', 'bg-pink-100', 'scale-110');
-                } else {
-                    btn.classList.remove('border-pink-500', 'bg-pink-100', 'scale-110');
-                }
+            /* 建立三欄貼紙畫冊版面（1366×595 一屏不捲動） */
+            var sizesHtml = SCENE_CONFIG.BRUSH_SIZES.map(function (sz, idx) {
+              return (
+                '<button type="button" class="sc-size" data-size-idx="' + idx + '" aria-label="' + sz.label + '">' +
+                  '<i style="width:' + sz.dot + 'px;height:' + sz.dot + 'px"></i>' +
+                '</button>'
+              );
+            }).join('');
+
+            var colorsHtml = SCENE_CONFIG.COLORS.map(function (c, idx) {
+              return (
+                '<button type="button" class="sc-sw" data-color-idx="' + idx + '" style="background:' + c.hex + '" aria-label="' + c.name + '"></button>'
+              );
+            }).join('');
+
+            var stampsHtml = currentTheme.stamps.map(function (st) {
+              return (
+                '<button type="button" class="sc-stamp-btn" data-stamp="' + st.id + '" aria-label="印章：' + st.label + '">' +
+                  STAMP_SVGS[st.id] +
+                  '<span>' + st.label + '</span>' +
+                '</button>'
+              );
+            }).join('');
+
+            api.field.innerHTML =
+              '<div class="ai-panel sc-tools">' +
+                '<h3 class="sc-sec-title">筆刷粗細</h3>' +
+                '<div class="sc-sizes">' + sizesHtml + '</div>' +
+                '<h3 class="sc-sec-title">畫筆工具</h3>' +
+                '<div class="sc-modes">' +
+                  '<button type="button" class="sc-mode" data-mode="pen" aria-label="畫筆">' + UI_ICONS.pen + '<span>畫筆</span></button>' +
+                  '<button type="button" class="sc-mode sc-mode-rainbow" data-mode="rainbow" aria-label="彩虹筆">' + UI_ICONS.rainbow + '<span>彩虹</span></button>' +
+                  '<button type="button" class="sc-mode" data-mode="eraser" aria-label="橡皮擦">' + UI_ICONS.eraser + '<span>擦擦</span></button>' +
+                '</div>' +
+                '<h3 class="sc-sec-title">選顏色</h3>' +
+                '<div class="sc-colors">' + colorsHtml + '</div>' +
+                '<div class="sc-actions">' +
+                  '<button type="button" class="ai-btn sc-undo" aria-label="復原上一筆">' + UI_ICONS.undo + '<span>復原</span></button>' +
+                  '<button type="button" class="ai-btn sc-clear" aria-label="清除畫布">' + UI_ICONS.clear + '<span>清除</span></button>' +
+                '</div>' +
+              '</div>' +
+
+              '<div class="ai-board sc-board">' +
+                '<span class="ai-tape" style="left:110px;top:-10px;transform:rotate(-4deg)"></span>' +
+                '<span class="ai-tape" style="right:110px;top:-10px;transform:rotate(3deg)"></span>' +
+                '<canvas class="sc-fx-canvas" width="' + SCENE_CONFIG.CANVAS_W + '" height="' + SCENE_CONFIG.CANVAS_H + '"></canvas>' +
+                '<div class="sc-stamp-layer" aria-label="印章蓋章區"></div>' +
+              '</div>' +
+
+              '<div class="ai-panel sc-stamps-bar">' +
+                '<div class="sc-stamps-label">' + UI_ICONS.stamp + '<span>蓋印章</span></div>' +
+                '<div class="sc-stamps-list">' + stampsHtml + '</div>' +
+              '</div>' +
+
+              '<div class="sc-side">' +
+                '<div class="ai-panel sc-guide">' +
+                  '<div class="sc-theme-pill">' + currentTheme.name + '</div>' +
+                  '<div class="sc-mascot">' + getMascotSvg('normal') + '</div>' +
+                  '<p class="sc-guide-msg ai-zy">' + currentTheme.prompt + '</p>' +
+                  '<div class="sc-stats">' +
+                    '<span>畫了 <b class="ai-num sc-stat-strokes">0</b> 筆</span>' +
+                    '<span>·</span>' +
+                    '<span><b class="ai-num sc-stat-stamps">0</b> 印章</span>' +
+                  '</div>' +
+                '</div>' +
+                '<button type="button" class="ai-btn sc-magic">' + UI_ICONS.wand + '<span>變魔法！</span></button>' +
+                '<button type="button" class="ai-btn go sc-done">' + UI_ICONS.check + '<span>完成</span></button>' +
+              '</div>';
+
+            var board = api.field.querySelector('.sc-board');
+            fxCanvas = api.field.querySelector('.sc-fx-canvas');
+            fxCtx = fxCanvas.getContext('2d');
+            stampLayer = api.field.querySelector('.sc-stamp-layer');
+
+            /* 使用共用 api.canvas 建立主畫布 */
+            cv = api.canvas(board, {
+              width: SCENE_CONFIG.CANVAS_W,
+              height: SCENE_CONFIG.CANVAS_H,
+              color: SCENE_CONFIG.COLORS[selectedColorIdx].hex,
+              size: SCENE_CONFIG.BRUSH_SIZES[selectedSizeIdx].px
             });
 
-            document.querySelectorAll('.color-btn, .brush-btn').forEach(btn => {
-                btn.classList.remove('active', 'border-pink-500');
-            });
-            playNote(400, 'sine', 0.1);
-        }
+            /* 記錄每一筆手繪資料，供彩虹重繪、復原與魔法動畫使用 */
+            cv.onStroke(function (st) {
+              if (!st || !st.path || !st.path.length) return;
+              var copiedPath = st.path.map(function (p) { return { x: p.x, y: p.y }; });
+              var center = computePathCenter(copiedPath);
+              var isRb = mode === 'rainbow' && st.tool !== 'eraser';
+              var item = {
+                type: 'stroke',
+                path: copiedPath,
+                tool: st.tool || (mode === 'eraser' ? 'eraser' : 'pen'),
+                color: st.color || SCENE_CONFIG.COLORS[selectedColorIdx].hex,
+                size: st.size || SCENE_CONFIG.BRUSH_SIZES[selectedSizeIdx].px,
+                isRainbow: isRb,
+                startHue: isRb ? rainbowStartHue : 0,
+                cx: center.cx,
+                cy: center.cy
+              };
+              items.push(item);
 
-        function placeStamp(x, y) {
-            if (!config.stamp) return;
-
-            ctx.save();
-            ctx.font = '60px Microsoft JhengHei, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(config.stamp, x, y);
-            ctx.restore();
-
-            for (let i = 0; i < 6; i++) {
-                createSparkle(x, y, '#ff007f');
-            }
-
-            playNote(600, 'sine', 0.15, 0.15);
-        }
-
-        function resetStampSelection() {
-            config.stamp = null;
-            document.querySelectorAll('.stamp-btn').forEach(btn => {
-                btn.classList.remove('border-pink-500', 'bg-pink-100', 'scale-110');
-            });
-        }
-
-        // --- STREAMING_CHUNK: 顏色與筆刷切換 ---
-        function selectColor(colorHex) {
-            if (config.mode === 'animate') {
-                toggleMagicMove(); // 如果在動畫中，切換顏色會自動結束動畫
-            }
-            config.color = colorHex;
-            config.brush = 'normal';
-            config.eraser = false;
-            resetStampSelection();
-
-            document.querySelectorAll('.color-btn').forEach(btn => {
-                if (btn.style.backgroundColor === colorHex) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
+              if (isRb) {
+                isRainbowDrawing = false;
+                rainbowLivePath = [];
+                rainbowHue = (rainbowStartHue + copiedPath.length * SCENE_CONFIG.RAINBOW_STEP_DEG) % 360;
+                cv.setColor(hslToHex(rainbowHue, 92, 52));
+                if (!isMagicPlaying) {
+                  fxCtx.clearRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
                 }
+              }
+
+              redrawMainCanvas();
+              updateStats();
+              resetClearArm();
             });
-            document.getElementById('btn-eraser').classList.remove('active', 'border-pink-500');
-            document.querySelectorAll('.brush-btn').forEach(btn => btn.classList.remove('active'));
 
-            playNote(350, 'sine', 0.1);
-        }
-
-        function selectBrush(brushName) {
-            if (config.mode === 'animate') {
-                toggleMagicMove();
-            }
-            config.brush = brushName;
-            config.eraser = false;
-            resetStampSelection();
-
-            document.querySelectorAll('.brush-btn').forEach(btn => {
-                if (btn.id === `brush-${brushName}`) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
+            /* 彩虹筆拖曳即時漸變預覽（不阻擋 api.canvas 運作） */
+            cv.el.addEventListener('pointerdown', function (e) {
+              if (!e.isPrimary) return;
+              if (isMagicPlaying) stopMagic(false);
+              resetClearArm();
+              if (mode !== 'rainbow') return;
+              isRainbowDrawing = true;
+              rainbowStartHue = rainbowHue;
+              var pt = getCanvasPoint(cv.el, e);
+              rainbowLivePath = [pt];
+              var sz = SCENE_CONFIG.BRUSH_SIZES[selectedSizeIdx].px;
+              fxCtx.clearRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+              drawStrokeItem(fxCtx, {
+                path: rainbowLivePath,
+                size: sz,
+                isRainbow: true,
+                startHue: rainbowStartHue
+              }, 0);
             });
-            document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('btn-eraser').classList.remove('active', 'border-pink-500');
 
-            playNote(500, 'sine', 0.1);
-        }
-
-        function selectEraser() {
-            if (config.mode === 'animate') {
-                toggleMagicMove();
-            }
-            config.eraser = true;
-            resetStampSelection();
-
-            document.getElementById('btn-eraser').classList.add('active', 'border-pink-500');
-            document.querySelectorAll('.color-btn').forEach(btn => {
-                if (btn.id !== 'btn-eraser') btn.classList.remove('active');
-            });
-            document.querySelectorAll('.brush-btn').forEach(btn => btn.classList.remove('active'));
-
-            playNote(220, 'triangle', 0.1);
-        }
-
-        function selectSize(px, idName) {
-            config.size = px;
-            
-            document.querySelectorAll('.size-btn').forEach(btn => {
-                if (btn.id === `size-${idName}`) {
-                    btn.classList.add('active', 'bg-pink-100', 'text-pink-700');
-                } else {
-                    btn.classList.remove('active', 'bg-pink-100', 'text-pink-700');
-                    btn.classList.add('bg-pink-50', 'text-pink-600');
-                }
-            });
-            playNote(440, 'sine', 0.1);
-        }
-
-        // --- STREAMING_CHUNK: 儲存與訊息彈窗 ---
-        function saveArt() {
-            playNote(523, 'sine', 0.1);
-            setTimeout(() => playNote(659, 'sine', 0.1), 80);
-            setTimeout(() => playNote(784, 'sine', 0.25), 160);
-
-            setTimeout(() => {
-                // 如果目前在動畫模式，我們儲存備份的原始畫作，而不是正在飛的畫面
-                let dataURL;
-                if (config.mode === 'animate' && backupCanvas) {
-                    dataURL = backupCanvas.toDataURL("image/png");
-                } else {
-                    dataURL = canvas.toDataURL("image/png");
-                }
-                
-                const link = document.createElement('a');
-                link.download = `我的魔法畫作-${Date.now()}.png`;
-                link.href = dataURL;
-                link.click();
-                showNotice("📸 畫作已經存進電腦裡囉！");
-            }, 200);
-        }
-
-        function showNotice(msg) {
-            const popup = document.getElementById('popup-notice');
-            popup.innerText = msg;
-            popup.style.opacity = '1';
-            setTimeout(() => {
-                popup.style.opacity = '0';
-            }, 2000);
-        }
-
-        // --- STREAMING_CHUNK: 核心「魔法動起來」演算法與引擎 ---
-        
-        // 1. 自動辨識畫作，裁切並去背
-        function cropAndExtractDrawing() {
-            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imgData.data;
-            
-            let minX = canvas.width, maxX = 0, minY = canvas.height, maxY = 0;
-            let hasContent = false;
-
-            // 掃描非白色像素 (當前底色預設為白)
-            for (let y = 0; y < canvas.height; y++) {
-                for (let x = 0; x < canvas.width; x++) {
-                    const idx = (y * canvas.width + x) * 4;
-                    const r = data[idx];
-                    const g = data[idx+1];
-                    const b = data[idx+2];
-                    const a = data[idx+3];
-
-                    // 只要有一點點色彩且非純白(留有小誤差，>245 視為白)
-                    if (a > 10 && (r < 245 || g < 245 || b < 245)) {
-                        if (x < minX) minX = x;
-                        if (x > maxX) maxX = x;
-                        if (y < minY) minY = y;
-                        if (y > maxY) maxY = y;
-                        hasContent = true;
-                    }
-                }
-            }
-
-            if (!hasContent) return null;
-
-            // 邊緣微調填充 (10px 緩衝)
-            const pad = 10;
-            minX = Math.max(0, minX - pad);
-            minY = Math.max(0, minY - pad);
-            maxX = Math.min(canvas.width, maxX + pad);
-            maxY = Math.min(canvas.height, maxY + pad);
-
-            const w = maxX - minX;
-            const h = maxY - minY;
-
-            // 建立 offscreen canvas 保存裁剪出來的圖像
-            const offscreen = document.createElement('canvas');
-            offscreen.width = w;
-            offscreen.height = h;
-            const oCtx = offscreen.getContext('2d');
-            oCtx.drawImage(canvas, minX, minY, w, h, 0, 0, w, h);
-
-            // 為裁剪出來的圖案做白色去背
-            const oImgData = oCtx.getImageData(0, 0, w, h);
-            const oData = oImgData.data;
-            for (let i = 0; i < oData.length; i += 4) {
-                const r = oData[i];
-                const g = oData[i+1];
-                const b = oData[i+2];
-                // 如果是白色，把透明度設為 0
-                if (r > 245 && g > 245 && b > 245) {
-                    oData[i+3] = 0;
-                }
-            }
-            oCtx.putImageData(oImgData, 0, 0);
-
-            return {
-                img: offscreen,
-                width: w,
-                height: h
+            docMoveHandler = function (e) {
+              if (!isRainbowDrawing || !e.isPrimary || !cv || !cv.el) return;
+              var pt = getCanvasPoint(cv.el, e);
+              rainbowLivePath.push(pt);
+              var sz = SCENE_CONFIG.BRUSH_SIZES[selectedSizeIdx].px;
+              var segIdx = rainbowLivePath.length - 1;
+              var prev = rainbowLivePath[segIdx - 1];
+              var segHue = rainbowStartHue + segIdx * SCENE_CONFIG.RAINBOW_STEP_DEG;
+              cv.setColor(hslToHex(segHue, 92, 52));
+              fxCtx.save();
+              fxCtx.lineCap = 'round';
+              fxCtx.lineJoin = 'round';
+              fxCtx.lineWidth = sz;
+              fxCtx.strokeStyle = hslToHex(segHue, 92, 52);
+              fxCtx.beginPath();
+              fxCtx.moveTo(prev.x, prev.y);
+              fxCtx.lineTo(pt.x, pt.y);
+              fxCtx.stroke();
+              fxCtx.restore();
             };
-        }
 
-        // 2. 切換「魔法動起來」與「回去畫畫」模式
-        function toggleMagicMove() {
-            if (config.mode === 'draw') {
-                // 試著擷取畫布內容
-                const extracted = cropAndExtractDrawing();
-                if (!extracted) {
-                    showNotice("💡 要先畫畫，魔法才會發生喔！🦕");
-                    playNote(150, 'triangle', 0.2);
-                    return;
-                }
+            docUpHandler = function (e) {
+              if (!isRainbowDrawing || !e.isPrimary) return;
+              isRainbowDrawing = false;
+              rainbowLivePath = [];
+              if (!isMagicPlaying && fxCtx) {
+                fxCtx.clearRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+              }
+            };
 
-                // 備份原始畫布 (以便之後還原)
-                backupCanvas = document.createElement('canvas');
-                backupCanvas.width = canvas.width;
-                backupCanvas.height = canvas.height;
-                backupCanvas.getContext('2d').drawImage(canvas, 0, 0);
+            document.addEventListener('pointermove', docMoveHandler);
+            document.addEventListener('pointerup', docUpHandler);
+            document.addEventListener('pointercancel', docUpHandler);
 
-                croppedDrawing = extracted;
-                config.mode = 'animate';
-
-                // 初始化多個分身
-                bouncingClones = [];
-                const count = Math.min(5, Math.max(2, Math.floor(600 / Math.max(extracted.width, extracted.height)))); // 根據大小決定初始分身數量
-                for (let i = 0; i < count; i++) {
-                    bouncingClones.push({
-                        x: Math.random() * (canvas.width - 150) + 75,
-                        y: Math.random() * (canvas.height - 150) + 75,
-                        vx: (Math.random() - 0.5) * 5,
-                        vy: (Math.random() - 0.5) * 5,
-                        scale: 0.3 + Math.random() * 0.4,
-                        rotation: Math.random() * Math.PI * 2,
-                        vRot: (Math.random() - 0.5) * 0.04,
-                        width: extracted.width,
-                        height: extracted.height,
-                        img: extracted.img
-                    });
-                }
-
-                // 更新 UI 狀態
-                document.getElementById('magic-btn-emoji').innerText = '✏️';
-                document.getElementById('magic-btn-text').innerText = '回去畫畫';
-                document.getElementById('sub-title-desc').innerText = '哇！你的畫作變出好多分身在跳舞！點擊畫面可以召喚更多喔！🎈';
-                
-                // 隱藏工具區，顯示特殊提示
-                document.getElementById('drawing-tools-container').classList.add('hidden');
-                document.getElementById('magic-instructions').classList.remove('hidden');
-
-                playNote(523, 'sine', 0.2);
-                setTimeout(() => playNote(659, 'sine', 0.2), 100);
-                setTimeout(() => playNote(784, 'sine', 0.3), 200);
-
-                // 啟動物理引擎動畫循環
-                animatePhysics();
-            } else {
-                // 回去畫畫模式
-                config.mode = 'draw';
-
-                // 還原原始畫作
-                if (backupCanvas) {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(backupCanvas, 0, 0);
-                }
-
-                // 還原 UI 狀態
-                document.getElementById('magic-btn-emoji').innerText = '✨';
-                document.getElementById('magic-btn-text').innerText = '魔法動起來';
-                document.getElementById('sub-title-desc').innerText = '點顏色就能畫畫，還有好聽的音樂喔！🌟';
-                
-                document.getElementById('drawing-tools-container').classList.remove('hidden');
-                document.getElementById('magic-instructions').classList.add('hidden');
-
-                playNote(392, 'sine', 0.15);
-                setTimeout(() => playNote(261, 'sine', 0.25), 80);
-            }
-        }
-
-        // 3. 在點擊滑鼠/觸控位置召喚新分身
-        function spawnCloneAt(x, y) {
-            if (!croppedDrawing) return;
-            magicSummonCount++;
-            { const _p = parseInt(localStorage.getItem('edtech-unit18-score')||'0',10); if (magicSummonCount > _p) localStorage.setItem('edtech-unit18-score', magicSummonCount); }
-
-            bouncingClones.push({
-                x: x,
-                y: y,
-                vx: (Math.random() - 0.5) * 10, // 飛出去的速度稍微快一點
-                vy: (Math.random() - 0.5) * 10,
-                scale: 0.2 + Math.random() * 0.4,
-                rotation: Math.random() * Math.PI * 2,
-                vRot: (Math.random() - 0.5) * 0.1,
-                width: croppedDrawing.width,
-                height: croppedDrawing.height,
-                img: croppedDrawing.img
+            /* 印章層 pointer events（支援滑鼠＋平板手指直接點擊蓋章） */
+            stampLayer.addEventListener('pointerdown', function (e) {
+              if (!e.isPrimary || mode !== 'stamp' || !activeStampId) return;
+              e.preventDefault();
+              if (isMagicPlaying) stopMagic(false);
+              resetClearArm();
+              var pt = getCanvasPoint(stampLayer, e);
+              var stampItem = {
+                type: 'stamp',
+                stampId: activeStampId,
+                x: pt.x,
+                y: pt.y,
+                size: SCENE_CONFIG.STAMP_BASE_SIZE
+              };
+              items.push(stampItem);
+              redrawMainCanvas();
+              updateStats();
+              playStampPop(pt.x, pt.y, activeStampId);
+              setGuide('蓋好囉！還可以多蓋！', 'normal', 'sc-anim-hop');
             });
 
-            // 爆開星星特效
-            for (let i = 0; i < 8; i++) {
-                createSparkle(x, y, '#feca57');
-            }
-
-            playNote(600 + Math.random() * 200, 'sine', 0.15, 0.12);
-        }
-
-        // 4. 動態物理彈跳與繪製循環
-        function animatePhysics() {
-            if (config.mode !== 'animate') return;
-
-            // 1. 清空主畫布 (填上純白底)
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // 2. 逐一更新分身並繪製
-            bouncingClones.forEach(c => {
-                c.x += c.vx;
-                c.y += c.vy;
-                c.rotation += c.vRot;
-
-                const halfW = (c.width * c.scale) / 2;
-                const halfH = (c.height * c.scale) / 2;
-
-                // 左右邊框彈回
-                if (c.x - halfW < 0) {
-                    c.vx *= -1;
-                    c.x = halfW;
-                    playBounceSound(c.y);
-                } else if (c.x + halfW > canvas.width) {
-                    c.vx *= -1;
-                    c.x = canvas.width - halfW;
-                    playBounceSound(c.y);
-                }
-
-                // 上下邊框彈回
-                if (c.y - halfH < 0) {
-                    c.vy *= -1;
-                    c.y = halfH;
-                    playBounceSound(c.y);
-                } else if (c.y + halfH > canvas.height) {
-                    c.vy *= -1;
-                    c.y = canvas.height - halfH;
-                    playBounceSound(c.y);
-                }
-
-                // 繪製含有旋轉、縮放的分身
-                ctx.save();
-                ctx.translate(c.x, c.y);
-                ctx.rotate(c.rotation);
-                ctx.scale(c.scale, c.scale);
-                ctx.drawImage(c.img, -c.width / 2, -c.height / 2);
-                ctx.restore();
+            stampLayer.addEventListener('pointermove', function (e) {
+              if (e.pointerType !== 'mouse' || mode !== 'stamp' || !activeStampId) return;
+              stampHoverPos = getCanvasPoint(stampLayer, e);
+              drawStampGhost();
             });
 
-            // 持續動畫循環
-            requestAnimationFrame(animatePhysics);
-        }
+            stampLayer.addEventListener('pointerleave', function () {
+              stampHoverPos = null;
+              if (!isMagicPlaying && !popRafId && fxCtx) {
+                fxCtx.clearRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+              }
+            });
 
-        // 彈跳時發出鋼琴琴音
-        function playBounceSound(y) {
-            playSoundByY(y, canvas.height);
-        }
+            /* 統一事件委派：工具列、色盤、印章列、變魔法、完成 */
+            api.field.onclick = function (e) {
+              var btn;
 
+              if ((btn = e.target.closest('.sc-size'))) {
+                stopMagic(false);
+                resetClearArm();
+                selectedSizeIdx = Number(btn.dataset.sizeIdx);
+                if (mode === 'stamp') mode = 'pen';
+                applyToolState();
+                return;
+              }
 
-        // --- 3. 啟動與視窗調整監聽 ---
-        window.onload = function() {
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
+              if ((btn = e.target.closest('.sc-mode'))) {
+                stopMagic(false);
+                resetClearArm();
+                mode = btn.dataset.mode;
+                activeStampId = null;
+                applyToolState();
+                if (mode === 'rainbow') setGuide('彩虹筆會變出七彩喔！', 'normal');
+                else if (mode === 'eraser') setGuide('輕輕擦掉想改的地方！', 'normal');
+                else setGuide(currentTheme.prompt, 'normal');
+                return;
+              }
 
-            // 音訊鎖解鎖
-            document.body.addEventListener('pointerdown', () => {
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
+              if ((btn = e.target.closest('.sc-sw'))) {
+                stopMagic(false);
+                resetClearArm();
+                selectedColorIdx = Number(btn.dataset.colorIdx);
+                mode = 'pen';
+                activeStampId = null;
+                applyToolState();
+                return;
+              }
+
+              if ((btn = e.target.closest('.sc-stamp-btn'))) {
+                stopMagic(false);
+                resetClearArm();
+                var sid = btn.dataset.stamp;
+                if (mode === 'stamp' && activeStampId === sid) {
+                  /* 再點一次已選中印章，切回畫筆 */
+                  mode = 'pen';
+                  activeStampId = null;
+                  setGuide(currentTheme.prompt, 'normal');
+                } else {
+                  mode = 'stamp';
+                  activeStampId = sid;
+                  setGuide('點白紙就能蓋印章！', 'normal');
                 }
-            }, { once: true });
+                applyToolState();
+                return;
+              }
+
+              if (e.target.closest('.sc-undo')) {
+                stopMagic(false);
+                resetClearArm();
+                if (items.length > 0) {
+                  var popped = items.pop();
+                  if (popped.type === 'stroke') cv.undo();
+                  redrawMainCanvas();
+                  updateStats();
+                  setGuide('已經退回上一步囉！', 'normal');
+                }
+                return;
+              }
+
+              if (e.target.closest('.sc-clear')) {
+                stopMagic(false);
+                if (items.length === 0) return;
+                if (items.length >= SCENE_CONFIG.CLEAR_CONFIRM_THRESHOLD && !clearArmed) {
+                  clearArmed = true;
+                  var clrBtn = api.field.querySelector('.sc-clear');
+                  clrBtn.classList.add('sc-clear-arm');
+                  clrBtn.innerHTML = UI_ICONS.clear + '<span>再按清</span>';
+                  setGuide('要整張重畫嗎？再按一次！', 'curious');
+                  clearArmTimer = setTimeout(resetClearArm, SCENE_CONFIG.CLEAR_ARM_TIMEOUT_MS);
+                  return;
+                }
+                resetClearArm();
+                items = [];
+                cv.clear();
+                redrawMainCanvas();
+                updateStats();
+                setGuide('白紙變乾淨囉！重新畫！', 'normal');
+                return;
+              }
+
+              if (e.target.closest('.sc-magic')) {
+                triggerMagic();
+                return;
+              }
+
+              if (e.target.closest('.sc-done')) {
+                stopMagic(false);
+                resetClearArm();
+                redrawMainCanvas();
+                api.finish({
+                  stars: SCENE_CONFIG.FINISH_STARS,
+                  image: cv.el,
+                  praise: buildPraise(),
+                  caption: currentTheme.name
+                });
+              }
+            };
+
+            applyToolState();
+            updateStats();
+          },
+
+          stop: function () {
+            clearTimersAndListeners();
+            isMagicPlaying = false;
+            isRainbowDrawing = false;
+            clearArmed = false;
+            items = [];
+            cv = null;
+            fxCanvas = null;
+            fxCtx = null;
+            stampLayer = null;
+            api.field.onclick = null;
+            api.field.innerHTML = '';
+          }
         };
-    </script>
-<script defer src="../../assets/js/beacon.js"></script>
-</body>
-</html>
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

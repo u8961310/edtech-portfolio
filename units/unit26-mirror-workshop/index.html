@@ -1,0 +1,1655 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>對稱魔鏡工坊 - 畫畫島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Fredoka:wght@600;700&display=swap">
+  <link rel="stylesheet" href="../../assets/css/art-island.css">
+  <style>
+    /* ===== 對稱魔鏡工坊（unit26）場景樣式：一律 sc- 開頭，不修改 .ai- 樣式 ===== */
+    .sc-root {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    /* 左側工具面板（寬 230px，與右欄對稱留邊 22px） */
+    .sc-tools {
+      position: absolute;
+      left: 22px;
+      top: 8px;
+      width: 230px;
+      height: 568px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      box-sizing: border-box;
+    }
+    .sc-sec-title {
+      margin: 0;
+      font: 700 16px/1.2 var(--f-ui);
+      color: var(--ink-2);
+      letter-spacing: 0.02em;
+    }
+
+    /* 筆刷 3 種粗細 */
+    .sc-sizes {
+      display: flex;
+      gap: 8px;
+    }
+    .sc-size {
+      position: relative;
+      flex: 1;
+      min-width: 48px;
+      height: 48px;
+      background: #fff;
+      border: 3px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: 0 3px 0 var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      transition: transform 0.08s ease;
+    }
+    .sc-size:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 var(--ink);
+    }
+    .sc-size i {
+      display: block;
+      border-radius: 50%;
+      background: var(--ink);
+    }
+    .sc-size.sc-on {
+      background: var(--blue-soft);
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px var(--blue), 0 3px 0 var(--ink);
+    }
+
+    /* 12 色色盤（4 × 3，每顆 44×44 px） */
+    .sc-colors {
+      display: grid;
+      grid-template-columns: repeat(4, 44px);
+      gap: 6px;
+      justify-content: space-between;
+    }
+    .sc-sw {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      border: 3px solid var(--ink);
+      box-shadow: 0 3px 0 var(--ink);
+      cursor: pointer;
+      padding: 0;
+      transition: transform 0.08s ease;
+    }
+    .sc-sw:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 var(--ink);
+    }
+    .sc-sw.sc-on {
+      box-shadow: 0 0 0 2px #fff, 0 0 0 5px var(--blue), 0 4px 0 var(--ink);
+    }
+
+    /* 工具按鈕列（畫筆／橡皮擦、復原／清除，全部 ≥ 44px 且不換行） */
+    .sc-tool-row {
+      display: flex;
+      gap: 8px;
+    }
+    .sc-tbtn {
+      position: relative;
+      flex: 1;
+      min-height: 46px;
+      padding: 0 6px;
+      background: var(--card);
+      color: var(--ink);
+      border: 3px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: 0 4px 0 var(--ink);
+      font: 700 17px/1 var(--f-ui);
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: transform 0.08s ease;
+    }
+    .sc-tbtn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--ink);
+    }
+    .sc-tbtn svg {
+      width: 19px;
+      height: 19px;
+      flex-shrink: 0;
+    }
+    .sc-tbtn.sc-on {
+      background: var(--blue-soft);
+      border-color: var(--blue);
+      color: var(--blue);
+      box-shadow: 0 0 0 2px var(--blue), 0 4px 0 var(--ink);
+    }
+
+    /* 被選中右上角藍色 ✓ 徽章 */
+    .sc-check {
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--blue);
+      border: 2px solid #fff;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .sc-check svg {
+      width: 13px;
+      height: 13px;
+    }
+    .sc-on > .sc-check {
+      display: flex;
+    }
+
+    /* 左欄底部：魔鏡精靈回饋小卡 */
+    .sc-mascot-box {
+      margin-top: auto;
+      padding: 8px 10px;
+      background: #fff;
+      border: 3px solid var(--ink);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 98px;
+      box-sizing: border-box;
+    }
+    .sc-mascot-box.sc-mascot-ok {
+      background: var(--ok-soft);
+      border-color: var(--ok-dk);
+    }
+    .sc-mascot-box.sc-mascot-warn {
+      background: var(--sun-soft);
+      border-color: var(--ink);
+    }
+    .sc-mascot-svg {
+      width: 58px;
+      height: 66px;
+      flex-shrink: 0;
+      transform-origin: center bottom;
+    }
+    .sc-mascot-msg {
+      margin: 0;
+      font: 700 16px/1.35 var(--f-ui);
+      color: var(--ink);
+    }
+    .sc-mascot-box.sc-mascot-ok .sc-mascot-msg {
+      color: var(--ok-dk);
+    }
+    .sc-mascot-face { display: none; }
+    .sc-mascot-box[data-mood="normal"] .sc-face-normal { display: block; }
+    .sc-mascot-box[data-mood="happy"] .sc-face-happy { display: block; }
+    .sc-mascot-box[data-mood="oops"] .sc-face-oops { display: block; }
+
+    /* 中央大白畫布舞台（780 × 560，與左、右欄保持清爽間距） */
+    .sc-stage {
+      position: absolute;
+      left: 272px;
+      top: 12px;
+      width: 780px;
+      height: 560px;
+    }
+    .sc-board {
+      position: absolute;
+      inset: 0;
+      width: 780px;
+      height: 560px;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    .sc-board.sc-nudge {
+      box-shadow: 0 0 0 4px var(--sun), 0 8px 0 var(--ink);
+    }
+    .sc-tape-l {
+      left: 118px;
+      top: -11px;
+      transform: rotate(-4deg);
+      z-index: 6;
+      pointer-events: none;
+    }
+    .sc-tape-r {
+      right: 118px;
+      top: -11px;
+      transform: rotate(3.5deg);
+      z-index: 6;
+      pointer-events: none;
+    }
+    /* 畫布疊層：底圖（正片疊底）＋鏡子虛線＋星光特效 */
+    .sc-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .sc-underlay {
+      mix-blend-mode: multiply;
+      z-index: 2;
+    }
+    .sc-guide {
+      z-index: 3;
+    }
+    .sc-fx {
+      z-index: 4;
+    }
+
+    /* 右側欄：對稱模式 4 格＋作品進度＋完成大按鈕 */
+    .sc-side {
+      position: absolute;
+      left: 1072px;
+      top: 8px;
+      width: 272px;
+      height: 568px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sc-modes-panel {
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-sizing: border-box;
+    }
+    .sc-modes-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .sc-modes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .sc-mode {
+      position: relative;
+      height: 104px;
+      padding: 8px 6px 6px;
+      background: #fff;
+      color: var(--ink);
+      border: 3px solid var(--ink);
+      border-radius: 14px;
+      box-shadow: 0 4px 0 var(--ink);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      box-sizing: border-box;
+      transition: transform 0.08s ease;
+    }
+    .sc-mode:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--ink);
+    }
+    .sc-mode svg {
+      width: 50px;
+      height: 50px;
+      flex-shrink: 0;
+    }
+    .sc-mode-name {
+      font: 700 17px/1.1 var(--f-ui);
+      white-space: nowrap;
+    }
+    .sc-mode.sc-on {
+      background: var(--blue-soft);
+      border-color: var(--blue);
+      color: var(--blue);
+      box-shadow: 0 0 0 2px var(--blue), 0 4px 0 var(--ink);
+    }
+    .sc-mode-rec {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: var(--sun-soft);
+      border: 2px solid var(--ink);
+      color: var(--ink);
+      font: 700 12px/1.2 var(--f-ui);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* 作品進度與即時星星卡 */
+    .sc-prog-panel {
+      flex: 1;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+    }
+    .sc-prog-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .sc-prog-count {
+      font: 700 18px/1.2 var(--f-ui);
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .sc-prog-count b {
+      font-size: 24px;
+      color: var(--blue);
+    }
+    .sc-stars-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 4px 0;
+    }
+    .sc-star {
+      width: 44px;
+      height: 44px;
+    }
+    .sc-star-fill {
+      fill: #DDE3EA;
+      transition: fill 0.18s ease;
+    }
+    .sc-star.sc-lit .sc-star-fill {
+      fill: var(--sun);
+    }
+    .sc-prog-hint {
+      margin: 0;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: var(--lagoon);
+      color: var(--ink);
+      font: 700 16px/1.35 var(--f-ui);
+      text-align: center;
+      white-space: nowrap;
+    }
+    .sc-prog-hint.sc-hint-ok {
+      background: var(--ok-soft);
+      color: var(--ok-dk);
+    }
+    .sc-prog-hint.sc-hint-warn {
+      background: var(--sun-soft);
+      color: var(--ink);
+    }
+
+    /* 完成大按鈕 */
+    .sc-done {
+      height: 82px;
+      width: 100%;
+      font: 900 30px/1 var(--f-title);
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .sc-done svg {
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
+    }
+
+    /* 回饋瞬間動畫（只觸發一次，不連續閃爍） */
+    @keyframes sc-hop {
+      0%   { transform: translateY(0) scale(1); }
+      35%  { transform: translateY(-9px) scale(1.06); }
+      70%  { transform: translateY(2px) scale(0.97); }
+      100% { transform: translateY(0) scale(1); }
+    }
+    @keyframes sc-wiggle {
+      0%, 100% { transform: translateX(0) rotate(0deg); }
+      25%      { transform: translateX(-5px) rotate(-5deg); }
+      55%      { transform: translateX(5px) rotate(5deg); }
+      80%      { transform: translateX(-3px) rotate(-2deg); }
+    }
+    @keyframes sc-star-pop {
+      0%   { transform: scale(0.7); }
+      60%  { transform: scale(1.22); }
+      100% { transform: scale(1); }
+    }
+    .sc-anim-hop { animation: sc-hop 0.42s ease-out 1; }
+    .sc-anim-wiggle { animation: sc-wiggle 0.38s ease-in-out 1; }
+    .sc-star.sc-pop { animation: sc-star-pop 0.36s ease-out 1; }
+
+    /* 護眼：尊重系統「減少動態效果」設定 */
+    @media (prefers-reduced-motion: reduce) {
+      .sc-anim-hop,
+      .sc-anim-wiggle,
+      .sc-star.sc-pop {
+        animation: none !important;
+      }
+      .sc-size, .sc-sw, .sc-tbtn, .sc-mode, .sc-star-fill {
+        transition: none !important;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/art-ui.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    /* =====================================================================
+       SCENE_CONFIG：集中管理本關所有常數、關卡設定、顏色、筆刷與星星規則
+       ===================================================================== */
+    var SCENE_CONFIG = {
+      CANVAS_W: 774,
+      CANVAS_H: 554,
+      DEFAULT_SIZE: 10,
+      DEFAULT_COLOR_INDEX: 11, // 預設墨水藍黑 #1F2A4D
+      BRUSH_SIZES: [
+        { size: 4,  dot: 8,  label: '細筆刷' },
+        { size: 10, dot: 15, label: '中筆刷' },
+        { size: 20, dot: 24, label: '粗筆刷' }
+      ],
+      // 12 色色盤（4 × 3）
+      COLORS: [
+        { hex: '#E53935', name: '草莓紅' },
+        { hex: '#FB8C00', name: '蜜柑橘' },
+        { hex: '#FDD835', name: '向日葵黃' },
+        { hex: '#7CB342', name: '嫩芽綠' },
+        { hex: '#2E7D32', name: '森林綠' },
+        { hex: '#00ACC1', name: '湖水青' },
+        { hex: '#1E88E5', name: '天空藍' },
+        { hex: '#3949AB', name: '寶石靛' },
+        { hex: '#8E24AA', name: '葡萄紫' },
+        { hex: '#EC407A', name: '櫻花粉' },
+        { hex: '#6D4C41', name: '巧克力棕' },
+        { hex: '#1F2A4D', name: '墨水藍黑' }
+      ],
+      // 星星門檻：畫的筆數 ≥ 6 → 3 顆；≥ 3 → 2 顆；≥ 1 → 1 顆
+      STAR_THRESHOLDS: {
+        THREE: 6,
+        TWO: 3,
+        ONE: 1
+      },
+      // 對稱模式定義
+      MODES: [
+        { id: 'lr',    name: '左右對稱',   shortName: '左右' },
+        { id: 'ud',    name: '上下對稱',   shortName: '上下' },
+        { id: 'quad',  name: '萬花筒 4 份', shortName: '萬花筒 4 份' },
+        { id: 'snow6', name: '雪花 6 份',  shortName: '雪花 6 份' }
+      ],
+      // 4 個關卡設定
+      LEVELS: [
+        {
+          id: 'butterfly',
+          name: '修好蝴蝶翅膀',
+          defaultMode: 'lr',
+          enforceSuggest: true,
+          quest: '修好蝴蝶的右邊翅膀',
+          introMsg: '在左邊畫翅膀花紋，魔鏡會幫忙修好右邊！',
+          praise3: '你用對稱魔法修好了蝴蝶翅膀，兩邊花紋配得真漂亮！',
+          praise2: '蝴蝶的新翅膀好可愛！再加幾筆點線面會更華麗喔！',
+          praise1: '你啟動了左右對稱魔法，幫蝴蝶長出翅膀了！'
+        },
+        {
+          id: 'mask',
+          name: '設計面具',
+          defaultMode: 'lr',
+          enforceSuggest: true,
+          quest: '幫對稱面具畫上酷炫花紋',
+          introMsg: '幫面具加上圖案和色彩，左右兩邊會完全一樣喔！',
+          praise3: '這張對稱面具超有設計感，點線面搭配得好精彩！',
+          praise2: '面具很有風格喔！再多加幾筆裝飾一定更亮眼！',
+          praise1: '你的對稱面具開始成形了，很有創意！'
+        },
+        {
+          id: 'lake',
+          name: '湖面倒影',
+          defaultMode: 'ud',
+          enforceSuggest: true,
+          quest: '畫出山和樹，湖面會出現倒影',
+          introMsg: '在上半天空畫山和樹，下面湖水會變出倒影！',
+          praise3: '山和樹倒映在湖面上，上下對稱的風景好迷人！',
+          praise2: '湖面倒影出現了！再畫點白雲或小花會更豐富！',
+          praise1: '你畫出了上下對稱的湖面倒影，好神奇！'
+        },
+        {
+          id: 'snowflake',
+          name: '萬花筒雪花',
+          defaultMode: 'snow6',
+          enforceSuggest: false,
+          quest: '用雪花魔鏡畫出你的萬花筒作品',
+          introMsg: '隨便畫一筆就會變出 6 瓣雪花，也能切換 4 種模式！',
+          praise3: '你的萬花筒雪花像真正的冰雪結晶一樣精緻漂亮！',
+          praise2: '好漂亮的旋轉對稱圖案！再多疊幾種顏色會更夢幻！',
+          praise1: '你用萬花筒魔鏡變出對稱星花囉，真好玩！'
+        }
+      ],
+      // 輔助線與星光特效配色
+      GUIDE_COLOR: '#2160C4',
+      SPARKLE_COLORS: ['#FFB627', '#2160C4', '#EC407A', '#00ACC1'],
+      SPARKLE_LIFE_MS: 520,
+      MAX_SPARKLES: 48
+    };
+
+    // 預先算好 60° 旋轉（0°, 60°, 120°, 180°, 240°, 300°）的 cos 與 sin，供雪花 6 份使用
+    var SNOW_TRIG = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var rad = (k * 60) * Math.PI / 180;
+      return { cos: Math.cos(rad), sin: Math.sin(rad) };
+    });
+
+    /* =====================================================================
+       對稱座標換算函式（傳回「額外」要同時畫的點陣列）
+       ===================================================================== */
+    function getMirrorFn(modeId, W, H) {
+      var cx = W / 2;
+      var cy = H / 2;
+      if (modeId === 'lr') {
+        return function (p) {
+          return [{ x: W - p.x, y: p.y }];
+        };
+      }
+      if (modeId === 'ud') {
+        return function (p) {
+          return [{ x: p.x, y: H - p.y }];
+        };
+      }
+      if (modeId === 'quad') {
+        return function (p) {
+          return [
+            { x: W - p.x, y: p.y },
+            { x: p.x, y: H - p.y },
+            { x: W - p.x, y: H - p.y }
+          ];
+        };
+      }
+      // snow6：以中心旋轉 60° 的 5 個點＋各自鏡射 6 個點（連同原始點共 12 個點）
+      return function (p) {
+        var dx = p.x - cx;
+        var dy = p.y - cy;
+        var pts = [];
+        for (var k = 0; k < 6; k++) {
+          var c = SNOW_TRIG[k].cos;
+          var s = SNOW_TRIG[k].sin;
+          // 旋轉點（k = 0 為原點本身，不重複加入）
+          if (k > 0) {
+            pts.push({
+              x: cx + dx * c - dy * s,
+              y: cy + dx * s + dy * c
+            });
+          }
+          // 先沿垂直軸鏡射 (-dx, dy) 再旋轉 k × 60°
+          pts.push({
+            x: cx + (-dx) * c - dy * s,
+            y: cy + (-dx) * s + dy * c
+          });
+        }
+        return pts;
+      };
+    }
+
+    /* =====================================================================
+       共用 SVG 插圖與圖示（純線條／貼紙風格，粗墨藍輪廓 #1F2A4D，無 emoji）
+       ===================================================================== */
+    // 開始畫面左側主角插圖：可愛的「魔鏡小精靈」（380 × 360）
+    var HERO_SVG =
+      '<svg viewBox="0 0 380 360" xmlns="http://www.w3.org/2000/svg">' +
+        /* 柔和背景點綴光暈與對稱星星 */
+        '<circle cx="190" cy="182" r="142" fill="#FFF0C2" opacity="0.65"/>' +
+        '<g fill="#FFB627" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round">' +
+          '<path d="M56 84l6 13 14 2-10 10 2 14-12-6-12 6 2-14-10-10 14-2z"/>' +
+          '<path d="M324 84l6 13 14 2-10 10 2 14-12-6-12 6 2-14-10-10 14-2z"/>' +
+        '</g>' +
+        '<circle cx="48" cy="252" r="9" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="4"/>' +
+        '<circle cx="332" cy="252" r="9" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="4"/>' +
+        /* 左右對稱的繽紛蝴蝶翅膀 */
+        '<g stroke="#1F2A4D" stroke-width="6" stroke-linejoin="round">' +
+          /* 左上翅與左下翅 */
+          '<path d="M122 158C72 104 28 118 32 164c4 38 42 52 84 44z" fill="#FB8C00"/>' +
+          '<path d="M124 206c-46 6-76 34-62 64 12 26 48 16 70-26z" fill="#FDD835"/>' +
+          '<circle cx="72" cy="156" r="13" fill="#FFFBEF"/>' +
+          '<circle cx="88" cy="242" r="9" fill="#FFFBEF"/>' +
+          /* 右上翅與右下翅（完全鏡像） */
+          '<path d="M258 158c50-54 94-40 90 6-4 38-42 52-84 44z" fill="#FB8C00"/>' +
+          '<path d="M256 206c46 6 76 34 62 64-12 26-48 16-70-26z" fill="#FDD835"/>' +
+          '<circle cx="308" cy="156" r="13" fill="#FFFBEF"/>' +
+          '<circle cx="292" cy="242" r="9" fill="#FFFBEF"/>' +
+        '</g>' +
+        /* 魔鏡底座與可愛小腳 */
+        '<g stroke="#1F2A4D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">' +
+          '<ellipse cx="154" cy="316" rx="22" ry="13" fill="#FFB627"/>' +
+          '<ellipse cx="226" cy="316" rx="22" ry="13" fill="#FFB627"/>' +
+          '<rect x="134" y="290" width="112" height="22" rx="11" fill="#FFFBEF"/>' +
+        '</g>' +
+        /* 魔鏡外框（厚實金色貼紙感） */
+        '<rect x="106" y="54" width="168" height="244" rx="84" fill="#FFB627" stroke="#1F2A4D" stroke-width="7"/>' +
+        '<rect x="122" y="70" width="136" height="212" rx="68" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="5"/>' +
+        /* 鏡面白色斜反光 */
+        '<path d="M144 108l52-26v24l-52 26z" fill="#FFFFFF" opacity="0.72"/>' +
+        '<path d="M138 148l78-38v14l-78 38z" fill="#FFFFFF" opacity="0.52"/>' +
+        /* 中央藍色對稱虛線 */
+        '<line x1="190" y1="62" x2="190" y2="290" stroke="#2160C4" stroke-width="4" stroke-dasharray="10 8" stroke-linecap="round"/>' +
+        /* 魔鏡可愛表情 */
+        '<ellipse cx="154" cy="202" rx="13" ry="8" fill="#F48FB1" opacity="0.8"/>' +
+        '<ellipse cx="226" cy="202" rx="13" ry="8" fill="#F48FB1" opacity="0.8"/>' +
+        '<circle cx="160" cy="176" r="11" fill="#1F2A4D"/>' +
+        '<circle cx="156" cy="172" r="4" fill="#FFFFFF"/>' +
+        '<circle cx="220" cy="176" r="11" fill="#1F2A4D"/>' +
+        '<circle cx="216" cy="172" r="4" fill="#FFFFFF"/>' +
+        '<path d="M168 206q22 20 44 0" fill="none" stroke="#1F2A4D" stroke-width="6" stroke-linecap="round"/>' +
+        /* 頭頂小皇冠寶石 */
+        '<path d="M166 56l10-22 14 14 14-14 10 22z" fill="#FFF0C2" stroke="#1F2A4D" stroke-width="5" stroke-linejoin="round"/>' +
+        '<circle cx="190" cy="48" r="5" fill="#2160C4"/>' +
+      '</svg>';
+
+    // 4 個關卡的 120 × 120 正方形縮圖
+    var LEVEL_THUMBS = [
+      // 第 1 關：修好蝴蝶翅膀
+      '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect x="6" y="6" width="108" height="108" rx="18" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="4"/>' +
+        /* 左邊已塗色翅膀 */
+        '<path d="M56 54C34 26 16 32 18 54c2 18 20 22 36 16z" fill="#FB8C00" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>' +
+        '<path d="M56 70c-22 2-36 14-28 28 6 12 22 6 30-16z" fill="#FDD835" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>' +
+        '<circle cx="34" cy="52" r="6" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="3"/>' +
+        /* 右邊虛線待補全翅膀 */
+        '<path d="M64 54c22-28 40-22 38 0-2 18-20 22-36 16z" fill="#DCE9FB" fill-opacity="0.55" stroke="#2160C4" stroke-width="3.5" stroke-dasharray="6 5" stroke-linejoin="round"/>' +
+        '<path d="M64 70c22 2 36 14 28 28-6 12-22 6-30-16z" fill="#DCE9FB" fill-opacity="0.55" stroke="#2160C4" stroke-width="3.5" stroke-dasharray="6 5" stroke-linejoin="round"/>' +
+        /* 中央對稱線與蝴蝶身體 */
+        '<line x1="60" y1="14" x2="60" y2="106" stroke="#2160C4" stroke-width="3" stroke-dasharray="6 5" stroke-linecap="round"/>' +
+        '<path d="M56 32c-4-10-10-12-12-10M64 32c4-10 10-12 12-10" fill="none" stroke="#1F2A4D" stroke-width="3.5" stroke-linecap="round"/>' +
+        '<rect x="54" y="42" width="12" height="44" rx="6" fill="#6D4C41" stroke="#1F2A4D" stroke-width="3.5"/>' +
+        '<circle cx="60" cy="37" r="8" fill="#8D6E63" stroke="#1F2A4D" stroke-width="3.5"/>' +
+      '</svg>',
+
+      // 第 2 關：設計面具
+      '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect x="6" y="6" width="108" height="108" rx="18" fill="#F3ECFF" stroke="#1F2A4D" stroke-width="4"/>' +
+        '<path d="M60 36c-14 0-22-12-38-12-8 0-12 16-8 34 4 20 22 32 36 26 5-2 7-8 10-8s5 6 10 8c14 6 32-6 36-26 4-18 0-34-8-34-16 0-24 12-38 12z" fill="#FFB627" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>' +
+        '<ellipse cx="40" cy="56" rx="11" ry="8" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="3.5"/>' +
+        '<ellipse cx="80" cy="56" rx="11" ry="8" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="3.5"/>' +
+        '<circle cx="28" cy="40" r="4" fill="#E53935"/>' +
+        '<circle cx="92" cy="40" r="4" fill="#E53935"/>' +
+        '<path d="M60 44l4 8-4 8-4-8z" fill="#2160C4" stroke="#1F2A4D" stroke-width="2.5"/>' +
+        '<line x1="60" y1="14" x2="60" y2="106" stroke="#2160C4" stroke-width="3" stroke-dasharray="6 5" stroke-linecap="round"/>' +
+      '</svg>',
+
+      // 第 3 關：湖面倒影
+      '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect x="6" y="6" width="108" height="108" rx="18" fill="#E6F4FF" stroke="#1F2A4D" stroke-width="4"/>' +
+        '<path d="M8 62h104v34a16 16 0 0 1-16 16H24A16 16 0 0 1 8 96z" fill="#C9ECEB"/>' +
+        /* 上半：山、樹、太陽 */
+        '<circle cx="88" cy="28" r="10" fill="#FFB627" stroke="#1F2A4D" stroke-width="3"/>' +
+        '<path d="M14 62l24-30 22 22 14-14 26 22z" fill="#7CB342" stroke="#1F2A4D" stroke-width="3.5" stroke-linejoin="round"/>' +
+        '<path d="M84 62v-14" stroke="#6D4C41" stroke-width="4" stroke-linecap="round"/>' +
+        '<circle cx="84" cy="44" r="9" fill="#2E7D32" stroke="#1F2A4D" stroke-width="3"/>' +
+        /* 下半：淡淡的上下對稱倒影 */
+        '<g opacity="0.55">' +
+          '<circle cx="88" cy="96" r="10" fill="#FFB627" stroke="#1F2A4D" stroke-width="2.5"/>' +
+          '<path d="M14 62l24 30 22-22 14 14 26-22z" fill="#7CB342" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/>' +
+          '<circle cx="84" cy="80" r="9" fill="#2E7D32" stroke="#1F2A4D" stroke-width="2.5"/>' +
+        '</g>' +
+        '<line x1="12" y1="62" x2="108" y2="62" stroke="#2160C4" stroke-width="3.5" stroke-dasharray="6 5" stroke-linecap="round"/>' +
+      '</svg>',
+
+      // 第 4 關：萬花筒雪花
+      '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect x="6" y="6" width="108" height="108" rx="18" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="4"/>' +
+        '<g stroke="#2160C4" stroke-width="2" stroke-dasharray="4 4" opacity="0.55">' +
+          '<line x1="60" y1="14" x2="60" y2="106"/>' +
+          '<line x1="20" y1="37" x2="100" y2="83"/>' +
+          '<line x1="100" y1="37" x2="20" y2="83"/>' +
+        '</g>' +
+        '<g stroke="#1F2A4D" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">' +
+          '<line x1="60" y1="22" x2="60" y2="98"/>' +
+          '<line x1="27" y1="41" x2="93" y2="79"/>' +
+          '<line x1="93" y1="41" x2="27" y2="79"/>' +
+          '<path d="M51 31l9 8 9-8M51 89l9-8 9 8" fill="none"/>' +
+          '<path d="M32 53l10-3-3-10M88 67l-10 3 3 10" fill="none"/>' +
+          '<path d="M88 53l-10-3 3-10M32 67l10 3-3 10" fill="none"/>' +
+        '</g>' +
+        '<circle cx="60" cy="60" r="11" fill="#FFB627" stroke="#1F2A4D" stroke-width="3.5"/>' +
+      '</svg>'
+    ];
+
+    // 小圖示 SVG 集合（統一 stroke 2.4、圓角端點）
+    var ICONS = {
+      check: '<svg viewBox="0 0 16 16" fill="none"><path d="M3.2 8.4l3.1 3.2L12.8 4.8" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      pen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5l4 4L8 20H4v-4L16.5 3.5z"/><path d="M13.5 6.5l4 4"/></svg>',
+      eraser: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4.5l5 5-9.5 9.5H6l-2.5-2.5 11-12z"/><path d="M10.5 8.5l5 5"/><path d="M12 19h8"/></svg>',
+      undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7L4 12l5 5"/><path d="M4 12h11a5 5 0 0 1 0 10h-2"/></svg>',
+      clear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v5M14 11v5"/></svg>',
+      done: '<svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="12" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="2.8"/><path d="M8.5 14.5l3.8 3.8 7.5-8.2" stroke="#166B3A" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      star: '<svg class="sc-star" viewBox="0 0 44 44"><path class="sc-star-fill" d="M22 4l5.2 10.6 11.7 1.7-8.5 8.2 2 11.6L22 30.6 11.6 36.1l2-11.6-8.5-8.2 11.7-1.7z" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/></svg>',
+      // 4 種對稱模式示意圖
+      mode_lr:
+        '<svg viewBox="0 0 56 56">' +
+          '<path d="M25 22C16 11 8 15 9 25c1 8 8 10 15 8z" fill="#FFB627" stroke="#1F2A4D" stroke-width="2.6" stroke-linejoin="round"/>' +
+          '<path d="M25 33c-9 1-14 7-11 13 3 5 9 2 12-7z" fill="#FDD835" stroke="#1F2A4D" stroke-width="2.6" stroke-linejoin="round"/>' +
+          '<path d="M31 22c9-11 17-7 16 3-1 8-8 10-15 8z" fill="#FFB627" stroke="#1F2A4D" stroke-width="2.6" stroke-linejoin="round"/>' +
+          '<path d="M31 33c9 1 14 7 11 13-3 5-9 2-12-7z" fill="#FDD835" stroke="#1F2A4D" stroke-width="2.6" stroke-linejoin="round"/>' +
+          '<line x1="28" y1="6" x2="28" y2="50" stroke="#2160C4" stroke-width="3" stroke-dasharray="5 4" stroke-linecap="round"/>' +
+        '</svg>',
+      mode_ud:
+        '<svg viewBox="0 0 56 56">' +
+          '<path d="M10 26l11-15 9 10 7-7 9 12z" fill="#7CB342" stroke="#1F2A4D" stroke-width="2.6" stroke-linejoin="round"/>' +
+          '<path d="M10 30l11 15 9-10 7 7 9-12z" fill="#7CB342" opacity="0.55" stroke="#1F2A4D" stroke-width="2.6" stroke-linejoin="round"/>' +
+          '<line x1="6" y1="28" x2="50" y2="28" stroke="#2160C4" stroke-width="3" stroke-dasharray="5 4" stroke-linecap="round"/>' +
+        '</svg>',
+      mode_quad:
+        '<svg viewBox="0 0 56 56">' +
+          '<circle cx="17" cy="17" r="7.5" fill="#EC407A" stroke="#1F2A4D" stroke-width="2.5"/>' +
+          '<circle cx="39" cy="17" r="7.5" fill="#EC407A" stroke="#1F2A4D" stroke-width="2.5"/>' +
+          '<circle cx="17" cy="39" r="7.5" fill="#EC407A" stroke="#1F2A4D" stroke-width="2.5"/>' +
+          '<circle cx="39" cy="39" r="7.5" fill="#EC407A" stroke="#1F2A4D" stroke-width="2.5"/>' +
+          '<line x1="28" y1="6" x2="28" y2="50" stroke="#2160C4" stroke-width="2.8" stroke-dasharray="4 4" stroke-linecap="round"/>' +
+          '<line x1="6" y1="28" x2="50" y2="28" stroke="#2160C4" stroke-width="2.8" stroke-dasharray="4 4" stroke-linecap="round"/>' +
+        '</svg>',
+      mode_snow6:
+        '<svg viewBox="0 0 56 56">' +
+          '<g stroke="#2160C4" stroke-width="2" stroke-dasharray="3 3">' +
+            '<line x1="28" y1="6" x2="28" y2="50"/>' +
+            '<line x1="9" y1="17" x2="47" y2="39"/>' +
+            '<line x1="47" y1="17" x2="9" y2="39"/>' +
+          '</g>' +
+          '<g stroke="#1F2A4D" stroke-width="2.8" stroke-linecap="round">' +
+            '<line x1="28" y1="11" x2="28" y2="45"/>' +
+            '<line x1="13" y1="19.5" x2="43" y2="36.5"/>' +
+            '<line x1="43" y1="19.5" x2="13" y2="36.5"/>' +
+          '</g>' +
+          '<circle cx="28" cy="28" r="6" fill="#FFB627" stroke="#1F2A4D" stroke-width="2.5"/>' +
+        '</svg>',
+      // 左欄互動小魔鏡精靈（含 3 種表情群組）
+      mascot:
+        '<svg class="sc-mascot-svg" viewBox="0 0 72 82">' +
+          '<rect x="12" y="8" width="48" height="62" rx="24" fill="#FFB627" stroke="#1F2A4D" stroke-width="3.5"/>' +
+          '<rect x="18" y="14" width="36" height="50" rx="18" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="2.6"/>' +
+          '<line x1="36" y1="14" x2="36" y2="64" stroke="#2160C4" stroke-width="2" stroke-dasharray="4 4" opacity="0.6"/>' +
+          '<ellipse cx="26" cy="74" rx="8" ry="4.5" fill="#FFB627" stroke="#1F2A4D" stroke-width="3"/>' +
+          '<ellipse cx="46" cy="74" rx="8" ry="4.5" fill="#FFB627" stroke="#1F2A4D" stroke-width="3"/>' +
+          /* 一般微笑 */
+          '<g class="sc-mascot-face sc-face-normal">' +
+            '<circle cx="28" cy="36" r="3.4" fill="#1F2A4D"/>' +
+            '<circle cx="44" cy="36" r="3.4" fill="#1F2A4D"/>' +
+            '<ellipse cx="24" cy="43" rx="4" ry="2.4" fill="#F48FB1"/>' +
+            '<ellipse cx="48" cy="43" rx="4" ry="2.4" fill="#F48FB1"/>' +
+            '<path d="M29 45q7 6 14 0" fill="none" stroke="#1F2A4D" stroke-width="3" stroke-linecap="round"/>' +
+          '</g>' +
+          /* 開心笑眼＋閃亮小星 */
+          '<g class="sc-mascot-face sc-face-happy">' +
+            '<path d="M24 37q4-5 8 0M40 37q4-5 8 0" fill="none" stroke="#1F2A4D" stroke-width="3" stroke-linecap="round"/>' +
+            '<ellipse cx="24" cy="43" rx="4.5" ry="2.6" fill="#F48FB1"/>' +
+            '<ellipse cx="48" cy="43" rx="4.5" ry="2.6" fill="#F48FB1"/>' +
+            '<path d="M27 44q9 9 18 0" fill="none" stroke="#1F2A4D" stroke-width="3" stroke-linecap="round"/>' +
+            '<path d="M8 14l2 5 5 1-4 3 1 5-4-2-4 2 1-5-4-3 5-1z" fill="#FFB627" stroke="#1F2A4D" stroke-width="1.8"/>' +
+            '<path d="M64 14l2 5 5 1-4 3 1 5-4-2-4 2 1-5-4-3 5-1z" fill="#FFB627" stroke="#1F2A4D" stroke-width="1.8"/>' +
+          '</g>' +
+          /* 逗趣驚訝表情（空畫布按完成時） */
+          '<g class="sc-mascot-face sc-face-oops">' +
+            '<circle cx="28" cy="35" r="3.8" fill="#1F2A4D"/>' +
+            '<circle cx="44" cy="35" r="3.8" fill="#1F2A4D"/>' +
+            '<circle cx="36" cy="47" r="4.5" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="2.8"/>' +
+          '</g>' +
+        '</svg>'
+    };
+
+    /* =====================================================================
+       各關卡底圖繪製（畫在透明疊層，以 multiply 疊於白畫布上，擦拭與復原不破壞底圖）
+       ===================================================================== */
+    function drawUnderlay(ctx, levelIdx, W, H) {
+      var cx = W / 2;
+      var cy = H / 2;
+      ctx.clearRect(0, 0, W, H);
+      ctx.save();
+
+      if (levelIdx === 0) {
+        /* 第 1 關：修好蝴蝶翅膀 — 左半邊淡色翅膀輪廓與點線花紋提示 */
+        // 左側上翅
+        ctx.beginPath();
+        ctx.moveTo(cx - 12, cy - 35);
+        ctx.bezierCurveTo(cx - 125, cy - 220, cx - 315, cy - 175, cx - 285, cy - 35);
+        ctx.bezierCurveTo(cx - 265, cy + 55, cx - 140, cy + 62, cx - 16, cy + 28);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(255, 232, 165, 0.36)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(72, 108, 168, 0.42)';
+        ctx.lineWidth = 4;
+        ctx.setLineDash([12, 9]);
+        ctx.stroke();
+
+        // 左側下翅
+        ctx.beginPath();
+        ctx.moveTo(cx - 16, cy + 32);
+        ctx.bezierCurveTo(cx - 160, cy + 44, cx - 245, cy + 128, cx - 196, cy + 195);
+        ctx.bezierCurveTo(cx - 150, cy + 245, cx - 54, cy + 195, cx - 14, cy + 106);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(255, 214, 153, 0.32)';
+        ctx.fill();
+        ctx.stroke();
+
+        // 左翅內淡淡花紋引導圓點
+        ctx.setLineDash([7, 7]);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(72, 108, 168, 0.3)';
+        ctx.beginPath();
+        ctx.arc(cx - 168, cy - 52, 42, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(cx - 126, cy + 132, 26, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 右側極淡參考外框，提示修補後的對稱形狀
+        ctx.save();
+        ctx.translate(W, 0);
+        ctx.scale(-1, 1);
+        ctx.strokeStyle = 'rgba(72, 108, 168, 0.16)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([10, 12]);
+        ctx.beginPath();
+        ctx.moveTo(cx - 12, cy - 35);
+        ctx.bezierCurveTo(cx - 125, cy - 220, cx - 315, cy - 175, cx - 285, cy - 35);
+        ctx.bezierCurveTo(cx - 265, cy + 55, cx - 140, cy + 62, cx - 16, cy + 28);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx - 16, cy + 32);
+        ctx.bezierCurveTo(cx - 160, cy + 44, cx - 245, cy + 128, cx - 196, cy + 195);
+        ctx.bezierCurveTo(cx - 150, cy + 245, cx - 54, cy + 195, cx - 14, cy + 106);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+
+        // 中央蝴蝶身體與觸角
+        ctx.setLineDash([]);
+        ctx.strokeStyle = 'rgba(67, 80, 122, 0.48)';
+        ctx.fillStyle = 'rgba(215, 198, 178, 0.48)';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        // 觸角
+        ctx.beginPath();
+        ctx.moveTo(cx - 10, cy - 120);
+        ctx.quadraticCurveTo(cx - 38, cy - 172, cx - 64, cy - 166);
+        ctx.moveTo(cx + 10, cy - 120);
+        ctx.quadraticCurveTo(cx + 38, cy - 172, cx + 64, cy - 166);
+        ctx.stroke();
+        // 觸角尖端小圓
+        ctx.beginPath();
+        ctx.arc(cx - 64, cy - 166, 6, 0, Math.PI * 2);
+        ctx.arc(cx + 64, cy - 166, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // 身體橢圓
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 26, 22, 118, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // 頭部
+        ctx.beginPath();
+        ctx.arc(cx, cy - 106, 26, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // 蝴蝶可愛小表情
+        ctx.fillStyle = 'rgba(31, 42, 77, 0.5)';
+        ctx.beginPath();
+        ctx.arc(cx - 9, cy - 110, 3.5, 0, Math.PI * 2);
+        ctx.arc(cx + 9, cy - 110, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx, cy - 102, 7, 0.15 * Math.PI, 0.85 * Math.PI);
+        ctx.lineWidth = 2.8;
+        ctx.stroke();
+
+      } else if (levelIdx === 1) {
+        /* 第 2 關：設計面具 — 對稱舞會面具淡淡外框與眼洞 */
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 92);
+        ctx.bezierCurveTo(cx - 64, cy - 92, cx - 128, cy - 178, cx - 216, cy - 162);
+        ctx.bezierCurveTo(cx - 284, cy - 148, cx - 298, cy - 30, cx - 252, cy + 54);
+        ctx.bezierCurveTo(cx - 210, cy + 132, cx - 122, cy + 158, cx - 54, cy + 120);
+        ctx.quadraticCurveTo(cx - 24, cy + 102, cx, cy + 98);
+        ctx.quadraticCurveTo(cx + 24, cy + 102, cx + 54, cy + 120);
+        ctx.bezierCurveTo(cx + 122, cy + 158, cx + 210, cy + 132, cx + 252, cy + 54);
+        ctx.bezierCurveTo(cx + 298, cy - 30, cx + 284, cy - 148, cx + 216, cy - 162);
+        ctx.bezierCurveTo(cx + 128, cy - 178, cx + 64, cy - 92, cx, cy - 92);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(255, 240, 194, 0.34)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(67, 80, 122, 0.42)';
+        ctx.lineWidth = 4.5;
+        ctx.setLineDash([12, 8]);
+        ctx.stroke();
+
+        // 左右對稱杏仁眼洞（留白提示）
+        [-1, 1].forEach(function (dir) {
+          ctx.beginPath();
+          ctx.moveTo(cx + dir * 48, cy - 12);
+          ctx.quadraticCurveTo(cx + dir * 116, cy - 68, cx + dir * 184, cy - 18);
+          ctx.quadraticCurveTo(cx + dir * 120, cy + 38, cx + dir * 48, cy - 12);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(220, 233, 251, 0.38)';
+          ctx.fill();
+          ctx.setLineDash([]);
+          ctx.strokeStyle = 'rgba(67, 80, 122, 0.44)';
+          ctx.lineWidth = 3.5;
+          ctx.stroke();
+        });
+
+        // 額頭中央小菱形引導記號
+        ctx.setLineDash([6, 6]);
+        ctx.strokeStyle = 'rgba(72, 108, 168, 0.28)';
+        ctx.lineWidth = 2.8;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 66);
+        ctx.lineTo(cx + 22, cy - 34);
+        ctx.lineTo(cx, cy - 2);
+        ctx.lineTo(cx - 22, cy - 34);
+        ctx.closePath();
+        ctx.stroke();
+
+      } else if (levelIdx === 2) {
+        /* 第 3 關：湖面倒影 — 上半天空、下半湖水的柔和淡色背景 */
+        var skyGrad = ctx.createLinearGradient(0, 0, 0, cy);
+        skyGrad.addColorStop(0, 'rgba(186, 226, 255, 0.42)');
+        skyGrad.addColorStop(1, 'rgba(236, 248, 255, 0.22)');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, W, cy);
+
+        var lakeGrad = ctx.createLinearGradient(0, cy, 0, H);
+        lakeGrad.addColorStop(0, 'rgba(155, 224, 220, 0.42)');
+        lakeGrad.addColorStop(1, 'rgba(205, 241, 240, 0.26)');
+        ctx.fillStyle = lakeGrad;
+        ctx.fillRect(0, cy, W, H - cy);
+
+        // 上半天空兩朵極淡白雲輪廓
+        ctx.strokeStyle = 'rgba(90, 148, 196, 0.24)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 8]);
+        [
+          { x: 175, y: 88, s: 1 },
+          { x: 585, y: 74, s: 0.85 }
+        ].forEach(function (cl) {
+          ctx.beginPath();
+          ctx.arc(cl.x - 28 * cl.s, cl.y, 20 * cl.s, Math.PI * 0.5, Math.PI * 1.5);
+          ctx.arc(cl.x, cl.y - 12 * cl.s, 26 * cl.s, Math.PI, Math.PI * 2);
+          ctx.arc(cl.x + 30 * cl.s, cl.y, 19 * cl.s, Math.PI * 1.5, Math.PI * 0.5);
+          ctx.closePath();
+          ctx.stroke();
+        });
+
+        // 湖岸淡線
+        ctx.setLineDash([]);
+        ctx.strokeStyle = 'rgba(85, 148, 152, 0.38)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, cy);
+        ctx.lineTo(W, cy);
+        ctx.stroke();
+
+        // 下半湖面淡淡水平水波紋
+        ctx.strokeStyle = 'rgba(72, 145, 158, 0.24)';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        var ripples = [
+          [75, cy + 44, 155], [320, cy + 36, 420], [565, cy + 52, 675],
+          [140, cy + 108, 255], [430, cy + 118, 535], [630, cy + 126, 725],
+          [95, cy + 188, 210], [345, cy + 196, 475], [580, cy + 218, 690]
+        ];
+        ripples.forEach(function (r) {
+          ctx.beginPath();
+          ctx.moveTo(r[0], r[1]);
+          ctx.lineTo(r[2], r[1]);
+          ctx.stroke();
+        });
+
+      } else {
+        /* 第 4 關：萬花筒雪花 — 柔和淡藍冰雪圓底與同心參考虛線圓 */
+        var radGrad = ctx.createRadialGradient(cx, cy, 18, cx, cy, 248);
+        radGrad.addColorStop(0, 'rgba(212, 234, 255, 0.36)');
+        radGrad.addColorStop(0.7, 'rgba(220, 238, 255, 0.16)');
+        radGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = radGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 248, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 兩圈淡淡的同心虛線圓
+        ctx.strokeStyle = 'rgba(65, 118, 196, 0.24)';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([8, 10]);
+        [105, 210].forEach(function (r) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+
+        // 中心淡淡六角小冰晶
+        ctx.setLineDash([]);
+        ctx.strokeStyle = 'rgba(65, 118, 196, 0.32)';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        for (var i = 0; i < 6; i++) {
+          var a = (i * 60 - 90) * Math.PI / 180;
+          var x = cx + Math.cos(a) * 26;
+          var y = cy + Math.sin(a) * 26;
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    /* =====================================================================
+       鏡子線（藍色虛線）繪製：只在創作時顯示，不合成進最終作品圖
+       ===================================================================== */
+    function drawGuideLines(ctx, modeId, W, H) {
+      var cx = W / 2;
+      var cy = H / 2;
+      ctx.clearRect(0, 0, W, H);
+      ctx.save();
+      ctx.strokeStyle = SCENE_CONFIG.GUIDE_COLOR;
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.setLineDash([12, 9]);
+      ctx.globalAlpha = 0.72;
+
+      function line(x1, y1, x2, y2) {
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+
+      if (modeId === 'lr') {
+        line(cx, 10, cx, H - 10);
+      } else if (modeId === 'ud') {
+        line(10, cy, W - 10, cy);
+      } else if (modeId === 'quad') {
+        line(cx, 10, cx, H - 10);
+        line(10, cy, W - 10, cy);
+      } else if (modeId === 'snow6') {
+        var R = Math.hypot(cx, cy);
+        ctx.lineWidth = 2.2;
+        ctx.globalAlpha = 0.48;
+        ctx.setLineDash([10, 9]);
+        // 6 條通過中心的對稱軸（每 30° 一條，切出 12 個鏡射扇區）
+        for (var k = 0; k < 6; k++) {
+          var rad = (k * 30) * Math.PI / 180;
+          var dx = Math.cos(rad) * R;
+          var dy = Math.sin(rad) * R;
+          line(cx - dx, cy - dy, cx + dx, cy + dy);
+        }
+      }
+
+      // 中心小菱形記號（十字與雪花模式）
+      if (modeId === 'quad' || modeId === 'snow6') {
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = SCENE_CONFIG.GUIDE_COLOR;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    /* =====================================================================
+       掛載「對稱魔鏡工坊」到畫畫島共用外殼
+       ===================================================================== */
+    ArtIsland.mount({
+      unit: 26,
+      title: '對稱魔鏡工坊',
+      grade: '3–4 年級',
+      howto: '在左邊畫畫，魔鏡會同時畫出右邊，做出對稱的作品。',
+      zhuyin: false,
+      teach: '對稱造形、點線面創作｜藝術 視E-II-1、視E-II-3',
+      submit: true,
+      hero: HERO_SVG,
+      levels: SCENE_CONFIG.LEVELS.map(function (lv, idx) {
+        return { name: lv.name, thumb: LEVEL_THUMBS[idx] };
+      }),
+
+      scene: function (api) {
+        var cv = null;
+        var underlayCanvas = null;
+        var guideCanvas = null;
+        var fxCanvas = null;
+        var fxCtx = null;
+        var rafId = null;
+        var lastFrameTime = 0;
+        var sparkles = [];
+        var timers = [];
+        var activeLevelIdx = 0;
+        var activeMode = 'lr';
+        var activeTool = 'pen';
+        var activeColor = SCENE_CONFIG.COLORS[SCENE_CONFIG.DEFAULT_COLOR_INDEX].hex;
+        var prevStars = 0;
+
+        // 偵測使用者是否偏好減少動態效果
+        function prefersReducedMotion() {
+          return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        }
+
+        // 受管計時器（stop 時統一清除）
+        function setManagedTimeout(fn, ms) {
+          var id = window.setTimeout(function () {
+            timers = timers.filter(function (t) { return t !== id; });
+            fn();
+          }, ms);
+          timers.push(id);
+          return id;
+        }
+
+        // 停止所有動畫、計時器與事件監聽
+        function cleanup() {
+          if (rafId !== null) {
+            window.cancelAnimationFrame(rafId);
+            rafId = null;
+          }
+          for (var i = 0; i < timers.length; i++) {
+            window.clearTimeout(timers[i]);
+          }
+          timers = [];
+          sparkles = [];
+          api.field.onclick = null;
+          cv = null;
+          underlayCanvas = null;
+          guideCanvas = null;
+          fxCanvas = null;
+          fxCtx = null;
+        }
+
+        // 依筆數計算星等（≥6 → 3 星；≥3 → 2 星；≥1 → 1 星）
+        function calcStars(strokeCount) {
+          var T = SCENE_CONFIG.STAR_THRESHOLDS;
+          if (strokeCount >= T.THREE) return 3;
+          if (strokeCount >= T.TWO) return 2;
+          if (strokeCount >= T.ONE) return 1;
+          return 0;
+        }
+
+        // 尋找模式資訊物件
+        function getModeMeta(modeId) {
+          for (var i = 0; i < SCENE_CONFIG.MODES.length; i++) {
+            if (SCENE_CONFIG.MODES[i].id === modeId) return SCENE_CONFIG.MODES[i];
+          }
+          return SCENE_CONFIG.MODES[0];
+        }
+
+        // 在指定座標陣列產生短暫星光粒子回饋（不連續閃爍，0.5 秒內自然淡出並自動停止 rAF）
+        function spawnSparkles(points, strokeColor) {
+          if (prefersReducedMotion() || !fxCtx) return;
+          var W = SCENE_CONFIG.CANVAS_W;
+          var H = SCENE_CONFIG.CANVAS_H;
+          for (var i = 0; i < points.length; i++) {
+            var pt = points[i];
+            if (pt.x < -10 || pt.x > W + 10 || pt.y < -10 || pt.y > H + 10) continue;
+            if (sparkles.length >= SCENE_CONFIG.MAX_SPARKLES) sparkles.shift();
+            var angle = Math.random() * Math.PI * 2;
+            var speed = 18 + Math.random() * 26;
+            sparkles.push({
+              x: pt.x,
+              y: pt.y,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed - 10,
+              r: 6 + Math.random() * 4,
+              rot: Math.random() * Math.PI,
+              color: i === 0 && strokeColor ? strokeColor : SCENE_CONFIG.SPARKLE_COLORS[i % SCENE_CONFIG.SPARKLE_COLORS.length],
+              age: 0,
+              life: SCENE_CONFIG.SPARKLE_LIFE_MS
+            });
+          }
+          if (rafId === null && sparkles.length > 0) {
+            lastFrameTime = performance.now();
+            rafId = window.requestAnimationFrame(tickSparkles);
+          }
+        }
+
+        // 以時間差（dt）驅動的星光粒子 rAF 迴圈
+        function tickSparkles(now) {
+          if (!fxCtx) {
+            rafId = null;
+            return;
+          }
+          var dt = Math.min(0.05, Math.max(0.001, (now - lastFrameTime) / 1000));
+          lastFrameTime = now;
+          fxCtx.clearRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+
+          var alive = [];
+          for (var i = 0; i < sparkles.length; i++) {
+            var sp = sparkles[i];
+            sp.age += dt * 1000;
+            if (sp.age >= sp.life) continue;
+            sp.x += sp.vx * dt;
+            sp.y += sp.vy * dt;
+            var t = sp.age / sp.life;
+            var alpha = 1 - t;
+            var scale = 0.65 + Math.sin(t * Math.PI) * 0.55;
+
+            fxCtx.save();
+            fxCtx.translate(sp.x, sp.y);
+            fxCtx.rotate(sp.rot + t * 1.4);
+            fxCtx.globalAlpha = alpha;
+            fxCtx.fillStyle = sp.color;
+            fxCtx.strokeStyle = '#1F2A4D';
+            fxCtx.lineWidth = 1.6;
+            // 四角閃亮星
+            var r = sp.r * scale;
+            var inner = r * 0.38;
+            fxCtx.beginPath();
+            for (var k = 0; k < 8; k++) {
+              var a = (k * Math.PI) / 4;
+              var rad = k % 2 === 0 ? r : inner;
+              var px = Math.cos(a) * rad;
+              var py = Math.sin(a) * rad;
+              if (k === 0) fxCtx.moveTo(px, py); else fxCtx.lineTo(px, py);
+            }
+            fxCtx.closePath();
+            fxCtx.fill();
+            fxCtx.stroke();
+            fxCtx.restore();
+            alive.push(sp);
+          }
+
+          sparkles = alive;
+          if (sparkles.length > 0) {
+            rafId = window.requestAnimationFrame(tickSparkles);
+          } else {
+            fxCtx.clearRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+            rafId = null;
+          }
+        }
+
+        // 更新魔鏡小精靈表情、台詞與瞬間動作
+        function setMascot(mood, msg, boxStyle, animClass) {
+          var box = api.field.querySelector('.sc-mascot-box');
+          var svg = api.field.querySelector('.sc-mascot-svg');
+          var text = api.field.querySelector('.sc-mascot-msg');
+          if (!box || !svg || !text) return;
+          box.setAttribute('data-mood', mood);
+          box.classList.remove('sc-mascot-ok', 'sc-mascot-warn');
+          if (boxStyle) box.classList.add(boxStyle);
+          text.textContent = msg;
+
+          if (animClass && !prefersReducedMotion()) {
+            svg.classList.remove('sc-anim-hop', 'sc-anim-wiggle');
+            void svg.offsetWidth; // 觸發重繪以重播單次動畫
+            svg.classList.add(animClass);
+            setManagedTimeout(function () {
+              svg.classList.remove('sc-anim-hop', 'sc-anim-wiggle');
+            }, 460);
+          }
+        }
+
+        // 依目前關卡與所選對稱模式更新頂列任務條
+        function updateQuestBar() {
+          var lv = SCENE_CONFIG.LEVELS[activeLevelIdx];
+          if (lv.enforceSuggest && activeMode !== lv.defaultMode) {
+            var suggest = getModeMeta(lv.defaultMode);
+            api.quest('這關建議用' + suggest.shortName + '對稱');
+          } else {
+            api.quest(lv.quest);
+          }
+        }
+
+        // 切換對稱模式並重繪鏡子線
+        function applyMode(modeId, fromUserClick) {
+          activeMode = modeId;
+          if (cv) {
+            cv.setMirror(getMirrorFn(modeId, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H));
+          }
+          if (guideCanvas) {
+            drawGuideLines(guideCanvas.getContext('2d'), modeId, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+          }
+          // 高亮選中的模式按鈕
+          api.field.querySelectorAll('.sc-mode').forEach(function (btn) {
+            btn.classList.toggle('sc-on', btn.dataset.mode === modeId);
+          });
+          updateQuestBar();
+
+          if (fromUserClick) {
+            var lv = SCENE_CONFIG.LEVELS[activeLevelIdx];
+            var cur = getModeMeta(modeId);
+            if (lv.enforceSuggest && modeId !== lv.defaultMode) {
+              var sug = getModeMeta(lv.defaultMode);
+              setMascot('normal', '換成' + cur.name + '囉！這關建議用' + sug.shortName + '對稱。', 'sc-mascot-warn', 'sc-anim-hop');
+            } else {
+              setMascot('happy', '切換到「' + cur.name + '」魔鏡囉！', '', 'sc-anim-hop');
+            }
+          }
+        }
+
+        // 同步更新作品筆數、3 顆即時進度星星與鼓勵提示
+        function updateProgress(strokeCount, isNewStroke) {
+          var nEl = api.field.querySelector('.sc-n');
+          var hintEl = api.field.querySelector('.sc-prog-hint');
+          var starEls = api.field.querySelectorAll('.sc-star');
+          if (!nEl || !hintEl) return;
+
+          nEl.textContent = String(strokeCount);
+          var stars = calcStars(strokeCount);
+
+          starEls.forEach(function (el, idx) {
+            var lit = idx < stars;
+            var wasLit = el.classList.contains('sc-lit');
+            el.classList.toggle('sc-lit', lit);
+            if (lit && !wasLit && !prefersReducedMotion()) {
+              el.classList.remove('sc-pop');
+              void el.offsetWidth;
+              el.classList.add('sc-pop');
+            }
+          });
+
+          hintEl.classList.remove('sc-hint-ok', 'sc-hint-warn');
+          if (stars >= 3) {
+            hintEl.textContent = '✓ 已達 3 顆星！可繼續裝飾';
+            hintEl.classList.add('sc-hint-ok');
+          } else if (stars === 2) {
+            var need3 = SCENE_CONFIG.STAR_THRESHOLDS.THREE - strokeCount;
+            hintEl.textContent = '再畫 ' + need3 + ' 筆就拿 3 顆星！';
+          } else if (stars === 1) {
+            var need2 = SCENE_CONFIG.STAR_THRESHOLDS.TWO - strokeCount;
+            hintEl.textContent = '再畫 ' + need2 + ' 筆就拿 2 顆星！';
+          } else {
+            hintEl.textContent = '畫滿 6 筆就能拿 3 顆星';
+          }
+
+          // 剛畫完新筆且星數提升時，給小朋友開心回饋
+          if (isNewStroke && stars > prevStars) {
+            if (stars === 3) {
+              setMascot('happy', '哇！達成 3 顆星了，作品超級漂亮！', 'sc-mascot-ok', 'sc-anim-hop');
+            } else if (stars === 2) {
+              setMascot('happy', '已經 2 顆星囉，魔鏡圖案越來越豐富！', 'sc-mascot-ok', 'sc-anim-hop');
+            } else if (stars === 1) {
+              setMascot('happy', '太棒了！看到魔鏡同步畫出來了嗎？', '', 'sc-anim-hop');
+            }
+          }
+          prevStars = stars;
+        }
+
+        // 合成「白底＋孩子的畫＋淡淡底圖」為最終作品 Canvas（不含藍色鏡子虛線）
+        function buildResultCanvas() {
+          var W = SCENE_CONFIG.CANVAS_W;
+          var H = SCENE_CONFIG.CANVAS_H;
+          var out = document.createElement('canvas');
+          out.width = W;
+          out.height = H;
+          var octx = out.getContext('2d');
+          octx.fillStyle = '#FFFFFF';
+          octx.fillRect(0, 0, W, H);
+          if (cv && cv.el) {
+            octx.drawImage(cv.el, 0, 0, W, H);
+          }
+          if (underlayCanvas) {
+            // 與畫面上看到的 mix-blend-mode: multiply 完全一致
+            octx.save();
+            octx.globalCompositeOperation = 'multiply';
+            octx.drawImage(underlayCanvas, 0, 0, W, H);
+            octx.restore();
+          }
+          return out;
+        }
+
+        // 標記同組按鈕選中狀態
+        function markGroup(selector, target) {
+          api.field.querySelectorAll(selector).forEach(function (el) {
+            el.classList.toggle('sc-on', el === target);
+          });
+        }
+
+        // 切換畫筆／橡皮擦工具
+        function setActiveTool(tool) {
+          activeTool = tool;
+          if (cv) {
+            cv.setTool(tool);
+            if (tool === 'pen') cv.setColor(activeColor);
+          }
+          var penBtn = api.field.querySelector('.sc-pen');
+          var erBtn = api.field.querySelector('.sc-eraser');
+          if (penBtn) penBtn.classList.toggle('sc-on', tool === 'pen');
+          if (erBtn) erBtn.classList.toggle('sc-on', tool === 'eraser');
+        }
+
+        return {
+          start: function (levelIndex) {
+            cleanup();
+            activeLevelIdx = Math.max(0, Math.min(SCENE_CONFIG.LEVELS.length - 1, levelIndex || 0));
+            var lv = SCENE_CONFIG.LEVELS[activeLevelIdx];
+            activeMode = lv.defaultMode;
+            activeTool = 'pen';
+            activeColor = SCENE_CONFIG.COLORS[SCENE_CONFIG.DEFAULT_COLOR_INDEX].hex;
+            prevStars = 0;
+
+            // 產生左側工具列、中間大畫布、右側模式與完成區
+            var sizesHtml = SCENE_CONFIG.BRUSH_SIZES.map(function (b) {
+              var on = b.size === SCENE_CONFIG.DEFAULT_SIZE ? ' sc-on' : '';
+              return '<button type="button" class="sc-size' + on + '" data-size="' + b.size + '" aria-label="' + b.label + '">' +
+                '<i style="width:' + b.dot + 'px;height:' + b.dot + 'px"></i>' +
+                '<span class="sc-check">' + ICONS.check + '</span>' +
+              '</button>';
+            }).join('');
+
+            var colorsHtml = SCENE_CONFIG.COLORS.map(function (c, idx) {
+              var on = idx === SCENE_CONFIG.DEFAULT_COLOR_INDEX ? ' sc-on' : '';
+              return '<button type="button" class="sc-sw' + on + '" data-color="' + c.hex + '" style="background:' + c.hex + '" aria-label="' + c.name + '"></button>';
+            }).join('');
+
+            var modesHtml = SCENE_CONFIG.MODES.map(function (m) {
+              var on = m.id === activeMode ? ' sc-on' : '';
+              var recBadge = (lv.enforceSuggest && m.id === lv.defaultMode)
+                ? '<span class="sc-mode-rec">建議</span>'
+                : '';
+              return '<button type="button" class="sc-mode' + on + '" data-mode="' + m.id + '" aria-label="' + m.name + '">' +
+                recBadge +
+                ICONS['mode_' + m.id] +
+                '<span class="sc-mode-name">' + m.name + '</span>' +
+                '<span class="sc-check">' + ICONS.check + '</span>' +
+              '</button>';
+            }).join('');
+
+            api.field.innerHTML =
+              '<div class="sc-root">' +
+                /* 左側工具面板 */
+                '<div class="ai-panel sc-tools">' +
+                  '<h3 class="sc-sec-title">筆刷粗細</h3>' +
+                  '<div class="sc-sizes">' + sizesHtml + '</div>' +
+                  '<h3 class="sc-sec-title">選顏色</h3>' +
+                  '<div class="sc-colors">' + colorsHtml + '</div>' +
+                  '<h3 class="sc-sec-title">畫筆工具</h3>' +
+                  '<div class="sc-tool-row">' +
+                    '<button type="button" class="sc-tbtn sc-pen sc-on" aria-label="畫筆">' + ICONS.pen + '<span>畫筆</span><span class="sc-check">' + ICONS.check + '</span></button>' +
+                    '<button type="button" class="sc-tbtn sc-eraser" aria-label="橡皮擦">' + ICONS.eraser + '<span>橡皮擦</span><span class="sc-check">' + ICONS.check + '</span></button>' +
+                  '</div>' +
+                  '<div class="sc-tool-row">' +
+                    '<button type="button" class="sc-tbtn sc-undo" aria-label="復原">' + ICONS.undo + '<span>復原</span></button>' +
+                    '<button type="button" class="sc-tbtn sc-clear" aria-label="清除">' + ICONS.clear + '<span>清除</span></button>' +
+                  '</div>' +
+                  '<div class="sc-mascot-box" data-mood="normal">' +
+                    ICONS.mascot +
+                    '<p class="sc-mascot-msg">' + lv.introMsg + '</p>' +
+                  '</div>' +
+                '</div>' +
+
+                /* 中央白畫布舞台（上緣貼兩條黃色膠帶） */
+                '<div class="sc-stage">' +
+                  '<span class="ai-tape sc-tape-l"></span>' +
+                  '<span class="ai-tape sc-tape-r"></span>' +
+                  '<div class="ai-board sc-board">' +
+                    '<canvas class="sc-layer sc-underlay" width="' + SCENE_CONFIG.CANVAS_W + '" height="' + SCENE_CONFIG.CANVAS_H + '"></canvas>' +
+                    '<canvas class="sc-layer sc-guide" width="' + SCENE_CONFIG.CANVAS_W + '" height="' + SCENE_CONFIG.CANVAS_H + '"></canvas>' +
+                    '<canvas class="sc-layer sc-fx" width="' + SCENE_CONFIG.CANVAS_W + '" height="' + SCENE_CONFIG.CANVAS_H + '"></canvas>' +
+                  '</div>' +
+                '</div>' +
+
+                /* 右側：對稱模式＋即時進度＋完成大按鈕 */
+                '<div class="sc-side">' +
+                  '<div class="ai-panel sc-modes-panel">' +
+                    '<div class="sc-modes-head">' +
+                      '<h3 class="sc-sec-title">對稱魔鏡模式</h3>' +
+                    '</div>' +
+                    '<div class="sc-modes-grid">' + modesHtml + '</div>' +
+                  '</div>' +
+                  '<div class="ai-panel sc-prog-panel">' +
+                    '<div class="sc-prog-top">' +
+                      '<h3 class="sc-sec-title">作品進度</h3>' +
+                      '<div class="sc-prog-count">已畫 <b class="ai-num sc-n">0</b> 筆</div>' +
+                    '</div>' +
+                    '<div class="sc-stars-row" aria-label="星星進度">' +
+                      ICONS.star + ICONS.star + ICONS.star +
+                    '</div>' +
+                    '<p class="sc-prog-hint">畫滿 6 筆就能拿 3 顆星</p>' +
+                  '</div>' +
+                  '<button type="button" class="ai-btn go sc-done">' + ICONS.done + '<span>完成</span></button>' +
+                '</div>' +
+              '</div>';
+
+            // 取得畫布疊層元素並建立共用自由畫布 api.canvas
+            var board = api.field.querySelector('.sc-board');
+            underlayCanvas = api.field.querySelector('.sc-underlay');
+            guideCanvas = api.field.querySelector('.sc-guide');
+            fxCanvas = api.field.querySelector('.sc-fx');
+            fxCtx = fxCanvas.getContext('2d');
+
+            cv = api.canvas(board, {
+              width: SCENE_CONFIG.CANVAS_W,
+              height: SCENE_CONFIG.CANVAS_H,
+              color: activeColor,
+              size: SCENE_CONFIG.DEFAULT_SIZE,
+              mirror: getMirrorFn(activeMode, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H)
+            });
+
+            // 繪製本關底圖與初始對稱鏡子線，並設定任務條
+            drawUnderlay(underlayCanvas.getContext('2d'), activeLevelIdx, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+            applyMode(activeMode, false);
+            updateProgress(0, false);
+
+            // 每完成一筆：更新筆數、星星進度，並在對稱處冒出小星光
+            cv.onStroke(function (info) {
+              var count = cv ? cv.strokes() : 0;
+              updateProgress(count, true);
+              if (info && info.tool !== 'eraser' && info.path && info.path.length > 0) {
+                var lastPt = info.path[info.path.length - 1];
+                var mfn = getMirrorFn(activeMode, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+                var fxPts = [lastPt].concat(mfn(lastPt));
+                spawnSparkles(fxPts, info.color);
+              }
+            });
+
+            // 統一處理場景內所有按鈕點擊事件
+            api.field.onclick = function (e) {
+              if (!cv) return;
+              var btn;
+
+              // 1. 筆刷粗細
+              if ((btn = e.target.closest('.sc-size'))) {
+                cv.setSize(Number(btn.dataset.size));
+                markGroup('.sc-size', btn);
+                return;
+              }
+
+              // 2. 色盤選色（選色時若原為橡皮擦，自動切回畫筆）
+              if ((btn = e.target.closest('.sc-sw'))) {
+                activeColor = btn.dataset.color;
+                cv.setColor(activeColor);
+                markGroup('.sc-sw', btn);
+                if (activeTool !== 'pen') setActiveTool('pen');
+                return;
+              }
+
+              // 3. 畫筆／橡皮擦切換
+              if (e.target.closest('.sc-pen')) {
+                setActiveTool('pen');
+                return;
+              }
+              if (e.target.closest('.sc-eraser')) {
+                setActiveTool('eraser');
+                return;
+              }
+
+              // 4. 復原與清除
+              if (e.target.closest('.sc-undo')) {
+                cv.undo();
+                updateProgress(cv.strokes(), false);
+                return;
+              }
+              if (e.target.closest('.sc-clear')) {
+                var hadStrokes = cv.strokes() > 0;
+                cv.clear();
+                updateProgress(0, false);
+                setMascot(
+                  'normal',
+                  hadStrokes ? '畫布擦乾淨囉，來畫個全新對稱圖案！' : '畫布已經是乾淨的囉，直接開畫吧！',
+                  '',
+                  'sc-anim-hop'
+                );
+                return;
+              }
+
+              // 5. 對稱模式切換（1–3 關可自由切換，非建議模式時任務條溫和提醒、不阻止）
+              if ((btn = e.target.closest('.sc-mode'))) {
+                if (btn.dataset.mode !== activeMode) {
+                  applyMode(btn.dataset.mode, true);
+                }
+                return;
+              }
+
+              // 6. 完成大按鈕
+              if (e.target.closest('.sc-done')) {
+                var n = cv.strokes();
+                if (n < SCENE_CONFIG.STAR_THRESHOLDS.ONE) {
+                  // 還沒畫畫：用逗趣小搖動提醒，不閃紅、不挫折
+                  setMascot('oops', '咦？畫布還空空的！先畫 1 筆看看魔鏡的魔法吧！', 'sc-mascot-warn', 'sc-anim-wiggle');
+                  var hint = api.field.querySelector('.sc-prog-hint');
+                  if (hint) {
+                    hint.textContent = '先在白畫布上畫 1 筆喔！';
+                    hint.classList.remove('sc-hint-ok');
+                    hint.classList.add('sc-hint-warn');
+                  }
+                  board.classList.add('sc-nudge');
+                  setManagedTimeout(function () {
+                    board.classList.remove('sc-nudge');
+                  }, 520);
+                  return;
+                }
+
+                var stars = calcStars(n);
+                var praise = stars >= 3 ? lv.praise3 : (stars === 2 ? lv.praise2 : lv.praise1);
+                var resultImage = buildResultCanvas();
+                api.finish({
+                  stars: stars,
+                  image: resultImage,
+                  praise: praise,
+                  caption: lv.name
+                });
+              }
+            };
+          },
+
+          stop: function () {
+            cleanup();
+          }
+        };
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

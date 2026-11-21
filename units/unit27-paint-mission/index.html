@@ -1,0 +1,1971 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>小畫家任務局 - 畫畫島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Fredoka:wght@600;700&display=swap">
+  <link rel="stylesheet" href="../../assets/css/art-island.css">
+  <style>
+    /* ===== 小畫家任務局：場景專用樣式（一律以 sc- 開頭，不覆寫 .ai- 共用樣式） ===== */
+    .sc-toolbar {
+      position: absolute;
+      left: 20px;
+      top: 8px;
+      width: 1326px;
+      height: 74px;
+      box-sizing: border-box;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .sc-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sc-sep {
+      width: 3px;
+      height: 44px;
+      border-radius: 3px;
+      background: var(--ink-2);
+      opacity: 0.35;
+      flex-shrink: 0;
+    }
+    .sc-tool {
+      position: relative;
+      min-width: 72px;
+      height: 56px;
+      padding: 4px 8px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      background: var(--card);
+      color: var(--ink);
+      border: 3px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: 0 4px 0 var(--ink);
+      font: 700 16px/1.1 var(--f-ui, "Noto Sans TC", sans-serif);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
+    }
+    .sc-tool.sc-wide {
+      min-width: 84px;
+    }
+    .sc-tool:hover:not(.sc-disabled) {
+      background: #FFF6DC;
+    }
+    .sc-tool:active:not(.sc-disabled) {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--ink);
+    }
+    .sc-tool svg {
+      width: 24px;
+      height: 24px;
+      display: block;
+      flex-shrink: 0;
+    }
+    .sc-tool.sc-on {
+      background: var(--blue-soft);
+      color: var(--blue);
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px var(--blue), 0 4px 0 var(--ink);
+    }
+    .sc-tool.sc-on::after {
+      content: "✓";
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      font: 900 13px/20px var(--f-ui, "Noto Sans TC", sans-serif);
+      text-align: center;
+      border: 2px solid #fff;
+    }
+    .sc-tool.sc-disabled {
+      background: #E8ECEF;
+      color: #4B5578;
+      border-color: #7C86A6;
+      box-shadow: 0 2px 0 #7C86A6;
+    }
+    .sc-tool.sc-pulse {
+      animation: scPop 0.35s ease;
+    }
+
+    /* 8 色色盤 */
+    .sc-palette {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-left: 2px;
+    }
+    .sc-sw {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      box-sizing: border-box;
+      border-radius: 11px;
+      border: 3px solid var(--ink);
+      box-shadow: 0 3px 0 var(--ink);
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+      transition: transform 0.08s ease;
+    }
+    .sc-sw:active {
+      transform: translateY(2px);
+    }
+    .sc-sw.sc-on {
+      box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--blue);
+    }
+    .sc-sw.sc-on::after {
+      content: "✓";
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      font: 900 12px/18px var(--f-ui, "Noto Sans TC", sans-serif);
+      text-align: center;
+      border: 2px solid #fff;
+    }
+
+    /* 畫布標題貼紙列 */
+    .sc-label {
+      position: absolute;
+      top: 86px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font: 900 18px/1 var(--f-title, "Chiron GoRound TC", "Noto Sans TC", sans-serif);
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .sc-label-left { left: 26px; }
+    .sc-label-right { left: 572px; }
+    .sc-label-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 2px solid var(--ink);
+      font: 700 16px/1.1 var(--f-ui, "Noto Sans TC", sans-serif);
+      color: var(--ink-2);
+    }
+    .sc-label-tag.sc-tag-err {
+      background: var(--bad-soft);
+      border-color: var(--bad);
+      color: #8E1F29;
+    }
+    .sc-label-tag.sc-tag-ok {
+      background: var(--ok-soft);
+      border-color: var(--ok);
+      color: var(--ok-dk);
+    }
+
+    /* 雙白畫布（內徑精準 520 × 400） */
+    .sc-board {
+      position: absolute;
+      top: 114px;
+      width: 526px;
+      height: 406px;
+      box-sizing: border-box;
+      overflow: visible;
+    }
+    .sc-board-left { left: 20px; }
+    .sc-board-right { left: 566px; }
+    .sc-cv-wrap {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 5px;
+      position: relative;
+      background: var(--canvas);
+    }
+    .sc-cv {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .sc-cv-user {
+      cursor: crosshair;
+    }
+    .sc-cv-user.sc-cur-select { cursor: default; }
+    .sc-cv-user.sc-cur-move { cursor: move; }
+    .sc-cv-user.sc-cur-fill { cursor: pointer; }
+    .sc-cv-user.sc-cur-eraser { cursor: not-allowed; }
+
+    /* 第 4 關（自由設計班級招牌）左側靈感與任務板 */
+    .sc-free-panel {
+      position: absolute;
+      left: 20px;
+      top: 114px;
+      width: 526px;
+      height: 406px;
+      box-sizing: border-box;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .sc-free-head {
+      font: 900 20px/1.3 var(--f-title, "Chiron GoRound TC", "Noto Sans TC", sans-serif);
+      color: var(--ink);
+    }
+    .sc-free-sub {
+      font: 500 17px/1.45 var(--f-ui, "Noto Sans TC", sans-serif);
+      color: var(--ink-2);
+      margin-top: 2px;
+    }
+    .sc-ideas {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .sc-idea {
+      background: #fff;
+      border: 3px solid var(--ink);
+      border-radius: 14px;
+      padding: 8px;
+      text-align: center;
+      box-shadow: 0 3px 0 var(--ink);
+    }
+    .sc-idea svg {
+      width: 100%;
+      height: 82px;
+      display: block;
+    }
+    .sc-idea span {
+      display: block;
+      margin-top: 4px;
+      font: 700 16px/1.2 var(--f-ui, "Noto Sans TC", sans-serif);
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .sc-checklist {
+      background: #FFF6DC;
+      border: 3px dashed var(--ink-2);
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+    .sc-check-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font: 700 17px/1.2 var(--f-ui, "Noto Sans TC", sans-serif);
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .sc-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .sc-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 2px solid var(--ink-2);
+      background: var(--card);
+      color: var(--ink-2);
+      font: 700 16px/1.1 var(--f-ui, "Noto Sans TC", sans-serif);
+      white-space: nowrap;
+    }
+    .sc-chip.sc-got {
+      background: var(--ok-soft);
+      border-color: var(--ok);
+      color: var(--ok-dk);
+    }
+
+    /* 下方步數與快速操作列 */
+    .sc-status {
+      position: absolute;
+      left: 20px;
+      top: 530px;
+      width: 1072px;
+      height: 56px;
+      box-sizing: border-box;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .sc-steps {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font: 700 20px/1 var(--f-ui, "Noto Sans TC", sans-serif);
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .sc-steps-bar {
+      color: var(--ink-2);
+      font-weight: 500;
+    }
+    .sc-steps .sc-n {
+      font-size: 24px;
+      color: var(--blue);
+      padding: 0 3px;
+    }
+    .sc-steps .sc-par {
+      font-size: 22px;
+      color: var(--ok-dk);
+      padding: 0 3px;
+    }
+    .sc-steps.sc-over .sc-n {
+      color: var(--bad);
+    }
+    .sc-hint-inline {
+      flex: 1;
+      font: 500 17px/1.25 var(--f-ui, "Noto Sans TC", sans-serif);
+      color: var(--ink-2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+    }
+    .sc-reset-btn {
+      min-height: 44px;
+      padding: 0 16px;
+      font-size: 17px;
+      white-space: nowrap;
+    }
+
+    /* 右側任務助手與完成按鈕區 */
+    .sc-side {
+      position: absolute;
+      left: 1110px;
+      top: 90px;
+      width: 236px;
+      height: 496px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sc-coach {
+      flex: 1;
+      padding: 12px 14px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+    }
+    .sc-bot-wrap {
+      width: 116px;
+      height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .sc-bot-wrap.sc-shake {
+      animation: scShake 0.42s ease;
+    }
+    .sc-bot-wrap.sc-hop {
+      animation: scHop 0.42s ease;
+    }
+    .sc-bubble {
+      width: 100%;
+      flex: 1;
+      box-sizing: border-box;
+      background: #FFF6DC;
+      border: 3px solid var(--ink);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font: 700 17px/1.45 var(--f-ui, "Noto Sans TC", sans-serif);
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: left;
+    }
+    .sc-bubble.sc-err {
+      background: var(--bad-soft);
+      border-color: var(--bad);
+      color: #8E1F29;
+    }
+    .sc-bubble.sc-ok {
+      background: var(--ok-soft);
+      border-color: var(--ok);
+      color: var(--ok-dk);
+    }
+    .sc-guide {
+      padding: 10px 12px;
+      box-sizing: border-box;
+      font: 500 16px/1.4 var(--f-ui, "Noto Sans TC", sans-serif);
+      color: var(--ink-2);
+    }
+    .sc-guide b {
+      display: block;
+      color: var(--ink);
+      font-size: 17px;
+      margin-bottom: 3px;
+    }
+    .sc-done {
+      width: 100%;
+      height: 70px;
+      font: 900 28px/1 var(--f-title, "Chiron GoRound TC", "Noto Sans TC", sans-serif);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    @keyframes scShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px) rotate(-4deg); }
+      45% { transform: translateX(7px) rotate(4deg); }
+      70% { transform: translateX(-5px) rotate(-2deg); }
+    }
+    @keyframes scHop {
+      0%, 100% { transform: translateY(0) scale(1); }
+      40% { transform: translateY(-10px) scale(1.05); }
+      70% { transform: translateY(0) scale(0.97); }
+    }
+    @keyframes scPop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sc-tool, .sc-sw, .sc-bot-wrap, .sc-tool.sc-pulse {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/art-ui.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    /* =====================================================================
+     * 一、集中設定常數（SCENE_CONFIG）
+     * 包含畫布尺寸、8 色色盤、比對容錯、星級門檻、工具定義與 4 關目標圖資料
+     * ===================================================================== */
+    var SCENE_CONFIG = {
+      CANVAS_W: 520,
+      CANVAS_H: 400,
+      GRID_STEP: 40,
+      STROKE_COLOR: '#1F2A4D',
+      SHAPE_LINE_W: 3.5,
+      LINE_TOOL_W: 6,
+      MIN_DRAW_SIZE: 8,
+      MIN_RESIZE_SIZE: 16,
+      HANDLE_HIT_R: 18,
+      PASTE_OFFSET: 24,
+      MAX_UNDO: 60,
+
+      // 比對容錯門檻（照規格：位置相差 ≤ 30px、寬高相差 ≤ 30%、填色相同）
+      MATCH_POS_PX: 30,
+      MATCH_SIZE_RATIO: 0.30,
+      STAR2_EXTRA_STEPS: 3, // ≤ 標準桿 + 3 給 2 顆星
+      FREE_MIN_TOOLS: 3,    // 第 4 關至少使用 3 種工具
+
+      // 右側 8 色色盤（含 3 關目標色與招牌常用亮色）
+      COLORS: [
+        { hex: '#E53935', name: '紅色' },
+        { hex: '#FB8C00', name: '橘色' },
+        { hex: '#FDD835', name: '黃色' },
+        { hex: '#43A047', name: '綠色' },
+        { hex: '#1E88E5', name: '藍色' },
+        { hex: '#8E24AA', name: '紫色' },
+        { hex: '#8D6E63', name: '棕色' },
+        { hex: '#263238', name: '黑色' }
+      ],
+
+      // 工具操作指南（顯示在右側小指南卡，小朋友一看就懂）
+      TOOL_GUIDE: {
+        line:     { title: '直線工具', desc: '按住滑鼠拖曳，拉出一條筆直的線。' },
+        rect:     { title: '矩形工具', desc: '按住拖曳畫長方形，畫完可用填色桶上色。' },
+        ellipse:  { title: '橢圓工具', desc: '按住拖曳畫圓形或橢圓，長寬一樣就是正圓。' },
+        triangle: { title: '三角形工具', desc: '按住拖曳畫出三角形，適合當屋頂或彩旗。' },
+        fill:     { title: '填色桶', desc: '先選右邊顏色，再點圖形裡面就能上色！' },
+        eraser:   { title: '橡皮擦', desc: '點一下不要的圖形，就能把它擦掉。' },
+        select:   { title: '選取工具', desc: '點圖形可拖曳移動，拉四個角還能改大小！' }
+      },
+
+      // 第 4 關工具清單（每使用一種亮起 ✓）
+      FREE_TOOLS: [
+        { id: 'line', label: '直線' },
+        { id: 'rect', label: '矩形' },
+        { id: 'ellipse', label: '橢圓' },
+        { id: 'triangle', label: '三角形' },
+        { id: 'fill', label: '填色桶' },
+        { id: 'select', label: '選取移動' },
+        { id: 'copyPaste', label: '複製貼上' },
+        { id: 'eraser', label: '橡皮擦' }
+      ],
+
+      // 4 關資料（座標以畫布 520×400 為準）
+      LEVELS: [
+        {
+          name: '紅綠燈',
+          quest: '第 1 關／4：紅綠燈 — 畫出黑色外殼和紅黃綠三顆燈',
+          par: 8, // 畫矩形(1)+填黑(2)+畫圓(3)+填紅(4)+複製貼上(5)+填黃(6)+貼上(7)+填綠(8)
+          tip: '三顆圓燈大小一樣！先畫好一顆圓，複製貼上 2 次再換顏色喔！',
+          freeMode: false,
+          targets: [
+            { id: 'tl-body', type: 'rect',    x: 190, y: 40,  w: 140, h: 320, fill: '#263238' },
+            { id: 'tl-r',    type: 'ellipse', x: 220, y: 65,  w: 80,  h: 80,  fill: '#E53935' },
+            { id: 'tl-y',    type: 'ellipse', x: 220, y: 160, w: 80,  h: 80,  fill: '#FDD835' },
+            { id: 'tl-g',    type: 'ellipse', x: 220, y: 255, w: 80,  h: 80,  fill: '#43A047' }
+          ]
+        },
+        {
+          name: '小房子',
+          quest: '第 2 關／4：小房子 — 畫出屋身、屋頂、大門和 4 扇一樣的窗',
+          par: 11, // 屋身(2)+屋頂(2)+門(2)+窗1(2)+複製貼上×3(3) = 11 步（不複製要 14 步）
+          tip: '4 扇窗都一樣，有沒有更快的方法？先填好藍色再複製貼上試試！',
+          freeMode: false,
+          targets: [
+            { id: 'hs-body', type: 'rect',     x: 110, y: 160, w: 300, h: 210, fill: '#FDD835' },
+            { id: 'hs-roof', type: 'triangle', x: 80,  y: 35,  w: 360, h: 125, fill: '#E53935' },
+            { id: 'hs-door', type: 'rect',     x: 228, y: 270, w: 64,  h: 100, fill: '#8D6E63' },
+            { id: 'hs-w1',   type: 'rect',     x: 138, y: 186, w: 56,  h: 52,  fill: '#1E88E5' },
+            { id: 'hs-w2',   type: 'rect',     x: 326, y: 186, w: 56,  h: 52,  fill: '#1E88E5' },
+            { id: 'hs-w3',   type: 'rect',     x: 138, y: 266, w: 56,  h: 52,  fill: '#1E88E5' },
+            { id: 'hs-w4',   type: 'rect',     x: 326, y: 266, w: 56,  h: 52,  fill: '#1E88E5' }
+          ]
+        },
+        {
+          name: '機器人',
+          quest: '第 3 關／4：機器人 — 找找看哪些零件長得一樣，用複製貼上省步數',
+          par: 12, // 頭(2)+身體(2)+左眼填黃(2)+貼右眼(1)+左手填橘(2)+貼右手左腳右腳(3) = 12 步
+          tip: '機器人的兩隻眼睛一樣大，四條橘色手和腳也都一模一樣喔！',
+          freeMode: false,
+          targets: [
+            { id: 'rb-head', type: 'rect',    x: 190, y: 36,  w: 140, h: 100, fill: '#1E88E5' },
+            { id: 'rb-eye1', type: 'ellipse', x: 214, y: 66,  w: 34,  h: 34,  fill: '#FDD835' },
+            { id: 'rb-eye2', type: 'ellipse', x: 272, y: 66,  w: 34,  h: 34,  fill: '#FDD835' },
+            { id: 'rb-body', type: 'rect',    x: 170, y: 146, w: 180, h: 140, fill: '#8E24AA' },
+            { id: 'rb-armL', type: 'rect',    x: 122, y: 156, w: 38,  h: 88,  fill: '#FB8C00' },
+            { id: 'rb-armR', type: 'rect',    x: 360, y: 156, w: 38,  h: 88,  fill: '#FB8C00' },
+            { id: 'rb-legL', type: 'rect',    x: 196, y: 294, w: 38,  h: 88,  fill: '#FB8C00' },
+            { id: 'rb-legR', type: 'rect',    x: 286, y: 294, w: 38,  h: 88,  fill: '#FB8C00' }
+          ]
+        },
+        {
+          name: '我的招牌',
+          quest: '第 4 關／4：我的招牌 — 自由設計一個班級招牌，至少使用 3 種工具',
+          par: 0,
+          tip: '用各種形狀和顏色設計獨一無二的班級招牌，至少用 3 種工具就過關！',
+          freeMode: true,
+          targets: []
+        }
+      ]
+    };
+
+    /* =====================================================================
+     * 二、內嵌 SVG 插圖（主角、關卡縮圖、工具圖示、助手表情）
+     * 皆採粗墨藍輪廓 #1F2A4D，完全不使用 emoji 或外部圖片
+     * ===================================================================== */
+
+    // 開始畫面主角插圖（380 × 360）：可愛的小畫家任務機器人與幾何畫板
+    var HERO_SVG =
+      '<svg viewBox="0 0 380 360" xmlns="http://www.w3.org/2000/svg">' +
+        // 背景裝飾貼紙形狀
+        '<circle cx="62" cy="84" r="24" fill="#FFF0C2" stroke="#1F2A4D" stroke-width="4.5"/>' +
+        '<polygon points="326,56 352,102 300,102" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="4.5" stroke-linejoin="round"/>' +
+        '<rect x="28" y="256" width="38" height="38" rx="8" fill="#D8F1DF" stroke="#1F2A4D" stroke-width="4.5" transform="rotate(-14 47 275)"/>' +
+        // 背後小畫板＋黃色膠帶
+        '<rect x="210" y="96" width="134" height="162" rx="12" fill="#FFFFFF" stroke="#1F2A4D" stroke-width="5"/>' +
+        '<rect x="252" y="84" width="50" height="18" rx="3" fill="#FFD966" stroke="#1F2A4D" stroke-width="3" transform="rotate(-4 277 93)"/>' +
+        '<polygon points="277,126 312,172 242,172" fill="#E53935" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>' +
+        '<rect x="250" y="172" width="54" height="44" fill="#FDD835" stroke="#1F2A4D" stroke-width="4"/>' +
+        '<rect x="268" y="188" width="18" height="28" fill="#8D6E63" stroke="#1F2A4D" stroke-width="3.5"/>' +
+        '<circle cx="318" cy="126" r="10" fill="#1E88E5" stroke="#1F2A4D" stroke-width="3.5"/>' +
+        // 主角小機器人：天線
+        '<line x1="154" y1="68" x2="154" y2="42" stroke="#1F2A4D" stroke-width="5.5" stroke-linecap="round"/>' +
+        '<circle cx="154" cy="34" r="12" fill="#FFB627" stroke="#1F2A4D" stroke-width="4.5"/>' +
+        // 畫家貝雷帽
+        '<path d="M98 92 C104 54, 204 54, 210 92 Z" fill="#E53935" stroke="#1F2A4D" stroke-width="5" stroke-linejoin="round"/>' +
+        // 頭
+        '<rect x="86" y="88" width="136" height="100" rx="22" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="5.5"/>' +
+        // 臉螢幕
+        '<rect x="104" y="106" width="100" height="64" rx="14" fill="#FFFFFF" stroke="#1F2A4D" stroke-width="4.5"/>' +
+        // 眼睛與微笑、腮紅
+        '<circle cx="132" cy="134" r="8" fill="#1F2A4D"/>' +
+        '<circle cx="135" cy="131" r="2.8" fill="#FFFFFF"/>' +
+        '<circle cx="176" cy="134" r="8" fill="#1F2A4D"/>' +
+        '<circle cx="179" cy="131" r="2.8" fill="#FFFFFF"/>' +
+        '<ellipse cx="118" cy="148" rx="8" ry="5" fill="#FFDCD8"/>' +
+        '<ellipse cx="190" cy="148" rx="8" ry="5" fill="#FFDCD8"/>' +
+        '<path d="M142 150 Q154 162 166 150" fill="none" stroke="#1F2A4D" stroke-width="4.5" stroke-linecap="round"/>' +
+        // 身體
+        '<rect x="96" y="196" width="116" height="96" rx="18" fill="#2160C4" stroke="#1F2A4D" stroke-width="5.5"/>' +
+        // 胸前任務徽章
+        '<rect x="116" y="216" width="76" height="52" rx="10" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="4"/>' +
+        '<rect x="126" y="228" width="18" height="18" rx="3" fill="#FDD835" stroke="#1F2A4D" stroke-width="3"/>' +
+        '<circle cx="160" cy="237" r="9" fill="#43A047" stroke="#1F2A4D" stroke-width="3"/>' +
+        '<polygon points="180,227 188,246 172,246" fill="#E53935" stroke="#1F2A4D" stroke-width="2.5" stroke-linejoin="round"/>' +
+        '<line x1="126" y1="257" x2="182" y2="257" stroke="#1F2A4D" stroke-width="3.5" stroke-linecap="round"/>' +
+        // 左手拿油漆桶
+        '<path d="M96 220 Q62 214 58 184" fill="none" stroke="#1F2A4D" stroke-width="10" stroke-linecap="round"/>' +
+        '<path d="M96 220 Q62 214 58 184" fill="none" stroke="#FFB627" stroke-width="4" stroke-linecap="round"/>' +
+        '<g transform="translate(30,136) rotate(-18)">' +
+          '<rect x="4" y="10" width="38" height="40" rx="7" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="4.5"/>' +
+          '<path d="M4 18 Q23 30 42 18 L42 10 L4 10 Z" fill="#1E88E5" stroke="#1F2A4D" stroke-width="4"/>' +
+          '<path d="M10 10 Q23 -6 36 10" fill="none" stroke="#1F2A4D" stroke-width="4"/>' +
+        '</g>' +
+        // 右手指著畫板
+        '<path d="M212 224 Q240 226 248 206" fill="none" stroke="#1F2A4D" stroke-width="10" stroke-linecap="round"/>' +
+        '<circle cx="250" cy="204" r="9" fill="#FFB627" stroke="#1F2A4D" stroke-width="4"/>' +
+        // 雙腳
+        '<rect x="114" y="292" width="28" height="36" rx="10" fill="#FB8C00" stroke="#1F2A4D" stroke-width="5"/>' +
+        '<rect x="166" y="292" width="28" height="36" rx="10" fill="#FB8C00" stroke="#1F2A4D" stroke-width="5"/>' +
+        // 地面小陰影
+        '<ellipse cx="180" cy="336" rx="120" ry="10" fill="#1F2A4D" opacity="0.14"/>' +
+      '</svg>';
+
+    // 4 張關卡縮圖（120 × 120）
+    var LEVEL_THUMBS = [
+      // 1. 紅綠燈
+      '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect x="38" y="10" width="44" height="100" rx="8" fill="#263238" stroke="#1F2A4D" stroke-width="4.5"/>' +
+        '<circle cx="60" cy="30" r="12" fill="#E53935" stroke="#1F2A4D" stroke-width="3.5"/>' +
+        '<circle cx="60" cy="60" r="12" fill="#FDD835" stroke="#1F2A4D" stroke-width="3.5"/>' +
+        '<circle cx="60" cy="90" r="12" fill="#43A047" stroke="#1F2A4D" stroke-width="3.5"/>' +
+      '</svg>',
+      // 2. 小房子
+      '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect x="22" y="52" width="76" height="54" fill="#FDD835" stroke="#1F2A4D" stroke-width="4.5"/>' +
+        '<polygon points="60,14 106,52 14,52" fill="#E53935" stroke="#1F2A4D" stroke-width="4.5" stroke-linejoin="round"/>' +
+        '<rect x="52" y="78" width="16" height="28" fill="#8D6E63" stroke="#1F2A4D" stroke-width="3.5"/>' +
+        '<rect x="30" y="60" width="14" height="13" fill="#1E88E5" stroke="#1F2A4D" stroke-width="3"/>' +
+        '<rect x="76" y="60" width="14" height="13" fill="#1E88E5" stroke="#1F2A4D" stroke-width="3"/>' +
+        '<rect x="30" y="80" width="14" height="13" fill="#1E88E5" stroke="#1F2A4D" stroke-width="3"/>' +
+        '<rect x="76" y="80" width="14" height="13" fill="#1E88E5" stroke="#1F2A4D" stroke-width="3"/>' +
+      '</svg>',
+      // 3. 機器人
+      '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect x="38" y="10" width="44" height="30" rx="4" fill="#1E88E5" stroke="#1F2A4D" stroke-width="4"/>' +
+        '<circle cx="50" cy="24" r="5" fill="#FDD835" stroke="#1F2A4D" stroke-width="2.5"/>' +
+        '<circle cx="70" cy="24" r="5" fill="#FDD835" stroke="#1F2A4D" stroke-width="2.5"/>' +
+        '<rect x="32" y="45" width="56" height="40" rx="4" fill="#8E24AA" stroke="#1F2A4D" stroke-width="4"/>' +
+        '<rect x="16" y="48" width="12" height="28" rx="3" fill="#FB8C00" stroke="#1F2A4D" stroke-width="3.5"/>' +
+        '<rect x="92" y="48" width="12" height="28" rx="3" fill="#FB8C00" stroke="#1F2A4D" stroke-width="3.5"/>' +
+        '<rect x="40" y="88" width="12" height="24" rx="3" fill="#FB8C00" stroke="#1F2A4D" stroke-width="3.5"/>' +
+        '<rect x="68" y="88" width="12" height="24" rx="3" fill="#FB8C00" stroke="#1F2A4D" stroke-width="3.5"/>' +
+      '</svg>',
+      // 4. 我的招牌
+      '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">' +
+        '<line x1="20" y1="22" x2="100" y2="22" stroke="#1F2A4D" stroke-width="4" stroke-linecap="round"/>' +
+        '<polygon points="32,22 44,22 38,36" fill="#E53935" stroke="#1F2A4D" stroke-width="2.5"/>' +
+        '<polygon points="54,22 66,22 60,36" fill="#FDD835" stroke="#1F2A4D" stroke-width="2.5"/>' +
+        '<polygon points="76,22 88,22 82,36" fill="#43A047" stroke="#1F2A4D" stroke-width="2.5"/>' +
+        '<rect x="16" y="44" width="88" height="54" rx="10" fill="#FFF0C2" stroke="#1F2A4D" stroke-width="4.5"/>' +
+        '<circle cx="40" cy="71" r="13" fill="#1E88E5" stroke="#1F2A4D" stroke-width="3.5"/>' +
+        '<rect x="62" y="58" width="28" height="11" rx="3" fill="#FB8C00" stroke="#1F2A4D" stroke-width="3"/>' +
+        '<rect x="62" y="75" width="20" height="10" rx="3" fill="#8E24AA" stroke="#1F2A4D" stroke-width="3"/>' +
+      '</svg>'
+    ];
+
+    // 工具列線條 SVG 圖示（stroke 2.2，圓角端點）
+    var TOOL_ICONS = {
+      line:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="4" y1="20" x2="20" y2="4"/><circle cx="4" cy="20" r="2" fill="currentColor"/><circle cx="20" cy="4" r="2" fill="currentColor"/></svg>',
+      rect:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="1.5"/></svg>',
+      ellipse:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><ellipse cx="12" cy="12" rx="8.5" ry="6.5"/></svg>',
+      triangle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><polygon points="12,4 20.5,19 3.5,19"/></svg>',
+      fill:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13L12 6l6 6-7 7a2 2 0 0 1-2.8 0L5 15.8A2 2 0 0 1 5 13z"/><path d="M10 4l2 2"/><path d="M19 14s2.5 2.5 2.5 4.2a2.5 2.5 0 0 1-5 0c0-1.7 2.5-4.2 2.5-4.2z" fill="currentColor"/></svg>',
+      eraser:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4l5 5-9.5 9.5a2 2 0 0 1-1.4.6H6l-3-3a2 2 0 0 1 0-2.8L13.2 4a2 2 0 0 1 2.8 0z"/><line x1="9" y1="8.5" x2="15.5" y2="15"/><line x1="6" y1="19" x2="21" y2="19"/></svg>',
+      select:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l6.5 16 2.5-5.5L19.5 12 5 4z"/></svg>',
+      copy:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="9" y="8" width="11" height="12" rx="2"/><path d="M6 16H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+      paste:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 5V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5V5"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="13" y2="15"/></svg>',
+      undo:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7L4 11l4 4"/><path d="M4 11h10a5.5 5.5 0 1 1 0 11h-3"/></svg>'
+    };
+
+    // 右側小機器人助手表情產生器（mood: 'idle' | 'happy' | 'oops'）
+    function makeCoachSvg(mood) {
+      var eyes, mouth, extra = '';
+      if (mood === 'happy') {
+        eyes = '<path d="M36 52 Q43 44 50 52" fill="none" stroke="#1F2A4D" stroke-width="4" stroke-linecap="round"/>' +
+               '<path d="M66 52 Q73 44 80 52" fill="none" stroke="#1F2A4D" stroke-width="4" stroke-linecap="round"/>';
+        mouth = '<path d="M48 64 Q58 76 68 64" fill="none" stroke="#1F2A4D" stroke-width="4" stroke-linecap="round"/>';
+        extra = '<polygon points="16,24 19,31 26,31 20,35 22,42 16,38 10,42 12,35 6,31 13,31" fill="#FFB627" stroke="#1F2A4D" stroke-width="2"/>' +
+                '<polygon points="100,20 102,26 108,26 103,29 105,35 100,31 95,35 97,29 92,26 98,26" fill="#FFB627" stroke="#1F2A4D" stroke-width="2"/>';
+      } else if (mood === 'oops') {
+        eyes = '<circle cx="43" cy="52" r="5.5" fill="#1F2A4D"/><circle cx="73" cy="52" r="5.5" fill="#1F2A4D"/>' +
+               '<line x1="36" y1="42" x2="49" y2="45" stroke="#1F2A4D" stroke-width="3" stroke-linecap="round"/>' +
+               '<line x1="80" y1="42" x2="67" y2="45" stroke="#1F2A4D" stroke-width="3" stroke-linecap="round"/>';
+        mouth = '<circle cx="58" cy="67" r="5" fill="#FFDCD8" stroke="#1F2A4D" stroke-width="3.2"/>';
+      } else {
+        eyes = '<circle cx="43" cy="51" r="5.5" fill="#1F2A4D"/><circle cx="45" cy="49" r="2" fill="#fff"/>' +
+               '<circle cx="73" cy="51" r="5.5" fill="#1F2A4D"/><circle cx="75" cy="49" r="2" fill="#fff"/>';
+        mouth = '<path d="M49 64 Q58 72 67 64" fill="none" stroke="#1F2A4D" stroke-width="3.8" stroke-linecap="round"/>';
+      }
+      return '<svg viewBox="0 0 116 110" width="116" height="110" xmlns="http://www.w3.org/2000/svg">' +
+        extra +
+        '<line x1="58" y1="24" x2="58" y2="12" stroke="#1F2A4D" stroke-width="4" stroke-linecap="round"/>' +
+        '<circle cx="58" cy="9" r="6" fill="#FFB627" stroke="#1F2A4D" stroke-width="3"/>' +
+        '<rect x="18" y="24" width="80" height="62" rx="16" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="4.5"/>' +
+        '<rect x="28" y="34" width="60" height="42" rx="10" fill="#FFFFFF" stroke="#1F2A4D" stroke-width="3.5"/>' +
+        '<ellipse cx="34" cy="61" rx="5" ry="3" fill="#FFDCD8"/>' +
+        '<ellipse cx="82" cy="61" rx="5" ry="3" fill="#FFDCD8"/>' +
+        eyes + mouth +
+        '<rect x="34" y="86" width="48" height="18" rx="8" fill="#2160C4" stroke="#1F2A4D" stroke-width="4"/>' +
+      '</svg>';
+    }
+
+    // 第 4 關靈感迷你範例 SVG
+    var FREE_IDEA_SVGS = [
+      '<svg viewBox="0 0 140 82" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="14" width="112" height="54" rx="6" fill="#FDD835" stroke="#1F2A4D" stroke-width="3.5"/><polygon points="28,14 42,14 35,28" fill="#E53935" stroke="#1F2A4D" stroke-width="2.5"/><polygon points="63,14 77,14 70,28" fill="#1E88E5" stroke="#1F2A4D" stroke-width="2.5"/><polygon points="98,14 112,14 105,28" fill="#43A047" stroke="#1F2A4D" stroke-width="2.5"/><circle cx="48" cy="48" r="12" fill="#FB8C00" stroke="#1F2A4D" stroke-width="3"/><rect x="70" y="38" width="40" height="20" fill="#FFFFFF" stroke="#1F2A4D" stroke-width="3"/></svg>',
+      '<svg viewBox="0 0 140 82" xmlns="http://www.w3.org/2000/svg"><polygon points="70,6 124,32 16,32" fill="#E53935" stroke="#1F2A4D" stroke-width="3.5" stroke-linejoin="round"/><rect x="24" y="32" width="92" height="42" fill="#8D6E63" stroke="#1F2A4D" stroke-width="3.5"/><rect x="36" y="42" width="68" height="22" fill="#FFFBEF" stroke="#1F2A4D" stroke-width="3"/><circle cx="52" cy="53" r="6" fill="#43A047" stroke="#1F2A4D" stroke-width="2.5"/><circle cx="70" cy="53" r="6" fill="#FDD835" stroke="#1F2A4D" stroke-width="2.5"/><circle cx="88" cy="53" r="6" fill="#1E88E5" stroke="#1F2A4D" stroke-width="2.5"/></svg>',
+      '<svg viewBox="0 0 140 82" xmlns="http://www.w3.org/2000/svg"><ellipse cx="70" cy="42" rx="54" ry="30" fill="#1E88E5" stroke="#1F2A4D" stroke-width="3.5"/><ellipse cx="70" cy="42" rx="42" ry="20" fill="#FFFFFF" stroke="#1F2A4D" stroke-width="3"/><line x1="42" y1="42" x2="98" y2="42" stroke="#8E24AA" stroke-width="5" stroke-linecap="round"/><circle cx="34" cy="24" r="9" fill="#FDD835" stroke="#1F2A4D" stroke-width="3"/><circle cx="106" cy="60" r="9" fill="#FB8C00" stroke="#1F2A4D" stroke-width="3"/></svg>'
+    ];
+
+    /* =====================================================================
+     * 三、幾何計算、繪製與比對核心函式
+     * ===================================================================== */
+
+    // 深拷貝圖形陣列（用於復原快照與剪貼簿）
+    function cloneShapes(list) {
+      return list.map(function (s) {
+        return { id: s.id, type: s.type, x: s.x, y: s.y, w: s.w, h: s.h, stroke: s.stroke, fill: s.fill };
+      });
+    }
+
+    // 計算圖形外接矩形（支援直線負寬高）
+    function getBounds(s) {
+      if (s.type === 'line') {
+        var x1 = Math.min(s.x, s.x + s.w);
+        var y1 = Math.min(s.y, s.y + s.h);
+        var x2 = Math.max(s.x, s.x + s.w);
+        var y2 = Math.max(s.y, s.y + s.h);
+        return { x: x1, y: y1, w: Math.max(2, x2 - x1), h: Math.max(2, y2 - y1) };
+      }
+      return { x: s.x, y: s.y, w: s.w, h: s.h };
+    }
+
+    // 判斷點擊座標 (px, py) 是否命中指定圖形
+    function hitTestShape(s, px, py) {
+      if (s.type === 'rect') {
+        return px >= s.x - 4 && px <= s.x + s.w + 4 && py >= s.y - 4 && py <= s.y + s.h + 4;
+      }
+      if (s.type === 'ellipse') {
+        var rx = s.w / 2 + 4;
+        var ry = s.h / 2 + 4;
+        if (rx <= 0 || ry <= 0) return false;
+        var cx = s.x + s.w / 2;
+        var cy = s.y + s.h / 2;
+        var dx = (px - cx) / rx;
+        var dy = (py - cy) / ry;
+        return dx * dx + dy * dy <= 1;
+      }
+      if (s.type === 'triangle') {
+        // 等腰三角形三頂點：上中、左下、右下
+        var ax = s.x + s.w / 2, ay = s.y;
+        var bx = s.x,           by = s.y + s.h;
+        var cx2 = s.x + s.w,    cy2 = s.y + s.h;
+        var v0x = cx2 - ax, v0y = cy2 - ay;
+        var v1x = bx - ax,  v1y = by - ay;
+        var v2x = px - ax,  v2y = py - ay;
+        var dot00 = v0x * v0x + v0y * v0y;
+        var dot01 = v0x * v1x + v0y * v1y;
+        var dot02 = v0x * v2x + v0y * v2y;
+        var dot11 = v1x * v1x + v1y * v1y;
+        var dot12 = v1x * v2x + v1y * v2y;
+        var denom = dot00 * dot11 - dot01 * dot01;
+        if (Math.abs(denom) < 0.0001) return false;
+        var u = (dot11 * dot02 - dot01 * dot12) / denom;
+        var v = (dot00 * dot12 - dot01 * dot02) / denom;
+        return u >= -0.05 && v >= -0.05 && (u + v) <= 1.05;
+      }
+      if (s.type === 'line') {
+        // 點到線段距離 <= 12px
+        var x1 = s.x, y1 = s.y, x2 = s.x + s.w, y2 = s.y + s.h;
+        var ldx = x2 - x1, ldy = y2 - y1;
+        var lenSq = ldx * ldx + ldy * ldy;
+        if (lenSq < 1) return Math.hypot(px - x1, py - y1) <= 12;
+        var t = Math.max(0, Math.min(1, ((px - x1) * ldx + (py - y1) * ldy) / lenSq));
+        return Math.hypot(px - (x1 + t * ldx), py - (y1 + t * ldy)) <= 12;
+      }
+      return false;
+    }
+
+    // 繪製輔助對齊點格（僅在遊戲畫面顯示，匯出作品圖時不畫）
+    function drawGrid(ctx) {
+      ctx.save();
+      ctx.fillStyle = '#D9E5EE';
+      var step = SCENE_CONFIG.GRID_STEP;
+      for (var gx = step; gx < SCENE_CONFIG.CANVAS_W; gx += step) {
+        for (var gy = step; gy < SCENE_CONFIG.CANVAS_H; gy += step) {
+          ctx.beginPath();
+          ctx.arc(gx, gy, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
+    // 繪製單一圖形物件
+    function drawShape(ctx, s, opts) {
+      opts = opts || {};
+      ctx.save();
+      if (opts.preview) {
+        ctx.globalAlpha = 0.72;
+        ctx.setLineDash([7, 5]);
+      }
+      if (opts.scale && opts.scale !== 1) {
+        var b = getBounds(s);
+        var cx = b.x + b.w / 2;
+        var cy = b.y + b.h / 2;
+        ctx.translate(cx, cy);
+        ctx.scale(opts.scale, opts.scale);
+        ctx.translate(-cx, -cy);
+      }
+
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+
+      if (s.type === 'line') {
+        ctx.beginPath();
+        ctx.moveTo(s.x, s.y);
+        ctx.lineTo(s.x + s.w, s.y + s.h);
+        ctx.strokeStyle = s.stroke || SCENE_CONFIG.STROKE_COLOR;
+        ctx.lineWidth = SCENE_CONFIG.LINE_TOOL_W;
+        ctx.stroke();
+        ctx.restore();
+        return;
+      }
+
+      ctx.beginPath();
+      if (s.type === 'rect') {
+        ctx.rect(s.x, s.y, s.w, s.h);
+      } else if (s.type === 'ellipse') {
+        ctx.ellipse(s.x + s.w / 2, s.y + s.h / 2, Math.max(1, s.w / 2), Math.max(1, s.h / 2), 0, 0, Math.PI * 2);
+      } else if (s.type === 'triangle') {
+        ctx.moveTo(s.x + s.w / 2, s.y);
+        ctx.lineTo(s.x, s.y + s.h);
+        ctx.lineTo(s.x + s.w, s.y + s.h);
+        ctx.closePath();
+      }
+
+      // 尚未上色的圖形以純白填底，上色後填實際顏色
+      ctx.fillStyle = s.fill ? s.fill : '#FFFFFF';
+      ctx.fill();
+      ctx.strokeStyle = s.stroke || SCENE_CONFIG.STROKE_COLOR;
+      ctx.lineWidth = SCENE_CONFIG.SHAPE_LINE_W;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 繪製選取框（藍色虛線框＋四角控制點）
+    function drawSelectionBox(ctx, s) {
+      ctx.save();
+      ctx.strokeStyle = '#2160C4';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 4]);
+      if (s.type === 'line') {
+        ctx.beginPath();
+        ctx.moveTo(s.x, s.y);
+        ctx.lineTo(s.x + s.w, s.y + s.h);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        [
+          { x: s.x, y: s.y },
+          { x: s.x + s.w, y: s.y + s.h }
+        ].forEach(function (pt) {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.strokeStyle = '#2160C4';
+          ctx.lineWidth = 2.8;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        });
+      } else {
+        var pad = 4;
+        ctx.strokeRect(s.x - pad, s.y - pad, s.w + pad * 2, s.h + pad * 2);
+        ctx.setLineDash([]);
+        var corners = [
+          { x: s.x - pad, y: s.y - pad },
+          { x: s.x + s.w + pad, y: s.y - pad },
+          { x: s.x - pad, y: s.y + s.h + pad },
+          { x: s.x + s.w + pad, y: s.y + s.h + pad }
+        ];
+        corners.forEach(function (pt) {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.strokeStyle = '#2160C4';
+          ctx.lineWidth = 2.8;
+          ctx.fillRect(pt.x - 6, pt.y - 6, 12, 12);
+          ctx.strokeRect(pt.x - 6, pt.y - 6, 12, 12);
+        });
+      }
+      ctx.restore();
+    }
+
+    // 在目標圖上標示沒對上的圖形（紅色虛線框＋✗）
+    function drawMissedMark(ctx, t) {
+      var pad = 5;
+      ctx.save();
+      ctx.strokeStyle = '#C0303A';
+      ctx.lineWidth = 3.2;
+      ctx.setLineDash([7, 5]);
+      ctx.strokeRect(t.x - pad, t.y - pad, t.w + pad * 2, t.h + pad * 2);
+      ctx.setLineDash([]);
+
+      // 右上角紅圓白 ✗ 徽章
+      var bx = Math.min(SCENE_CONFIG.CANVAS_W - 16, t.x + t.w + pad);
+      var by = Math.max(16, t.y - pad);
+      ctx.beginPath();
+      ctx.arc(bx, by, 13, 0, Math.PI * 2);
+      ctx.fillStyle = '#C0303A';
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.stroke();
+
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(bx - 5, by - 5);
+      ctx.lineTo(bx + 5, by + 5);
+      ctx.moveTo(bx + 5, by - 5);
+      ctx.lineTo(bx - 5, by + 5);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 比對單一目標圖形 t 與玩家圖形 u 是否符合條件
+    function isShapeMatch(t, u) {
+      if (t.type !== u.type) return false;
+      var tFill = (t.fill || '').toUpperCase();
+      var uFill = (u.fill || '').toUpperCase();
+      if (tFill !== uFill) return false;
+
+      var tcx = t.x + t.w / 2;
+      var tcy = t.y + t.h / 2;
+      var ucx = u.x + u.w / 2;
+      var ucy = u.y + u.h / 2;
+      if (Math.hypot(ucx - tcx, ucy - tcy) > SCENE_CONFIG.MATCH_POS_PX) return false;
+
+      var wDiff = Math.abs(u.w - t.w) / Math.max(1, t.w);
+      var hDiff = Math.abs(u.h - t.h) / Math.max(1, t.h);
+      if (wDiff > SCENE_CONFIG.MATCH_SIZE_RATIO || hDiff > SCENE_CONFIG.MATCH_SIZE_RATIO) return false;
+
+      return true;
+    }
+
+    // 使用二分圖最大匹配，一對一配對目標圖形與玩家圖形，回傳沒對上的目標 ID 陣列
+    function evaluateTargets(targets, userShapes) {
+      var nT = targets.length;
+      var nU = userShapes.length;
+      var adj = [];
+      for (var i = 0; i < nT; i++) {
+        var list = [];
+        for (var j = 0; j < nU; j++) {
+          if (isShapeMatch(targets[i], userShapes[j])) list.push(j);
+        }
+        adj.push(list);
+      }
+
+      var matchU = new Array(nU).fill(-1);
+      var matchT = new Array(nT).fill(-1);
+
+      function dfs(tIdx, visited) {
+        var edges = adj[tIdx];
+        for (var k = 0; k < edges.length; k++) {
+          var uIdx = edges[k];
+          if (visited[uIdx]) continue;
+          visited[uIdx] = true;
+          if (matchU[uIdx] === -1 || dfs(matchU[uIdx], visited)) {
+            matchU[uIdx] = tIdx;
+            matchT[tIdx] = uIdx;
+            return true;
+          }
+        }
+        return false;
+      }
+
+      for (var t = 0; t < nT; t++) {
+        dfs(t, new Array(nU).fill(false));
+      }
+
+      var missedIds = [];
+      for (var m = 0; m < nT; m++) {
+        if (matchT[m] === -1) missedIds.push(targets[m].id);
+      }
+      return missedIds;
+    }
+
+    /* =====================================================================
+     * 四、掛載至 ArtIsland 共用外殼
+     * ===================================================================== */
+    ArtIsland.mount({
+      unit: 27,
+      title: '小畫家任務局',
+      grade: '3–4 年級',
+      howto: '照著目標圖，用繪圖工具畫出一模一樣的圖，步數越少星星越多。',
+      zhuyin: false,
+      teach: '電腦繪圖工具、拆解步驟｜藝術 視E-II-2；資訊課小畫家',
+      submit: true,
+      hero: HERO_SVG,
+      levels: SCENE_CONFIG.LEVELS.map(function (lv, idx) {
+        return { name: lv.name, thumb: LEVEL_THUMBS[idx] };
+      }),
+
+      scene: function (api) {
+        // 場景執行期狀態（每次 start 會完全重置，stop 會完整清理）
+        var levelIdx = 0;
+        var levelData = null;
+        var shapes = [];
+        var undoStack = [];
+        var selectedId = null;
+        var clipboard = null;
+        var pasteSerial = 0;
+        var nextShapeId = 1;
+        var steps = 0;
+        var activeTool = 'rect';
+        var activeColor = SCENE_CONFIG.COLORS[0].hex;
+        var missedIds = [];
+        var usedTools = {};
+
+        // 指標拖曳狀態
+        var drag = null;
+
+        // 動畫與計時器追蹤（供 stop() 徹底清除）
+        var effects = [];
+        var rafId = null;
+        var lastFrameTs = 0;
+        var timers = [];
+        var keyListenerAttached = false;
+        var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // DOM 參照
+        var targetCanvas = null;
+        var targetCtx = null;
+        var userCanvas = null;
+        var userCtx = null;
+
+        function addTimer(fn, ms) {
+          var id = window.setTimeout(function () {
+            timers = timers.filter(function (x) { return x !== id; });
+            fn();
+          }, ms);
+          timers.push(id);
+          return id;
+        }
+
+        // 記錄使用過的工具（第 4 關計數用）
+        function markToolUsed(toolKey) {
+          if (!usedTools[toolKey]) {
+            usedTools[toolKey] = true;
+            if (levelData && levelData.freeMode) updateFreeChecklist();
+          }
+        }
+
+        function countUsedTools() {
+          return Object.keys(usedTools).length;
+        }
+
+        // 儲存復原快照（同時記下步數，復原時一併回朔）
+        function pushUndo() {
+          undoStack.push({ shapes: cloneShapes(shapes), steps: steps, selectedId: selectedId });
+          if (undoStack.length > SCENE_CONFIG.MAX_UNDO) undoStack.shift();
+          updateActionButtons();
+        }
+
+        function getSelectedShape() {
+          if (selectedId == null) return null;
+          for (var i = 0; i < shapes.length; i++) {
+            if (shapes[i].id === selectedId) return shapes[i];
+          }
+          return null;
+        }
+
+        // 將瀏覽器指標座標換算回畫布 520×400 邏輯座標（相容 CSS transform 縮放）
+        function getCanvasPoint(e) {
+          var rect = userCanvas.getBoundingClientRect();
+          return {
+            x: Math.max(0, Math.min(SCENE_CONFIG.CANVAS_W, (e.clientX - rect.left) * (SCENE_CONFIG.CANVAS_W / rect.width))),
+            y: Math.max(0, Math.min(SCENE_CONFIG.CANVAS_H, (e.clientY - rect.top) * (SCENE_CONFIG.CANVAS_H / rect.height)))
+          };
+        }
+
+        // 偵測選取狀態下是否點到四角控制點或直線兩端點
+        function hitTestHandle(s, px, py) {
+          var r = SCENE_CONFIG.HANDLE_HIT_R;
+          if (s.type === 'line') {
+            if (Math.hypot(px - s.x, py - s.y) <= r) return 'p1';
+            if (Math.hypot(px - (s.x + s.w), py - (s.y + s.h)) <= r) return 'p2';
+            return null;
+          }
+          var pad = 4;
+          var pts = [
+            { k: 'nw', x: s.x - pad, y: s.y - pad },
+            { k: 'ne', x: s.x + s.w + pad, y: s.y - pad },
+            { k: 'sw', x: s.x - pad, y: s.y + s.h + pad },
+            { k: 'se', x: s.x + s.w + pad, y: s.y + s.h + pad }
+          ];
+          for (var i = 0; i < pts.length; i++) {
+            if (Math.hypot(px - pts[i].x, py - pts[i].y) <= r) return pts[i].k;
+          }
+          return null;
+        }
+
+        // 由最上層往底層找第一個被點到的圖形
+        function findTopShapeAt(px, py) {
+          for (var i = shapes.length - 1; i >= 0; i--) {
+            if (hitTestShape(shapes[i], px, py)) return shapes[i];
+          }
+          return null;
+        }
+
+        // 加入短暫回饋特效（填色小光圈／貼上彈跳，用 rAF 依時間差更新）
+        function addEffect(fx) {
+          if (reducedMotion) return;
+          fx.t = 0;
+          effects.push(fx);
+          if (!rafId) {
+            lastFrameTs = performance.now();
+            rafId = window.requestAnimationFrame(tickEffects);
+          }
+        }
+
+        function tickEffects(ts) {
+          var dt = Math.min(0.05, Math.max(0, (ts - lastFrameTs) / 1000));
+          lastFrameTs = ts;
+          for (var i = effects.length - 1; i >= 0; i--) {
+            effects[i].t += dt;
+            if (effects[i].t >= effects[i].dur) effects.splice(i, 1);
+          }
+          renderUserCanvas();
+          if (effects.length > 0) {
+            rafId = window.requestAnimationFrame(tickEffects);
+          } else {
+            rafId = null;
+          }
+        }
+
+        // 重繪左側目標圖
+        function renderTargetCanvas() {
+          if (!targetCtx || !levelData || levelData.freeMode) return;
+          targetCtx.clearRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+          targetCtx.fillStyle = '#FFFFFF';
+          targetCtx.fillRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+          drawGrid(targetCtx);
+
+          levelData.targets.forEach(function (t) {
+            drawShape(targetCtx, t);
+          });
+          // 沒對上的圖形加上紅色虛線框與 ✗
+          if (missedIds.length > 0) {
+            levelData.targets.forEach(function (t) {
+              if (missedIds.indexOf(t.id) !== -1) drawMissedMark(targetCtx, t);
+            });
+          }
+        }
+
+        // 重繪右側我的畫布
+        function renderUserCanvas() {
+          if (!userCtx) return;
+          userCtx.clearRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+          userCtx.fillStyle = '#FFFFFF';
+          userCtx.fillRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+          drawGrid(userCtx);
+
+          // 找出是否有貼上彈跳特效
+          var popMap = {};
+          effects.forEach(function (fx) {
+            if (fx.kind === 'pop') {
+              var p = fx.t / fx.dur;
+              popMap[fx.shapeId] = 1 + Math.sin(p * Math.PI) * 0.08;
+            }
+          });
+
+          shapes.forEach(function (s) {
+            drawShape(userCtx, s, { scale: popMap[s.id] || 1 });
+          });
+
+          // 拖曳繪製中的預覽圖形
+          if (drag && drag.mode === 'draw' && drag.preview) {
+            drawShape(userCtx, drag.preview, { preview: true });
+          }
+
+          // 選取框
+          var sel = getSelectedShape();
+          if (sel && activeTool === 'select') {
+            drawSelectionBox(userCtx, sel);
+          }
+
+          // 填色光圈回饋
+          effects.forEach(function (fx) {
+            if (fx.kind === 'ripple') {
+              var p = fx.t / fx.dur;
+              userCtx.save();
+              userCtx.globalAlpha = 1 - p;
+              userCtx.strokeStyle = fx.color;
+              userCtx.lineWidth = 4 * (1 - p) + 1;
+              userCtx.beginPath();
+              userCtx.arc(fx.x, fx.y, 10 + p * 34, 0, Math.PI * 2);
+              userCtx.stroke();
+              userCtx.restore();
+            }
+          });
+        }
+
+        // 匯出乾淨的高解析度作品畫布（給畫廊、下載、列印用，不含格線與選取框）
+        function exportArtworkCanvas() {
+          var scale = 2;
+          var out = document.createElement('canvas');
+          out.width = SCENE_CONFIG.CANVAS_W * scale;
+          out.height = SCENE_CONFIG.CANVAS_H * scale;
+          var octx = out.getContext('2d');
+          octx.scale(scale, scale);
+          octx.fillStyle = '#FFFFFF';
+          octx.fillRect(0, 0, SCENE_CONFIG.CANVAS_W, SCENE_CONFIG.CANVAS_H);
+          shapes.forEach(function (s) {
+            drawShape(octx, s);
+          });
+          return out;
+        }
+
+        // 更新助手表情與對話框
+        function setCoach(mood, msg, styleClass) {
+          var wrap = api.field.querySelector('.sc-bot-wrap');
+          var bubble = api.field.querySelector('.sc-bubble');
+          if (!wrap || !bubble) return;
+          wrap.innerHTML = makeCoachSvg(mood);
+          wrap.classList.remove('sc-shake', 'sc-hop');
+          if (!reducedMotion && (mood === 'oops' || mood === 'happy')) {
+            void wrap.offsetWidth; // 觸發單次回饋動畫
+            wrap.classList.add(mood === 'oops' ? 'sc-shake' : 'sc-hop');
+          }
+          bubble.className = 'sc-bubble' + (styleClass ? ' ' + styleClass : '');
+          bubble.textContent = msg;
+        }
+
+        // 更新下方步數顯示
+        function updateStepsUI() {
+          var box = api.field.querySelector('.sc-steps');
+          if (!box) return;
+          if (levelData.freeMode) {
+            var nUsed = countUsedTools();
+            box.className = 'sc-steps';
+            box.innerHTML =
+              '已用工具：<b class="ai-num sc-n">' + nUsed + '</b>／<b class="ai-num sc-par">' + SCENE_CONFIG.FREE_MIN_TOOLS + '</b> 種' +
+              '<span class="sc-steps-bar">｜</span>畫布物件：<b class="ai-num sc-n">' + shapes.length + '</b> 個';
+          } else {
+            var over = steps > levelData.par;
+            box.className = 'sc-steps' + (over ? ' sc-over' : '');
+            box.innerHTML =
+              '步數計：已用 <b class="ai-num sc-n">' + steps + '</b> 步' +
+              '<span class="sc-steps-bar">｜</span>標準桿 <b class="ai-num sc-par">' + levelData.par + '</b> 步';
+          }
+        }
+
+        // 更新右側工具說明卡與工具列選中狀態
+        function setActiveTool(tool) {
+          activeTool = tool;
+          if (tool !== 'select') {
+            // 切換到非選取工具時保留 selectedId 以便剛畫完也能選取，但隱藏藍框
+          }
+          api.field.querySelectorAll('.sc-tool[data-tool]').forEach(function (btn) {
+            btn.classList.toggle('sc-on', btn.dataset.tool === tool);
+          });
+          var guide = SCENE_CONFIG.TOOL_GUIDE[tool];
+          var gEl = api.field.querySelector('.sc-guide');
+          if (gEl && guide) {
+            gEl.innerHTML = '<b>' + guide.title + '</b>' + guide.desc;
+          }
+          if (userCanvas) {
+            userCanvas.className = 'sc-cv sc-cv-user' +
+              (tool === 'select' ? ' sc-cur-select' :
+               tool === 'fill' ? ' sc-cur-fill' :
+               tool === 'eraser' ? ' sc-cur-eraser' : '');
+          }
+          renderUserCanvas();
+          updateActionButtons();
+        }
+
+        // 更新複製、貼上、復原按鈕可用樣式
+        function updateActionButtons() {
+          var copyBtn = api.field.querySelector('[data-action="copy"]');
+          var pasteBtn = api.field.querySelector('[data-action="paste"]');
+          var undoBtn = api.field.querySelector('[data-action="undo"]');
+          var hasSel = activeTool === 'select' && getSelectedShape() !== null;
+          if (copyBtn) copyBtn.classList.toggle('sc-disabled', !hasSel);
+          if (pasteBtn) pasteBtn.classList.toggle('sc-disabled', !clipboard);
+          if (undoBtn) undoBtn.classList.toggle('sc-disabled', undoStack.length === 0);
+        }
+
+        // 更新第 4 關工具清單進度
+        function updateFreeChecklist() {
+          if (!levelData || !levelData.freeMode) return;
+          var n = countUsedTools();
+          var badge = api.field.querySelector('.sc-free-count');
+          if (badge) {
+            badge.textContent = n >= SCENE_CONFIG.FREE_MIN_TOOLS
+              ? '✓ 已達標（' + n + ' 種）'
+              : '已用 ' + n + '／' + SCENE_CONFIG.FREE_MIN_TOOLS + ' 種';
+            badge.className = 'sc-label-tag sc-free-count ' + (n >= SCENE_CONFIG.FREE_MIN_TOOLS ? 'sc-tag-ok' : '');
+          }
+          SCENE_CONFIG.FREE_TOOLS.forEach(function (item) {
+            var chip = api.field.querySelector('.sc-chip[data-ft="' + item.id + '"]');
+            if (chip) {
+              var got = !!usedTools[item.id];
+              chip.classList.toggle('sc-got', got);
+              chip.textContent = (got ? '✓ ' : '') + item.label;
+            }
+          });
+          updateStepsUI();
+        }
+
+        // 更新目標圖狀態小徽章（全部對上／還有幾處沒對上）
+        function updateTargetTag() {
+          var tag = api.field.querySelector('.sc-target-tag');
+          if (!tag || !levelData || levelData.freeMode) return;
+          if (missedIds.length > 0) {
+            tag.textContent = '✗ 還有 ' + missedIds.length + ' 處沒對上';
+            tag.className = 'sc-label-tag sc-target-tag sc-tag-err';
+          } else {
+            tag.textContent = '共 ' + levelData.targets.length + ' 個圖形';
+            tag.className = 'sc-label-tag sc-target-tag';
+          }
+        }
+
+        // 執行複製
+        function doCopy() {
+          var sel = getSelectedShape();
+          if (!sel || activeTool !== 'select') {
+            setCoach('oops', '先點「選取」再點一下要複製的圖形，就可以複製囉！');
+            return;
+          }
+          clipboard = { type: sel.type, x: sel.x, y: sel.y, w: sel.w, h: sel.h, stroke: sel.stroke, fill: sel.fill };
+          pasteSerial = 0;
+          updateActionButtons();
+          var pasteBtn = api.field.querySelector('[data-action="paste"]');
+          if (pasteBtn && !reducedMotion) {
+            pasteBtn.classList.remove('sc-pulse');
+            void pasteBtn.offsetWidth;
+            pasteBtn.classList.add('sc-pulse');
+          }
+          setCoach('happy', '複製好了！按「貼上」就會變出一個一模一樣的副本！');
+        }
+
+        // 執行貼上（步數 +1，副本出現在旁邊並自動選取方便拖曳）
+        function doPaste() {
+          if (!clipboard) {
+            setCoach('oops', '還沒複製圖形喔！先用「選取」挑一個圖形按「複製」。');
+            return;
+          }
+          pushUndo();
+          pasteSerial += 1;
+          var shift = SCENE_CONFIG.PASTE_OFFSET * ((pasteSerial - 1) % 4 + 1);
+          var nx = clipboard.x + shift;
+          var ny = clipboard.y + shift;
+          var b = getBounds(clipboard);
+          // 避免貼到畫布外
+          if (nx + b.w > SCENE_CONFIG.CANVAS_W - 8) nx = Math.max(8, clipboard.x - shift);
+          if (ny + b.h > SCENE_CONFIG.CANVAS_H - 8) ny = Math.max(8, clipboard.y - shift);
+
+          var copyObj = {
+            id: nextShapeId++,
+            type: clipboard.type,
+            x: nx,
+            y: ny,
+            w: clipboard.w,
+            h: clipboard.h,
+            stroke: clipboard.stroke,
+            fill: clipboard.fill
+          };
+          shapes.push(copyObj);
+          steps += 1;
+          selectedId = copyObj.id;
+          markToolUsed('copyPaste');
+          setActiveTool('select');
+          addEffect({ kind: 'pop', shapeId: copyObj.id, dur: 0.24 });
+          updateStepsUI();
+          renderUserCanvas();
+          setCoach('happy', '貼上成功！直接拖曳藍色框框把它移到正確位置吧！');
+        }
+
+        // 執行復原（不算步數，且還原上一步的狀態與步數）
+        function doUndo() {
+          if (undoStack.length === 0) {
+            setCoach('idle', '已經回到最一開始的空白畫布囉！');
+            return;
+          }
+          var snap = undoStack.pop();
+          shapes = snap.shapes;
+          steps = snap.steps;
+          selectedId = snap.selectedId;
+          updateStepsUI();
+          updateActionButtons();
+          renderUserCanvas();
+          setCoach('idle', '已經復原上一步囉！（復原不會增加步數）');
+        }
+
+        // 刪除目前選中圖形（鍵盤 Delete / Backspace 用，算 1 步）
+        function doDeleteSelected() {
+          var sel = getSelectedShape();
+          if (!sel || activeTool !== 'select') return;
+          pushUndo();
+          shapes = shapes.filter(function (s) { return s.id !== sel.id; });
+          selectedId = null;
+          steps += 1;
+          markToolUsed('eraser');
+          updateStepsUI();
+          updateActionButtons();
+          renderUserCanvas();
+        }
+
+        // 全部重畫（清空畫布與步數，方便孩子重新挑戰標準桿）
+        function doResetAll() {
+          if (shapes.length === 0 && steps === 0) return;
+          pushUndo();
+          shapes = [];
+          selectedId = null;
+          steps = 0;
+          missedIds = [];
+          updateTargetTag();
+          updateStepsUI();
+          updateActionButtons();
+          renderTargetCanvas();
+          renderUserCanvas();
+          setCoach('idle', '畫布清空囉！重新挑戰看看能不能更少步數！');
+        }
+
+        // 按下「完成」檢查比對與結算星星
+        function doFinish() {
+          // 第 4 關：自由設計招牌
+          if (levelData.freeMode) {
+            var nUsed = countUsedTools();
+            if (shapes.length === 0) {
+              setCoach('oops', '畫布還是空的喔！先用工具畫出你的班級招牌吧！', 'sc-err');
+              return;
+            }
+            if (nUsed < SCENE_CONFIG.FREE_MIN_TOOLS) {   // 寬鬆（老師 11-21）：工具不夠也過關，給 2 顆星
+              api.finish({
+                stars: 2,
+                image: exportArtworkCanvas(),
+                caption: levelData.name,
+                praise: '招牌完成了！這次用了 ' + nUsed + ' 種工具，下次多試幾種工具會更豐富喔！'
+              });
+              return;
+            }
+            api.finish({
+              stars: 3,
+              image: exportArtworkCanvas(),
+              caption: levelData.name,
+              praise: '用了 ' + nUsed + ' 種繪圖工具設計出超棒的班級招牌，創意滿分！'
+            });
+            return;
+          }
+
+          // 第 1–3 關：一對一比對目標圖形
+          missedIds = evaluateTargets(levelData.targets, shapes);
+          updateTargetTag();
+          renderTargetCanvas();
+
+          if (missedIds.length > 0) {
+            // 寬鬆（老師 11-21）：沒全對上也過關，給 1 顆星，稱讚句說出差在哪
+            if (shapes.length === 0) {
+              setCoach('oops', '畫布還是空的喔！先用工具畫一個圖形吧！', 'sc-err');
+              return;
+            }
+            var hasUnfilled = shapes.some(function (s) { return s.type !== 'line' && !s.fill; });
+            api.finish({
+              stars: 1,
+              image: exportArtworkCanvas(),
+              caption: levelData.name,
+              praise: '任務完成！跟目標圖還差 ' + missedIds.length + ' 個圖形' + (hasUnfilled ? '，記得用填色桶上色' : '') + '，再挑戰一次就能拿更多星星！'
+            });
+            return;
+          }
+
+          // 全部對上，計算星星
+          var stars = 1;
+          var praise = '';
+          if (steps <= levelData.par) {
+            stars = 3;
+            praise = '只用 ' + steps + ' 步就畫得一模一樣！你超會拆解步驟跟複製貼上！';
+          } else if (steps <= levelData.par + SCENE_CONFIG.STAR2_EXTRA_STEPS) {
+            stars = 2;
+            praise = '全部都對上囉（用了 ' + steps + ' 步）！下次善用複製貼上就能衝 3 顆星！';
+          } else {
+            stars = 1;
+            praise = '你把每個圖形都完成了！記得先上好色再複製貼上，可以省下好多步喔！';
+          }
+
+          api.finish({
+            stars: stars,
+            image: exportArtworkCanvas(),
+            caption: levelData.name,
+            praise: praise
+          });
+        }
+
+        /* ----- 畫布 Pointer Events 處理（滑鼠與平板觸控共用） ----- */
+        function onPointerDown(e) {
+          if (e.button !== undefined && e.button !== 0 && e.pointerType === 'mouse') return;
+          e.preventDefault();
+          var pt = getCanvasPoint(e);
+
+          // 填色桶
+          if (activeTool === 'fill') {
+            var hitFill = findTopShapeAt(pt.x, pt.y);
+            if (!hitFill) {
+              setCoach('oops', '點在圖形裡面，就能把顏色倒進去喔！');
+              return;
+            }
+            if (hitFill.type === 'line') {
+              if (hitFill.stroke === activeColor) {
+                setCoach('idle', '這條線已經是這個顏色囉，換別的顏色試試！');
+                return;
+              }
+              pushUndo();
+              hitFill.stroke = activeColor;
+            } else {
+              if (hitFill.fill === activeColor) {
+                setCoach('idle', '這個圖形已經是這個顏色囉，換別的顏色試試！');
+                return;
+              }
+              pushUndo();
+              hitFill.fill = activeColor;
+            }
+            steps += 1;
+            markToolUsed('fill');
+            addEffect({ kind: 'ripple', x: pt.x, y: pt.y, color: activeColor, dur: 0.28 });
+            updateStepsUI();
+            renderUserCanvas();
+            return;
+          }
+
+          // 橡皮擦
+          if (activeTool === 'eraser') {
+            var hitErase = findTopShapeAt(pt.x, pt.y);
+            if (!hitErase) {
+              setCoach('oops', '點一下想要擦掉的圖形喔！');
+              return;
+            }
+            pushUndo();
+            shapes = shapes.filter(function (s) { return s.id !== hitErase.id; });
+            if (selectedId === hitErase.id) selectedId = null;
+            steps += 1;
+            markToolUsed('eraser');
+            updateStepsUI();
+            updateActionButtons();
+            renderUserCanvas();
+            return;
+          }
+
+          // 選取（點選、移動、四角縮放 — 均不算步數）
+          if (activeTool === 'select') {
+            var curSel = getSelectedShape();
+            if (curSel) {
+              var handle = hitTestHandle(curSel, pt.x, pt.y);
+              if (handle) {
+                try { userCanvas.setPointerCapture(e.pointerId); } catch (_) {}
+                pushUndo();
+                drag = {
+                  mode: 'resize',
+                  pointerId: e.pointerId,
+                  shape: curSel,
+                  handle: handle,
+                  orig: { x: curSel.x, y: curSel.y, w: curSel.w, h: curSel.h },
+                  moved: false
+                };
+                return;
+              }
+            }
+            var hitSel = findTopShapeAt(pt.x, pt.y);
+            if (hitSel) {
+              selectedId = hitSel.id;
+              updateActionButtons();
+              try { userCanvas.setPointerCapture(e.pointerId); } catch (_) {}
+              drag = {
+                mode: 'move',
+                pointerId: e.pointerId,
+                shape: hitSel,
+                startX: pt.x,
+                startY: pt.y,
+                origX: hitSel.x,
+                origY: hitSel.y,
+                snapSaved: false
+              };
+              userCanvas.classList.add('sc-cur-move');
+              renderUserCanvas();
+            } else {
+              selectedId = null;
+              updateActionButtons();
+              renderUserCanvas();
+            }
+            return;
+          }
+
+          // 繪圖工具（直線、矩形、橢圓、三角形）
+          try { userCanvas.setPointerCapture(e.pointerId); } catch (_) {}
+          drag = {
+            mode: 'draw',
+            pointerId: e.pointerId,
+            tool: activeTool,
+            startX: pt.x,
+            startY: pt.y,
+            preview: null
+          };
+        }
+
+        function onPointerMove(e) {
+          if (!drag || drag.pointerId !== e.pointerId) return;
+          e.preventDefault();
+          var pt = getCanvasPoint(e);
+
+          if (drag.mode === 'draw') {
+            if (drag.tool === 'line') {
+              drag.preview = {
+                id: 0,
+                type: 'line',
+                x: drag.startX,
+                y: drag.startY,
+                w: pt.x - drag.startX,
+                h: pt.y - drag.startY,
+                stroke: activeColor,
+                fill: null
+              };
+            } else {
+              drag.preview = {
+                id: 0,
+                type: drag.tool,
+                x: Math.min(drag.startX, pt.x),
+                y: Math.min(drag.startY, pt.y),
+                w: Math.abs(pt.x - drag.startX),
+                h: Math.abs(pt.y - drag.startY),
+                stroke: SCENE_CONFIG.STROKE_COLOR,
+                fill: null
+              };
+            }
+            renderUserCanvas();
+            return;
+          }
+
+          if (drag.mode === 'move') {
+            var dx = pt.x - drag.startX;
+            var dy = pt.y - drag.startY;
+            if (!drag.snapSaved && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) {
+              pushUndo();
+              drag.snapSaved = true;
+              markToolUsed('select');
+            }
+            var s = drag.shape;
+            var nx = drag.origX + dx;
+            var ny = drag.origY + dy;
+            if (s.type !== 'line') {
+              nx = Math.max(-s.w + 20, Math.min(SCENE_CONFIG.CANVAS_W - 20, nx));
+              ny = Math.max(-s.h + 20, Math.min(SCENE_CONFIG.CANVAS_H - 20, ny));
+            }
+            s.x = nx;
+            s.y = ny;
+            renderUserCanvas();
+            return;
+          }
+
+          if (drag.mode === 'resize') {
+            var rs = drag.shape;
+            var o = drag.orig;
+            var minS = SCENE_CONFIG.MIN_RESIZE_SIZE;
+            drag.moved = true;
+            markToolUsed('select');
+            if (rs.type === 'line') {
+              if (drag.handle === 'p1') {
+                var endX = o.x + o.w, endY = o.y + o.h;
+                rs.x = pt.x;
+                rs.y = pt.y;
+                rs.w = endX - pt.x;
+                rs.h = endY - pt.y;
+              } else {
+                rs.w = pt.x - o.x;
+                rs.h = pt.y - o.y;
+              }
+            } else {
+              var right = o.x + o.w;
+              var bottom = o.y + o.h;
+              if (drag.handle === 'se') {
+                rs.w = Math.max(minS, pt.x - o.x);
+                rs.h = Math.max(minS, pt.y - o.y);
+              } else if (drag.handle === 'sw') {
+                var nxSw = Math.min(right - minS, pt.x);
+                rs.x = nxSw;
+                rs.w = right - nxSw;
+                rs.h = Math.max(minS, pt.y - o.y);
+              } else if (drag.handle === 'ne') {
+                var nyNe = Math.min(bottom - minS, pt.y);
+                rs.y = nyNe;
+                rs.w = Math.max(minS, pt.x - o.x);
+                rs.h = bottom - nyNe;
+              } else if (drag.handle === 'nw') {
+                var nxNw = Math.min(right - minS, pt.x);
+                var nyNw = Math.min(bottom - minS, pt.y);
+                rs.x = nxNw;
+                rs.y = nyNw;
+                rs.w = right - nxNw;
+                rs.h = bottom - nyNw;
+              }
+            }
+            renderUserCanvas();
+          }
+        }
+
+        function onPointerUp(e) {
+          if (!drag || drag.pointerId !== e.pointerId) return;
+          try { userCanvas.releasePointerCapture(e.pointerId); } catch (_) {}
+          userCanvas.classList.remove('sc-cur-move');
+
+          if (drag.mode === 'draw' && drag.preview) {
+            var p = drag.preview;
+            var valid = p.type === 'line'
+              ? Math.hypot(p.w, p.h) >= SCENE_CONFIG.MIN_DRAW_SIZE
+              : (p.w >= SCENE_CONFIG.MIN_DRAW_SIZE && p.h >= SCENE_CONFIG.MIN_DRAW_SIZE);
+            if (valid) {
+              pushUndo();
+              p.id = nextShapeId++;
+              shapes.push(p);
+              steps += 1;
+              selectedId = p.id;
+              markToolUsed(p.type);
+              updateStepsUI();
+              updateActionButtons();
+            }
+          } else if (drag.mode === 'resize' && !drag.moved) {
+            // 沒真的縮放就把多存的快照彈出
+            undoStack.pop();
+            updateActionButtons();
+          }
+
+          drag = null;
+          renderUserCanvas();
+        }
+
+        // 鍵盤快捷鍵（Ctrl+Z 復原、Ctrl+C 複製、Ctrl+V 貼上、Delete 刪除）
+        function onKeyDown(e) {
+          if (e.ctrlKey || e.metaKey) {
+            var k = e.key.toLowerCase();
+            if (k === 'z') { e.preventDefault(); doUndo(); }
+            else if (k === 'c') { e.preventDefault(); doCopy(); }
+            else if (k === 'v') { e.preventDefault(); doPaste(); }
+          } else if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (activeTool === 'select' && getSelectedShape()) {
+              e.preventDefault();
+              doDeleteSelected();
+            }
+          }
+        }
+
+        // 建立本關畫面 HTML
+        function buildDOM() {
+          var toolHtml =
+            '<div class="ai-panel sc-toolbar">' +
+              '<div class="sc-group">' +
+                '<button type="button" class="sc-tool" data-tool="line">' + TOOL_ICONS.line + '<span>直線</span></button>' +
+                '<button type="button" class="sc-tool sc-on" data-tool="rect">' + TOOL_ICONS.rect + '<span>矩形</span></button>' +
+                '<button type="button" class="sc-tool" data-tool="ellipse">' + TOOL_ICONS.ellipse + '<span>橢圓</span></button>' +
+                '<button type="button" class="sc-tool sc-wide" data-tool="triangle">' + TOOL_ICONS.triangle + '<span>三角形</span></button>' +
+              '</div>' +
+              '<div class="sc-sep" aria-hidden="true"></div>' +
+              '<div class="sc-group">' +
+                '<button type="button" class="sc-tool sc-wide" data-tool="fill">' + TOOL_ICONS.fill + '<span>填色桶</span></button>' +
+                '<button type="button" class="sc-tool sc-wide" data-tool="eraser">' + TOOL_ICONS.eraser + '<span>橡皮擦</span></button>' +
+              '</div>' +
+              '<div class="sc-sep" aria-hidden="true"></div>' +
+              '<div class="sc-group">' +
+                '<button type="button" class="sc-tool" data-tool="select">' + TOOL_ICONS.select + '<span>選取</span></button>' +
+                '<button type="button" class="sc-tool sc-disabled" data-action="copy">' + TOOL_ICONS.copy + '<span>複製</span></button>' +
+                '<button type="button" class="sc-tool sc-disabled" data-action="paste">' + TOOL_ICONS.paste + '<span>貼上</span></button>' +
+              '</div>' +
+              '<div class="sc-sep" aria-hidden="true"></div>' +
+              '<div class="sc-group">' +
+                '<button type="button" class="sc-tool sc-disabled" data-action="undo">' + TOOL_ICONS.undo + '<span>復原</span></button>' +
+              '</div>' +
+              '<div class="sc-sep" aria-hidden="true"></div>' +
+              '<div class="sc-palette">' +
+                SCENE_CONFIG.COLORS.map(function (c, i) {
+                  return '<button type="button" class="sc-sw' + (i === 0 ? ' sc-on' : '') + '" data-color="' + c.hex + '" style="background:' + c.hex + '" aria-label="' + c.name + '" title="' + c.name + '"></button>';
+                }).join('') +
+              '</div>' +
+            '</div>';
+
+          var leftPaneHtml;
+          if (levelData.freeMode) {
+            leftPaneHtml =
+              '<div class="sc-label sc-label-left"><span>招牌任務卡</span><span class="sc-label-tag sc-free-count">已用 0／3 種</span></div>' +
+              '<div class="ai-panel sc-free-panel">' +
+                '<div>' +
+                  '<div class="sc-free-head">設計我們班的專屬招牌！</div>' +
+                  '<div class="sc-free-sub">這裡沒有標準答案，你可以參考下面點子，自由組合形狀和顏色。</div>' +
+                '</div>' +
+                '<div class="sc-ideas">' +
+                  '<div class="sc-idea">' + FREE_IDEA_SVGS[0] + '<span>彩旗招牌</span></div>' +
+                  '<div class="sc-idea">' + FREE_IDEA_SVGS[1] + '<span>木屋門牌</span></div>' +
+                  '<div class="sc-idea">' + FREE_IDEA_SVGS[2] + '<span>星光圓牌</span></div>' +
+                '</div>' +
+                '<div class="sc-checklist">' +
+                  '<div class="sc-check-title"><span>工具挑戰：任用 3 種工具就拿 3 顆星！</span></div>' +
+                  '<div class="sc-chips">' +
+                    SCENE_CONFIG.FREE_TOOLS.map(function (item) {
+                      return '<span class="sc-chip" data-ft="' + item.id + '">' + item.label + '</span>';
+                    }).join('') +
+                  '</div>' +
+                '</div>' +
+              '</div>';
+          } else {
+            leftPaneHtml =
+              '<div class="sc-label sc-label-left"><span>目標圖</span><span class="sc-label-tag sc-target-tag">共 ' + levelData.targets.length + ' 個圖形</span></div>' +
+              '<div class="ai-board sc-board sc-board-left">' +
+                '<span class="ai-tape" style="left:220px;top:-11px;transform:rotate(-2.5deg)"></span>' +
+                '<div class="sc-cv-wrap"><canvas class="sc-cv sc-cv-target" width="' + SCENE_CONFIG.CANVAS_W + '" height="' + SCENE_CONFIG.CANVAS_H + '"></canvas></div>' +
+              '</div>';
+          }
+
+          var rightBoardHtml =
+            '<div class="sc-label sc-label-right"><span>我的畫布</span><span class="sc-label-tag">滑鼠與手指皆可畫</span></div>' +
+            '<div class="ai-board sc-board sc-board-right">' +
+              '<span class="ai-tape" style="left:220px;top:-11px;transform:rotate(2deg)"></span>' +
+              '<div class="sc-cv-wrap"><canvas class="sc-cv sc-cv-user" width="' + SCENE_CONFIG.CANVAS_W + '" height="' + SCENE_CONFIG.CANVAS_H + '"></canvas></div>' +
+            '</div>';
+
+          var statusHtml =
+            '<div class="ai-panel sc-status">' +
+              '<div class="sc-steps"></div>' +
+              '<div class="sc-hint-inline">選取和移動都不算步數，大膽調整位置吧！</div>' +
+              '<button type="button" class="ai-btn sc-reset-btn" data-action="reset">全部重畫</button>' +
+            '</div>';
+
+          var sideHtml =
+            '<div class="sc-side">' +
+              '<div class="ai-panel sc-coach">' +
+                '<div class="sc-bot-wrap">' + makeCoachSvg('idle') + '</div>' +
+                '<div class="sc-bubble">' + levelData.tip + '</div>' +
+              '</div>' +
+              '<div class="ai-panel sc-guide"></div>' +
+              '<button type="button" class="ai-btn go sc-done" data-action="done">完成</button>' +
+            '</div>';
+
+          api.field.innerHTML = toolHtml + leftPaneHtml + rightBoardHtml + statusHtml + sideHtml;
+        }
+
+        // 統一清理函式（供 stop 與每次 start 前呼叫）
+        function cleanup() {
+          if (rafId) {
+            window.cancelAnimationFrame(rafId);
+            rafId = null;
+          }
+          timers.forEach(function (id) { window.clearTimeout(id); });
+          timers = [];
+          effects = [];
+          drag = null;
+
+          if (keyListenerAttached) {
+            document.removeEventListener('keydown', onKeyDown);
+            keyListenerAttached = false;
+          }
+          if (userCanvas) {
+            userCanvas.removeEventListener('pointerdown', onPointerDown);
+            userCanvas.removeEventListener('pointermove', onPointerMove);
+            userCanvas.removeEventListener('pointerup', onPointerUp);
+            userCanvas.removeEventListener('pointercancel', onPointerUp);
+          }
+          api.field.onclick = null;
+          targetCanvas = null;
+          targetCtx = null;
+          userCanvas = null;
+          userCtx = null;
+        }
+
+        return {
+          start: function (idx) {
+            cleanup();
+            levelIdx = idx || 0;
+            levelData = SCENE_CONFIG.LEVELS[levelIdx] || SCENE_CONFIG.LEVELS[0];
+
+            // 重置為乾淨狀態
+            shapes = [];
+            undoStack = [];
+            selectedId = null;
+            clipboard = null;
+            pasteSerial = 0;
+            nextShapeId = 1;
+            steps = 0;
+            activeTool = 'rect';
+            activeColor = SCENE_CONFIG.COLORS[0].hex;
+            missedIds = [];
+            usedTools = {};
+
+            api.quest(levelData.quest);
+            buildDOM();
+
+            targetCanvas = api.field.querySelector('.sc-cv-target');
+            targetCtx = targetCanvas ? targetCanvas.getContext('2d') : null;
+            userCanvas = api.field.querySelector('.sc-cv-user');
+            userCtx = userCanvas.getContext('2d');
+
+            // 綁定畫布 pointer events
+            userCanvas.addEventListener('pointerdown', onPointerDown);
+            userCanvas.addEventListener('pointermove', onPointerMove);
+            userCanvas.addEventListener('pointerup', onPointerUp);
+            userCanvas.addEventListener('pointercancel', onPointerUp);
+
+            // 綁定快捷鍵
+            document.addEventListener('keydown', onKeyDown);
+            keyListenerAttached = true;
+
+            // 工具列與按鈕事件委派
+            api.field.onclick = function (e) {
+              var btn;
+              if ((btn = e.target.closest('.sc-tool[data-tool]'))) {
+                setActiveTool(btn.dataset.tool);
+              } else if ((btn = e.target.closest('.sc-sw[data-color]'))) {
+                activeColor = btn.dataset.color;
+                api.field.querySelectorAll('.sc-sw').forEach(function (sw) {
+                  sw.classList.toggle('sc-on', sw === btn);
+                });
+              } else if ((btn = e.target.closest('[data-action]'))) {
+                var act = btn.dataset.action;
+                if (act === 'copy') doCopy();
+                else if (act === 'paste') doPaste();
+                else if (act === 'undo') doUndo();
+                else if (act === 'reset') doResetAll();
+                else if (act === 'done') doFinish();
+              }
+            };
+
+            setActiveTool('rect');
+            updateStepsUI();
+            updateTargetTag();
+            if (levelData.freeMode) updateFreeChecklist();
+            renderTargetCanvas();
+            renderUserCanvas();
+          },
+
+          stop: function () {
+            cleanup();
+          }
+        };
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

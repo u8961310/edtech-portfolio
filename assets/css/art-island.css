@@ -88,7 +88,7 @@ body {
 .ai-lv .th { flex: none; width: 120px; height: 120px; background: #fff; border: 3px solid var(--ink); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 .ai-lv .th svg { width: 100%; height: 100%; }
 .ai-lv .n1 { font: 700 17px var(--f-ui); color: var(--ink-2); }
-.ai-lv .n2 { font: 900 27px/1.2 var(--f-title); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ai-lv .n2 { font: 900 24px/1.2 var(--f-title); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ai-lv .n3 { display: flex; align-items: center; gap: 4px; margin-top: 6px; font: 700 17px var(--f-ui); white-space: nowrap; }
 .ai-lv .n3 svg { width: 28px; height: 28px; }
 .ai-lv.new { border-style: dashed; }
