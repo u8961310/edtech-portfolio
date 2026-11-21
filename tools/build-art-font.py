@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 ART_UNITS = ["unit5-pixel-art", "unit18-magic-paint", "unit24-color-cauldron", "unit25-line-train",
-             "unit26-mirror-workshop", "unit27-paint-mission"]
+             "unit26-mirror-workshop", "unit27-paint-mission", "unit28-sparkle-fireworks"]
 
 ttf = sys.argv[1]
 tmp = Path(tempfile.mkdtemp())

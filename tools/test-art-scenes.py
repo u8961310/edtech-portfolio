@@ -32,6 +32,7 @@ UNITS = {   # 代號 → 路徑（相對暫存根目錄）
     "unit25": "units/unit25-line-train/index.html",
     "unit26": "units/unit26-mirror-workshop/index.html",
     "unit27": "units/unit27-paint-mission/index.html",
+    "unit28": "units/unit28-sparkle-fireworks/index.html",
     "unit18": "units/unit18-magic-paint/index.html",
     "unit5": "units/unit5-pixel-art/index.html",
 }

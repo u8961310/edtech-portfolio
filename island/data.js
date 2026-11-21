@@ -43,7 +43,8 @@ export const ISLANDS = [
     ['魔法畫畫','🖌️','easel','units/unit18-magic-paint/','魔法畫畫屋',A12,18],
     ['像素畫家','👾','pixels','units/unit5-pixel-art/','像素小畫家',A14,5],
     ['對稱魔鏡','🦋','mirror','units/unit26-mirror-workshop/','對稱魔鏡工坊',A34,26],
-    ['任務局','🛠️','toolbox','units/unit27-paint-mission/','小畫家任務局',A34,27] ] },
+    ['任務局','🛠️','toolbox','units/unit27-paint-mission/','小畫家任務局',A34,27],
+    ['煙火畫','🎆','fireworks','units/unit28-sparkle-fireworks/','閃亮亮煙火畫',A14,28] ] },   // 自由發揮、不評分（存作品張數）
   { id:'smart', name:'小常識島', icon:'📁', color:0xb69bff, units:[
     ['桌面整理','🗂️','folders','units/unit8-desktop-organizer/','桌面整理大師',G1,8],
     ['網路警察','👮','siren','units/unit9-net-detective/','網路小警察',G1,9] ] },

@@ -369,6 +369,14 @@
                 <p class="card-score" id="unit25-score-badge" style="display:none;"></p>
                 <span class="play-btn">▶ 開始玩</span>
             </a>
+            <a href="./units/unit28-sparkle-fireworks/index.html" class="card" style="--c: #db2777;">
+                <span class="skill-tag">自由創作</span>
+                <div class="card-cover">🎆✨</div>
+                <h3 class="card-title">閃亮亮煙火畫</h3>
+                <p class="card-desc">煙火筆、亮粉筆、霓虹筆、泡泡筆，畫完還能放一場煙火秀！自由發揮不打分數。（1–4 年級）</p>
+                <p class="card-score" id="unit28-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
             <a href="./units/unit19-farm-harvest/index.html" class="card" style="--c: #84cc16;">
                 <span class="skill-tag">手眼協調</span>
                 <div class="card-cover">🧑‍🌾🥕</div>
@@ -536,12 +544,12 @@
 
     // 畫畫島（2026-11-21 改版）存的是總星星數；魔法畫畫屋（unit18）存完成的作品張數
     (function loadArtBadges() {
-        [5, 18, 24, 25, 26, 27].forEach((id) => {
+        [5, 18, 24, 25, 26, 27, 28].forEach((id) => {
             let v = null;
             try { v = localStorage.getItem(`edtech-unit${id}-score`); } catch (e) { /* 讀不到就不顯示 */ }
             const badge = document.getElementById(`unit${id}-score-badge`);
             if (v && Number(v) > 0 && badge) {
-                badge.textContent = id === 18 ? `🖼 畫了 ${v} 張作品` : `⭐ 共 ${v} 顆星`;
+                badge.textContent = (id === 18 || id === 28) ? `🖼 畫了 ${v} 張作品` : `⭐ 共 ${v} 顆星`;
                 badge.style.display = 'inline-block';
             }
         });
