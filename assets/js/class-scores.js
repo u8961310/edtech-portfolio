@@ -155,7 +155,7 @@
     wrap.className = 'cs-overlay';
     wrap.innerHTML =
       '<div class="cs-box" role="dialog" aria-modal="true" aria-labelledby="cs-title">' +
-        '<div class="cs-head"><h2 id="cs-title">交成績給老師</h2><span>老師用手機掃 QR 就收到了，不會上傳到網路</span>' +
+        '<div class="cs-head"><h2 id="cs-title">交成績給老師</h2><span>老師用手機掃 QR 就收到了，這台電腦不會上傳任何資料</span>' +
           '<button class="cs-x" type="button" aria-label="關閉">✕</button></div>' +
         '<div class="cs-body">' +
           '<div class="cs-col cs-seatcol">' +

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>老師收成績｜打字島</title>
-<meta name="description" content="老師用手機掃學生螢幕上的 QR code 收打字島成績，掃完匯出 CSV。不經過伺服器、不收個資。">
+<meta name="description" content="老師用手機掃學生螢幕上的 QR code 收打字島成績，掃完匯出 CSV。也可以手機掃、電腦收（經自己的伺服器轉送，不存檔）。">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
 <style>
@@ -125,6 +125,25 @@ td.sub { color: var(--ink3); font-size: 13px; }
 .bar .btn.gold { background: #F2C14E; border-color: #F2C14E; color: #2B2420; }
 .toast { position: fixed; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: #FFFDF8; padding: 8px 14px; border-radius: 6px; font-size: 14px; z-index: 30; }
 
+/* 手機配對 */
+.pairpanel { margin-bottom: 12px; }
+.pairhead { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.pairhead > div { flex: 1; min-width: 220px; }
+.pairbox { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; align-items: flex-start; }
+.pairbox > div:last-child { flex: 1; min-width: 220px; }
+.pairqr { width: 220px; height: 220px; flex: none; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+.pairqr svg { width: 100%; height: 100%; display: block; }
+.steps { margin: 0 0 8px; padding-left: 1.3em; }
+.steps li { margin: 2px 0; }
+.pairstatus { margin: 0; font-weight: 700; color: var(--ink2); }
+.pairstatus.ok { color: var(--ok); } .pairstatus.warn { color: #9A5B00; } .pairstatus.bad { color: var(--bad); }
+.phoneonly { display: none; }
+/* 手機掃描器模式：只留相機、結果、已收人數 */
+.phone-mode .phoneonly { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+.phone-mode .tabs, .phone-mode .top .row2, .phone-mode .top .title, .phone-mode #pairpanel,
+.phone-mode .scanwide > .panel, .phone-mode #b-totable, .phone-mode #b-csv2 { display: none !important; }
+.phone-mode .cam { max-height: 60vh; }
+
 @media (min-width: 960px) {
   .wide { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; align-items: start; }
   .wide .panel + .panel { margin-top: 0; }
@@ -137,7 +156,7 @@ td.sub { color: var(--ink3); font-size: 13px; }
 <body>
 <header class="top">
   <div class="row1">
-    <h1>老師收成績</h1>
+    <h1 id="mode-title">老師收成績</h1>
     <input class="title" id="f-title" maxlength="30" placeholder="班級・節次，例如 三年二班 第2節" aria-label="班級和節次">
   </div>
   <div class="row2">
@@ -154,6 +173,25 @@ td.sub { color: var(--ink3); font-size: 13px; }
 <main>
   <!-- 掃描 -->
   <section id="p-scan" role="tabpanel" aria-labelledby="t-scan">
+    <!-- 電腦端：手機配對 -->
+    <div class="panel pairpanel" id="pairpanel">
+      <div class="pairhead">
+        <div><h2>用手機掃、電腦收</h2>
+          <p class="muted" style="margin:0">老師拿手機掃學生的 QR，成績直接出現在這台電腦，在電腦上看座位、匯出 CSV。</p></div>
+        <button class="btn primary" id="b-pair" type="button">開始配對</button>
+        <button class="btn" id="b-unpair" type="button" hidden>停止配對</button>
+      </div>
+      <div class="pairbox" id="pair-box" hidden>
+        <div class="pairqr" id="pair-qr" aria-label="配對 QR"></div>
+        <div>
+          <ol class="steps"><li>用手機相機掃左邊這個 QR，手機會打開「手機掃描器」</li><li>手機按「開啟相機開始掃」，逐台掃學生螢幕上的 QR</li><li>成績會即時出現在這台電腦的座位和成績表</li></ol>
+          <p class="pairstatus" id="pair-status" aria-live="polite"></p>
+          <p class="muted" style="margin:6px 0 0">配對碼 <b class="num" id="pair-code"></b>　成績經過我們自己的伺服器轉送給這台電腦，不存檔；關掉這個分頁配對就失效。</p>
+        </div>
+      </div>
+    </div>
+    <!-- 手機端：掃描器模式的連線狀態 -->
+    <p class="pairstatus phoneonly" id="phone-status" aria-live="polite"></p>
     <div class="scanwide">
       <div>
         <div class="cam" id="cam">
@@ -253,6 +291,7 @@ td.sub { color: var(--ink3); font-size: 13px; }
 
 <script src="../assets/js/class-scores.js"></script>
 <script src="../assets/js/vendor/jsQR-1.4.0.js"></script>
+<script src="../assets/js/vendor/qrcode-generator-2.0.4.js"></script>
 <script>
 (function () {
   'use strict';
@@ -260,6 +299,12 @@ td.sub { color: var(--ink3); font-size: 13px; }
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   var KEY = 'edtech-teacher-scores';
+  // 手機配對電腦：轉送伺服器（duel-worker 的 /scores，只轉送不存檔）；本機測試可用 ?relay=ws://127.0.0.1:8788
+  var RELAY = 'wss://edtech-duel.edtech-analytics.workers.dev';
+  var qRelay = (location.search.match(/[?&]relay=([^&]+)/) || [])[1];
+  if (qRelay && /^ws:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(decodeURIComponent(qRelay))) RELAY = decodeURIComponent(qRelay);
+  // 網址帶 #pair=配對碼 ＝ 老師手機掃了電腦上的配對 QR，進入「手機掃描器」模式
+  var PAIR = (location.hash.match(/pair=([a-z0-9]{16})/) || [])[1] || '';
 
   // ---------------- 狀態（存在老師這支手機的 localStorage）
   var S = load();
@@ -308,27 +353,39 @@ td.sub { color: var(--ink3); font-size: 13px; }
 
   // ---------------- 收一筆
   var recent = {};   // 同一個 QR 3 秒內只算一次（相機一直對著會連續解到）
+  function haveCount() { return S.records.filter(function (r) { return r.seat <= S.expected; }).length; }
+  // 收進本機清單，回傳結果（手機配對時這個結果會轉回手機顯示）
+  function ingest(text) {
+    var rec = CS.parse(text);
+    if (!rec) return { ok: false, reason: 'bad', message: '這不是打字島的成績 QR' };
+    var kind = CS.upsert(S.records, rec);
+    lastSeat = rec.seat;
+    save();
+    renderAll();
+    return { ok: true, kind: kind, seat: rec.seat, name: rec.name, unit: CS.unitName(rec.unit) + (rec.tier !== '-' ? '・' + CS.TIERS[rec.tier] : ''),
+      acc: rec.acc, cpm: rec.cpm, have: haveCount(), expected: S.expected };
+  }
+  function showFlash(r) {
+    var f = $('flash');
+    if (!r.ok) {
+      f.className = 'flash bad';
+      f.innerHTML = '<span class="tag">✕ 沒收到</span><div class="who">' + esc(r.message || '這不是打字島的成績 QR') + '</div>';
+      try { if (navigator.vibrate) navigator.vibrate([80, 60, 80]); } catch (e) { /* 不支援就算了 */ }
+      return;
+    }
+    f.className = 'flash ' + r.kind;
+    f.innerHTML = '<span class="seatno num">' + r.seat + '</span><div class="who"><b>' + esc(r.name || '（沒寫名字）') + '</b><br><span class="muted">' +
+      esc(r.unit || '') + '　' + r.acc + '%　' + r.cpm + ' 字/分</span></div>' +
+      '<span class="tag">' + (r.kind === 'new' ? '✓ 收到' : '↻ 已更新') + '</span>';
+    if (r.expected && r.seat > r.expected) toast(r.seat + ' 號超過應到人數 ' + r.expected + '，有收，但不算在應到裡');
+    try { if (navigator.vibrate) navigator.vibrate(r.kind === 'new' ? 60 : [30, 40, 30]); } catch (e) { /* 不支援就算了 */ }
+  }
   function receive(text) {
     var now = Date.now();
     if (recent[text] && now - recent[text] < 3000) return;
     recent[text] = now;
-    var rec = CS.parse(text);
-    var f = $('flash');
-    if (!rec) {
-      f.className = 'flash bad';
-      f.innerHTML = '<span class="tag">✕ 不收</span><div class="who">這不是打字島的成績 QR</div>';
-      return;
-    }
-    var kind = CS.upsert(S.records, rec);
-    lastSeat = rec.seat;
-    save();
-    f.className = 'flash ' + kind;
-    f.innerHTML = '<span class="seatno num">' + rec.seat + '</span><div class="who"><b>' + esc(rec.name || '（沒寫名字）') + '</b><br><span class="muted">' +
-      esc(CS.unitName(rec.unit)) + (rec.tier !== '-' ? '・' + CS.TIERS[rec.tier] : '') + '　' + rec.acc + '%　' + rec.cpm + ' 字/分</span></div>' +
-      '<span class="tag">' + (kind === 'new' ? '✓ 收到' : '↻ 已更新') + '</span>';
-    if (rec.seat > S.expected) toast(rec.seat + ' 號超過應到人數 ' + S.expected + '，有收，但不算在應到裡');
-    try { if (navigator.vibrate) navigator.vibrate(kind === 'new' ? 60 : [30, 40, 30]); } catch (e) { /* 不支援就算了 */ }
-    renderAll();
+    if (PAIR) return phoneSend(text);       // 手機掃描器模式：送去電腦，結果等電腦回
+    showFlash(ingest(text));
   }
 
   // ---------------- 相機
@@ -575,9 +632,117 @@ td.sub { color: var(--ink3); font-size: 13px; }
   $('ed-num-ok').addEventListener('click', setNum);
   $('ed-num').addEventListener('keydown', function (e) { if (e.key === 'Enter') setNum(); });
 
+  // ---------------- 手機配對電腦（電腦端）
+  var PAIR_KEY = 'edtech-teacher-pair';   // 存 sessionStorage：重新整理接回同一組，關掉分頁就失效
+  var desk = { ws: null, code: '', on: false, retry: 0, timer: 0, phones: 0 };
+  function deskStatus(text, cls) { var s = $('pair-status'); s.textContent = text; s.className = 'pairstatus ' + (cls || ''); }
+  function deskStart() {
+    desk.on = true;
+    var saved = ''; try { saved = sessionStorage.getItem(PAIR_KEY) || ''; } catch (e) { /* 無痕模式 */ }
+    deskConnect(/^[a-z0-9]{16}$/.test(saved) ? saved : '');
+    $('b-pair').hidden = true; $('b-unpair').hidden = false; $('pair-box').hidden = false;
+  }
+  function deskStop() {
+    desk.on = false; clearTimeout(desk.timer);
+    if (desk.ws) { try { desk.ws.close(1000, 'stop'); } catch (e) { /* 已關 */ } }
+    desk.ws = null; desk.code = '';
+    try { sessionStorage.removeItem(PAIR_KEY); } catch (e) { /* 無痕模式 */ }
+    $('b-pair').hidden = false; $('b-unpair').hidden = true; $('pair-box').hidden = true;
+  }
+  function deskConnect(code) {
+    deskStatus('連線中…');
+    var ws;
+    try { ws = new WebSocket(RELAY + '/scores?role=desk' + (code ? '&code=' + code : '')); } catch (e) { deskStatus('連不上配對伺服器', 'bad'); return; }
+    desk.ws = ws;
+    ws.onmessage = function (ev) {
+      var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+      if (m.t === 'hello') {
+        desk.code = m.code; desk.retry = 0; desk.phones = m.phones || 0;
+        try { sessionStorage.setItem(PAIR_KEY, m.code); } catch (e) { /* 無痕模式 */ }
+        renderPairQR();
+        deskStatus(desk.phones ? '✓ 已連 ' + desk.phones + ' 支手機，掃到的成績會出現在這台電腦' : '等手機掃上面的 QR…', desk.phones ? 'ok' : '');
+      } else if (m.t === 'phones') {
+        desk.phones = m.n;
+        deskStatus(m.n ? '✓ 已連 ' + m.n + ' 支手機，掃到的成績會出現在這台電腦' : '手機斷線了，請手機重新掃上面的 QR', m.n ? 'ok' : 'warn');
+      } else if (m.t === 'rec') {
+        var r = ingest(m.text);
+        showFlash(r);
+        var ack = Object.assign({ t: 'ack', id: m.id }, r);
+        try { ws.send(JSON.stringify(ack)); } catch (e) { /* 斷線了，手機會等不到回覆 */ }
+      }
+    };
+    ws.onclose = function (ev) {
+      if (desk.ws !== ws) return;
+      desk.ws = null;
+      if (!desk.on || ev.code === 4010) { if (ev.code === 4010) { desk.on = false; deskStatus('這組配對在另一個分頁開著，這裡先停下來', 'warn'); } return; }
+      var wait = Math.min(15000, 1000 * Math.pow(2, desk.retry++));
+      deskStatus('連線斷了，' + Math.round(wait / 1000) + ' 秒後重連…', 'warn');
+      desk.timer = setTimeout(function () { if (desk.on) deskConnect(desk.code); }, wait);
+    };
+  }
+  function pairURL() {
+    var u = location.origin + location.pathname + (RELAY.indexOf('ws://') === 0 ? '?relay=' + encodeURIComponent(RELAY) : '') + '#pair=' + desk.code;
+    return u;
+  }
+  function renderPairQR() {
+    var q = window.qrcode(0, 'M'); q.addData(pairURL(), 'Byte'); q.make();
+    $('pair-qr').innerHTML = q.createSvgTag({ cellSize: 5, margin: 3, scalable: true });
+    $('pair-qr').setAttribute('data-url', pairURL());
+    $('pair-code').textContent = desk.code.replace(/(.{4})/g, '$1 ').trim();
+  }
+  if (!PAIR) {
+    $('b-pair').addEventListener('click', deskStart);
+    $('b-unpair').addEventListener('click', deskStop);
+    try { if (sessionStorage.getItem(PAIR_KEY)) deskStart(); } catch (e) { /* 無痕模式 */ }
+  }
+
+  // ---------------- 手機配對電腦（手機端：掃描器模式）
+  var phone = { ws: null, retry: 0, seq: 0, pending: {}, deskOn: false };
+  function phoneStatus(text, cls) { var s = $('phone-status'); s.textContent = text; s.className = 'pairstatus phoneonly ' + (cls || ''); }
+  function phoneConnect() {
+    phoneStatus('連線到電腦中…');
+    var ws;
+    try { ws = new WebSocket(RELAY + '/scores?role=phone&code=' + PAIR); } catch (e) { phoneStatus('連不上配對伺服器', 'bad'); return; }
+    phone.ws = ws;
+    ws.onmessage = function (ev) {
+      var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+      if (m.t === 'hello') { phone.retry = 0; phone.deskOn = !!m.desk; phoneStatus(m.desk ? '✓ 已連到電腦，開相機掃學生的 QR' : '電腦的收成績頁沒開著，請在電腦上按「用手機掃、電腦收」', m.desk ? 'ok' : 'warn'); }
+      else if (m.t === 'desk') { phone.deskOn = m.online; phoneStatus(m.online ? '✓ 已連到電腦' : '電腦斷線了：請確認電腦的收成績頁還開著', m.online ? 'ok' : 'warn'); }
+      else if (m.t === 'ack') {
+        delete phone.pending[m.id];
+        showFlash(m);
+        if (m.ok) { $('c-have').textContent = m.have; $('c-exp').textContent = m.expected; }
+      } else if (m.t === 'error') phoneStatus(m.message || '配對失敗', 'bad');
+    };
+    ws.onclose = function () {
+      if (phone.ws !== ws) return;
+      phone.ws = null;
+      var wait = Math.min(15000, 1000 * Math.pow(2, phone.retry++));
+      phoneStatus('連線斷了，' + Math.round(wait / 1000) + ' 秒後重連…', 'warn');
+      setTimeout(phoneConnect, wait);
+    };
+  }
+  function phoneSend(text) {
+    if (!CS.parse(text)) { showFlash({ ok: false, message: '這不是打字島的成績 QR' }); return; }
+    if (!phone.ws || phone.ws.readyState !== 1) { showFlash({ ok: false, message: '還沒連上電腦，等上面顯示「已連到電腦」再掃' }); delete recent[text]; return; }
+    var id = 'p' + (++phone.seq);
+    phone.pending[id] = text;
+    phone.ws.send(JSON.stringify({ t: 'rec', id: id, text: text }));
+    setTimeout(function () {
+      if (phone.pending[id]) { delete phone.pending[id]; delete recent[text]; showFlash({ ok: false, message: '電腦沒有回應，請再掃一次' }); }
+    }, 6000);
+  }
+  if (PAIR) {
+    document.body.classList.add('phone-mode');
+    document.title = '手機掃描器｜老師收成績';
+    $('mode-title').textContent = '手機掃描器';
+    phoneConnect();
+  }
+
   // ---------------- 開場
   renderLayoutSelect();
   renderAll();
+  if (PAIR) { $('c-have').textContent = '—'; $('c-exp').textContent = '—'; }
   // 自動測試用：網址帶 ?debug=1 才有
   if (/[?&]debug=1\b/.test(location.search)) window.__scores = { receive: function (t) { delete recent[t]; receive(t); }, decodeImage: decodeImage, state: function () { return S; } };
 })();

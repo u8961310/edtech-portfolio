@@ -6,9 +6,16 @@
   "compatibility_date": "2026-09-08",
   "observability": { "enabled": true },
   "durable_objects": {
-    "bindings": [{ "name": "ROOMS", "class_name": "DuelRoom" }]
+    "bindings": [
+      { "name": "ROOMS", "class_name": "DuelRoom" },
+      // 老師收成績：手機配對電腦的轉送（一個 16 碼配對碼一個，不存檔）
+      { "name": "RELAYS", "class_name": "ScoreRelay" }
+    ]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DuelRoom"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["DuelRoom"] },
+    { "tag": "v2", "new_sqlite_classes": ["ScoreRelay"] }
+  ],
   "vars": {
     // 允許連線的網頁來源（逗號分隔）；本機測試另外放行 localhost／127.0.0.1
     "ALLOWED_ORIGINS": "https://u8961310.github.io"

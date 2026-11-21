@@ -1,8 +1,11 @@
-/* 打字擂台（unit23）連線對戰後端
+/* 打字擂台（unit23）連線對戰後端＋老師收成績的手機配對轉送
  *
  * GET  /health                → ok
  * WS   /ws?code=new           → 開新房（隨機 4 位數房號），第一個訊息送 {t:'create', nick, best}
  * WS   /ws?code=1234          → 加入房間，第一個訊息送 {t:'join', nick, best, token?}
+ * WS   /scores?role=desk[&code=xxxx]   → 老師電腦開配對（code 省略＝新配對碼，帶舊 code＝重新整理後接回）
+ * WS   /scores?role=phone&code=xxxx    → 老師手機用配對碼連進來，掃到的成績 QR 轉給電腦
+ *   成績只轉送、不存檔（ScoreRelay 不寫 storage）；不是 ETS1| 開頭的一律丟掉；閒置 2 小時清空
  *
  * 一個房號一個 Durable Object（DuelRoom）。比賽規則與單機練習共用 units/unit23-typing-duel/duel-rules.js，
  * 分數只在這裡算。訊息格式見 docs/specs/unit23-duel-protocol.md 第 5 節。
@@ -37,6 +40,7 @@ export default {
         '<a href="https://u8961310.github.io/edtech-portfolio/units/unit23-typing-duel/">打字擂台</a></p></body>',
         { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
+    if (url.pathname === '/scores') return scoresRoute(req, env, url);
     if (url.pathname !== '/ws') return new Response('not found', { status: 404 });
     if (req.headers.get('Upgrade') !== 'websocket') return new Response('需要 WebSocket', { status: 426 });
     if (!originOk(req, env)) return new Response('forbidden', { status: 403 });
@@ -330,4 +334,110 @@ export class DuelRoom extends DurableObject {
   sendTo(ws, obj) {
     try { ws.send(JSON.stringify(obj)); } catch {}
   }
+}
+
+/* ================================================================
+ * 老師收成績：手機配對電腦（teacher/scores.html）
+ *  電腦（desk）開配對碼 → 畫面顯示配對 QR → 老師手機（phone）掃了帶著配對碼連進來
+ *  手機送 {t:'rec', id, text}（學生成績 QR 的文字）→ 轉給電腦 → 電腦回 {t:'ack', id, ...} → 轉給手機
+ *  一個配對碼一個 ScoreRelay；不寫 storage，成績只在記憶體裡經過
+ * ================================================================ */
+const PAIR_RE = /^[a-z0-9]{16}$/;
+const PAIR_IDLE_MS = 2 * 60 * 60 * 1000;
+const MAX_TEXT = 400;
+const MAX_PHONES = 4;
+
+function pairCode() {
+  const abc = 'abcdefghijkmnpqrstuvwxyz23456789';   // 去掉 0 o 1 l，免得老師要手打時看錯
+  const b = new Uint8Array(16);
+  crypto.getRandomValues(b);
+  return Array.from(b, (x) => abc[x % abc.length]).join('');
+}
+
+async function scoresRoute(req, env, url) {
+  if (req.headers.get('Upgrade') !== 'websocket') return new Response('需要 WebSocket', { status: 426 });
+  if (!originOk(req, env)) return new Response('forbidden', { status: 403 });
+  const role = url.searchParams.get('role');
+  let code = url.searchParams.get('code') || '';
+  if (role !== 'desk' && role !== 'phone') return new Response('role 要是 desk 或 phone', { status: 400 });
+  if (role === 'desk' && !code) code = pairCode();
+  if (!PAIR_RE.test(code)) return new Response('配對碼格式不對', { status: 400 });
+  const stub = env.RELAYS.get(env.RELAYS.idFromName('pair-' + code));
+  return stub.fetch(new Request(`https://relay/scores?role=${role}&code=${code}`, req));
+}
+
+export class ScoreRelay extends DurableObject {
+  async fetch(req) {
+    const url = new URL(req.url);
+    const role = url.searchParams.get('role');
+    const code = url.searchParams.get('code');
+    const [client, server] = Object.values(new WebSocketPair());
+    if (role === 'desk') {
+      // 同一個配對碼只留一台電腦：新的進來（例如重新整理）就把舊的關掉
+      for (const s of this.ctx.getWebSockets('desk')) { try { s.close(4010, 'replaced'); } catch {} }
+      this.ctx.acceptWebSocket(server, ['desk']);
+      this.send(server, { t: 'hello', role: 'desk', code, phones: this.ctx.getWebSockets('phone').length });
+      this.toPhones({ t: 'desk', online: true });
+    } else {
+      if (this.ctx.getWebSockets('phone').length >= MAX_PHONES) {
+        this.ctx.acceptWebSocket(server, ['reject']);
+        this.send(server, { t: 'error', code: 'full', message: '這組配對已經有 ' + MAX_PHONES + ' 支手機了' });
+        server.close(4013, 'full');
+        return new Response(null, { status: 101, webSocket: client });
+      }
+      this.ctx.acceptWebSocket(server, ['phone']);
+      const online = this.ctx.getWebSockets('desk').length > 0;
+      this.send(server, { t: 'hello', role: 'phone', code, desk: online });
+      this.toDesk({ t: 'phones', n: this.ctx.getWebSockets('phone').length });
+    }
+    await this.ctx.storage.setAlarm(Date.now() + PAIR_IDLE_MS);
+    return new Response(null, { status: 101, webSocket: client });
+  }
+
+  async webSocketMessage(ws, raw) {
+    if (typeof raw !== 'string' || raw.length > 1000) return;
+    let msg;
+    try { msg = JSON.parse(raw); } catch { return; }
+    if (!msg || typeof msg.t !== 'string') return;
+    const tags = this.ctx.getTags(ws);
+    await this.ctx.storage.setAlarm(Date.now() + PAIR_IDLE_MS);
+
+    if (tags.includes('phone') && msg.t === 'rec') {
+      const id = String(msg.id || '').slice(0, 24);
+      const text = typeof msg.text === 'string' ? msg.text : '';
+      if (!text.startsWith('ETS1|') || text.length > MAX_TEXT) {
+        return this.send(ws, { t: 'ack', id, ok: false, reason: 'bad', message: '這不是打字島的成績 QR' });
+      }
+      if (!this.ctx.getWebSockets('desk').length) {
+        return this.send(ws, { t: 'ack', id, ok: false, reason: 'offline', message: '電腦沒有連線，請確認電腦的收成績頁還開著' });
+      }
+      return this.toDesk({ t: 'rec', id, text });
+    }
+    if (tags.includes('desk') && msg.t === 'ack') {
+      // 電腦處理完回報結果，轉給所有手機（只轉必要欄位）
+      const out = { t: 'ack', id: String(msg.id || '').slice(0, 24), ok: !!msg.ok };
+      ['kind', 'reason', 'message', 'name', 'unit'].forEach((k) => { if (typeof msg[k] === 'string') out[k] = msg[k].slice(0, 80); });
+      ['seat', 'acc', 'cpm', 'have', 'expected'].forEach((k) => { if (Number.isFinite(msg[k])) out[k] = msg[k]; });
+      return this.toPhones(out);
+    }
+    if (msg.t === 'ping') return this.send(ws, { t: 'pong' });
+  }
+
+  async webSocketClose(ws) { this.gone(ws); }
+  async webSocketError(ws) { this.gone(ws); }
+
+  gone(ws) {
+    const tags = this.ctx.getTags(ws);
+    const left = (t) => this.ctx.getWebSockets(t).filter((s) => s !== ws).length;
+    if (tags.includes('desk') && !left('desk')) this.toPhones({ t: 'desk', online: false });
+    if (tags.includes('phone')) this.toDesk({ t: 'phones', n: left('phone') });
+  }
+
+  async alarm() {
+    for (const s of this.ctx.getWebSockets()) { try { s.close(4002, 'idle'); } catch {} }
+  }
+
+  send(ws, obj) { try { ws.send(JSON.stringify(obj)); } catch {} }
+  toDesk(obj) { for (const s of this.ctx.getWebSockets('desk')) this.send(s, obj); }
+  toPhones(obj) { for (const s of this.ctx.getWebSockets('phone')) this.send(s, obj); }
 }
