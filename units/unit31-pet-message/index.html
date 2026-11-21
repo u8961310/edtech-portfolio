@@ -1,0 +1,1191 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>寵物收到怪訊息 - 小常識島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Baloo+2:wght@700;800&display=swap">
+  <link rel="stylesheet" href="../../assets/css/smart-island.css">
+  <style>
+    /* ===== 場景專屬樣式（全數以 sc- 開頭，不動 .sm- 共用樣式） ===== */
+    .sc-stage {
+      position: relative;
+      width: 1366px;
+      height: 591px;
+      overflow: hidden;
+      color: var(--ink);
+      user-select: none;
+    }
+
+    /* ----- 左欄：寵物平板聊天 App ----- */
+    .sc-tablet {
+      position: absolute;
+      left: 26px;
+      top: 18px;
+      width: 470px;
+      height: 554px;
+      padding: 12px 14px 14px;
+      background: #FFF9F2;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    .sc-tab-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 28px;
+      padding: 0 8px 6px;
+      color: var(--ink2);
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .sc-tab-time {
+      font-family: 'Baloo 2', 'Noto Sans TC', sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .sc-tab-cam {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--edge);
+      border: 2px solid var(--ink2);
+    }
+    .sc-tab-icons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sc-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #FAF3EB;
+      border: 3px solid var(--edge);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .sc-chat-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--lilac);
+      border-bottom: 2px solid var(--edge);
+    }
+    .sc-avatar {
+      width: 48px;
+      height: 48px;
+      flex: 0 0 48px;
+      border-radius: 50%;
+      background: #FFF9F2;
+      border: 2.5px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .sc-avatar svg {
+      width: 40px;
+      height: 40px;
+      display: block;
+    }
+    .sc-head-info {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .sc-sender {
+      font-size: 19px;
+      font-weight: 900;
+      color: var(--ink);
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sc-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      align-self: flex-start;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.25;
+      white-space: nowrap;
+      color: var(--ink);
+      border: 2px solid var(--edge);
+      background: var(--butter);
+    }
+    .sc-badge.sc-b-warn {
+      background: var(--bad-soft);
+      border-color: #E6A99F;
+    }
+    .sc-badge.sc-b-info {
+      background: var(--sky);
+      border-color: #A7CBEF;
+    }
+    .sc-badge.sc-b-soft {
+      background: var(--mint);
+      border-color: #9AD3B3;
+    }
+    .sc-badge svg {
+      width: 16px;
+      height: 16px;
+      flex: 0 0 16px;
+    }
+
+    .sc-chat-body {
+      flex: 1;
+      padding: 14px 14px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+      overflow: hidden;
+    }
+    .sc-msg-row {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      animation: sc-pop-in 0.22s ease-out both;
+    }
+    .sc-msg-row.sc-me {
+      align-items: flex-end;
+    }
+    .sc-msg-meta {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink2);
+      padding: 0 6px;
+    }
+    .sc-msg-bub {
+      max-width: 92%;
+      padding: 12px 15px;
+      border-radius: 18px 18px 18px 6px;
+      background: #FFFFFF;
+      border: 2.5px solid var(--edge);
+      box-shadow: 0 4px 0 rgba(233, 213, 196, 0.55);
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.45;
+      color: var(--ink);
+    }
+    .sc-msg-row.sc-me .sc-msg-bub {
+      border-radius: 18px 18px 6px 18px;
+      background: var(--lilac);
+      border-color: #C5B3EE;
+    }
+    .sc-msg-row.sc-alt .sc-msg-bub {
+      background: #FFF9F2;
+    }
+
+    /* 聊天訊息內的附件圖卡（僅示意，不可點擊） */
+    .sc-attach {
+      margin-top: 8px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: #FFF9F2;
+      border: 2px dashed var(--ink2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sc-attach.sc-a-warn {
+      background: var(--bad-soft);
+      border-color: var(--bad);
+    }
+    .sc-attach.sc-a-butter {
+      background: var(--butter);
+      border-color: var(--orange-d);
+    }
+    .sc-attach.sc-a-sky {
+      background: var(--sky);
+      border-color: var(--violet);
+    }
+    .sc-attach-ic {
+      width: 44px;
+      height: 44px;
+      flex: 0 0 44px;
+      border-radius: 12px;
+      background: #FFFFFF;
+      border: 2px solid var(--edge);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sc-attach-ic svg {
+      width: 32px;
+      height: 32px;
+    }
+    .sc-attach-txt {
+      min-width: 0;
+      flex: 1;
+    }
+    .sc-attach-title {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+    .sc-attach-sub {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink2);
+      line-height: 1.25;
+      word-break: break-all;
+    }
+
+    .sc-chat-foot {
+      padding: 10px 12px;
+      background: #FFF9F2;
+      border-top: 2px solid var(--edge);
+    }
+    .sc-fake-input {
+      height: 42px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: #FAF3EB;
+      border: 2px solid var(--edge);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink2);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    /* ----- 中欄：題目卡與 3 張選項卡 ----- */
+    .sc-main {
+      position: absolute;
+      left: 516px;
+      top: 18px;
+      width: 520px;
+      height: 554px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .sc-qcard {
+      height: 124px;
+      padding: 14px 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+    }
+    .sc-qmeta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .sc-lv-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 12px;
+      border-radius: 999px;
+      background: var(--violet);
+      color: #FFFFFF;
+      font-size: 16px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .sc-hint-pill {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink2);
+      white-space: nowrap;
+    }
+    .sc-qtext {
+      margin: 0;
+      font-size: 21px;
+      font-weight: 900;
+      line-height: 1.38;
+      color: var(--ink);
+    }
+
+    .sc-opts {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .sc-opt {
+      flex: 1;
+      min-height: 122px;
+      width: 100%;
+      padding: 14px 20px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-align: left;
+      cursor: pointer;
+      color: var(--ink);
+      font-family: inherit;
+      transition: transform 0.18s ease-out, border-color 0.18s ease-out, background-color 0.18s ease-out;
+    }
+    .sc-opt:hover:not(:disabled) {
+      transform: translateY(-2px);
+      border-color: var(--orange);
+    }
+    .sc-opt:active:not(:disabled) {
+      transform: translateY(2px);
+    }
+    .sc-opt:focus-visible {
+      outline: 4px solid var(--violet);
+      outline-offset: 3px;
+    }
+    .sc-opt:disabled {
+      cursor: default;
+    }
+    .sc-opt-num {
+      width: 46px;
+      height: 46px;
+      flex: 0 0 46px;
+      border-radius: 50%;
+      background: var(--violet);
+      color: #FFFFFF;
+      font-family: 'Baloo 2', 'Noto Sans TC', sans-serif;
+      font-size: 23px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.16);
+    }
+    .sc-opt-txt {
+      flex: 1;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--ink);
+    }
+    .sc-opt.sc-is-ok {
+      background: var(--ok-soft);
+      border-color: var(--ok);
+    }
+    .sc-opt.sc-is-ok .sc-opt-num {
+      background: var(--ok);
+    }
+    .sc-opt.sc-is-bad {
+      background: var(--bad-soft);
+      border-color: var(--bad);
+    }
+    .sc-opt.sc-is-bad .sc-opt-num {
+      background: var(--bad);
+    }
+    .sc-opt.sc-dim {
+      opacity: 0.62;
+    }
+
+    /* ----- 右欄：寵物陪伴區 ----- */
+    .sc-petbox {
+      position: absolute;
+      left: 1054px;
+      top: 18px;
+      width: 288px;
+      height: 554px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 10px;
+      box-sizing: border-box;
+    }
+    .sc-bubble {
+      position: relative;
+      width: 100%;
+      padding: 16px 18px;
+      margin-bottom: 22px;
+      box-sizing: border-box;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.48;
+      color: var(--ink);
+      background: #FFF9F2;
+    }
+    .sc-bubble::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: -14px;
+      transform: translateX(-50%) rotate(45deg);
+      width: 22px;
+      height: 22px;
+      background: #FFF9F2;
+      border-right: 3px solid var(--edge);
+      border-bottom: 3px solid var(--edge);
+      border-radius: 0 0 6px 0;
+    }
+    .sc-pet {
+      width: 272px;
+      height: 272px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sc-pet svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    .sc-pet.sc-shake {
+      animation: sc-wobble 0.36s ease-out 1;
+    }
+    .sc-pet-shadow {
+      width: 180px;
+      height: 20px;
+      margin-top: -10px;
+      border-radius: 50%;
+      background: rgba(59, 35, 80, 0.12);
+    }
+    .sc-pet-tag {
+      margin-top: 10px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: var(--butter);
+      border: 2.5px solid var(--edge);
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    @keyframes sc-pop-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes sc-wobble {
+      0%   { transform: translateX(0); }
+      25%  { transform: translateX(-6px); }
+      55%  { transform: translateX(6px); }
+      80%  { transform: translateX(-3px); }
+      100% { transform: translateX(0); }
+    }
+
+    /* 護眼與動態減敏：使用者開啟減少動態時關閉所有動畫 */
+    @media (prefers-reduced-motion: reduce) {
+      .sc-msg-row,
+      .sc-pet.sc-shake {
+        animation: none !important;
+      }
+      .sc-opt {
+        transition: none !important;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/smart-pet.js"></script>
+  <script src="../../assets/js/smart-ui.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    /* =====================================================================
+       一、本關核心設定（題庫、星星門檻、關卡圖示與結算文字集中管理）
+       ===================================================================== */
+    var SCENE_CONFIG = {
+      /* 星星門檻：5 題答對 5 題 → 3 顆；3–4 題 → 2 顆；0–2 題 → 1 顆 */
+      STARS: { three: 5, two: 3, one: 0 },
+
+      /* 三個關卡的 40×40 主題 SVG 圖示（線條 #3B2350、粗 2.6） */
+      LEVEL_ICONS: {
+        stranger:
+          '<svg viewBox="0 0 40 40" fill="none">' +
+          '<rect x="5" y="9" width="24" height="20" rx="7" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.6"/>' +
+          '<path d="M11 29L8 35L17 29" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/>' +
+          '<circle cx="17" cy="17" r="3.4" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.4"/>' +
+          '<path d="M11.5 24.5C12.5 21.8 21.5 21.8 22.5 24.5" stroke="#3B2350" stroke-width="2.4" stroke-linecap="round"/>' +
+          '<circle cx="30" cy="11" r="7" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.6"/>' +
+          '<path d="M28.2 9.4C28.2 8.2 29.1 7.5 30.2 7.5C31.3 7.5 32 8.2 32 9.2C32 10.3 30.2 10.5 30.2 11.7" stroke="#3B2350" stroke-width="2.4" stroke-linecap="round"/>' +
+          '<circle cx="30.2" cy="14.3" r="1.2" fill="#3B2350"/>' +
+          '</svg>',
+
+        verify:
+          '<svg viewBox="0 0 40 40" fill="none">' +
+          '<rect x="5" y="7" width="21" height="26" rx="5" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.6"/>' +
+          '<path d="M10 14H21M10 20H18M10 26H16" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/>' +
+          '<circle cx="25.5" cy="22.5" r="8.5" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.6"/>' +
+          '<path d="M31.6 28.6L36 33" stroke="#3B2350" stroke-width="3" stroke-linecap="round"/>' +
+          '<path d="M23.7 20.6C23.7 19.3 24.7 18.6 25.8 18.6C26.9 18.6 27.6 19.4 27.6 20.4C27.6 21.5 25.7 21.8 25.7 23" stroke="#3B2350" stroke-width="2.4" stroke-linecap="round"/>' +
+          '<circle cx="25.7" cy="25.8" r="1.2" fill="#3B2350"/>' +
+          '</svg>',
+
+        polite:
+          '<svg viewBox="0 0 40 40" fill="none">' +
+          '<rect x="13" y="6" width="22" height="16" rx="7" fill="#DDF3E6" stroke="#3B2350" stroke-width="2.6"/>' +
+          '<rect x="5" y="15" width="23" height="17" rx="7" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.6"/>' +
+          '<path d="M10 32L7 36L16 32" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/>' +
+          '<path d="M16.5 27.2C16.5 27.2 11.4 24.3 11.4 21.3C11.4 19.7 12.7 18.7 14 18.7C15.1 18.7 16 19.4 16.5 20.3C17 19.4 17.9 18.7 19 18.7C20.3 18.7 21.6 19.7 21.6 21.3C21.6 24.3 16.5 27.2 16.5 27.2Z" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.2" stroke-linejoin="round"/>' +
+          '</svg>'
+      },
+
+      /* 3 關 × 5 題題庫（選項順序固定，正解位置已平均分散） */
+      LEVELS: [
+        /* ==================== 第 1 關：陌生人來訊息 ==================== */
+        {
+          name: '陌生人來訊息',
+          iconKey: 'stranger',
+          learned: '陌生訊息不回覆、不給個資，馬上告訴大人',
+          retry: '收到陌生人的訊息時，記得找大人幫忙喔！',
+          questions: [
+            {
+              sender: '神秘攝影師',
+              avatar: 'stranger',
+              badge: '不在好友名單',
+              badgeTone: 'warn',
+              time: '16:05',
+              messages: [
+                { from: 'other', text: '嗨！我喜歡收集可愛照片，可以拍一張你穿制服的樣子傳給我嗎？' }
+              ],
+              attach: { type: 'photo', tone: 'warn', title: '對方請求傳送照片', sub: '「傳一張制服照給我看看」' },
+              petLine: '{name} 不認識這個人，他卻突然跟我要制服照片……',
+              q: '不認識的人跟你要照片，應該怎麼做？',
+              options: [
+                { text: '只傳背影照片給他，不要露臉就安全', why: '以為沒露臉就安全，忽略制服與背景也會洩漏學校和行蹤' },
+                { text: '不傳照片也不回覆，立刻告訴家長或老師', why: '正解' },
+                { text: '先回訊息問問他，為什麼想要我的照片', why: '出於好奇想先問清楚，卻容易被對方套話繼續聊天' }
+              ],
+              ans: 1,
+              praise: '太棒了！幫 {name} 好好保護照片了！',
+              explain: '不認識的人要照片很危險，不要回覆也不要傳任何照片，立刻告訴家長或老師。'
+            },
+            {
+              sender: '快樂禮物王',
+              avatar: 'gift',
+              badge: '陌生帳號',
+              badgeTone: 'warn',
+              time: '16:12',
+              messages: [
+                { from: 'other', text: '恭喜你被選中當小試吃員！快告訴我你家住哪裡，我寄大盒點心給你！' }
+              ],
+              attach: { type: 'gift', tone: 'butter', title: '神秘點心宅配單', sub: '需要填寫：收件人與住家地址' },
+              petLine: '他說要寄點心，可是 {name} 根本沒參加活動耶！',
+              q: '陌生人說要寄禮物，跟你要家裡地址，怎麼做才安全？',
+              options: [
+                { text: '拒絕告訴他地址，並請家長一起看訊息', why: '正解' },
+                { text: '只給附近超商地址，這樣應該就沒事', why: '以為不給門牌就安全，但透露住家附近地點仍可能暴露行蹤' },
+                { text: '先問他要寄什麼點心，喜歡再給地址', why: '被免費禮物吸引，沒意識到陌生人會用好處騙取住址' }
+              ],
+              ans: 0,
+              praise: '做得好！沒被免費點心騙走家裡地址！',
+              explain: '家裡地址和常去的地點都是重要個資，不能因為禮物就告訴陌生人，要找家長確認。'
+            },
+            {
+              sender: '小宇哥哥',
+              avatar: 'stranger',
+              badge: '不在好友名單',
+              badgeTone: 'warn',
+              time: '16:28',
+              messages: [
+                { from: 'other', text: '我是你同學小宇的哥哥，小宇手機沒電了，快把你爸爸的電話傳給我！' }
+              ],
+              attach: null,
+              petLine: '他自稱是同學的哥哥，{name} 可以直接把電話給他嗎？',
+              q: '陌生人自稱是同學的家人跟你要電話，應該怎麼做？',
+              options: [
+                { text: '先傳電話給他，等明天上學再問同學', why: '擔心同學真的有急事，急著幫忙卻未先查證對方身分' },
+                { text: '回訊息請他先說同學的綽號來證明', why: '以為問一個小問題就能驗明身分，但陌生人可能從公開資料猜到' },
+                { text: '不給電話號碼，先請家長或老師查證', why: '正解' }
+              ],
+              ans: 2,
+              praise: '好聰明！沒有輕易相信網路上的自我介紹！',
+              explain: '陌生人可能會假冒親友套取聯絡方式，先不給任何電話，交給家長或老師幫忙查證最安全。'
+            },
+            {
+              sender: '超強點數站',
+              avatar: 'gift',
+              badge: '陌生帳號',
+              badgeTone: 'warn',
+              time: '16:40',
+              messages: [
+                { from: 'other', text: '加我為好友，我就免費送你 1000 枚遊戲點數，今天最後一天喔！' }
+              ],
+              attach: { type: 'coin', tone: 'butter', title: '免費點數領取券', sub: '條件：立刻加入陌生帳號好友' },
+              petLine: '免費送這麼多點數，{name} 覺得事情沒那麼單純……',
+              q: '不認識的人說加好友就送遊戲點數，你會怎麼處理？',
+              options: [
+                { text: '不要加對方好友，直接封鎖並告訴家長', why: '正解' },
+                { text: '先加好友拿完點數，拿到後馬上刪掉他', why: '以為拿完好處就封鎖沒損失，不知道加好友後對方會一步步騙取帳號或個資' },
+                { text: '回訊問他點數怎麼領，確定免費再加', why: '抱著試探心態想確認真假，反而讓對方知道帳號有人使用而持續騷擾' }
+              ],
+              ans: 0,
+              praise: '好冷靜喔！沒掉進免費點數的陷阱裡！',
+              explain: '網路上用免費點數吸引加好友常是詐騙陷阱，不回應、不加好友，直接封鎖並告訴大人。'
+            },
+            {
+              sender: '畫畫達人',
+              avatar: 'stranger',
+              badge: '只聊過一週的網友',
+              badgeTone: 'warn',
+              time: '17:02',
+              messages: [
+                { from: 'other', text: '我們聊得好開心！星期六下午三點，你一個人來公園找我拿畫本吧，別告訴爸媽，當作驚喜！' }
+              ],
+              attach: null,
+              petLine: '他要 {name} 自己去公園見面，還說不要告訴爸媽……',
+              q: '聊過幾天的網友約你單獨見面，還叫你保密，怎麼辦？',
+              options: [
+                { text: '約在人多的超商門口，白天去就安全', why: '以為人多和白天就能防範危險，仍忽略未經家長同意見網友的高風險' },
+                { text: '拒絕單獨見面，立刻把對話給家長看', why: '正解' },
+                { text: '請一個好朋友陪我一起去拿完就回家', why: '以為有同學作伴就沒問題，但小學生彼此無法應付陌生大人的威脅' }
+              ],
+              ans: 1,
+              praise: '超有警覺心！保護自己永遠最重要！',
+              explain: '只在網路聊過的人依然是陌生人，叫你瞞著爸媽見面更危險，一定要拒絕並立刻告訴家長。'
+            }
+          ]
+        },
+
+        /* ==================== 第 2 關：真的假的 ==================== */
+        {
+          name: '真的假的',
+          iconKey: 'verify',
+          learned: '可疑連結不亂點，沒來源訊息先查證',
+          retry: '看到緊急或奇怪的訊息，先停一下找大人查證！',
+          questions: [
+            {
+              sender: '系統小幫手',
+              avatar: 'system',
+              badge: '不明外部連結',
+              badgeTone: 'warn',
+              time: '18:05',
+              messages: [
+                { from: 'other', text: '警告！你的遊戲帳號今晚會被永久停用，請立刻點下面連結輸入密碼解除！' }
+              ],
+              attach: { type: 'link', tone: 'warn', title: '帳號緊急解除中心', sub: 'http://free-fix-pw.xyz' },
+              petLine: '上面寫帳號快停用了，{name} 看得好緊張喔……',
+              q: '收到訊息說帳號快停用，要你點連結輸密碼，怎麼做？',
+              options: [
+                { text: '先點連結看看畫面像不像真的再決定', why: '以為只看不輸入就安全，但點進釣魚網站本身就可能觸發惡意下載或陷阱' },
+                { text: '趕快輸入帳號密碼，以免遊戲紀錄不見', why: '被限時停用的恐嚇嚇到，急著想救帳號而交出密碼' },
+                { text: '絕對不點連結也不輸密碼，請家長確認', why: '正解' }
+              ],
+              ans: 2,
+              praise: '好厲害！一下子就識破釣魚連結了！',
+              explain: '用帳號停用來嚇人、叫你點連結輸入密碼的是釣魚訊息，千萬不要點，請家長幫忙確認。'
+            },
+            {
+              sender: '轉傳訊息',
+              avatar: 'chain',
+              badge: '已被轉傳多次',
+              badgeTone: 'warn',
+              time: '18:18',
+              messages: [
+                { from: 'other', text: '注意！這是詛咒訊息，十分鐘內不轉傳給 10 個人，明天考試就會考零分還會倒楣一整週！' }
+              ],
+              attach: { type: 'chain', tone: 'warn', title: '限時連鎖訊息', sub: '剩餘時間：10 分鐘（來源不明）' },
+              petLine: '哇，它說不轉傳就會倒楣，{name} 要傳給大家嗎？',
+              q: '收到「不轉傳就會倒楣」的連鎖訊息，應該怎麼處理？',
+              options: [
+                { text: '趕快轉給 10 個同學，寧可信其有', why: '害怕真的會倒楣，用轉傳來換取心安，卻讓嚇人訊息繼續擴散' },
+                { text: '不用害怕也不要轉傳，直接把訊息刪掉', why: '正解' },
+                { text: '只轉給兩個好朋友，提醒他們小心就好', why: '想折衷少傳幾個，但轉給任何人一樣是在散播不實的恐嚇訊息' }
+              ],
+              ans: 1,
+              praise: '好勇敢！不相信也不亂傳嚇人的訊息！',
+              explain: '連鎖詛咒訊息都是假的，不會真的讓人倒楣，不要被嚇到，也不要轉傳去嚇其他同學。'
+            },
+            {
+              sender: '好友小安',
+              avatar: 'friend',
+              badge: '語氣和平常不同',
+              badgeTone: 'info',
+              time: '18:35',
+              messages: [
+                { from: 'other', text: '我現在急用，幫我去買 500 元點數卡拍密碼給我，明天還你，別打電話問我！' }
+              ],
+              attach: null,
+              petLine: '小安平常不會這樣說話，為什麼還叫 {name} 別打電話？',
+              q: '好友帳號突然傳訊息借點數，又不准你打電話，怎麼辦？',
+              options: [
+                { text: '先不要買點數，用其他管道向本人查證', why: '正解' },
+                { text: '他是我好朋友，先買一張幫他解圍再說', why: '因為對方頭像是熟人就放鬆戒心，沒想到好友的帳號可能被盜用' },
+                { text: '在聊天室回訊問他，你真的是本人嗎', why: '在同一個被盜帳號裡反問，壞人當然會說「我就是本人」，無法真的驗證' }
+              ],
+              ans: 0,
+              praise: '觀察超細心！發現帳號可能被盜用了！',
+              explain: '好朋友的帳號也可能被盜用！遇到借錢或借點數，一定要請家長用電話或當面找本人查證。'
+            },
+            {
+              sender: '課後社團群組',
+              avatar: 'group',
+              badge: '轉傳・沒有來源',
+              badgeTone: 'warn',
+              time: '19:10',
+              messages: [
+                { from: 'other', name: '轉傳消息', text: '緊急通知！聽說因為要停水，全台灣國小明天全部停課一天，大家快轉給全班！' }
+              ],
+              attach: { type: 'rumor', tone: 'butter', title: '無公告單位的轉傳文字', sub: '沒有日期，也沒有學校官網連結' },
+              petLine: '明天真的不用上課嗎？可是上面沒寫是哪裡公告的耶！',
+              q: '看到沒有來源的「明天停課」訊息，應該先做什麼？',
+              options: [
+                { text: '先轉傳到班級群組，讓大家早點準備', why: '出於好心想通知大家，卻在查證前幫忙散播假消息造成混亂' },
+                { text: '只要貼文有很多人轉傳，應該就是真的', why: '誤把轉傳次數多當成真實證據，忽略假消息也常被大量轉傳' },
+                { text: '先不轉傳，請家長到學校官網確認公告', why: '正解' }
+              ],
+              ans: 2,
+              praise: '真有求證精神！先查官方消息才不會被騙！',
+              explain: '停課等重要消息一定要看學校官網或政府正式公告，沒有來源的轉傳訊息先查證、不要亂傳。'
+            },
+            {
+              sender: '作業討論區',
+              avatar: 'system',
+              badge: '不明檔案下載',
+              badgeTone: 'warn',
+              time: '19:26',
+              messages: [
+                { from: 'other', text: '只要下載這個免費小程式，一秒自動幫你寫完所有寒假作業！同學都說超好用！' }
+              ],
+              attach: { type: 'file', tone: 'warn', title: 'hw-fast-free.apk', sub: '不明來源安裝檔（未經安全檢查）' },
+              petLine: '一秒寫完作業聽起來好誘人，可是不明程式安全嗎？',
+              q: '群組有人傳不明檔案連結，說能一秒寫完作業，怎麼辦？',
+              options: [
+                { text: '先下載到平板試用，不好用再刪掉就好', why: '以為試裝再刪除就無害，忽略來路不明的程式可能暗藏病毒或偷取資料' },
+                { text: '不點連結也不下載，並告訴家長或老師', why: '正解' },
+                { text: '先請別的同學點點看，沒中毒我再下載', why: '想讓別人幫忙測試安全性，不但不安全還會害同學的裝置受害' }
+              ],
+              ans: 1,
+              praise: '太棒了！不下載不明檔案，平板好安全！',
+              explain: '來路不明的程式檔案可能藏有病毒，會弄壞平板或偷走資料，千萬不要下載，作業也要自己完成。'
+            }
+          ]
+        },
+
+        /* ==================== 第 3 關：群組好好說 ==================== */
+        {
+          name: '群組好好說',
+          iconKey: 'polite',
+          learned: '網路互動說好話，不轉傳別人的照片和秘密',
+          retry: '在群組說話前先想想，這樣對方會開心嗎？',
+          questions: [
+            {
+              sender: '四年二班群組',
+              avatar: 'group',
+              badge: '班級群組（26 人）',
+              badgeTone: 'info',
+              time: '17:15',
+              messages: [
+                { from: 'other', name: '小傑', text: '小皮剛才上台忘詞好好笑喔！' },
+                { from: 'other2', name: '阿豪', text: '對啊超笨的，大家快來看哈哈！' }
+              ],
+              attach: null,
+              petLine: '小皮看到這些話一定很難過，{name} 該怎麼做呢？',
+              q: '看到同學在班級群組被大家取笑，怎麼做最友善？',
+              options: [
+                { text: '不跟著笑，私下關心同學並告訴老師', why: '正解' },
+                { text: '也跟著發大笑貼圖，免得被說不合群', why: '為了融入大家而跟著起鬨，反而一起傷害了被取笑的同學' },
+                { text: '在群組用更難聽的話，大罵取笑的人', why: '想幫同學出氣卻用罵人方式回擊，會讓衝突越演越烈' }
+              ],
+              ans: 0,
+              praise: '好溫暖喔！你跟 {name} 都是友善的好夥伴！',
+              explain: '在網路上取笑別人也是傷害，不要跟著起鬨或互罵，私下安慰同學並讓老師協助處理最溫暖。'
+            },
+            {
+              sender: '籃球社群組',
+              avatar: 'group',
+              badge: '社團群組（18 人）',
+              badgeTone: 'info',
+              time: '17:30',
+              messages: [
+                { from: 'other', name: '小凱', text: '快看我拍到阿明跌倒的醜照，超好笑，大家快存起來！' }
+              ],
+              attach: { type: 'oops', tone: 'butter', title: '阿明跌倒醜照.jpg', sub: '未經當事人同意拍下的照片' },
+              petLine: '阿明一定不想讓這張出糗的照片被大家存起來……',
+              q: '有人在群組傳別人的出糗照片，要大家存檔，怎麼做？',
+              options: [
+                { text: '先存到自己平板，以後拿來開他玩笑', why: '把別人的難堪當成有趣的事，沒有顧慮當事人的感受與隱私' },
+                { text: '轉傳到另一個群組，讓別班同學也看看', why: '把出糗照轉到更多地方，會讓對方的難過和傷害變得更大' },
+                { text: '不存檔也不轉傳，請對方把照片刪掉', why: '正解' }
+              ],
+              ans: 2,
+              praise: '做得太好了！懂得保護同學的隱私和心情！',
+              explain: '未經同意拍下並傳播別人的出糗照片，會傷害對方的感受也侵犯隱私，不存不傳才是有禮貌的做法。'
+            },
+            {
+              sender: '桌遊小隊群組',
+              avatar: 'group',
+              badge: '社團群組（12 人）',
+              badgeTone: 'info',
+              time: '18:02',
+              messages: [
+                { from: 'me', name: '我', text: '週末要不要一起玩猜謎桌遊？' },
+                { from: 'other', name: '小翔', text: '你選的遊戲超無聊，每次都這樣！' }
+              ],
+              attach: null,
+              petLine: '{name} 看到這句話覺得好生氣，差點就想罵回去了……',
+              q: '在群組被同學用不好聽的話回應，覺得很生氣，怎麼辦？',
+              options: [
+                { text: '立刻打一連串生氣的話，把對方罵回去', why: '一時衝動用文字回罵，容易說出傷人的話且紀錄會留下來' },
+                { text: '先冷靜一下，用和平的語氣說出想法', why: '正解' },
+                { text: '號召幾個好朋友，一起在群組排擠他', why: '想找人撐腰反擊，卻變成另一種群組霸凌行為' }
+              ],
+              ans: 1,
+              praise: '好棒的修養！先冷靜溝通真的超成熟！',
+              explain: '生氣時先深呼吸冷靜一下，不要在網路上急著回罵，用和平清楚的話溝通，或請大人幫忙協調。'
+            },
+            {
+              sender: '四年二班群組',
+              avatar: 'group',
+              badge: '班級群組（26 人）',
+              badgeTone: 'soft',
+              time: '19:45',
+              messages: [
+                { from: 'other', name: '班長', text: '明天自然課記得帶放大鏡喔！' },
+                { from: 'me', name: '我（剛剛傳錯了）', text: '媽媽我忘記帶水壺，晚餐想吃咖哩飯' }
+              ],
+              attach: null,
+              petLine: '哎呀！{name} 不小心把要給媽媽的訊息傳到班群了！',
+              q: '在群組裡不小心傳錯了私人訊息，怎麼處理最有禮貌？',
+              options: [
+                { text: '趕快收回訊息，再簡單跟大家說聲抱歉', why: '正解' },
+                { text: '立刻連傳十張貼圖，把剛才那句洗掉', why: '想用大量貼圖蓋過去，反而洗版打擾全班同學看重要訊息' },
+                { text: '假裝什麼都沒發生，直接退出班級群組', why: '因為覺得尷尬就退群逃避，反而錯過班上的重要通知' }
+              ],
+              ans: 0,
+              praise: '處理得好大方！既不洗版又有禮貌！',
+              explain: '傳錯訊息很常見不用慌，使用收回功能並有禮貌地說聲「不好意思傳錯了」，不要用貼圖洗版喔。'
+            },
+            {
+              sender: '好朋友小美',
+              avatar: 'secret',
+              badge: '一對一私人對話',
+              badgeTone: 'soft',
+              time: '20:10',
+              messages: [
+                { from: 'other', text: '其實我今天數學考不好偷偷哭了，我只敢告訴你，拜託不要跟別人說喔！' }
+              ],
+              attach: { type: 'secret', tone: 'sky', title: '小美的私人悄悄話', sub: '群組裡剛好有同學在問「小美怎麼了？」' },
+              petLine: '群組裡大家都在問小美怎麼了，可以把私訊截圖嗎？',
+              q: '好朋友在私訊告訴你秘密，別人在群組問起時怎麼做？',
+              options: [
+                { text: '把私訊截圖傳到群組，讓大家去安慰她', why: '以為出發點是關心就能公開私訊，卻違背了朋友的信任與隱私' },
+                { text: '不傳截圖，改成直接打字告訴大家原因', why: '以為沒有貼截圖就不算洩漏，其實說出秘密內容同樣傷害了信任' },
+                { text: '不截圖也不說出秘密，尊重朋友的隱私', why: '正解' }
+              ],
+              ans: 2,
+              praise: '最可靠的好朋友！懂得守住約定與隱私！',
+              explain: '別人私下分享的心情和秘密屬於個人隱私，未經同意不可以截圖或轉述給大家看，守住約定才是好朋友。'
+            }
+          ]
+        }
+      ]
+    };
+
+    /* =====================================================================
+       二、場景小圖示 SVG 庫（不使用任何 emoji 或外部圖片）
+       ===================================================================== */
+    var ICONS = {
+      /* 平板狀態列小圖 */
+      wifi: '<svg width="18" height="16" viewBox="0 0 20 16" fill="none"><path d="M2 6C6.6 2 13.4 2 18 6M5 9.5C7.8 7 12.2 7 15 9.5M8.2 12.6C9.2 11.7 10.8 11.7 11.8 12.6" stroke="#3B2350" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="14.5" r="1.2" fill="#3B2350"/></svg>',
+      battery: '<svg width="24" height="14" viewBox="0 0 26 14" fill="none"><rect x="1.5" y="2" width="20" height="10" rx="3" stroke="#3B2350" stroke-width="2" fill="#FFF9F2"/><rect x="4" y="4.5" width="13" height="5" rx="1.5" fill="#186B41"/><rect x="22.5" y="4.5" width="2.5" height="5" rx="1" fill="#3B2350"/></svg>',
+      inputMsg: '<svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="3.5" width="15" height="11" rx="4" fill="#ECE3FA" stroke="#5C4870" stroke-width="2"/><path d="M6.5 14.5L5 17.5L9.5 14.5" fill="#ECE3FA" stroke="#5C4870" stroke-width="2" stroke-linejoin="round"/></svg>',
+
+      /* 標籤小圖 */
+      badgeWarn: '<svg viewBox="0 0 20 20" fill="none"><path d="M10 3L18 16.5H2L10 3Z" fill="#FF8F3F" stroke="#3B2350" stroke-width="2" stroke-linejoin="round"/><path d="M10 8V11.8" stroke="#3B2350" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="14.2" r="1.1" fill="#3B2350"/></svg>',
+      badgeInfo: '<svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" fill="#ECE3FA" stroke="#3B2350" stroke-width="2"/><path d="M10 9V14" stroke="#3B2350" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="6.4" r="1.1" fill="#3B2350"/></svg>',
+      badgeSoft: '<svg viewBox="0 0 20 20" fill="none"><rect x="4.5" y="9" width="11" height="8" rx="2.5" fill="#FFF0C4" stroke="#3B2350" stroke-width="2"/><path d="M7 9V6.5C7 4.8 8.3 3.5 10 3.5C11.7 3.5 13 4.8 13 6.5V9" stroke="#3B2350" stroke-width="2" stroke-linecap="round"/></svg>',
+
+      /* 對方頭像 */
+      avatars: {
+        stranger: '<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="16" r="6.5" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.4"/><path d="M9 33C10.5 26.5 29.5 26.5 31 33" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.4" stroke-linecap="round"/><path d="M12 13.5C14 8.5 26 8.5 28 13.5Z" fill="#6A45C9" stroke="#3B2350" stroke-width="2.2" stroke-linejoin="round"/></svg>',
+        gift: '<svg viewBox="0 0 40 40" fill="none"><rect x="9" y="16" width="22" height="16" rx="4" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.4"/><rect x="7" y="12" width="26" height="6" rx="2.5" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.4"/><path d="M20 12V32" stroke="#3B2350" stroke-width="2.4"/><path d="M20 12C17 7 13 8.5 14.5 12M20 12C23 7 27 8.5 25.5 12" stroke="#3B2350" stroke-width="2.2" stroke-linecap="round"/></svg>',
+        system: '<svg viewBox="0 0 40 40" fill="none"><path d="M20 6L31 10.5V19.5C31 26 26.2 31 20 34C13.8 31 9 26 9 19.5V10.5L20 6Z" fill="#FCE6E1" stroke="#3B2350" stroke-width="2.4" stroke-linejoin="round"/><path d="M20 14V21.5" stroke="#B4372B" stroke-width="2.8" stroke-linecap="round"/><circle cx="20" cy="25.8" r="1.6" fill="#B4372B"/></svg>',
+        chain: '<svg viewBox="0 0 40 40" fill="none"><rect x="7" y="11" width="26" height="18" rx="4" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.4"/><path d="M8 13L20 22L32 13" stroke="#3B2350" stroke-width="2.4" stroke-linejoin="round"/><circle cx="20" cy="22" r="3" fill="#FF8F3F" stroke="#3B2350" stroke-width="2"/></svg>',
+        friend: '<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="17" r="7" fill="#FFE1CB" stroke="#3B2350" stroke-width="2.4"/><path d="M10 34C11.5 27.5 28.5 27.5 30 34" fill="#DDF3E6" stroke="#3B2350" stroke-width="2.4" stroke-linecap="round"/><circle cx="17.5" cy="16.5" r="1.2" fill="#3B2350"/><circle cx="22.5" cy="16.5" r="1.2" fill="#3B2350"/><path d="M17.5 20C19 21.4 21 21.4 22.5 20" stroke="#3B2350" stroke-width="2" stroke-linecap="round"/></svg>',
+        group: '<svg viewBox="0 0 40 40" fill="none"><circle cx="14" cy="17" r="4.5" fill="#FFE1CB" stroke="#3B2350" stroke-width="2.2"/><circle cx="26" cy="17" r="4.5" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.2"/><path d="M7.5 31C8.5 26 19.5 26 20.5 31" fill="#DDF3E6" stroke="#3B2350" stroke-width="2.2" stroke-linecap="round"/><path d="M19.5 31C20.5 26 31.5 26 32.5 31" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.2" stroke-linecap="round"/></svg>',
+        secret: '<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="17" r="7" fill="#FFE1CB" stroke="#3B2350" stroke-width="2.4"/><path d="M10 34C11.5 27.5 28.5 27.5 30 34" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.4" stroke-linecap="round"/><circle cx="29" cy="28" r="6" fill="#FFF0C4" stroke="#3B2350" stroke-width="2"/><path d="M27.2 28V26.5C27.2 25.5 28 24.8 29 24.8C30 24.8 30.8 25.5 30.8 26.5V28" stroke="#3B2350" stroke-width="1.8"/><rect x="26.5" y="27.8" width="5" height="3.8" rx="1" fill="#FF8F3F" stroke="#3B2350" stroke-width="1.6"/></svg>'
+      },
+
+      /* 訊息附件卡片小圖 */
+      attach: {
+        photo: '<svg viewBox="0 0 32 32" fill="none"><rect x="4" y="9" width="24" height="17" rx="4" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.2"/><path d="M11 9L13 6H19L21 9" stroke="#3B2350" stroke-width="2.2" stroke-linejoin="round"/><circle cx="16" cy="17.5" r="4.5" fill="#FFF9F2" stroke="#3B2350" stroke-width="2.2"/></svg>',
+        gift: '<svg viewBox="0 0 32 32" fill="none"><rect x="6" y="13" width="20" height="14" rx="3" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.2"/><rect x="4.5" y="9.5" width="23" height="5" rx="2" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.2"/><path d="M16 9.5V27" stroke="#3B2350" stroke-width="2.2"/></svg>',
+        coin: '<svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="11" fill="#FFC233" stroke="#3B2350" stroke-width="2.2"/><circle cx="16" cy="16" r="7" fill="#FFF0C4" stroke="#A8670E" stroke-width="1.8"/><path d="M16 11.5V20.5M13.5 14H18.5" stroke="#3B2350" stroke-width="2" stroke-linecap="round"/></svg>',
+        link: '<svg viewBox="0 0 32 32" fill="none"><path d="M13 19L19 13" stroke="#B4372B" stroke-width="2.4" stroke-linecap="round"/><path d="M11.5 14.5L9 17C7.3 18.7 7.3 21.3 9 23C10.7 24.7 13.3 24.7 15 23L17.5 20.5" stroke="#3B2350" stroke-width="2.4" stroke-linecap="round"/><path d="M20.5 17.5L23 15C24.7 13.3 24.7 10.7 23 9C21.3 7.3 18.7 7.3 17 9L14.5 11.5" stroke="#3B2350" stroke-width="2.4" stroke-linecap="round"/></svg>',
+        chain: '<svg viewBox="0 0 32 32" fill="none"><rect x="5" y="8" width="22" height="16" rx="3.5" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.2"/><path d="M6 10L16 17.5L26 10" stroke="#3B2350" stroke-width="2.2"/><path d="M21 21L26 26M26 21L21 26" stroke="#B4372B" stroke-width="2.4" stroke-linecap="round"/></svg>',
+        rumor: '<svg viewBox="0 0 32 32" fill="none"><path d="M7 14H12L23 8V24L12 18H7C5.8 18 5 17.2 5 16C5 14.8 5.8 14 7 14Z" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.2" stroke-linejoin="round"/><path d="M26 13.5C27.5 14.8 27.5 17.2 26 18.5" stroke="#3B2350" stroke-width="2.2" stroke-linecap="round"/></svg>',
+        file: '<svg viewBox="0 0 32 32" fill="none"><path d="M8 5H19L24 10V27H8V5Z" fill="#FCE6E1" stroke="#3B2350" stroke-width="2.2" stroke-linejoin="round"/><path d="M16 13V19M13 16.5L16 19.5L19 16.5" stroke="#B4372B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        oops: '<svg viewBox="0 0 32 32" fill="none"><rect x="5" y="6" width="22" height="20" rx="3.5" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.2"/><circle cx="13" cy="13" r="2.5" fill="#FFC233" stroke="#3B2350" stroke-width="1.8"/><path d="M7 22L13 16.5L18 20.5L22 17.5L25 22" stroke="#3B2350" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        secret: '<svg viewBox="0 0 32 32" fill="none"><rect x="7" y="14" width="18" height="13" rx="3.5" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.2"/><path d="M11 14V11C11 8.2 13.2 6 16 6C18.8 6 21 8.2 21 11V14" stroke="#3B2350" stroke-width="2.2" stroke-linecap="round"/><circle cx="16" cy="20.5" r="2" fill="#3B2350"/></svg>'
+      }
+    };
+
+    /* HTML 字元跳脫，避免寵物名字含特殊符號破壞版面 */
+    function esc(str) {
+      return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    /* 將台詞裡的 {name} 替換成孩子的寵物名字 */
+    function fillPetName(text, petName) {
+      return String(text || '').replace(/\{name\}/g, petName || '小雲');
+    }
+
+    /* =====================================================================
+       三、掛載共用外殼與本關場景邏輯
+       ===================================================================== */
+    SmartIsland.mount({
+      unit: 31,
+      title: '寵物收到怪訊息',
+      grade: '3–4 年級',
+      zhuyin: false,
+      howto: '寵物的平板跳出好多訊息，幫牠想想怎麼回應才安全、有禮貌。',
+      teach: '辨識可疑訊息、保護個資、網路禮儀｜資E12 了解並遵守資訊倫理與使用資訊科技的相關規範、資E7 使用資訊科技與他人建立良好的互動關係',
+      levels: SCENE_CONFIG.LEVELS.map(function (lv) {
+        return { name: lv.name, icon: SCENE_CONFIG.LEVEL_ICONS[lv.iconKey] };
+      }),
+
+      scene: function (api) {
+        var alive = false;   /* 目前場景是否啟用中 */
+        var locked = false;  /* 作答後立刻鎖定，防止連點兩次 */
+        var runId = 0;       /* 每次 start／stop 遞增，確保舊 Promise 回呼失效 */
+        var levelIdx = 0;    /* 目前關卡索引（0 起算） */
+        var qIdx = 0;        /* 目前題目索引（0 起算） */
+        var review = [];     /* 每題作答回顧 [{ ok, q }] */
+        var timers = [];     /* 集中追蹤所有計時器，供 stop() 清理 */
+
+        /* 清理所有計時器、事件監聽並讓未完成的 feedback 失效 */
+        function cleanup() {
+          alive = false;
+          locked = true;
+          runId++;
+          while (timers.length) {
+            clearTimeout(timers.pop());
+          }
+          api.field.onclick = null;
+          document.removeEventListener('keydown', onKeyDown);
+        }
+
+        /* 計算本關星星數（依本關規則：5→3、3–4→2、0–2→1） */
+        function calcStars(rightCount) {
+          if (rightCount >= SCENE_CONFIG.STARS.three) return 3;
+          if (rightCount >= SCENE_CONFIG.STARS.two) return 2;
+          return 1;
+        }
+
+        /* 依標籤色系取用對應的 SVG 小圖示 */
+        function getBadgeIcon(tone) {
+          if (tone === 'warn') return ICONS.badgeWarn;
+          if (tone === 'soft') return ICONS.badgeSoft;
+          return ICONS.badgeInfo;
+        }
+
+        /* 渲染目前這一題的完整畫面 */
+        function renderQuestion() {
+          var lv = SCENE_CONFIG.LEVELS[levelIdx];
+          var q = lv.questions[qIdx];
+          var petInfo = api.pet ? api.pet() : { name: '小雲' };
+          var petName = (petInfo && petInfo.name) ? petInfo.name : '小雲';
+          var zyClass = api.zy ? ' sm-zy' : '';
+
+          locked = false;
+          api.progress(qIdx + 1, lv.questions.length);
+
+          /* 組合聊天泡泡清單 */
+          var msgsHtml = q.messages.map(function (m, idx) {
+            var rowCls = 'sc-msg-row' +
+              (m.from === 'me' ? ' sc-me' : (m.from === 'other2' ? ' sc-alt' : ''));
+            var metaHtml = m.name ? '<div class="sc-msg-meta">' + esc(m.name) + '</div>' : '';
+            var attachHtml = '';
+            if (q.attach && idx === q.messages.length - 1) {
+              var aTone = q.attach.tone ? (' sc-a-' + q.attach.tone) : '';
+              attachHtml =
+                '<div class="sc-attach' + aTone + '">' +
+                  '<div class="sc-attach-ic">' + (ICONS.attach[q.attach.type] || ICONS.attach.link) + '</div>' +
+                  '<div class="sc-attach-txt">' +
+                    '<div class="sc-attach-title">' + esc(q.attach.title) + '</div>' +
+                    '<div class="sc-attach-sub">' + esc(q.attach.sub) + '</div>' +
+                  '</div>' +
+                '</div>';
+            }
+            return (
+              '<div class="' + rowCls + '">' +
+                metaHtml +
+                '<div class="sc-msg-bub' + zyClass + '">' + esc(m.text) + attachHtml + '</div>' +
+              '</div>'
+            );
+          }).join('');
+
+          /* 組合 3 張選項卡 */
+          var optsHtml = q.options.map(function (opt, idx) {
+            return (
+              '<button type="button" class="clay sc-opt" data-idx="' + idx + '" aria-label="選項 ' + (idx + 1) + '：' + esc(opt.text) + '">' +
+                '<span class="sc-opt-num sm-num" aria-hidden="true">' + (idx + 1) + '</span>' +
+                '<span class="sc-opt-txt' + zyClass + '">' + esc(opt.text) + '</span>' +
+              '</button>'
+            );
+          }).join('');
+
+          var badgeCls = 'sc-badge sc-b-' + (q.badgeTone || 'info');
+          var petLine = fillPetName(q.petLine, petName);
+
+          api.field.innerHTML =
+            '<div class="sc-stage">' +
+              /* 左欄：寵物平板聊天 App */
+              '<section class="clay sc-tablet" aria-label="平板訊息畫面">' +
+                '<div class="sc-tab-bar">' +
+                  '<span class="sc-tab-time sm-num">' + esc(q.time) + '</span>' +
+                  '<span class="sc-tab-cam" aria-hidden="true"></span>' +
+                  '<span class="sc-tab-icons" aria-hidden="true">' + ICONS.wifi + ICONS.battery + '</span>' +
+                '</div>' +
+                '<div class="sc-screen">' +
+                  '<div class="sc-chat-head">' +
+                    '<div class="sc-avatar" aria-hidden="true">' + (ICONS.avatars[q.avatar] || ICONS.avatars.stranger) + '</div>' +
+                    '<div class="sc-head-info">' +
+                      '<div class="sc-sender">' + esc(q.sender) + '</div>' +
+                      '<div class="' + badgeCls + '">' + getBadgeIcon(q.badgeTone) + '<span>' + esc(q.badge) + '</span></div>' +
+                    '</div>' +
+                  '</div>' +
+                  '<div class="sc-chat-body">' + msgsHtml + '</div>' +
+                  '<div class="sc-chat-foot">' +
+                    '<div class="sc-fake-input">' + ICONS.inputMsg + '<span>請幫 ' + esc(petName) + ' 從右邊選一個做法</span></div>' +
+                  '</div>' +
+                '</div>' +
+              '</section>' +
+
+              /* 中欄：題目卡與 3 張選項卡 */
+              '<section class="sc-main" aria-label="題目與選項">' +
+                '<div class="clay sc-qcard">' +
+                  '<div class="sc-qmeta">' +
+                    '<span class="sc-lv-pill">第 ' + (levelIdx + 1) + ' 關・' + esc(lv.name) + '</span>' +
+                    '<span class="sc-hint-pill">點選最安全有禮貌的做法</span>' +
+                  '</div>' +
+                  '<h2 class="sc-qtext' + zyClass + '">' + esc(q.q) + '</h2>' +
+                '</div>' +
+                '<div class="sc-opts" role="group" aria-label="回答選項">' + optsHtml + '</div>' +
+              '</section>' +
+
+              /* 右欄：寵物陪伴與對話泡泡 */
+              '<aside class="sc-petbox" aria-label="寵物夥伴">' +
+                '<div class="clay sc-bubble' + zyClass + '">' + esc(petLine) + '</div>' +
+                '<div class="sc-pet" id="sc-pet-slot">' + api.petSVG('normal', { q: true }) + '</div>' +
+                '<div class="sc-pet-shadow" aria-hidden="true"></div>' +
+                '<div class="sc-pet-tag">' + esc(petName) + ' 的平板時間</div>' +
+              '</aside>' +
+            '</div>';
+        }
+
+        /* 處理作答（滑鼠點擊或數字鍵 1–3 皆走這裡） */
+        function handleChoice(choiceIdx) {
+          if (!alive || locked) return;
+          var lv = SCENE_CONFIG.LEVELS[levelIdx];
+          var q = lv.questions[qIdx];
+          if (choiceIdx < 0 || choiceIdx >= q.options.length) return;
+
+          locked = true;
+          var myRun = runId;
+          var ok = choiceIdx === q.ans;
+          var petInfo = api.pet ? api.pet() : { name: '小雲' };
+          var petName = (petInfo && petInfo.name) ? petInfo.name : '小雲';
+
+          /* 立刻鎖定全部選項並呈現 ✓／✗ 視覺狀態 */
+          var btns = api.field.querySelectorAll('.sc-opt');
+          for (var i = 0; i < btns.length; i++) {
+            btns[i].disabled = true;
+            var numEl = btns[i].querySelector('.sc-opt-num');
+            if (i === choiceIdx) {
+              btns[i].classList.add(ok ? 'sc-is-ok' : 'sc-is-bad');
+              if (numEl) numEl.textContent = ok ? '✓' : '✗';
+            } else {
+              btns[i].classList.add('sc-dim');
+            }
+          }
+
+          /* 更新畫面右側寵物表情，讓孩子先看到寵物反應 */
+          var petSlot = api.field.querySelector('#sc-pet-slot');
+          if (petSlot) {
+            petSlot.innerHTML = ok
+              ? api.petSVG('happy', { spark: true })
+              : api.petSVG('worried', { sweat: true });
+            if (!ok) petSlot.classList.add('sc-shake');
+          }
+
+          review.push({ ok: ok, q: q.q });
+
+          /* 稍微停頓 180ms 讓孩子看見選項與寵物表情，再彈出共用回饋卡 */
+          var tid = setTimeout(function () {
+            if (!alive || myRun !== runId) return;
+            api.feedback({
+              ok: ok,
+              text: ok ? fillPetName(q.praise, petName) : petName + ' 想再想想看！',
+              explain: q.explain,
+              zyExplain: false
+            }).then(function () {
+              /* 若中途離開此關，直接結束不執行後續動作 */
+              if (!alive || myRun !== runId) return;
+              qIdx++;
+              if (qIdx < lv.questions.length) {
+                renderQuestion();
+                return;
+              }
+              /* 整關完成：計算星星並交給共用結算畫面（寬鬆過關，至少 1 顆星） */
+              var right = review.filter(function (r) { return r.ok; }).length;
+              var finishData = {
+                stars: calcStars(right),
+                review: review,
+                learned: lv.learned
+              };
+              if (right < lv.questions.length) {
+                finishData.retry = lv.retry;
+              }
+              api.finish(finishData);
+            });
+          }, 180);
+          timers.push(tid);
+        }
+
+        /* 鍵盤快速鍵：按 1、2、3 也能選答，方便電腦教室操作 */
+        function onKeyDown(e) {
+          if (!alive || locked) return;
+          if (e.key === '1' || e.key === '2' || e.key === '3') {
+            handleChoice(parseInt(e.key, 10) - 1);
+          }
+        }
+
+        return {
+          start: function (lvIdx) {
+            cleanup();
+            var idx = typeof lvIdx === 'number' ? lvIdx : (api.levelIndex ? api.levelIndex() : 0);
+            if (idx < 0 || idx >= SCENE_CONFIG.LEVELS.length) idx = 0;
+            levelIdx = idx;
+            qIdx = 0;
+            review = [];
+            alive = true;
+            locked = false;
+
+            api.field.innerHTML = '';
+            api.field.onclick = function (e) {
+              var btn = e.target.closest('.sc-opt');
+              if (!btn || !alive || locked) return;
+              handleChoice(parseInt(btn.getAttribute('data-idx'), 10));
+            };
+            document.addEventListener('keydown', onKeyDown);
+
+            renderQuestion();
+          },
+          stop: function () {
+            cleanup();
+          }
+        };
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

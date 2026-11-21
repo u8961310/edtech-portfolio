@@ -1,0 +1,949 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>寵物的 AI 作業 - 小常識島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Baloo+2:wght@700;800&display=swap">
+  <link rel="stylesheet" href="../../assets/css/smart-island.css">
+  <style>
+    /* ===== 場景樣式：一律以 sc- 開頭，不覆蓋共用 .sm- 樣式 ===== */
+    .sc-stage {
+      position: relative;
+      width: 1366px;
+      height: 591px;
+      overflow: hidden;
+      font-family: 'Noto Sans TC', sans-serif;
+      color: var(--ink);
+    }
+
+    /* 書桌背景：低調柔和的奶油木桌，不干擾讀題 */
+    .sc-desk {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 94px;
+      background: linear-gradient(180deg, #F6E0CA 0%, #ECD0B5 100%);
+      border-top: 4px solid var(--edge);
+      box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.55);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .sc-desk-prop {
+      position: absolute;
+      right: 14px;
+      bottom: 8px;
+      width: 68px;
+      height: 68px;
+      opacity: 0.72;
+      pointer-events: none;
+    }
+
+    /* 左側：書桌上的「AI 小幫手」對話視窗 */
+    .sc-chat {
+      position: absolute;
+      left: 24px;
+      top: 18px;
+      width: 468px;
+      height: 544px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 0;
+      z-index: 1;
+    }
+    .sc-chat-head {
+      height: 68px;
+      padding: 0 18px;
+      background: var(--lilac);
+      border-bottom: 3px solid var(--edge);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .sc-ai-id {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .sc-ai-ava {
+      width: 46px;
+      height: 46px;
+      flex-shrink: 0;
+    }
+    .sc-ai-title {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--ink);
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .sc-scene-pill {
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 2px solid var(--edge);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink2);
+      white-space: nowrap;
+    }
+
+    .sc-chat-body {
+      flex: 1;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 14px;
+      background: var(--card);
+    }
+    .sc-story-strip {
+      padding: 9px 14px;
+      border-radius: 14px;
+      background: var(--butter);
+      border: 2px solid var(--edge);
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.45;
+      color: var(--ink);
+    }
+    .sc-msg {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-width: 92%;
+    }
+    .sc-msg-pet {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+    .sc-msg-ai {
+      align-self: flex-start;
+      align-items: flex-start;
+    }
+    .sc-msg-who {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--ink2);
+      padding: 0 6px;
+    }
+    .sc-msg-pet .sc-msg-who {
+      color: var(--violet);
+    }
+    .sc-msg-box {
+      padding: 13px 16px;
+      border-radius: 20px;
+      font-size: 19px;
+      font-weight: 700;
+      line-height: 1.5;
+      color: var(--ink);
+      border: 2.5px solid var(--edge);
+    }
+    .sc-msg-pet .sc-msg-box {
+      background: var(--lilac);
+      border-bottom-right-radius: 6px;
+    }
+    .sc-msg-ai .sc-msg-box {
+      background: var(--sky);
+      border-bottom-left-radius: 6px;
+    }
+    .sc-chat-foot {
+      height: 50px;
+      padding: 0 18px;
+      background: var(--bg);
+      border-top: 2.5px dashed var(--edge);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink2);
+      flex-shrink: 0;
+    }
+    .sc-send-ic {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    /* 中間：題目卡與選項卡 */
+    .sc-quiz {
+      position: absolute;
+      left: 512px;
+      top: 18px;
+      width: 526px;
+      height: 544px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 1;
+    }
+    .sc-q {
+      padding: 16px 20px;
+      min-height: 102px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--card);
+    }
+    .sc-q-badge {
+      width: 50px;
+      height: 50px;
+      border-radius: 16px;
+      background: var(--violet);
+      color: #fff;
+      font: 800 22px var(--f-num, 'Baloo 2', 'Noto Sans TC', sans-serif);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .sc-q-text {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1.42;
+      color: var(--ink);
+    }
+
+    .sc-opts {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .sc-opt {
+      flex: 1;
+      min-height: 120px;
+      width: 100%;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--card);
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 0.18s ease-out, border-color 0.18s ease-out, background-color 0.18s ease-out;
+    }
+    .sc-opt:hover:not(:disabled) {
+      transform: translateY(-2px);
+      border-color: var(--violet);
+    }
+    .sc-opt:active:not(:disabled) {
+      transform: translateY(2px);
+    }
+    .sc-opt:focus-visible {
+      outline: 4px solid var(--violet);
+      outline-offset: 3px;
+    }
+    .sc-opt:disabled {
+      cursor: default;
+    }
+    .sc-tag {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--violet);
+      color: #fff;
+      font: 800 22px var(--f-num, 'Baloo 2', 'Noto Sans TC', sans-serif);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .sc-opt-ic {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sc-opt-ic svg {
+      width: 48px;
+      height: 48px;
+    }
+    .sc-opt-txt {
+      flex: 1;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.42;
+      color: var(--ink);
+    }
+
+    /* 作答後狀態：顏色＋✓／✗ 雙重提示 */
+    .sc-opt.sc-opt-ok {
+      background: var(--ok-soft);
+      border-color: var(--ok);
+    }
+    .sc-opt.sc-opt-ok .sc-tag {
+      background: var(--ok);
+    }
+    .sc-opt.sc-opt-bad {
+      background: var(--bad-soft);
+      border-color: var(--bad);
+    }
+    .sc-opt.sc-opt-bad .sc-tag {
+      background: var(--bad);
+    }
+    .sc-opt.sc-opt-dim {
+      opacity: 0.58;
+    }
+
+    /* 右側：寵物陪伴與台詞泡泡 */
+    .sc-petbox {
+      position: absolute;
+      left: 1056px;
+      top: 18px;
+      width: 286px;
+      height: 544px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      z-index: 1;
+    }
+    .sc-bubble {
+      position: relative;
+      width: 280px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      background: var(--card);
+      font-size: 19px;
+      font-weight: 700;
+      line-height: 1.48;
+      color: var(--ink);
+    }
+    .sc-bubble::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: -17px;
+      transform: translateX(-50%);
+      border-width: 17px 14px 0 14px;
+      border-style: solid;
+      border-color: var(--edge) transparent transparent transparent;
+    }
+    .sc-bubble::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: -12px;
+      transform: translateX(-50%);
+      border-width: 14px 11px 0 11px;
+      border-style: solid;
+      border-color: var(--card) transparent transparent transparent;
+    }
+    .sc-pet {
+      width: 276px;
+      height: 276px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sc-pet svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    .sc-pet-plate {
+      margin-top: 2px;
+      padding: 6px 18px;
+      border-radius: 999px;
+      background: var(--butter);
+      border: 2.5px solid var(--edge);
+      font-size: 17px;
+      font-weight: 900;
+      color: var(--ink);
+      white-space: nowrap;
+      box-shadow: 0 3px 0 rgba(59, 35, 80, 0.1);
+    }
+
+    /* 單次回饋瞬間動畫（不連續閃爍） */
+    .sc-pop {
+      animation: scPop 0.22s ease-out;
+    }
+    .sc-wiggle {
+      animation: scWiggle 0.32s ease-out;
+    }
+    @keyframes scPop {
+      0% { transform: scale(0.96); opacity: 0.7; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes scWiggle {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sc-opt, .sc-pop, .sc-wiggle {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/smart-pet.js"></script>
+  <script src="../../assets/js/smart-ui.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    // ===== 1. 關卡與題目設定（集中於 SCENE_CONFIG） =====
+    var SCENE_CONFIG = {
+      // 星星門檻：5 題答對 5 題 → 3 顆；3–4 題 → 2 顆；0–2 題 → 1 顆
+      STAR_RULES: { three: 5, two: 3 },
+
+      // 三關關卡圖示（40×40 viewBox，線條 #3B2350 粗 2.6）
+      LEVEL_ICONS: [
+        // 第 1 關：AI 可以幫什麼（筆記本＋靈感小燈泡）
+        '<svg viewBox="0 0 40 40" fill="none"><rect x="6" y="7" width="22" height="26" rx="4" fill="#FFF9F2" stroke="#3B2350" stroke-width="2.6"/><path d="M12 14h10M12 20h10M12 26h6" stroke="#6A45C9" stroke-width="2.6" stroke-linecap="round"/><circle cx="29" cy="25" r="7" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.6"/><path d="M29 21v4l2.5 1.5" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/></svg>',
+        // 第 2 關：AI 也會出錯（放大鏡查證課本）
+        '<svg viewBox="0 0 40 40" fill="none"><rect x="6" y="8" width="18" height="24" rx="3.5" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.6"/><path d="M11 15h8M11 21h6" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/><circle cx="24" cy="21" r="8" fill="#FFF9F2" stroke="#3B2350" stroke-width="2.6"/><path d="M30 27l5 5" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/><path d="M21 21l2 2 4-4" stroke="#186B41" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        // 第 3 關：跟 AI 聊天要小心（盾牌保護對話）
+        '<svg viewBox="0 0 40 40" fill="none"><path d="M20 5l12 5v9c0 8-5.2 13.4-12 16-6.8-2.6-12-8-12-16v-9l12-5z" fill="#DDF3E6" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/><rect x="15" y="19" width="10" height="8" rx="2" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.6"/><path d="M17 19v-2.5a3 3 0 0 1 6 0V19" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/></svg>'
+      ],
+
+      // 三關題庫（每關 5 題，選項順序固定不洗牌）
+      LEVELS: [
+        {
+          name: 'AI 可以幫什麼',
+          intro: '{pet}坐在書桌前寫週末作業，打開平板想看看 AI 可以幫什麼忙！',
+          learned: '請 AI 解釋和練習，作業自己寫並誠實說',
+          retry: '答錯的題目，再玩一次想想怎麼聰明用 AI！',
+          questions: [
+            {
+              sceneTag: '國語作業・查成語',
+              petMsg: '讀故事時看到「守株待兔」，我不太懂意思。',
+              aiMsg: '我可以白話解釋意思，還能舉生活例子給你聽！',
+              bubble: '請 AI 解釋看不懂的詞，這樣可以嗎？',
+              q: '讀課文遇到看不懂的成語，怎麼請 AI 幫忙最合適？',
+              options: [
+                { text: '完全不要用 AI，猜一猜意思就好', pic: 'stop', why: '以為只要寫作業就絕對不能碰 AI，怕用了就會被罵' },
+                { text: '請 AI 用白話解釋意思並舉個例子', pic: 'bulb', why: '正解' },
+                { text: '請 AI 把整課的習作答案全部寫完', pic: 'copy', why: '覺得既然都打開 AI 了，順便請它做完所有作業更省時間' }
+              ],
+              ans: 1,
+              okText: '答對了！請 AI 當小字典解釋很聰明！',
+              explain: 'AI 很適合解釋不懂的語詞和舉例，能幫我們更快理解課文。'
+            },
+            {
+              sceneTag: '國語作業・寫作文',
+              petMsg: '老師出了一篇作文《我的假日》，但我還沒靈感。',
+              aiMsg: '我可以幫你直接寫好一篇，也可以幫你發想題目點子。',
+              bubble: '好想快點寫完去玩⋯⋯該選哪一種？',
+              q: '寫作文《我的假日》卡住了，哪一種請 AI 幫忙的方式最好？',
+              options: [
+                { text: '請 AI 給幾個寫作靈感，自己再動筆寫', pic: 'pencil', why: '正解' },
+                { text: '請 AI 寫完整篇作文，再直接抄進稿紙', pic: 'copy', why: '以為自己一字一字抄進稿紙，就算有親自完成作業' },
+                { text: '請 AI 寫好作文後，只改掉幾個字就交', pic: 'edit', why: '覺得只要有動手改幾個字，就不算讓 AI 代寫' }
+              ],
+              ans: 0,
+              okText: '太棒了！靈感找幫手，文章自己寫！',
+              explain: '請 AI 給靈感沒問題，但文章要自己寫，寫作能力才會真的進步。'
+            },
+            {
+              sceneTag: '數學考前・練乘法',
+              petMsg: '下週要考兩位數乘法，我想多練習幾題！',
+              aiMsg: '沒問題，我可以出練習題，也可以直接幫你算作業。',
+              bubble: '我想讓數學變強，要怎麼用 AI 呢？',
+              q: '快要考數學了，想用 AI 幫自己加強計算，怎麼做最有幫助？',
+              options: [
+                { text: '把今天數學習作拍給 AI，直接抄算式', pic: 'copy', why: '認為先把答案看過一遍抄起來，就自然學會算法了' },
+                { text: '請 AI 出題並附上答案，直接背起來', pic: 'book', why: '把數學當成背誦科目，以為背熟題目答案就能考高分' },
+                { text: '請 AI 出幾題練習題，自己算完再對答', pic: 'math', why: '正解' }
+              ],
+              ans: 2,
+              okText: '答對了！自己動手算才會真正變強！',
+              explain: '請 AI 出練習題讓自己動手算，再核對過程，才能真正學會解題。'
+            },
+            {
+              sceneTag: '美勞海報・AI 插圖',
+              petMsg: '我請 AI 畫了一張可愛的環保插圖，想貼在海報上。',
+              aiMsg: '圖片生成完成囉！記得想好怎麼標示圖片來源喔。',
+              bubble: '這張圖好漂亮！我要怎麼跟老師說？',
+              q: '把 AI 畫的插圖放進自己的簡報或海報時，怎麼做才誠實？',
+              options: [
+                { text: '在圖片旁邊寫上自己名字，當作親手畫', pic: 'mask', why: '覺得指令是自己想出來的，所以圖片就算自己畫的作品' },
+                { text: '在圖片旁清楚註明，這是 AI 幫忙畫的', pic: 'badge', why: '正解' },
+                { text: '什麼都不要寫，等老師有問再慢慢解釋', pic: 'shh', why: '怕主動說用了 AI 會被扣分，想先隱瞞看看' }
+              ],
+              ans: 1,
+              okText: '好誠實！標示清楚最值得稱讚！',
+              explain: '使用 AI 生成的圖片或內容時，誠實註明「這是 AI 做的」才是好習慣。'
+            },
+            {
+              sceneTag: '英語造句・修改練習',
+              petMsg: '這三個英文句子是我自己寫的，但不確定文法對不對。',
+              aiMsg: '我可以幫你找出哪裡寫錯，也可以幫你重寫全新的句子。',
+              bubble: '這兩種幫忙好像很像，哪個比較好？',
+              q: '自己寫完作業想請 AI 幫忙檢查，哪一種做法最能幫到學習？',
+              options: [
+                { text: '請 AI 指出錯在哪裡，自己再重新訂正', pic: 'check', why: '正解' },
+                { text: '請 AI 直接改成滿分版本，再整句照抄', pic: 'copy', why: '只想拿到看起來最完美的句子交差，忽略自己訂正的過程' },
+                { text: '請 AI 順便多寫五句新句子，一起交出', pic: 'plus', why: '以為交出越多內容分數越高，沒意識到這不是自己寫的' }
+              ],
+              ans: 0,
+              okText: '答對了！自己訂正才能越學越好！',
+              explain: '請 AI 當小老師指出錯誤並由自己訂正，才能真正發現問題、越學越好。'
+            }
+          ]
+        },
+        {
+          name: 'AI 也會出錯',
+          intro: '{pet}正在查報告資料，不過 AI 小幫手的回答好像藏著小錯誤喔！',
+          learned: 'AI 的答案可能出錯，要查課本或問老師',
+          retry: '再練習一次，當個細心的資料小偵探吧！',
+          questions: [
+            {
+              sceneTag: '社會報告・台灣高山',
+              petMsg: '請問台灣最高的山是哪一座？有多高？',
+              aiMsg: '台灣最高的山是玉山，高度是 5,000 公尺喔！',
+              bubble: '咦？玉山有 5,000 公尺嗎？該怎麼辦？',
+              q: 'AI 說「台灣最高的山是玉山，高 5,000 公尺」，接下來怎麼做最好？',
+              options: [
+                { text: 'AI 懂得比我多，直接把數字抄進報告', pic: 'copy', why: '以為電腦和 AI 算得很準，講出來的資料一定百分之百正確' },
+                { text: '多問 AI 兩次，看它回答是不是一樣', pic: 'repeat', why: '覺得同一個 AI 只要重複說一樣的答案，就代表是真的' },
+                { text: '去查社會課本或問老師，確認正確高度', pic: 'book', why: '正解' }
+              ],
+              ans: 2,
+              okText: '好細心！寫報告前一定要先查證！',
+              explain: 'AI 有時會把數字講錯（玉山其實高 3,952 公尺），查課本或問老師最保險。'
+            },
+            {
+              sceneTag: '自然報告・動物知識',
+              petMsg: '課本寫蝙蝠是哺乳類，但剛剛 AI 說蝙蝠是鳥類耶？',
+              aiMsg: '蝙蝠有翅膀會飛，所以它屬於鳥類家族喔！',
+              bubble: 'AI 跟課本說的不一樣，要聽誰的？',
+              q: 'AI 給的答案和學校課本不一樣時，哪一種做法最正確？',
+              options: [
+                { text: '先查課本和百科全書，或請教老師確認', pic: 'adult', why: '正解' },
+                { text: 'AI 是最新科技，直接相信 AI 的說法', pic: 'robot', why: '以為新科技一定比紙本課本更新、更正確' },
+                { text: '把兩種說法都寫進報告，讓老師自己選', pic: 'split', why: '不想自己查證，覺得兩個都寫就至少有一個對' }
+              ],
+              ans: 0,
+              okText: '答對了！遇到不同說法要先查可靠資料！',
+              explain: '課本經過專家審核，當 AI 與課本不同時，要先查可靠資料或問老師。'
+            },
+            {
+              sceneTag: '課外閱讀・找故事書',
+              petMsg: '我想找關於台灣黑熊的繪本，請推薦一本。',
+              aiMsg: '推薦《黑熊飛上火星》，作者是王大明，2023 年出版！',
+              bubble: '書名聽起來好酷，但圖書館找得到嗎？',
+              q: 'AI 推薦了一本聽起來很有趣的書名，使用前怎麼做最妥當？',
+              options: [
+                { text: '既然連作者和年份都有，一定真的存在', pic: 'star', why: '看到回答寫得很詳細（有作者與年份），就誤以為不會是編造的' },
+                { text: '先到圖書館網站或請大人幫忙查證書名', pic: 'search', why: '正解' },
+                { text: '直接把這本書名寫進我的閱讀推薦清單', pic: 'pencil', why: '急著完成推薦單，覺得 AI 推薦的應該都很安全' }
+              ],
+              ans: 1,
+              okText: '太厲害了！沒被看起來很真的細節騙到！',
+              explain: 'AI 有時會編造不存在的書名或作者，引用前一定要先查證是否真的存在。'
+            },
+            {
+              sceneTag: '數學應用題・驗算',
+              petMsg: '這題應用題我算 48 元，AI 幫我算出來卻是 58 元。',
+              aiMsg: '算式是 12 × 4 = 58，所以總共要付 58 元！',
+              bubble: 'AI 算得超快，可是 12 × 4 怪怪的耶！',
+              q: '請 AI 幫忙驗算數學題時，發現它的算式怪怪的，該怎麼辦？',
+              options: [
+                { text: '一定是自己算錯了，趕快照 AI 改掉', pic: 'erase', why: '缺乏信心，以為機器算術一定比自己厲害' },
+                { text: '既然答案不同，就把這題跳過先不要寫', pic: 'split', why: '遇到矛盾覺得太麻煩，乾脆放棄這題' },
+                { text: '一步步自己重新驗算，必要時問問老師', pic: 'math', why: '正解' }
+              ],
+              ans: 2,
+              okText: '答對了！相信自己的驗算能力！',
+              explain: 'AI 主要是預測文字，算數也可能出錯，一定要自己一步步驗算確認。'
+            },
+            {
+              sceneTag: '查資料心得・正確態度',
+              petMsg: '剛剛查資料發現 AI 偶爾會講錯，以後還能用 AI 嗎？',
+              aiMsg: '我能幫你整理點子，不過重要資訊還是需要你一起確認喔！',
+              bubble: '既然 AI 會出錯，我們該怎麼看待它？',
+              q: '知道 AI 的回答有時會出錯後，哪一種使用態度最正確？',
+              options: [
+                { text: '把 AI 當作永遠可靠的專家，全部照做', pic: 'crown', why: '忽略剛剛學到的風險，依然過度依賴 AI' },
+                { text: '把 AI 當學習小幫手，重要資料都查證', pic: 'search', why: '正解' },
+                { text: '把 AI 當作壞工具，以後完全不去接觸', pic: 'stop', why: '因為 AI 會出錯就走極端，認為它毫無用處或很危險' }
+              ],
+              ans: 1,
+              okText: '完全正確！既善用工具又懂得查證！',
+              explain: 'AI 是好幫手但不是萬能專家，只要記得多查證，就能安全又聰明地使用。'
+            }
+          ]
+        },
+        {
+          name: '跟 AI 聊天要小心',
+          intro: '{pet}試用新的 AI 聊天小幫手時，遇到幾個要注意隱私和規定的情況！',
+          learned: '不給 AI 個人資料，使用前先問大人',
+          retry: '再玩一次，練習保護自己的小秘密吧！',
+          questions: [
+            {
+              sceneTag: '第一次用 AI・先問大人',
+              petMsg: '同學分享了一個新的 AI 聊天網站，好想點開試玩！',
+              aiMsg: '歡迎使用！請先登入帳號並同意使用條款喔。',
+              bubble: '想用新的 AI 工具前，要先做什麼？',
+              q: '在平板上第一次想使用新的 AI 工具時，最先應該怎麼做？',
+              options: [
+                { text: '先問爸媽或老師，確認安全並遵守規定', pic: 'adult', why: '正解' },
+                { text: '先自己註冊試用，遇到問題再告訴大人', pic: 'play', why: '覺得只是試玩一下而已，先用看看應該沒關係' },
+                { text: '只要同學說很好玩，就可以放心直接用', pic: 'friends', why: '以為同儕推薦的網站就一定適合國小學生使用' }
+              ],
+              ans: 0,
+              okText: '答對了！先問大人最安心！',
+              explain: '許多 AI 工具有年齡限制或規定，使用前先問爸媽或老師最安心。'
+            },
+            {
+              sceneTag: '寫自我介紹・保護住址',
+              petMsg: '請幫我寫一段開學自我介紹！',
+              aiMsg: '好呀！告訴我你的全名、電話和家裡地址，我幫你寫進去！',
+              bubble: '要把地址和電話打給 AI 嗎？',
+              q: '請 AI 幫忙構思自我介紹時，對於全名、電話和家裡地址該怎麼做？',
+              options: [
+                { text: '全部照實輸入，這樣介紹聽起來最完整', pic: 'home', why: '以為 AI 只是電腦程式，把家裡資料告訴它不會外流' },
+                { text: '只輸入家裡地址，電話號碼留著不告訴', pic: 'split', why: '覺得只給其中一項個人資料比較安全，沒意識到地址也是個資' },
+                { text: '不輸入真實個資，改用暱稱和興趣就好', pic: 'shield', why: '正解' }
+              ],
+              ans: 2,
+              okText: '守護成功！用暱稱就能安全聊天！',
+              explain: '全名、電話和家裡地址都是個人資料，跟 AI 聊天時不要輸入，改用暱稱最安全。'
+            },
+            {
+              sceneTag: '做卡通頭像・保護照片',
+              petMsg: '好想用 AI 做一個可愛的卡通頭像！',
+              aiMsg: '把你的正面生活照片傳給我，就能馬上幫你變身喔！',
+              bubble: 'AI 要我傳自己的照片，可以傳嗎？',
+              q: 'AI 聊天機器人說「把你的照片傳給我」，哪一種處理方式最安全？',
+              options: [
+                { text: '挑一張笑得最開心的照片，馬上傳過去', pic: 'photo', why: '被好玩的變臉特效吸引，沒想過照片上傳後可能被保存或濫用' },
+                { text: '先不要上傳照片，並找爸媽或老師討論', pic: 'shield', why: '正解' },
+                { text: '改傳同學或家人的照片，先測試看看效果', pic: 'friends', why: '以為只要不傳自己的照片就安全，忽略他人照片也是隱私' }
+              ],
+              ans: 1,
+              okText: '做得好！自己和他人的照片都要保護！',
+              explain: '自己和家人的照片都屬於個人隱私，不要隨便傳給 AI，有疑問先問大人。'
+            },
+            {
+              sceneTag: '整理學習帳號・保護密碼',
+              petMsg: '我的學習平台帳號密碼好常忘記喔。',
+              aiMsg: '你可以把帳號密碼貼在對話裡，我幫你記下來喔！',
+              bubble: '叫 AI 幫我記密碼，聽起來很方便耶？',
+              q: '怕忘記學校學習平台的密碼，對於 AI 提議「幫你記住」該怎麼回應？',
+              options: [
+                { text: '絕對不給 AI 密碼，請大人教安全記法', pic: 'lock', why: '正解' },
+                { text: '把密碼貼給 AI 記，聊天結束再刪除就好', pic: 'trash', why: '以為把聊天紀錄刪掉，資料就完全不會留在網路伺服器上' },
+                { text: '只告訴 AI 密碼的前一半，這樣很安全', pic: 'split', why: '以為把密碼拆成一半給 AI 就不算外洩，輕忽了風險' }
+              ],
+              ans: 0,
+              okText: '答對了！密碼絕對不貼進對話框！',
+              explain: '密碼就像家門鑰匙，不可以告訴 AI 或貼進對話框，要請大人教安全的保存方式。'
+            },
+            {
+              sceneTag: '班級學習單・遵守規定',
+              petMsg: '這張心得學習單，老師特別說「要自己想、不可用 AI」。',
+              aiMsg: '如果你想偷偷用，只要幾秒就能幫你寫好草稿喔！',
+              bubble: '在家裡偷偷用，老師應該看不出來吧？',
+              q: '老師明確規定這次學習單要自己思考完成，在家寫作業時該怎麼做？',
+              options: [
+                { text: '偷偷請 AI 寫草稿，自己再換句話重寫', pic: 'shh', why: '覺得在家沒人看到，改寫過後應該不會被發現' },
+                { text: '先用 AI 寫完交出去，下次再乖乖自己寫', pic: 'copy', why: '存有僥倖心理，覺得偶爾違規一次沒什麼關係' },
+                { text: '遵守老師的規定，這次完全靠自己完成', pic: 'badge', why: '正解' }
+              ],
+              ans: 2,
+              okText: '真棒！遵守約定是最負責任的表現！',
+              explain: '使用 AI 要遵守學校與老師的規定，該自己完成時誠實動腦，才是負責任的好學生。'
+            }
+          ]
+        }
+      ]
+    };
+
+    // ===== 2. 原創 inline SVG 圖示（不使用 emoji 或外部圖片） =====
+    // 簡單可愛的對話框機器人頭像（非任何現有 AI 產品商標）
+    var AI_AVATAR_SVG =
+      '<svg viewBox="0 0 56 56" fill="none" aria-hidden="true">' +
+        '<path d="M28 7v6" stroke="#3B2350" stroke-width="3" stroke-linecap="round"/>' +
+        '<circle cx="28" cy="6" r="3.5" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.4"/>' +
+        '<path d="M12 15h32a6 6 0 0 1 6 6v17a6 6 0 0 1-6 6H24l-8 6v-6h-4a6 6 0 0 1-6-6V21a6 6 0 0 1 6-6z" fill="#E1EEFB" stroke="#3B2350" stroke-width="3" stroke-linejoin="round"/>' +
+        '<circle cx="21" cy="27" r="3" fill="#3B2350"/>' +
+        '<circle cx="35" cy="27" r="3" fill="#3B2350"/>' +
+        '<circle cx="15" cy="32" r="2.6" fill="#FFE1CB"/>' +
+        '<circle cx="41" cy="32" r="2.6" fill="#FFE1CB"/>' +
+        '<path d="M23 34c2 2.4 8 2.4 10 0" stroke="#3B2350" stroke-width="2.8" stroke-linecap="round"/>' +
+      '</svg>';
+
+    var SEND_ICON_SVG =
+      '<svg class="sc-send-ic" viewBox="0 0 32 32" fill="none" aria-hidden="true">' +
+        '<path d="M5 15l21-9-6 20-5-7-10-4z" fill="#ECE3FA" stroke="#5C4870" stroke-width="2.4" stroke-linejoin="round"/>' +
+        '<path d="M26 6L15 19" stroke="#5C4870" stroke-width="2.4" stroke-linecap="round"/>' +
+      '</svg>';
+
+    var DESK_CUP_SVG =
+      '<svg class="sc-desk-prop" viewBox="0 0 68 68" fill="none" aria-hidden="true">' +
+        '<path d="M22 30l-4-18 6-4 5 22" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/>' +
+        '<path d="M40 30l6-20 6 3-5 17" fill="#DDF3E6" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/>' +
+        '<rect x="16" y="28" width="36" height="32" rx="8" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.8"/>' +
+        '<path d="M24 44h20" stroke="#6A45C9" stroke-width="2.8" stroke-linecap="round"/>' +
+      '</svg>';
+
+    // 選項小圖示（48×48 viewBox）
+    var PIC = {
+      stop: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="16" fill="#FCE6E1" stroke="#3B2350" stroke-width="2.8"/><path d="M13 13l22 22" stroke="#B4372B" stroke-width="3.2" stroke-linecap="round"/></svg>',
+      bulb: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M17 31c0-4-5-6-5-13a12 12 0 1 1 24 0c0 7-5 9-5 13H17z" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.8" stroke-linejoin="round"/><path d="M19 36h10M21 41h6" stroke="#3B2350" stroke-width="2.8" stroke-linecap="round"/></svg>',
+      copy: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect x="16" y="14" width="20" height="24" rx="4" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.8"/><rect x="11" y="9" width="20" height="24" rx="4" fill="#FFF9F2" stroke="#3B2350" stroke-width="2.8"/><path d="M16 17h10M16 23h10" stroke="#5C4870" stroke-width="2.6" stroke-linecap="round"/></svg>',
+      pencil: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M11 37l2-9L31 10l7 7-18 18-9 2z" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.8" stroke-linejoin="round"/><path d="M27 14l7 7" stroke="#3B2350" stroke-width="2.6"/></svg>',
+      edit: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect x="9" y="10" width="26" height="30" rx="4" fill="#FFF9F2" stroke="#3B2350" stroke-width="2.8"/><path d="M15 18h14M15 24h9" stroke="#5C4870" stroke-width="2.6" stroke-linecap="round"/><path d="M26 34l11-11 4 4-11 11-5 1 1-5z" fill="#FFE1CB" stroke="#3B2350" stroke-width="2.4" stroke-linejoin="round"/></svg>',
+      book: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M8 13c5-2 11-2 16 2 5-4 11-4 16-2v23c-5-2-11-2-16 2-5-4-11-4-16-2V13z" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.8" stroke-linejoin="round"/><path d="M24 15v23" stroke="#3B2350" stroke-width="2.6"/></svg>',
+      math: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect x="8" y="8" width="32" height="32" rx="8" fill="#DDF3E6" stroke="#3B2350" stroke-width="2.8"/><path d="M14 18h8M18 14v8M27 18h8M15 31l6-6M21 31l-6-6M27 28h8M27 33h8" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/></svg>',
+      mask: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect x="8" y="12" width="32" height="24" rx="5" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.8"/><circle cx="18" cy="22" r="3" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.2"/><path d="M12 31l7-6 6 5 5-4 6 5" stroke="#3B2350" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      badge: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="21" r="12" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.8"/><path d="M18 31l-3 10 9-4 9 4-3-10" fill="#FFE1CB" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/><path d="M19 21l3.5 3.5L29 18" stroke="#186B41" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      shh: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="15" fill="#FCE6E1" stroke="#3B2350" stroke-width="2.8"/><circle cx="19" cy="20" r="2.2" fill="#3B2350"/><circle cx="29" cy="20" r="2.2" fill="#3B2350"/><rect x="21.5" y="25" width="5" height="12" rx="2.5" fill="#FFF9F2" stroke="#3B2350" stroke-width="2.4"/></svg>',
+      check: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="16" fill="#DDF3E6" stroke="#3B2350" stroke-width="2.8"/><path d="M16 24l5.5 5.5L33 18" stroke="#186B41" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      plus: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect x="10" y="10" width="28" height="28" rx="8" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.8"/><path d="M24 16v16M16 24h16" stroke="#6A45C9" stroke-width="3.2" stroke-linecap="round"/></svg>',
+      repeat: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M13 21a11 11 0 0 1 19-6" stroke="#3B2350" stroke-width="3" stroke-linecap="round"/><path d="M32 10v7h-7" stroke="#3B2350" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M35 27a11 11 0 0 1-19 6" stroke="#6A45C9" stroke-width="3" stroke-linecap="round"/><path d="M16 38v-7h7" stroke="#6A45C9" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      adult: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="19" cy="17" r="6" fill="#FFE1CB" stroke="#3B2350" stroke-width="2.6"/><path d="M9 36c0-6 4.5-10 10-10s10 4 10 10" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/><circle cx="33" cy="21" r="4.5" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.6"/><path d="M27 36c0-4 2.7-7 6-7s6 3 6 7" fill="#DDF3E6" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/></svg>',
+      robot: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 8v5" stroke="#3B2350" stroke-width="2.8" stroke-linecap="round"/><rect x="11" y="13" width="26" height="23" rx="6" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.8"/><circle cx="19" cy="23" r="2.6" fill="#3B2350"/><circle cx="29" cy="23" r="2.6" fill="#3B2350"/><path d="M19 30h10" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/></svg>',
+      split: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 38V24L13 13M24 24l11-11" stroke="#3B2350" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 20v-7h7M28 13h7v7" stroke="#6A45C9" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      star: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 8l4.8 9.8 10.8 1.6-7.8 7.6 1.8 10.8L24 32.8l-9.6 5 1.8-10.8-7.8-7.6 10.8-1.6L24 8z" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.8" stroke-linejoin="round"/></svg>',
+      search: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="21" cy="21" r="11" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.8"/><path d="M29 29l9 9" stroke="#3B2350" stroke-width="3.2" stroke-linecap="round"/><path d="M17 21l3 3 5-5" stroke="#186B41" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      erase: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M13 33l14-18 11 9-10 13H17l-4-4z" fill="#FCE6E1" stroke="#3B2350" stroke-width="2.8" stroke-linejoin="round"/><path d="M20 24l10 8M11 37h26" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/></svg>',
+      crown: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M9 34l3-17 12 8 12-8 3 17H9z" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.8" stroke-linejoin="round"/><circle cx="12" cy="14" r="2.4" fill="#FF8F3F"/><circle cx="24" cy="12" r="2.4" fill="#FF8F3F"/><circle cx="36" cy="14" r="2.4" fill="#FF8F3F"/></svg>',
+      play: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="16" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.8"/><path d="M20 16l13 8-13 8V16z" fill="#6A45C9" stroke="#3B2350" stroke-width="2.4" stroke-linejoin="round"/></svg>',
+      friends: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="17" cy="18" r="5" fill="#FFE1CB" stroke="#3B2350" stroke-width="2.6"/><circle cx="31" cy="18" r="5" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.6"/><path d="M9 35c0-5 3.6-8 8-8s8 3 8 8M23 35c0-5 3.6-8 8-8s8 3 8 8" fill="#ECE3FA" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/></svg>',
+      home: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M9 23l15-12 15 12" stroke="#3B2350" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 21v16h22V21" fill="#FFE1CB" stroke="#3B2350" stroke-width="2.8" stroke-linejoin="round"/><rect x="20" y="27" width="8" height="10" rx="1.5" fill="#FFF9F2" stroke="#3B2350" stroke-width="2.4"/></svg>',
+      shield: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 8l13 5v10c0 9-5.8 14.5-13 17-7.2-2.5-13-8-13-17V13l13-5z" fill="#DDF3E6" stroke="#3B2350" stroke-width="2.8" stroke-linejoin="round"/><path d="M18 24l4 4 8-8" stroke="#186B41" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      photo: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect x="8" y="14" width="32" height="23" rx="5" fill="#E1EEFB" stroke="#3B2350" stroke-width="2.8"/><path d="M17 14l2.5-4h9L31 14" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/><circle cx="24" cy="25.5" r="6" fill="#FFF9F2" stroke="#3B2350" stroke-width="2.6"/></svg>',
+      lock: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect x="12" y="21" width="24" height="18" rx="5" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.8"/><path d="M17 21v-5a7 7 0 0 1 14 0v5" stroke="#3B2350" stroke-width="2.8" stroke-linecap="round"/><circle cx="24" cy="30" r="2.6" fill="#3B2350"/></svg>',
+      trash: '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M12 15h24M19 15v-4h10v4" stroke="#3B2350" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 15l2 23h14l2-23" fill="#FCE6E1" stroke="#3B2350" stroke-width="2.8" stroke-linejoin="round"/><path d="M21 21v11M27 21v11" stroke="#B4372B" stroke-width="2.4" stroke-linecap="round"/></svg>'
+    };
+
+    // 文字跳脫與寵物名稱替換工具
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function fmt(text, petName) {
+      return esc(text).replace(/\{pet\}/g, esc(petName));
+    }
+
+    // ===== 3. 掛載至小常識島共用外殼 =====
+    SmartIsland.mount({
+      unit: 32,
+      title: '寵物的 AI 作業',
+      grade: '3–4 年級',
+      zhuyin: false,
+      howto: '寵物想請 AI 幫忙寫作業，哪些用法可以、哪些要小心？',
+      teach: '合宜使用生成式 AI：誠實、查證、保護個資｜資E12 了解並遵守資訊倫理與使用資訊科技的相關規範、資E2 使用資訊科技解決生活中簡單的問題',
+      levels: SCENE_CONFIG.LEVELS.map(function (lv, idx) {
+        return { name: lv.name, icon: SCENE_CONFIG.LEVEL_ICONS[idx] };
+      }),
+
+      scene: function (api) {
+        var alive = false;
+        var runId = 0;        // 避免舊的 feedback Promise 在切換關卡後誤觸發
+        var locked = false;   // 作答後立即鎖定選項，防止連點
+        var qIndex = 0;
+        var review = [];
+        var curLevel = null;
+
+        function getPetName() {
+          var p = api.pet ? api.pet() : null;
+          return (p && p.name) ? p.name : '小雲';
+        }
+
+        // 渲染目前這一題的書桌場景
+        function renderQuestion() {
+          var Q = curLevel.questions[qIndex];
+          var total = curLevel.questions.length;
+          var petName = getPetName();
+
+          locked = false;
+          api.progress(qIndex + 1, total);
+
+          // 第 1 題顯示關卡開場故事，其餘題目顯示簡短步驟提示
+          var stripText = qIndex === 0
+            ? fmt(curLevel.intro, petName)
+            : esc(curLevel.name) + '・第 ' + (qIndex + 1) + ' 題對話情境';
+
+          var optsHtml = Q.options.map(function (opt, idx) {
+            var iconSvg = PIC[opt.pic] || PIC.bulb;
+            return (
+              '<button type="button" class="clay sc-opt" data-idx="' + idx + '" aria-label="選項 ' + (idx + 1) + '：' + esc(opt.text) + '">' +
+                '<span class="sc-tag">' + (idx + 1) + '</span>' +
+                '<span class="sc-opt-ic">' + iconSvg + '</span>' +
+                '<span class="sc-opt-txt">' + esc(opt.text) + '</span>' +
+              '</button>'
+            );
+          }).join('');
+
+          api.field.innerHTML =
+            '<div class="sc-stage">' +
+              '<div class="sc-desk" aria-hidden="true">' + DESK_CUP_SVG + '</div>' +
+
+              // 左側：寵物與 AI 小幫手的對話視窗
+              '<section class="clay sc-chat sc-pop" aria-label="AI 小幫手對話視窗">' +
+                '<div class="sc-chat-head">' +
+                  '<div class="sc-ai-id">' +
+                    '<div class="sc-ai-ava">' + AI_AVATAR_SVG + '</div>' +
+                    '<div class="sc-ai-title">AI 小幫手</div>' +
+                  '</div>' +
+                  '<span class="sc-scene-pill">' + esc(Q.sceneTag) + '</span>' +
+                '</div>' +
+                '<div class="sc-chat-body">' +
+                  '<div class="sc-story-strip">' + stripText + '</div>' +
+                  '<div class="sc-msg sc-msg-pet">' +
+                    '<span class="sc-msg-who">' + esc(petName) + '</span>' +
+                    '<div class="sc-msg-box">' + fmt(Q.petMsg, petName) + '</div>' +
+                  '</div>' +
+                  '<div class="sc-msg sc-msg-ai">' +
+                    '<span class="sc-msg-who">AI 小幫手</span>' +
+                    '<div class="sc-msg-box">' + fmt(Q.aiMsg, petName) + '</div>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="sc-chat-foot" aria-hidden="true">' +
+                  '<span>請在右邊幫 ' + esc(petName) + ' 選出最好的做法</span>' +
+                  SEND_ICON_SVG +
+                '</div>' +
+              '</section>' +
+
+              // 中間：題目卡與三個選項卡
+              '<section class="sc-quiz sc-pop" aria-label="題目與選項">' +
+                '<div class="clay sc-q">' +
+                  '<span class="sc-q-badge">Q' + (qIndex + 1) + '</span>' +
+                  '<p class="sc-q-text">' + esc(Q.q) + '</p>' +
+                '</div>' +
+                '<div class="sc-opts">' + optsHtml + '</div>' +
+              '</section>' +
+
+              // 右側：寵物陪伴與思考泡泡
+              '<aside class="sc-petbox" aria-label="寵物陪伴區">' +
+                '<div class="clay sc-bubble" id="scBubble">' + fmt(Q.bubble, petName) + '</div>' +
+                '<div class="sc-pet" id="scPet">' + api.petSVG('normal', { q: true }) + '</div>' +
+                '<div class="sc-pet-plate">' + esc(petName) + '的書桌</div>' +
+              '</aside>' +
+            '</div>';
+        }
+
+        // 處理作答（支援滑鼠點選與鍵盤 1/2/3）
+        function chooseOption(idx) {
+          if (!alive || locked) return;
+          var Q = curLevel.questions[qIndex];
+          if (idx < 0 || idx >= Q.options.length) return;
+
+          locked = true;
+          var myRun = runId;
+          var ok = idx === Q.ans;
+          var petName = getPetName();
+
+          // 更新按鈕外觀並全部鎖定
+          var btns = api.field.querySelectorAll('.sc-opt');
+          for (var j = 0; j < btns.length; j++) {
+            btns[j].disabled = true;
+            var tag = btns[j].querySelector('.sc-tag');
+            if (j === idx) {
+              btns[j].classList.add(ok ? 'sc-opt-ok' : 'sc-opt-bad');
+              if (tag) tag.textContent = ok ? '✓' : '✗';
+            } else {
+              btns[j].classList.add('sc-opt-dim');
+            }
+          }
+
+          // 即時切換寵物表情與台詞（不閃爍，僅單次反應）
+          var petEl = api.field.querySelector('#scPet');
+          var bubbleEl = api.field.querySelector('#scBubble');
+          if (petEl) {
+            petEl.innerHTML = ok
+              ? api.petSVG('happy', { spark: true })
+              : api.petSVG('worried', { sweat: true });
+            petEl.classList.remove('sc-pop', 'sc-wiggle');
+            petEl.classList.add(ok ? 'sc-pop' : 'sc-wiggle');
+          }
+          if (bubbleEl) {
+            bubbleEl.textContent = ok
+              ? '太好了！謝謝你幫' + petName + '做對選擇！'
+              : '唔⋯⋯原來要注意這件事，我們來看看！';
+          }
+
+          review.push({ ok: ok, q: Q.q });
+
+          // 寬鬆過關：不論對錯皆可按「下一題」繼續
+          api.feedback({
+            ok: ok,
+            text: ok ? Q.okText : '差一點點，一起看看正確觀念吧！',
+            explain: Q.explain,
+            zyExplain: false
+          }).then(function () {
+            if (!alive || myRun !== runId) return;
+            qIndex++;
+            if (qIndex < curLevel.questions.length) {
+              renderQuestion();
+              return;
+            }
+            var right = review.filter(function (r) { return r.ok; }).length;
+            var stars = right >= SCENE_CONFIG.STAR_RULES.three
+              ? 3
+              : right >= SCENE_CONFIG.STAR_RULES.two ? 2 : 1;
+
+            api.finish({
+              stars: stars,
+              review: review,
+              learned: curLevel.learned,
+              retry: right < curLevel.questions.length ? curLevel.retry : ''
+            });
+          });
+        }
+
+        function onFieldClick(e) {
+          var btn = e.target.closest('.sc-opt');
+          if (!btn || !alive || locked) return;
+          var idx = parseInt(btn.getAttribute('data-idx'), 10);
+          if (!isNaN(idx)) chooseOption(idx);
+        }
+
+        function onKeyDown(e) {
+          if (!alive || locked) return;
+          if (e.key === '1' || e.key === '2' || e.key === '3') {
+            chooseOption(parseInt(e.key, 10) - 1);
+          }
+        }
+
+        function cleanup() {
+          alive = false;
+          locked = true;
+          runId++;
+          api.field.removeEventListener('click', onFieldClick);
+          document.removeEventListener('keydown', onKeyDown);
+        }
+
+        return {
+          start: function (levelIndex) {
+            cleanup();
+            alive = true;
+            qIndex = 0;
+            review = [];
+            curLevel = SCENE_CONFIG.LEVELS[levelIndex] || SCENE_CONFIG.LEVELS[0];
+            api.field.innerHTML = '';
+            api.field.addEventListener('click', onFieldClick);
+            document.addEventListener('keydown', onKeyDown);
+            renderQuestion();
+          },
+          stop: function () {
+            cleanup();
+          }
+        };
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

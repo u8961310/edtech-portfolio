@@ -1,0 +1,1260 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>寵物的新電腦 - 小常識島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Baloo+2:wght@700;800&display=swap">
+  <link rel="stylesheet" href="../../assets/css/smart-island.css">
+  <style>
+    /* ===== 本關場景專屬樣式（全數以 sc- 開頭，不覆寫 .sm- 共用樣式） ===== */
+    .sc-stage {
+      position: relative;
+      width: 1366px;
+      height: 591px;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* 題目區：單行寬敞容納注音句，不斷在詞中間 */
+    .sc-q {
+      position: absolute;
+      left: 30px;
+      top: 18px;
+      width: 916px;
+      height: 102px;
+      padding: 12px 26px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-sizing: border-box;
+    }
+    .sc-q-num {
+      flex: 0 0 auto;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--violet);
+      color: #fff;
+      font: 800 24px/1 var(--f-num, 'Baloo 2', sans-serif);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 0 var(--violet-d);
+    }
+    .sc-q-text {
+      margin: 0;
+      color: var(--ink);
+      font-weight: 700;
+      white-space: nowrap;
+      line-height: 1.4;
+    }
+    .sc-q-text.sm-zy {
+      font-size: 36px;
+    }
+    .sc-neg {
+      color: var(--bad);
+      font-weight: 900;
+      text-decoration: underline;
+      text-decoration-thickness: 4px;
+      text-underline-offset: 5px;
+      padding: 0 2px;
+    }
+
+    /* ===== 第 1 關：書桌上的電腦互動場景 ===== */
+    .sc-desk-wrap {
+      position: absolute;
+      left: 30px;
+      top: 136px;
+      width: 916px;
+      height: 432px;
+      padding: 0;
+      overflow: hidden;
+      box-sizing: border-box;
+      background: #FFF9F2;
+    }
+    .sc-desk-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .sc-desk-tip {
+      position: absolute;
+      left: 50%;
+      bottom: 12px;
+      transform: translateX(-50%);
+      background: var(--butter);
+      border: 3px solid var(--edge);
+      border-radius: 999px;
+      padding: 6px 22px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--ink);
+      box-shadow: 0 4px 0 rgba(233, 213, 196, .8);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .sc-desk-tip .sm-zy {
+      font-size: 20px;
+      line-height: 1.3;
+    }
+    .sc-desk-tip svg {
+      width: 24px;
+      height: 24px;
+      flex: 0 0 auto;
+    }
+
+    /* 書桌可點設備感應區（皆 >= 124x112，遠高於 96x80 規範） */
+    .sc-hotspot {
+      position: absolute;
+      background: transparent;
+      border: 3px solid transparent;
+      border-radius: 22px;
+      padding: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform .18s ease-out, background-color .18s ease-out, border-color .18s ease-out, box-shadow .18s ease-out;
+    }
+    .sc-hotspot svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+    .sc-hotspot:hover:not(:disabled) {
+      transform: translateY(-4px);
+      background: rgba(255, 240, 196, .55);
+      border-color: var(--orange);
+      box-shadow: 0 8px 16px rgba(59, 35, 80, .14);
+    }
+    .sc-hotspot:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+    .sc-hotspot:focus-visible {
+      outline: 4px solid var(--violet);
+      outline-offset: 3px;
+    }
+    .sc-hotspot:disabled {
+      cursor: default;
+    }
+    .sc-hotspot.is-ok {
+      background: var(--ok-soft);
+      border-color: var(--ok);
+      box-shadow: 0 6px 0 rgba(24, 107, 65, .28);
+      animation: sc-pop .32s ease-out;
+    }
+    .sc-hotspot.is-bad {
+      background: var(--bad-soft);
+      border-color: var(--bad);
+      box-shadow: 0 6px 0 rgba(180, 55, 43, .28);
+      animation: sc-shake .32s ease-out;
+    }
+
+    /* ===== 第 2、3 關：3 張大圖卡選項 ===== */
+    .sc-opts {
+      position: absolute;
+      left: 30px;
+      top: 150px;
+      width: 916px;
+      height: 404px;
+      display: flex;
+      gap: 22px;
+      box-sizing: border-box;
+    }
+    .sc-opt {
+      position: relative;
+      flex: 1 1 0;
+      min-width: 260px;
+      height: 384px;
+      padding: 18px 16px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--ink);
+      cursor: pointer;
+      box-sizing: border-box;
+      transition: transform .18s ease-out, border-color .18s ease-out, background-color .18s ease-out;
+    }
+    .sc-opt:hover:not(:disabled) {
+      transform: translateY(-4px);
+      border-color: var(--orange);
+    }
+    .sc-opt:active:not(:disabled) {
+      transform: translateY(2px);
+    }
+    .sc-opt:focus-visible {
+      outline: 4px solid var(--violet);
+      outline-offset: 3px;
+    }
+    .sc-opt:disabled {
+      cursor: default;
+    }
+    .sc-opt.is-ok {
+      background: var(--ok-soft);
+      border-color: var(--ok);
+      animation: sc-pop .32s ease-out;
+    }
+    .sc-opt.is-bad {
+      background: var(--bad-soft);
+      border-color: var(--bad);
+      animation: sc-shake .32s ease-out;
+    }
+    .sc-tag {
+      position: absolute;
+      left: 16px;
+      top: 16px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--violet);
+      color: #fff;
+      font: 800 22px/1 var(--f-num, 'Baloo 2', sans-serif);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 0 var(--violet-d);
+    }
+    .sc-pic {
+      width: 230px;
+      height: 224px;
+      margin-top: 14px;
+      border-radius: 20px;
+      background: var(--sky);
+      border: 2px solid rgba(59, 35, 80, .08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    .sc-opt:nth-child(2) .sc-pic { background: var(--butter); }
+    .sc-opt:nth-child(3) .sc-pic { background: var(--lilac); }
+    .sc-opt.is-ok .sc-pic { background: #fff; }
+    .sc-opt.is-bad .sc-pic { background: #fff; }
+    .sc-pic svg {
+      width: 204px;
+      height: 174px;
+      display: block;
+    }
+    .sc-label {
+      margin: 4px 0 0;
+      color: var(--ink);
+      font-weight: 700;
+      white-space: nowrap;
+      line-height: 1.35;
+    }
+    .sc-label.sm-zy {
+      font-size: 30px;
+    }
+
+    /* 對錯符號徽章（不只靠紅綠，清楚顯示 ✓ / ✗） */
+    .sc-mark {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      color: #fff;
+      font: 900 26px/1 'Noto Sans TC', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 0 rgba(59, 35, 80, .18);
+      pointer-events: none;
+    }
+    .sc-mark.ok { background: var(--ok); }
+    .sc-mark.bad { background: var(--bad); }
+
+    /* ===== 右側寵物陪伴區 ===== */
+    .sc-petbox {
+      position: absolute;
+      left: 974px;
+      top: 22px;
+      width: 362px;
+      height: 546px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      box-sizing: border-box;
+    }
+    .sc-bubble {
+      position: relative;
+      width: 356px;
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      text-align: center;
+      color: var(--ink);
+      background: var(--card);
+      box-sizing: border-box;
+    }
+    .sc-bubble::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: -14px;
+      width: 22px;
+      height: 22px;
+      background: var(--card);
+      border-right: 3px solid var(--edge);
+      border-bottom: 3px solid var(--edge);
+      transform: translateX(-50%) rotate(45deg);
+      border-radius: 0 0 6px 0;
+    }
+    .sc-bubble-lines {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .sc-line {
+      display: block;
+      white-space: nowrap;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+    .sc-line.sm-zy {
+      font-size: 21px;
+    }
+    .sc-pet-wrap {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sc-pet-shadow {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 210px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(59, 35, 80, .1);
+      pointer-events: none;
+    }
+    .sc-pet {
+      position: relative;
+      width: 292px;
+      height: 292px;
+      z-index: 1;
+    }
+    .sc-pet svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    .sc-petname {
+      margin-top: 6px;
+      padding: 6px 20px;
+      border-radius: 999px;
+      background: var(--lilac);
+      border: 3px solid #D4C4F4;
+      color: var(--ink);
+      font-weight: 900;
+      font-size: 20px;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sc-petname svg {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    /* 回饋瞬間短動畫（不連續閃爍） */
+    @keyframes sc-pop {
+      0% { transform: scale(1); }
+      45% { transform: scale(1.04); }
+      100% { transform: scale(1); }
+    }
+    @keyframes sc-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-7px); }
+      65% { transform: translateX(7px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sc-hotspot, .sc-opt { transition: none !important; }
+      .sc-hotspot.is-ok, .sc-hotspot.is-bad,
+      .sc-opt.is-ok, .sc-opt.is-bad { animation: none !important; }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/smart-pet.js"></script>
+  <script src="../../assets/js/smart-ui.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    // =========================================================================
+    // 具名設定常數：集中管理星星門檻、書桌設備座標與 3 關全部題庫
+    // =========================================================================
+    var SCENE_CONFIG = {
+      // 星星門檻：該關 5 題答對 5 題 → 3 顆；3–4 題 → 2 顆；0–2 題 → 1 顆
+      STARS: { three: 5, two: 3, one: 0 },
+
+      // 第 1 關書桌上的 6 個互動設備（每個感應區皆 >= 124×112，不重疊）
+      DESK_ITEMS: [
+        { key: 'headset',  name: '耳機', posLabel: '書桌左上角設備', x: 34,  y: 36,  w: 146, h: 158 },
+        { key: 'speaker',  name: '音響', posLabel: '書桌左下角設備', x: 48,  y: 220, w: 136, h: 144 },
+        { key: 'screen',   name: '螢幕', posLabel: '書桌正上方設備', x: 254, y: 24,  w: 296, h: 196 },
+        { key: 'keyboard', name: '鍵盤', posLabel: '書桌中下方設備', x: 244, y: 242, w: 306, h: 118 },
+        { key: 'mouse',    name: '滑鼠', posLabel: '書桌中右側設備', x: 574, y: 242, w: 124, h: 112 },
+        { key: 'host',     name: '主機', posLabel: '書桌最右側設備', x: 722, y: 50,  w: 154, h: 274 }
+      ],
+
+      // 3 關題目資料（選項順序固定不洗牌；每題皆含 options/why/ans/explain）
+      LEVELS: [
+        {
+          name: '書桌上的電腦',
+          mode: 'desk',
+          learned: '我認識螢幕、鍵盤、滑鼠、主機跟耳機',
+          retry: '答錯的設備，再找一次！',
+          questions: [
+            {
+              q: '滑鼠在哪裡？',
+              petLines: ['{PET}買了新電腦！', '快幫我找出來！'],
+              options: [
+                { text: '滑鼠', pic: 'mouse',    why: '正解' },
+                { text: '鍵盤', pic: 'keyboard', why: '知道鍵盤能操作電腦，誤以為打字跟點選是同一個\u{E01E1}設備' },
+                { text: '耳機', pic: 'headset',  why: '尚未記熟桌上配件名稱，誤點旁邊的圓潤配件' }
+              ],
+              ans: 0,
+              explain: '滑鼠放在鍵盤旁邊，用來點選畫面。'
+            },
+            {
+              q: '螢幕在哪裡？',
+              petLines: ['可以看到畫面的', '是哪一個\u{E01E1}呢？'],
+              options: [
+                { text: '主機', pic: 'host',     why: '常把主機箱誤認成顯示畫面的螢幕' },
+                { text: '螢幕', pic: 'screen',   why: '正解' },
+                { text: '鍵盤', pic: 'keyboard', why: '還沒分清螢幕與鍵盤兩個\u{E01E1}名稱' }
+              ],
+              ans: 1,
+              explain: '螢幕會顯示畫面，像一台小電視。'
+            },
+            {
+              q: '鍵盤在哪裡？',
+              petLines: ['有好多按鍵，', '是哪一個\u{E01E1}呢？'],
+              options: [
+                { text: '螢幕', pic: 'screen',   why: '習慣平板觸控打字，誤點螢幕' },
+                { text: '滑鼠', pic: 'mouse',    why: '知道滑鼠上面也有按鍵，和鍵盤搞混' },
+                { text: '鍵盤', pic: 'keyboard', why: '正解' }
+              ],
+              ans: 2,
+              explain: '鍵盤上有許多按鍵，用來打字。'
+            },
+            {
+              q: '耳機在哪裡？',
+              petLines: ['可以戴在頭上，', '安靜聽歌喔！'],
+              options: [
+                { text: '音響', pic: 'speaker',  why: '知道音響也能播聲音，把耳機和音響搞混' },
+                { text: '耳機', pic: 'headset',  why: '正解' },
+                { text: '滑鼠', pic: 'mouse',    why: '沒有注意頭戴式圓弧外型，誤點滑鼠' }
+              ],
+              ans: 1,
+              explain: '耳機戴在頭上，只有自己聽見聲音。'
+            },
+            {
+              q: '主機在哪裡？',
+              petLines: ['開機按鈕就在', '它的身上喔！'],
+              options: [
+                { text: '螢幕', pic: 'screen',   why: '以為看到的螢幕本身就是電腦主機' },
+                { text: '音響', pic: 'speaker',  why: '音響也是立在桌上的方形箱子，容易和主機搞混' },
+                { text: '主機', pic: 'host',     why: '正解' }
+              ],
+              ans: 2,
+              explain: '主機像電腦的身體，裡面有電腦零件。'
+            }
+          ]
+        },
+        {
+          name: '設備小幫手',
+          mode: 'cards',
+          learned: '我知道打字、看片、印圖要選哪個\u{E01E1}設備',
+          retry: '答錯的設備用途，再練一次！',
+          questions: [
+            {
+              q: '想自己聽歌，要用哪一個\u{E01E1}？',
+              petLines: ['{PET}好想聽歌，', '又不想吵到別人！'],
+              options: [
+                { text: '麥克風', pic: 'mic',      why: '把同樣和聲音有關、負責收音的麥克風當成聽歌設備' },
+                { text: '耳機',   pic: 'headset',  why: '正解' },
+                { text: '鍵盤',   pic: 'keyboard', why: '以為按鍵盤就能放出聲音，不清楚發聲設備' }
+              ],
+              ans: 1,
+              explain: '耳機可以聽聲音，不會吵到別人。'
+            },
+            {
+              q: '想在電腦打字，選哪一個\u{E01E1}？',
+              petLines: ['我想打一張卡片', '送給好朋友！'],
+              options: [
+                { text: '鍵盤', pic: 'keyboard', why: '正解' },
+                { text: '滑鼠', pic: 'mouse',    why: '知道滑鼠能操作電腦，誤以為也能直接打字' },
+                { text: '螢幕', pic: 'screen',   why: '平常滑平板觸控打字，誤以為桌機也靠螢幕打字' }
+              ],
+              ans: 0,
+              explain: '鍵盤上有許多按鍵，是用來打字的。'
+            },
+            {
+              q: '想看動物影片，選哪一個\u{E01E1}？',
+              petLines: ['今天想看可愛的', '小狗影片喔！'],
+              options: [
+                { text: '音響', pic: 'speaker', why: '看影片時會有聲音，誤以為音響會播畫面' },
+                { text: '主機', pic: 'host',    why: '以為主機箱本身就能直接放出影片畫面' },
+                { text: '螢幕', pic: 'screen',  why: '正解' }
+              ],
+              ans: 2,
+              explain: '螢幕會顯示圖片跟影片，讓眼睛看。'
+            },
+            {
+              q: '想把圖畫印出來，選哪一個\u{E01E1}？',
+              petLines: ['我想把畫好的圖', '印出來送老師！'],
+              options: [
+                { text: '印表機', pic: 'printer', why: '正解' },
+                { text: '主機',   pic: 'host',    why: '主機與印表機外型都方方的，誤以為主機能出紙' },
+                { text: '螢幕',   pic: 'screen',  why: '在螢幕上畫圖，誤以為圖畫會從螢幕印出來' }
+              ],
+              ans: 0,
+              explain: '印表機可以把電腦的圖畫印在紙上。'
+            },
+            {
+              q: '視訊想拍到臉，要用哪一個\u{E01E1}？',
+              petLines: ['好想跟外婆視訊', '一起揮揮手！'],
+              options: [
+                { text: '音響',     pic: 'speaker', why: '以為視訊只要有播聲音的音響就夠了' },
+                { text: '麥克風',   pic: 'mic',     why: '知道視訊要講話，把收音的麥克風誤認成拍照鏡頭' },
+                { text: '視訊鏡頭', pic: 'webcam',  why: '正解' }
+              ],
+              ans: 2,
+              explain: '視訊鏡頭會拍下畫面，讓外婆看到你。'
+            }
+          ]
+        },
+        {
+          name: '家裡的資訊產品',
+          mode: 'cards',
+          learned: '我能認出電腦、平板、手機跟智慧手錶',
+          retry: '答錯的資訊產品，再找一次！',
+          questions: [
+            {
+              q: '哪一個\u{E01E1}是資訊產品？',
+              petLines: ['{PET}想找家中的', '資訊產品喔！'],
+              options: [
+                { text: '書本', pic: 'book',   why: '以為書本裡有知識和圖畫，就屬於資訊產品' },
+                { text: '鉛筆', pic: 'pencil', why: '以為鉛筆可以寫字記錄，所以是資訊產品' },
+                { text: '平板', pic: 'tablet', why: '正解' }
+              ],
+              ans: 2,
+              explain: '平板可以上網，是常見的資訊產品。'
+            },
+            {
+              q: '出門想上網查天氣，帶哪個\u{E01E1}？',
+              petLines: ['明天出門玩，', '會不會下雨呢？'],
+              options: [
+                { text: '手機',   pic: 'phone',    why: '正解' },
+                { text: '記事本', pic: 'notebook', why: '知道記事本可以查寫過的筆記，誤以為也能上網查天氣' },
+                { text: '水壺',   pic: 'bottle',   why: '只看到「出門帶哪個\u{E01E1}」，選了出門常帶的水壺' }
+              ],
+              ans: 0,
+              explain: '手機小小一台，出門就能上網查資料。'
+            },
+            {
+              q: '戴在手上能收訊息，是哪個\u{E01E1}？',
+              petLines: ['戴在手腕上的', '酷酷小幫手！'],
+              options: [
+                { text: '積木',     pic: 'blocks',     why: '誤以為積木玩具拼起來像手錶，沒看清能收訊息' },
+                { text: '智慧手錶', pic: 'smartwatch', why: '正解' },
+                { text: '鬧鐘',     pic: 'alarm',      why: '知道鬧鐘可以看時間，忽略它不能戴在手上收訊息' }
+              ],
+              ans: 1,
+              explain: '智慧手錶能戴在手上，也能收訊息。'
+            },
+            {
+              q: '在家想上網查恐龍，用哪個\u{E01E1}？',
+              petLines: ['好想查一查', '霸王龍喔！'],
+              options: [
+                { text: '繪本',   pic: 'book',      why: '知道繪本能看恐龍故事，忽略題目要「上網查」' },
+                { text: '放大鏡', pic: 'magnifier', why: '看到「查」字，聯想到偵探用的放大鏡' },
+                { text: '電腦',   pic: 'laptop',    why: '正解' }
+              ],
+              ans: 2,
+              explain: '電腦連上網路，就能查好多新知識。'
+            },
+            {
+              q: '哪一個\u{E01E1}不是資訊產品？',
+              qHtml: '哪一個\u{E01E1}<strong class="sc-neg">不</strong>是資訊產品？',
+              petLines: ['這題要仔細看', '「不」字喔！'],
+              options: [
+                { text: '平板',     pic: 'tablet',     why: '沒看清楚「不」字，直接選了認識的資訊產品' },
+                { text: '積木',     pic: 'blocks',     why: '正解' },
+                { text: '智慧手錶', pic: 'smartwatch', why: '以為手錶只是普通飾品，不知道智慧手錶也是資訊產品' }
+              ],
+              ans: 1,
+              explain: '積木是玩具，不能上網，不是資訊產品。'
+            }
+          ]
+        }
+      ]
+    };
+
+    // =========================================================================
+    // 關卡卡片圖示（40×40 viewBox，線條 #3B2350 粗 2.6）
+    // =========================================================================
+    var LEVEL_ICONS = [
+      // 第 1 關：書桌上的電腦
+      '<svg viewBox="0 0 40 40" fill="none" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' +
+        '<rect x="6" y="7" width="22" height="16" rx="3.5" fill="#E1EEFB"/>' +
+        '<path d="M17 23v5M12 28h10"/>' +
+        '<rect x="30" y="13" width="6" height="15" rx="2" fill="#ECE3FA"/>' +
+        '<path d="M4 33h32" stroke="#C75F17"/>' +
+      '</svg>',
+      // 第 2 關：設備小幫手（耳機與音符/小星）
+      '<svg viewBox="0 0 40 40" fill="none" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M8 23v-4a12 12 0 0 1 24 0v4"/>' +
+        '<rect x="5" y="21" width="7" height="11" rx="3.5" fill="#FF8F3F"/>' +
+        '<rect x="28" y="21" width="7" height="11" rx="3.5" fill="#FF8F3F"/>' +
+        '<circle cx="20" cy="24" r="3" fill="#FFF0C4"/>' +
+      '</svg>',
+      // 第 3 關：家裡的資訊產品（平板與手機）
+      '<svg viewBox="0 0 40 40" fill="none" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' +
+        '<rect x="5" y="9" width="22" height="18" rx="3.5" fill="#DDF3E6"/>' +
+        '<circle cx="16" cy="23.5" r="1.2" fill="#3B2350" stroke="none"/>' +
+        '<rect x="23" y="14" width="12" height="19" rx="3" fill="#FFF0C4"/>' +
+        '<path d="M27.5 29.5h3"/>' +
+      '</svg>'
+    ];
+
+    // =========================================================================
+    // 可愛線條 inline SVG 圖庫（200×170，用於第 2、3 關圖卡）
+    // =========================================================================
+    var PIC = {
+      mouse:
+        '<svg viewBox="0 0 200 170">' +
+          '<path d="M100 14c0 14 14 14 14 26" stroke="#5C4870" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+          '<rect x="60" y="38" width="80" height="116" rx="40" fill="#FFF9F2" stroke="#3B2350" stroke-width="5"/>' +
+          '<path d="M100 40v44M62 84h76" stroke="#3B2350" stroke-width="4.5"/>' +
+          '<rect x="94" y="54" width="12" height="22" rx="6" fill="#FF8F3F" stroke="#3B2350" stroke-width="3"/>' +
+          '<circle cx="122" cy="122" r="7" fill="#ECE3FA"/>' +
+        '</svg>',
+
+      keyboard:
+        '<svg viewBox="0 0 200 170">' +
+          '<rect x="12" y="48" width="176" height="82" rx="14" fill="#FFF9F2" stroke="#3B2350" stroke-width="5"/>' +
+          (function () {
+            var s = '', r, c;
+            for (r = 0; r < 3; r++) {
+              for (c = 0; c < 8; c++) {
+                s += '<rect x="' + (24 + c * 19.5) + '" y="' + (58 + r * 19) + '" width="15" height="14" rx="3.5" fill="' +
+                  ((r === 1 && c === 3) ? '#FFE1CB' : '#ECE3FA') + '" stroke="#5C4870" stroke-width="2.2"/>';
+              }
+            }
+            return s;
+          })() +
+          '<rect x="54" y="114" width="92" height="11" rx="4.5" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.4"/>' +
+        '</svg>',
+
+      screen:
+        '<svg viewBox="0 0 200 170">' +
+          '<rect x="20" y="16" width="160" height="106" rx="14" fill="#FFF9F2" stroke="#3B2350" stroke-width="5"/>' +
+          '<rect x="32" y="28" width="136" height="82" rx="7" fill="#9BD7F2" stroke="#3B2350" stroke-width="3"/>' +
+          '<path d="M34 94 Q78 62 118 88 T166 80 V108 H34 Z" fill="#7CC79A"/>' +
+          '<circle cx="142" cy="48" r="11" fill="#FFD65E"/>' +
+          '<path d="M100 122v24M64 148h72" stroke="#3B2350" stroke-width="6" stroke-linecap="round"/>' +
+          '<rect x="86" y="122" width="28" height="24" rx="4" fill="#ECE3FA" stroke="#3B2350" stroke-width="4"/>' +
+        '</svg>',
+
+      host:
+        '<svg viewBox="0 0 200 170">' +
+          '<rect x="54" y="14" width="92" height="142" rx="14" fill="#FFF9F2" stroke="#3B2350" stroke-width="5"/>' +
+          '<rect x="68" y="28" width="64" height="16" rx="5" fill="#ECE3FA" stroke="#3B2350" stroke-width="3"/>' +
+          '<circle cx="100" cy="72" r="14" fill="#FF8F3F" stroke="#3B2350" stroke-width="4"/>' +
+          '<path d="M100 64v8" stroke="#FFF9F2" stroke-width="3.5" stroke-linecap="round"/>' +
+          '<rect x="70" y="102" width="60" height="8" rx="4" fill="#D4C4F4"/>' +
+          '<rect x="70" y="116" width="60" height="8" rx="4" fill="#D4C4F4"/>' +
+          '<rect x="70" y="130" width="60" height="8" rx="4" fill="#D4C4F4"/>' +
+        '</svg>',
+
+      headset:
+        '<svg viewBox="0 0 200 170">' +
+          '<path d="M44 96V74a56 56 0 0 1 112 0v22" fill="none" stroke="#3B2350" stroke-width="11" stroke-linecap="round"/>' +
+          '<path d="M44 96V74a56 56 0 0 1 112 0v22" fill="none" stroke="#6A45C9" stroke-width="5" stroke-linecap="round"/>' +
+          '<rect x="28" y="88" width="32" height="58" rx="16" fill="#FF8F3F" stroke="#3B2350" stroke-width="5"/>' +
+          '<rect x="140" y="88" width="32" height="58" rx="16" fill="#FF8F3F" stroke="#3B2350" stroke-width="5"/>' +
+          '<rect x="52" y="96" width="12" height="42" rx="6" fill="#FFF0C4" stroke="#3B2350" stroke-width="3.5"/>' +
+          '<rect x="136" y="96" width="12" height="42" rx="6" fill="#FFF0C4" stroke="#3B2350" stroke-width="3.5"/>' +
+        '</svg>',
+
+      speaker:
+        '<svg viewBox="0 0 200 170">' +
+          '<rect x="48" y="20" width="90" height="132" rx="16" fill="#FFF9F2" stroke="#3B2350" stroke-width="5"/>' +
+          '<circle cx="93" cy="54" r="18" fill="#ECE3FA" stroke="#3B2350" stroke-width="4.5"/>' +
+          '<circle cx="93" cy="54" r="6" fill="#6A45C9"/>' +
+          '<circle cx="93" cy="108" r="28" fill="#FFE1CB" stroke="#3B2350" stroke-width="4.5"/>' +
+          '<circle cx="93" cy="108" r="10" fill="#FF8F3F" stroke="#3B2350" stroke-width="3"/>' +
+          '<path d="M150 56c10 10 10 28 0 38M162 44c16 18 16 44 0 62" fill="none" stroke="#6A45C9" stroke-width="4.5" stroke-linecap="round"/>' +
+        '</svg>',
+
+      mic:
+        '<svg viewBox="0 0 200 170">' +
+          '<rect x="74" y="18" width="52" height="78" rx="26" fill="#ECE3FA" stroke="#3B2350" stroke-width="5"/>' +
+          '<path d="M78 44h44M78 58h44M78 72h44" stroke="#5C4870" stroke-width="3.5" stroke-linecap="round"/>' +
+          '<path d="M60 72v18a40 40 0 0 0 80 0V72" fill="none" stroke="#3B2350" stroke-width="5" stroke-linecap="round"/>' +
+          '<path d="M100 130v22M70 152h60" stroke="#3B2350" stroke-width="6" stroke-linecap="round"/>' +
+          '<circle cx="100" cy="112" r="6" fill="#FF8F3F"/>' +
+        '</svg>',
+
+      printer:
+        '<svg viewBox="0 0 200 170">' +
+          '<rect x="54" y="16" width="92" height="36" rx="6" fill="#FFF9F2" stroke="#3B2350" stroke-width="4.5"/>' +
+          '<rect x="26" y="48" width="148" height="70" rx="16" fill="#ECE3FA" stroke="#3B2350" stroke-width="5"/>' +
+          '<circle cx="150" cy="70" r="7" fill="#FF8F3F" stroke="#3B2350" stroke-width="3"/>' +
+          '<rect x="46" y="96" width="108" height="10" rx="5" fill="#3B2350"/>' +
+          '<rect x="56" y="100" width="88" height="54" rx="6" fill="#FFF9F2" stroke="#3B2350" stroke-width="4.5"/>' +
+          '<circle cx="82" cy="120" r="8" fill="#FFD65E"/>' +
+          '<path d="M64 144 Q90 124 112 138 T138 134 V148 H64 Z" fill="#7CC79A"/>' +
+        '</svg>',
+
+      webcam:
+        '<svg viewBox="0 0 200 170">' +
+          '<path d="M66 146h68l-14-26H80z" fill="#ECE3FA" stroke="#3B2350" stroke-width="5" stroke-linejoin="round"/>' +
+          '<circle cx="100" cy="74" r="50" fill="#FFF9F2" stroke="#3B2350" stroke-width="5"/>' +
+          '<circle cx="100" cy="74" r="30" fill="#6A45C9" stroke="#3B2350" stroke-width="4.5"/>' +
+          '<circle cx="100" cy="74" r="14" fill="#3B2350"/>' +
+          '<circle cx="92" cy="66" r="6" fill="#FFF9F2"/>' +
+          '<circle cx="132" cy="48" r="5" fill="#186B41"/>' +
+        '</svg>',
+
+      tablet:
+        '<svg viewBox="0 0 200 170">' +
+          '<rect x="20" y="24" width="160" height="122" rx="18" fill="#FFF9F2" stroke="#3B2350" stroke-width="5"/>' +
+          '<rect x="34" y="38" width="120" height="94" rx="8" fill="#E1EEFB" stroke="#3B2350" stroke-width="3.5"/>' +
+          '<rect x="48" y="52" width="26" height="26" rx="7" fill="#FF8F3F"/>' +
+          '<rect x="82" y="52" width="26" height="26" rx="7" fill="#6A45C9"/>' +
+          '<rect x="116" y="52" width="26" height="26" rx="7" fill="#7CC79A"/>' +
+          '<rect x="48" y="88" width="94" height="28" rx="8" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.5"/>' +
+          '<circle cx="167" cy="85" r="6" fill="#ECE3FA" stroke="#3B2350" stroke-width="3"/>' +
+        '</svg>',
+
+      phone:
+        '<svg viewBox="0 0 200 170">' +
+          '<rect x="58" y="14" width="84" height="142" rx="18" fill="#FFF9F2" stroke="#3B2350" stroke-width="5"/>' +
+          '<rect x="68" y="32" width="64" height="100" rx="8" fill="#9BD7F2" stroke="#3B2350" stroke-width="3"/>' +
+          '<path d="M90 23h20" stroke="#3B2350" stroke-width="4" stroke-linecap="round"/>' +
+          '<circle cx="100" cy="144" r="5" fill="#FF8F3F"/>' +
+          '<circle cx="92" cy="66" r="13" fill="#FFD65E"/>' +
+          '<path d="M84 92h34a10 10 0 0 0 0-20 14 14 0 0 0-26-4 12 12 0 0 0-8 24z" fill="#FFF9F2" stroke="#3B2350" stroke-width="3"/>' +
+        '</svg>',
+
+      smartwatch:
+        '<svg viewBox="0 0 200 170">' +
+          '<rect x="74" y="10" width="52" height="150" rx="14" fill="#6A45C9" stroke="#3B2350" stroke-width="5"/>' +
+          '<rect x="58" y="42" width="84" height="86" rx="22" fill="#FFF9F2" stroke="#3B2350" stroke-width="5"/>' +
+          '<rect x="142" y="68" width="10" height="26" rx="5" fill="#FF8F3F" stroke="#3B2350" stroke-width="3.5"/>' +
+          '<rect x="68" y="52" width="64" height="66" rx="14" fill="#3B2350"/>' +
+          '<rect x="80" y="66" width="40" height="24" rx="5" fill="#FFF0C4"/>' +
+          '<path d="M82 68l18 12 18-12" fill="none" stroke="#3B2350" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<rect x="82" y="98" width="36" height="8" rx="4" fill="#7CC79A"/>' +
+        '</svg>',
+
+      laptop:
+        '<svg viewBox="0 0 200 170">' +
+          '<rect x="32" y="24" width="136" height="88" rx="12" fill="#FFF9F2" stroke="#3B2350" stroke-width="5"/>' +
+          '<rect x="44" y="36" width="112" height="64" rx="6" fill="#E1EEFB" stroke="#3B2350" stroke-width="3"/>' +
+          '<circle cx="88" cy="64" r="14" fill="#FFF0C4" stroke="#3B2350" stroke-width="3.5"/>' +
+          '<path d="M98 74l12 12" stroke="#3B2350" stroke-width="4.5" stroke-linecap="round"/>' +
+          '<path d="M18 112h164l10 30H8z" fill="#ECE3FA" stroke="#3B2350" stroke-width="5" stroke-linejoin="round"/>' +
+          '<rect x="78" y="128" width="44" height="8" rx="4" fill="#FF8F3F"/>' +
+        '</svg>',
+
+      book:
+        '<svg viewBox="0 0 200 170">' +
+          '<path d="M44 26h104a12 12 0 0 1 12 12v102a8 8 0 0 1-8 8H44a12 12 0 0 1-12-12V38a12 12 0 0 1 12-12z" fill="#FF8F3F" stroke="#3B2350" stroke-width="5"/>' +
+          '<path d="M54 26v122" stroke="#3B2350" stroke-width="4.5"/>' +
+          '<rect x="72" y="48" width="66" height="44" rx="8" fill="#FFF9F2" stroke="#3B2350" stroke-width="3.5"/>' +
+          '<polygon points="105,56 109,66 120,66 111,72 115,82 105,76 95,82 99,72 90,66 101,66" fill="#FFD65E" stroke="#3B2350" stroke-width="2.5" stroke-linejoin="round"/>' +
+          '<path d="M74 112h62M74 126h44" stroke="#FFF9F2" stroke-width="5" stroke-linecap="round"/>' +
+        '</svg>',
+
+      pencil:
+        '<svg viewBox="0 0 200 170">' +
+          '<g transform="rotate(-32 100 85)">' +
+            '<rect x="34" y="66" width="106" height="36" rx="6" fill="#FFD65E" stroke="#3B2350" stroke-width="5"/>' +
+            '<path d="M36 78h102M36 90h102" stroke="#C75F17" stroke-width="2.8"/>' +
+            '<rect x="20" y="66" width="22" height="36" rx="8" fill="#F8A8A8" stroke="#3B2350" stroke-width="5"/>' +
+            '<rect x="38" y="66" width="12" height="36" fill="#ECE3FA" stroke="#3B2350" stroke-width="4"/>' +
+            '<polygon points="140,66 178,84 140,102" fill="#FFE1CB" stroke="#3B2350" stroke-width="5" stroke-linejoin="round"/>' +
+            '<polygon points="164,77 178,84 164,91" fill="#3B2350"/>' +
+          '</g>' +
+        '</svg>',
+
+      notebook:
+        '<svg viewBox="0 0 200 170">' +
+          '<rect x="46" y="22" width="114" height="128" rx="12" fill="#FFF9F2" stroke="#3B2350" stroke-width="5"/>' +
+          '<path d="M68 54h72M68 78h72M68 102h72M68 126h50" stroke="#9D8BB5" stroke-width="4.5" stroke-linecap="round"/>' +
+          '<rect x="34" y="38" width="22" height="10" rx="5" fill="#6A45C9" stroke="#3B2350" stroke-width="3.5"/>' +
+          '<rect x="34" y="66" width="22" height="10" rx="5" fill="#6A45C9" stroke="#3B2350" stroke-width="3.5"/>' +
+          '<rect x="34" y="94" width="22" height="10" rx="5" fill="#6A45C9" stroke="#3B2350" stroke-width="3.5"/>' +
+          '<rect x="34" y="122" width="22" height="10" rx="5" fill="#6A45C9" stroke="#3B2350" stroke-width="3.5"/>' +
+        '</svg>',
+
+      bottle:
+        '<svg viewBox="0 0 200 170">' +
+          '<rect x="82" y="14" width="36" height="22" rx="6" fill="#6A45C9" stroke="#3B2350" stroke-width="4.5"/>' +
+          '<rect x="74" y="34" width="52" height="14" rx="7" fill="#FF8F3F" stroke="#3B2350" stroke-width="4.5"/>' +
+          '<rect x="64" y="48" width="72" height="106" rx="22" fill="#9BD7F2" stroke="#3B2350" stroke-width="5"/>' +
+          '<rect x="76" y="76" width="48" height="44" rx="12" fill="#FFF9F2" stroke="#3B2350" stroke-width="3.5"/>' +
+          '<circle cx="100" cy="98" r="10" fill="#FFD65E"/>' +
+        '</svg>',
+
+      blocks:
+        '<svg viewBox="0 0 200 170">' +
+          '<rect x="32" y="92" width="64" height="58" rx="10" fill="#FF8F3F" stroke="#3B2350" stroke-width="5"/>' +
+          '<rect x="104" y="92" width="64" height="58" rx="10" fill="#7CC79A" stroke="#3B2350" stroke-width="5"/>' +
+          '<polygon points="100,24 148,92 52,92" fill="#FFD65E" stroke="#3B2350" stroke-width="5" stroke-linejoin="round"/>' +
+          '<circle cx="64" cy="121" r="11" fill="#FFF9F2"/>' +
+          '<rect x="125" y="110" width="22" height="22" rx="4" fill="#FFF9F2"/>' +
+        '</svg>',
+
+      alarm:
+        '<svg viewBox="0 0 200 170">' +
+          '<circle cx="54" cy="40" r="20" fill="#FF8F3F" stroke="#3B2350" stroke-width="5"/>' +
+          '<circle cx="146" cy="40" r="20" fill="#FF8F3F" stroke="#3B2350" stroke-width="5"/>' +
+          '<path d="M62 134l-14 20M138 134l14 20" stroke="#3B2350" stroke-width="7" stroke-linecap="round"/>' +
+          '<circle cx="100" cy="92" r="54" fill="#FFF9F2" stroke="#3B2350" stroke-width="5"/>' +
+          '<circle cx="100" cy="92" r="42" fill="#FFF0C4" stroke="#3B2350" stroke-width="3"/>' +
+          '<path d="M100 92V66M100 92l20 12" stroke="#3B2350" stroke-width="5.5" stroke-linecap="round"/>' +
+          '<circle cx="100" cy="92" r="6" fill="#B4372B"/>' +
+        '</svg>',
+
+      magnifier:
+        '<svg viewBox="0 0 200 170">' +
+          '<path d="M118 104l42 42" stroke="#C75F17" stroke-width="18" stroke-linecap="round"/>' +
+          '<path d="M118 104l42 42" stroke="#FF8F3F" stroke-width="10" stroke-linecap="round"/>' +
+          '<circle cx="84" cy="74" r="46" fill="#E1EEFB" stroke="#3B2350" stroke-width="8"/>' +
+          '<path d="M60 56a28 28 0 0 1 28-14" fill="none" stroke="#FFF9F2" stroke-width="6" stroke-linecap="round"/>' +
+        '</svg>'
+    };
+
+    // =========================================================================
+    // 第 1 關書桌背景與各設備專屬 SVG（可愛黏土玩具感）
+    // =========================================================================
+    var DESK_BG_SVG =
+      '<svg class="sc-desk-bg" viewBox="0 0 916 432" preserveAspectRatio="none">' +
+        // 溫馨奶油書房牆面
+        '<rect x="0" y="0" width="916" height="236" fill="#FDF3E7"/>' +
+        // 左側裝飾小窗戶（靜態白雲，不干擾設備）
+        '<rect x="192" y="20" width="54" height="72" rx="12" fill="#E1EEFB" stroke="#E9D5C4" stroke-width="4"/>' +
+        '<path d="M192 56h54M219 20v72" stroke="#E9D5C4" stroke-width="3"/>' +
+        // 右側牆上裝飾小便條紙（視覺活潑但不像設備）
+        '<rect x="576" y="34" width="114" height="72" rx="12" fill="#ECE3FA" stroke="#D4C4F4" stroke-width="3.5"/>' +
+        '<circle cx="633" cy="44" r="5" fill="#FF8F3F"/>' +
+        '<path d="M594 64h78M594 82h52" stroke="#9D8BB5" stroke-width="4" stroke-linecap="round"/>' +
+        // 書桌桌面（木頭色與前緣立體厚邊）
+        '<path d="M0 198 H916 V374 H0 Z" fill="#F4D3B2"/>' +
+        '<path d="M0 198 H916" stroke="#D9A87E" stroke-width="5"/>' +
+        '<rect x="0" y="370" width="916" height="62" fill="#E6BC94"/>' +
+        '<path d="M0 370 H916" stroke="#C9966B" stroke-width="4"/>' +
+        // 滑鼠墊（放滑鼠的明確區域）
+        '<rect x="568" y="246" width="136" height="106" rx="22" fill="#DDF3E6" stroke="#9AD3B3" stroke-width="3.5"/>' +
+        // 鍵盤下方淡色桌墊
+        '<rect x="234" y="242" width="324" height="116" rx="18" fill="#FBE6CF" stroke="#E2B991" stroke-width="2.5"/>' +
+      '</svg>';
+
+    var DESK_DEVICE_SVG = {
+      headset:
+        '<svg viewBox="0 0 140 150">' +
+          // 耳機架
+          '<path d="M70 132V34M42 134h56" stroke="#C75F17" stroke-width="7" stroke-linecap="round"/>' +
+          // 頭戴式耳機
+          '<path d="M32 76V60a38 38 0 0 1 76 0v16" fill="none" stroke="#3B2350" stroke-width="10" stroke-linecap="round"/>' +
+          '<path d="M32 76V60a38 38 0 0 1 76 0v16" fill="none" stroke="#6A45C9" stroke-width="4.5" stroke-linecap="round"/>' +
+          '<rect x="20" y="70" width="24" height="44" rx="12" fill="#FF8F3F" stroke="#3B2350" stroke-width="4.5"/>' +
+          '<rect x="96" y="70" width="24" height="44" rx="12" fill="#FF8F3F" stroke="#3B2350" stroke-width="4.5"/>' +
+          '<rect x="38" y="76" width="9" height="32" rx="4.5" fill="#FFF0C4" stroke="#3B2350" stroke-width="3"/>' +
+          '<rect x="93" y="76" width="9" height="32" rx="4.5" fill="#FFF0C4" stroke="#3B2350" stroke-width="3"/>' +
+        '</svg>',
+
+      speaker:
+        '<svg viewBox="0 0 130 138">' +
+          '<rect x="22" y="14" width="76" height="110" rx="15" fill="#FFF9F2" stroke="#3B2350" stroke-width="4.5"/>' +
+          '<circle cx="60" cy="44" r="14" fill="#ECE3FA" stroke="#3B2350" stroke-width="4"/>' +
+          '<circle cx="60" cy="44" r="5" fill="#6A45C9"/>' +
+          '<circle cx="60" cy="88" r="22" fill="#FFE1CB" stroke="#3B2350" stroke-width="4"/>' +
+          '<circle cx="60" cy="88" r="8" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.5"/>' +
+          '<path d="M107 46c8 8 8 22 0 30M116 36c13 14 13 36 0 50" fill="none" stroke="#6A45C9" stroke-width="4" stroke-linecap="round"/>' +
+        '</svg>',
+
+      screen:
+        '<svg viewBox="0 0 290 190">' +
+          '<rect x="14" y="8" width="262" height="142" rx="16" fill="#FFF9F2" stroke="#3B2350" stroke-width="5"/>' +
+          '<rect x="28" y="22" width="234" height="114" rx="8" fill="#9BD7F2" stroke="#3B2350" stroke-width="3.5"/>' +
+          '<path d="M30 114 Q100 72 162 108 T260 96 V134 H30 Z" fill="#7CC79A"/>' +
+          '<circle cx="222" cy="48" r="14" fill="#FFD65E"/>' +
+          '<rect x="44" y="36" width="24" height="24" rx="6" fill="#FFF9F2" stroke="#3B2350" stroke-width="2.5"/>' +
+          '<rect x="44" y="68" width="24" height="24" rx="6" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.5"/>' +
+          '<rect x="128" y="150" width="34" height="26" rx="4" fill="#ECE3FA" stroke="#3B2350" stroke-width="4.5"/>' +
+          '<rect x="92" y="172" width="106" height="12" rx="6" fill="#FFF9F2" stroke="#3B2350" stroke-width="4.5"/>' +
+        '</svg>',
+
+      keyboard:
+        '<svg viewBox="0 0 300 112">' +
+          '<rect x="8" y="10" width="284" height="92" rx="14" fill="#FFF9F2" stroke="#3B2350" stroke-width="5"/>' +
+          (function () {
+            var s = '', r, c;
+            for (r = 0; r < 3; r++) {
+              for (c = 0; c < 11; c++) {
+                s += '<rect x="' + (22 + c * 23.5) + '" y="' + (22 + r * 20) + '" width="18" height="14" rx="3.5" fill="' +
+                  ((r === 1 && c === 5) ? '#FFE1CB' : '#ECE3FA') + '" stroke="#5C4870" stroke-width="2"/>';
+              }
+            }
+            return s;
+          })() +
+          '<rect x="82" y="82" width="136" height="12" rx="5" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.5"/>' +
+        '</svg>',
+
+      mouse:
+        '<svg viewBox="0 0 118 106">' +
+          '<path d="M59 4c0 10 12 10 12 18" fill="none" stroke="#5C4870" stroke-width="4.5" stroke-linecap="round"/>' +
+          '<rect x="28" y="20" width="62" height="80" rx="31" fill="#FFF9F2" stroke="#3B2350" stroke-width="4.5"/>' +
+          '<path d="M59 22v30M30 52h58" stroke="#3B2350" stroke-width="4"/>' +
+          '<rect x="54" y="30" width="10" height="16" rx="5" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.5"/>' +
+          '<circle cx="74" cy="76" r="5" fill="#ECE3FA"/>' +
+        '</svg>',
+
+      host:
+        '<svg viewBox="0 0 148 266">' +
+          '<rect x="14" y="10" width="120" height="246" rx="18" fill="#FFF9F2" stroke="#3B2350" stroke-width="5"/>' +
+          '<rect x="30" y="30" width="88" height="22" rx="6" fill="#ECE3FA" stroke="#3B2350" stroke-width="3.5"/>' +
+          '<rect x="30" y="64" width="52" height="12" rx="4" fill="#D4C4F4" stroke="#3B2350" stroke-width="2.5"/>' +
+          '<circle cx="104" cy="70" r="6" fill="#186B41"/>' +
+          '<circle cx="74" cy="122" r="22" fill="#FFE1CB" stroke="#FF8F3F" stroke-width="4"/>' +
+          '<circle cx="74" cy="122" r="14" fill="#FF8F3F" stroke="#3B2350" stroke-width="3.5"/>' +
+          '<path d="M74 114v8" stroke="#FFF9F2" stroke-width="3.5" stroke-linecap="round"/>' +
+          '<rect x="32" y="172" width="84" height="10" rx="5" fill="#D4C4F4"/>' +
+          '<rect x="32" y="192" width="84" height="10" rx="5" fill="#D4C4F4"/>' +
+          '<rect x="32" y="212" width="84" height="10" rx="5" fill="#D4C4F4"/>' +
+          '<rect x="32" y="232" width="84" height="10" rx="5" fill="#D4C4F4"/>' +
+        '</svg>'
+    };
+
+    // 小圖示 SVG（提示手勢、名牌星星）
+    var MINI_SVG = {
+      tap: '<svg viewBox="0 0 24 24" fill="none" stroke="#3B2350" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M12 3v3M5.5 6.5l2 2M18.5 6.5l-2 2"/>' +
+        '<path d="M10 11v6l-2-1.5a1.5 1.5 0 0 0-2 2.2l4 3.8h6a3 3 0 0 0 3-3v-4a2 2 0 0 0-2-2h-3V9.5a1.5 1.5 0 0 0-4 0V11z" fill="#FF8F3F"/>' +
+      '</svg>',
+      star: '<svg viewBox="0 0 24 24" fill="#FFC233" stroke="#A8670E" stroke-width="2" stroke-linejoin="round">' +
+        '<polygon points="12,2.5 15,8.6 21.6,9.5 16.8,14.2 18,20.8 12,17.6 6,20.8 7.2,14.2 2.4,9.5 9,8.6"/>' +
+      '</svg>'
+    };
+
+    // 工具：依文字建立安全顯示字串
+    function escapeHTML(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // 工具：計算本關星星數（對齊 SCENE_CONFIG.STARS）
+    function calcStars(rightCount) {
+      if (rightCount >= SCENE_CONFIG.STARS.three) return 3;
+      if (rightCount >= SCENE_CONFIG.STARS.two) return 2;
+      return 1;
+    }
+
+    // 掛載小常識島第 29 關
+    SmartIsland.mount({
+      unit: 29,
+      title: '寵物的新電腦',
+      grade: '1–2 年級',
+      howto: '寵物買了新電腦！請你幫牠找出滑鼠。',
+      zhuyin: true,
+      teach: '認識常見的資訊設備與用途｜資E1 認識常見的資訊系統',
+      levels: SCENE_CONFIG.LEVELS.map(function (lv, idx) {
+        return { name: lv.name, icon: LEVEL_ICONS[idx] };
+      }),
+
+      scene: function (api) {
+        var alive = false;
+        var locked = false;
+        var runToken = 0; // 用於作廢離開關卡後才 resolve 的 Promise
+        var levelIdx = 0;
+        var qIdx = 0;
+        var review = [];
+        var timers = [];
+        var keyHandler = null;
+
+        // 清除所有計時器與鍵盤監聽
+        function cleanup() {
+          alive = false;
+          locked = false;
+          runToken += 1;
+          while (timers.length) {
+            clearTimeout(timers.pop());
+          }
+          api.field.onclick = null;
+          if (keyHandler) {
+            document.removeEventListener('keydown', keyHandler);
+            keyHandler = null;
+          }
+        }
+
+        // 取得寵物名字（安全預設）
+        function getPetName() {
+          var p = api.pet ? api.pet() : null;
+          return (p && p.name) ? p.name : '小雲';
+        }
+
+        // 渲染右側寵物陪伴區
+        function buildPetBox(lines, mood, opts) {
+          var petName = getPetName();
+          var zyCls = api.zy ? ' sm-zy' : '';
+          var lineHtml = lines.map(function (line) {
+            var txt = line.replace(/\{PET\}/g, petName);
+            return '<span class="sc-line' + zyCls + '">' + escapeHTML(txt) + '</span>';
+          }).join('');
+
+          return (
+            '<div class="sc-petbox">' +
+              '<div class="clay sc-bubble" aria-live="polite">' +
+                '<div class="sc-bubble-lines">' + lineHtml + '</div>' +
+              '</div>' +
+              '<div class="sc-pet-wrap">' +
+                '<div class="sc-pet-shadow"></div>' +
+                '<div class="sc-pet">' + api.petSVG(mood, opts) + '</div>' +
+              '</div>' +
+              '<div class="sc-petname">' + MINI_SVG.star + '<span>' + escapeHTML(petName) + '</span></div>' +
+            '</div>'
+          );
+        }
+
+        // 更新寵物表情與泡泡（作答瞬間給予即時情緒回饋）
+        function updatePet(lines, mood, opts) {
+          var box = api.field.querySelector('.sc-petbox');
+          if (!box) return;
+          box.outerHTML = buildPetBox(lines, mood, opts);
+        }
+
+        // 渲染第 1 關（書桌場景）
+        function renderDeskLevel(lv, Q) {
+          var zyCls = api.zy ? ' sm-zy' : '';
+          var hotspots = SCENE_CONFIG.DESK_ITEMS.map(function (item) {
+            return (
+              '<button type="button" class="sc-hotspot" data-key="' + item.key + '" ' +
+                'style="left:' + item.x + 'px;top:' + item.y + 'px;width:' + item.w + 'px;height:' + item.h + 'px;" ' +
+                'aria-label="' + item.posLabel + '">' +
+                DESK_DEVICE_SVG[item.key] +
+              '</button>'
+            );
+          }).join('');
+
+          api.field.innerHTML =
+            '<div class="sc-stage">' +
+              '<div class="clay sc-q">' +
+                '<span class="sc-q-num">' + (qIdx + 1) + '</span>' +
+                '<p class="sc-q-text' + zyCls + '">' + (Q.qHtml || escapeHTML(Q.q)) + '</p>' +
+              '</div>' +
+              '<div class="clay sc-desk-wrap">' +
+                DESK_BG_SVG +
+                hotspots +
+                '<div class="sc-desk-tip">' +
+                  MINI_SVG.tap +
+                  '<span class="' + (api.zy ? 'sm-zy' : '') + '">點一點書桌上的設備</span>' +
+                '</div>' +
+              '</div>' +
+              buildPetBox(Q.petLines, 'normal', { q: true }) +
+            '</div>';
+        }
+
+        // 渲染第 2、3 關（3 張大圖卡）
+        function renderCardLevel(lv, Q) {
+          var zyCls = api.zy ? ' sm-zy' : '';
+          var cards = Q.options.map(function (opt, idx) {
+            return (
+              '<button type="button" class="clay sc-opt" data-idx="' + idx + '" aria-label="選項 ' + (idx + 1) + '：' + escapeHTML(opt.text) + '">' +
+                '<span class="sc-tag">' + (idx + 1) + '</span>' +
+                '<div class="sc-pic">' + (PIC[opt.pic] || '') + '</div>' +
+                '<span class="sc-label' + zyCls + '">' + escapeHTML(opt.text) + '</span>' +
+              '</button>'
+            );
+          }).join('');
+
+          api.field.innerHTML =
+            '<div class="sc-stage">' +
+              '<div class="clay sc-q">' +
+                '<span class="sc-q-num">' + (qIdx + 1) + '</span>' +
+                '<p class="sc-q-text' + zyCls + '">' + (Q.qHtml || escapeHTML(Q.q)) + '</p>' +
+              '</div>' +
+              '<div class="sc-opts">' + cards + '</div>' +
+              buildPetBox(Q.petLines, 'normal', { q: true }) +
+            '</div>';
+        }
+
+        // 出目前這一題
+        function ask() {
+          var lv = SCENE_CONFIG.LEVELS[levelIdx];
+          var Q = lv.questions[qIdx];
+          locked = false;
+          api.progress(qIdx + 1, lv.questions.length);
+
+          if (lv.mode === 'desk') {
+            renderDeskLevel(lv, Q);
+          } else {
+            renderCardLevel(lv, Q);
+          }
+        }
+
+        // 鎖定場上所有作答按鈕（防止連點兩次）
+        function lockButtons() {
+          var btns = api.field.querySelectorAll('.sc-hotspot, .sc-opt');
+          for (var i = 0; i < btns.length; i++) {
+            btns[i].disabled = true;
+          }
+        }
+
+        // 在被點選的按鈕上加上 ✓ / ✗ 徽章
+        function markButton(btn, ok) {
+          btn.classList.add(ok ? 'is-ok' : 'is-bad');
+          var badge = document.createElement('span');
+          badge.className = 'sc-mark ' + (ok ? 'ok' : 'bad');
+          badge.setAttribute('aria-hidden', 'true');
+          badge.textContent = ok ? '✓' : '✗';
+          btn.appendChild(badge);
+        }
+
+        // 進入回饋與下一題（寬鬆過關：答錯也能繼續，整關完成一定呼叫 api.finish）
+        function commitAnswer(btn, ok, explainText) {
+          var lv = SCENE_CONFIG.LEVELS[levelIdx];
+          var Q = lv.questions[qIdx];
+          var myToken = runToken;
+
+          locked = true;
+          lockButtons();
+          markButton(btn, ok);
+
+          if (ok) {
+            updatePet(['答對了，太棒了！'], 'happy', { spark: true });
+          } else {
+            updatePet(['原來是這樣，', '記起來！'], 'worried', { sweat: true });
+          }
+
+          review.push({ ok: ok, q: Q.q });
+
+          // 短暫停頓 260ms 讓孩子看見場上 ✓/✗ 與寵物表情，再跳出共用回饋卡
+          var tid = setTimeout(function () {
+            if (!alive || myToken !== runToken) return;
+            api.feedback({
+              ok: ok,
+              explain: explainText,
+              zyExplain: true
+            }).then(function () {
+              if (!alive || myToken !== runToken) return;
+              qIdx += 1;
+              if (qIdx < lv.questions.length) {
+                ask();
+                return;
+              }
+              var rightCount = review.filter(function (r) { return r.ok; }).length;
+              var allRight = rightCount === lv.questions.length;
+              api.finish({
+                stars: calcStars(rightCount),
+                review: review,
+                learned: lv.learned,
+                retry: allRight ? '' : lv.retry
+              });
+            });
+          }, 260);
+          timers.push(tid);
+        }
+
+        // 處理第 1 關點擊書桌設備
+        function handleDeskClick(btn) {
+          var lv = SCENE_CONFIG.LEVELS[levelIdx];
+          var Q = lv.questions[qIdx];
+          var targetKey = Q.options[Q.ans].pic;
+          var clickedKey = btn.dataset.key;
+          var ok = clickedKey === targetKey;
+
+          var clickedItem = null;
+          for (var i = 0; i < SCENE_CONFIG.DESK_ITEMS.length; i++) {
+            if (SCENE_CONFIG.DESK_ITEMS[i].key === clickedKey) {
+              clickedItem = SCENE_CONFIG.DESK_ITEMS[i];
+              break;
+            }
+          }
+          var explainText = ok
+            ? Q.explain
+            : ('這是' + (clickedItem ? clickedItem.name : '別的設備') + '喔！' + Q.explain);
+
+          commitAnswer(btn, ok, explainText);
+        }
+
+        // 處理第 2、3 關點擊圖卡
+        function handleCardClick(btn) {
+          var lv = SCENE_CONFIG.LEVELS[levelIdx];
+          var Q = lv.questions[qIdx];
+          var idx = parseInt(btn.dataset.idx, 10);
+          var ok = idx === Q.ans;
+          commitAnswer(btn, ok, Q.explain);
+        }
+
+        return {
+          start: function (idx) {
+            cleanup();
+            levelIdx = (typeof idx === 'number' && SCENE_CONFIG.LEVELS[idx]) ? idx : 0;
+            qIdx = 0;
+            review = [];
+            alive = true;
+            api.field.innerHTML = '';
+            ask();
+
+            // 場景統一點擊代理
+            api.field.onclick = function (e) {
+              if (!alive || locked) return;
+              var lv = SCENE_CONFIG.LEVELS[levelIdx];
+              if (lv.mode === 'desk') {
+                var spot = e.target.closest('.sc-hotspot');
+                if (spot && !spot.disabled) handleDeskClick(spot);
+              } else {
+                var opt = e.target.closest('.sc-opt');
+                if (opt && !opt.disabled) handleCardClick(opt);
+              }
+            };
+
+            // 鍵盤 1 / 2 / 3 快捷作答（僅第 2、3 關卡片模式，離開時移除）
+            keyHandler = function (e) {
+              if (!alive || locked) return;
+              var lv = SCENE_CONFIG.LEVELS[levelIdx];
+              if (lv.mode !== 'cards') return;
+              if (e.key === '1' || e.key === '2' || e.key === '3') {
+                var n = parseInt(e.key, 10) - 1;
+                var btn = api.field.querySelector('.sc-opt[data-idx="' + n + '"]');
+                if (btn && !btn.disabled) handleCardClick(btn);
+              }
+            };
+            document.addEventListener('keydown', keyHandler);
+          },
+
+          stop: function () {
+            cleanup();
+          }
+        };
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

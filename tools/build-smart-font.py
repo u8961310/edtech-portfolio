@@ -20,7 +20,10 @@ tmp = Path(tempfile.mkdtemp())
 files = list((ROOT / "assets/smart").glob("*.html")) + [ROOT / "assets/js/smart-ui.js"]
 for u in SMART_UNITS:
     f = ROOT / "units" / u / "index.html"
-    if f.exists() and "smart-ui.js" in f.read_text(encoding="utf-8", errors="ignore") or (f.exists() and u == "smart-pet-house"):
+    if not f.exists():
+        continue
+    t = f.read_text(encoding="utf-8", errors="ignore")
+    if u == "smart-pet-house" or ("smart-ui.js" in t and "zhuyin: true" in t):   # 3–4 年級沒注音的關不用掃，字型小一點
         files.append(f)
 for i, f in enumerate(files):
     shutil.copy(f, tmp / f"{i}-{f.parent.name}-{f.name}")

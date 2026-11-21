@@ -1,0 +1,1414 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>寵物作息表 - 小常識島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Baloo+2:wght@700;800&display=swap">
+  <link rel="stylesheet" href="../../assets/css/smart-island.css">
+  <style>
+    /* ===== 場景專屬樣式（一律以 sc- 開頭，不改動共用 .sm- 樣式） ===== */
+    .sc-stage {
+      position: relative;
+      width: 1366px;
+      height: 591px;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* 題目卡（第 1、2 關） */
+    .sc-q {
+      position: absolute;
+      left: 32px;
+      top: 22px;
+      width: 910px;
+      height: 116px;
+      padding: 0 26px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      box-sizing: border-box;
+    }
+    .sc-q-num {
+      flex: 0 0 auto;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: var(--violet);
+      color: #fff;
+      font: 800 26px/54px var(--f-num);
+      text-align: center;
+      box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .18);
+    }
+    .sc-q-text {
+      margin: 0;
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--ink);
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+
+    /* 第 3 關題目卡（配合上方時間軸縮緊高度） */
+    .sc-q-compact {
+      top: 192px;
+      height: 92px;
+    }
+    .sc-q-compact .sc-q-text {
+      font-size: 33px;
+    }
+
+    /* 第 3 關：寵物的一天時間軸卡片 */
+    .sc-timeline {
+      position: absolute;
+      left: 32px;
+      top: 16px;
+      width: 910px;
+      height: 160px;
+      padding: 14px 20px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .sc-slot {
+      flex: 1;
+      height: 126px;
+      border-radius: 20px;
+      background: var(--bg);
+      border: 3px solid var(--edge);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 6px 8px;
+      box-sizing: border-box;
+      position: relative;
+    }
+    .sc-slot-focus {
+      background: var(--butter);
+      border-color: var(--orange);
+      box-shadow: 0 6px 0 rgba(255, 143, 63, .28);
+      transform: translateY(-3px);
+    }
+    .sc-slot-time {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--ink2);
+      background: #fff;
+      border: 2px solid var(--edge);
+      border-radius: 999px;
+      padding: 1px 12px;
+      line-height: 1.45;
+      white-space: nowrap;
+    }
+    .sc-slot-focus .sc-slot-time {
+      background: var(--orange);
+      border-color: var(--orange-d);
+      color: var(--ink);
+    }
+    .sc-slot-ic {
+      width: 52px;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sc-slot-ic svg {
+      width: 100%;
+      height: 100%;
+    }
+    .sc-slot-act {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--ink);
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+    .sc-arrow {
+      flex: 0 0 22px;
+      width: 22px;
+      height: 22px;
+      opacity: .75;
+    }
+
+    /* 選項列（3 選 1，第 1、2 關） */
+    .sc-opts {
+      position: absolute;
+      left: 32px;
+      top: 158px;
+      width: 910px;
+      height: 400px;
+      display: flex;
+      gap: 20px;
+    }
+    /* 第 3 關選項列 */
+    .sc-opts-t {
+      top: 302px;
+      height: 258px;
+    }
+
+    /* 3 選 1 圖文選項卡（每張 290×400 或 290×258，皆大於 200×160） */
+    .sc-opt {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      padding: 18px 12px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      cursor: pointer;
+      color: var(--ink);
+      box-sizing: border-box;
+      transition: transform .18s ease-out, border-color .18s ease-out, background-color .18s ease-out;
+    }
+    .sc-opt:hover:not(:disabled) {
+      transform: translateY(-4px);
+      border-color: var(--orange);
+    }
+    .sc-opt:active:not(:disabled) {
+      transform: translateY(2px);
+    }
+    .sc-opt:focus-visible {
+      outline: 4px solid var(--violet);
+      outline-offset: 3px;
+    }
+    .sc-opt:disabled {
+      cursor: default;
+    }
+    .sc-opt-tag {
+      position: absolute;
+      left: 14px;
+      top: 14px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--violet);
+      color: #fff;
+      font: 800 22px/44px var(--f-num);
+      text-align: center;
+      box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .18);
+    }
+    .sc-opt-pic {
+      width: 244px;
+      height: 214px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sc-opt-pic svg {
+      width: 100%;
+      height: 100%;
+    }
+    .sc-opts-t .sc-opt {
+      padding: 14px 10px 12px;
+      gap: 8px;
+    }
+    .sc-opts-t .sc-opt-pic {
+      width: 196px;
+      height: 146px;
+    }
+    .sc-opt-txt {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--ink);
+      line-height: 1.35;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    /* 第 3 關 2 選 1 超大判斷按鈕（好／不好） */
+    .sc-yn {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      cursor: pointer;
+      color: var(--ink);
+      padding: 20px;
+      box-sizing: border-box;
+      transition: transform .18s ease-out, border-color .18s ease-out, background-color .18s ease-out;
+    }
+    .sc-yn:hover:not(:disabled) {
+      transform: translateY(-4px);
+    }
+    .sc-yn:active:not(:disabled) {
+      transform: translateY(2px);
+    }
+    .sc-yn:focus-visible {
+      outline: 4px solid var(--violet);
+      outline-offset: 3px;
+    }
+    .sc-yn:disabled {
+      cursor: default;
+    }
+    .sc-yn-good:hover:not(:disabled) {
+      border-color: var(--ok);
+      background: var(--ok-soft);
+    }
+    .sc-yn-bad:hover:not(:disabled) {
+      border-color: var(--bad);
+      background: var(--bad-soft);
+    }
+    .sc-yn-badge {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid transparent;
+    }
+    .sc-yn-good .sc-yn-badge {
+      background: var(--ok-soft);
+      border-color: var(--ok);
+    }
+    .sc-yn-bad .sc-yn-badge {
+      background: var(--bad-soft);
+      border-color: var(--bad);
+    }
+    .sc-yn-badge svg {
+      width: 56px;
+      height: 56px;
+    }
+    .sc-yn-txt {
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--ink);
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+
+    /* 作答瞬間回饋樣式（僅短暫提示，不連續閃爍） */
+    .sc-picked-ok {
+      border-color: var(--ok) !important;
+      background: var(--ok-soft) !important;
+      animation: sc-pop .26s ease-out;
+    }
+    .sc-picked-bad {
+      border-color: var(--bad) !important;
+      background: var(--bad-soft) !important;
+      animation: sc-shake .28s ease-out;
+    }
+    @keyframes sc-pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+    @keyframes sc-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    /* 右側寵物陪伴區 */
+    .sc-petbox {
+      position: absolute;
+      left: 970px;
+      top: 22px;
+      width: 364px;
+      height: 536px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      box-sizing: border-box;
+    }
+    .sc-level-chip {
+      position: absolute;
+      top: 0;
+      right: 4px;
+      background: var(--lilac);
+      border: 3px solid var(--edge);
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 900;
+      padding: 6px 16px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .sc-bubble {
+      position: relative;
+      max-width: 356px;
+      padding: 14px 20px;
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--ink);
+      text-align: center;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+    .sc-bubble::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: -14px;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 14px solid var(--edge);
+    }
+    .sc-bubble::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: -10px;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-top: 11px solid var(--card);
+      z-index: 1;
+    }
+    .sc-pet {
+      width: 292px;
+      height: 292px;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sc-pet svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    .sc-pet-name {
+      padding: 6px 22px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 3px solid var(--edge);
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--ink);
+      white-space: nowrap;
+      box-shadow: 0 4px 0 var(--edge);
+    }
+
+    /* 護眼與動態偏好設定 */
+    @media (prefers-reduced-motion: reduce) {
+      .sc-opt, .sc-yn, .sc-picked-ok, .sc-picked-bad {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/smart-pet.js"></script>
+  <script src="../../assets/js/smart-ui.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    /* =====================================================================
+       1. 本關設定常數（題目、迷思、解說、時間軸、星星門檻集中管理）
+       ===================================================================== */
+    var SCENE_CONFIG = {
+      // 星星門檻：5 題全對 → 3 顆；3–4 題 → 2 顆；0–2 題 → 1 顆
+      STARS: { three: 5, two: 3, one: 0 },
+
+      // 3 個關卡的 40×40 主題線條圖示（#3B2350 粗 2.6）
+      LEVEL_ICONS: [
+        // 關卡 1：坐好看螢幕（小螢幕＋穩穩小椅）
+        '<svg viewBox="0 0 40 40" fill="none" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' +
+          '<rect x="6" y="7" width="20" height="14" rx="3" fill="#E1EEFB"/>' +
+          '<path d="M16 21v5M11 26h10"/>' +
+          '<path d="M29 14v19M24 23h10M24 23v10"/>' +
+        '</svg>',
+        // 關卡 2：愛護眼睛（微笑眼睛＋小綠葉）
+        '<svg viewBox="0 0 40 40" fill="none" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' +
+          '<path d="M4 21c4.5-7.5 11.5-10 16-10s11.5 2.5 16 10c-4.5 7.5-11.5 10-16 10S8.5 28.5 4 21z" fill="#FFF9F2"/>' +
+          '<circle cx="20" cy="21" r="5" fill="#6A45C9"/>' +
+          '<circle cx="18.3" cy="19.3" r="1.4" fill="#fff" stroke="none"/>' +
+          '<path d="M28 8c3-2 7-1 8 2-2 3-6 4-8 2z" fill="#DDF3E6"/>' +
+        '</svg>',
+        // 關卡 3：寵物的一天（小太陽時鐘）
+        '<svg viewBox="0 0 40 40" fill="none" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' +
+          '<circle cx="20" cy="21" r="13" fill="#FFF0C4"/>' +
+          '<path d="M20 14v7l5 3"/>' +
+          '<path d="M12 7l-3-2M28 7l3-2M20 4v2"/>' +
+        '</svg>'
+      ],
+
+      // 三關完整題庫（每關 5 題；選項順序固定不洗牌以對應檢核表）
+      LEVELS: [
+        /* -------------------- 第 1 關：坐好看螢幕 -------------------- */
+        {
+          name: '坐好看螢幕',
+          mode: 'cards3',
+          learned: '坐正靠椅背、腳踩穩，離螢幕手臂寬',
+          retry: '坐姿和距離的題目，再練習一次吧',
+          questions: [
+            {
+              bubble: '{pet}要看螢幕了！',
+              q: '哪一種坐姿最棒？',
+              options: [
+                { text: '坐正背靠椅背', pic: 'sitGood', why: '正解' },
+                { text: '彎腰駝背看螢幕', pic: 'sitHunch', why: '覺得身體往前傾比較容易看清楚螢幕' },
+                { text: '趴在桌上玩平板', pic: 'sitDeskLie', why: '覺得趴在桌上撐著頭比較舒服省力' }
+              ],
+              ans: 0,
+              explain: '坐正背靠椅背，身體才不會酸痛呀！',
+              praise: '太棒了！坐正靠椅背最健康。'
+            },
+            {
+              bubble: '{pet}想玩平板！',
+              q: '在哪裡用平板最好？',
+              options: [
+                { text: '躺在床上舉平板', pic: 'bedSupine', why: '覺得躺在床上最舒服，隨時都能看' },
+                { text: '趴在床上低頭看', pic: 'bedProne', why: '覺得趴在軟軟的床上玩平板很放鬆' },
+                { text: '坐在書桌前使用', pic: 'deskUse', why: '正解' }
+              ],
+              ans: 2,
+              explain: '坐在書桌前用平板，對眼睛和脖子\u{E01E1}最好。',
+              praise: '真厲害！在書桌前用平板最健康。'
+            },
+            {
+              bubble: '幫{pet}擺好腳！',
+              q: '坐椅子\u{E01E1}時，雙腳怎麼放？',
+              options: [
+                { text: '雙腳縮到椅子\u{E01E1}上', pic: 'feetTuck', why: '覺得盤腿或把腳縮起來坐比較有安全感' },
+                { text: '雙腳平穩踩地板', pic: 'feetFloor', why: '正解' },
+                { text: '雙腳翹高放桌上', pic: 'feetDesk', why: '模仿大人或覺得把腳抬高靠桌上很輕鬆' }
+              ],
+              ans: 1,
+              explain: '雙腳平穩踩地板，坐姿才穩又不歪斜。',
+              praise: '好棒！雙腳踩穩地板，坐姿端正。'
+            },
+            {
+              bubble: '{pet}離螢幕多遠？',
+              q: '眼睛離電腦螢幕要多遠？',
+              options: [
+                { text: '約一個\u{E01E1}手臂寬度', pic: 'distArm', why: '正解' },
+                { text: '臉快貼到螢幕上', pic: 'distClose', why: '以為靠越近越能看清楚畫面細節' },
+                { text: '遠到看不清小字', pic: 'distFar', why: '以為離越遠就越護眼，忽略了看不清反而瞇眼' }
+              ],
+              ans: 0,
+              explain: '眼睛離螢幕約一個\u{E01E1}手臂寬，最清楚又護眼。',
+              praise: '答對了！保持一個\u{E01E1}手臂寬最護眼。'
+            },
+            {
+              bubble: '螢幕會太低嗎？',
+              q: '平板放桌上，怎麼擺最好？',
+              options: [
+                { text: '平放桌上低頭看', pic: 'tabFlat', why: '平常寫字也是平放桌面，以為平板平放就好' },
+                { text: '放在大腿往下看', pic: 'tabLap', why: '覺得放在腿上隨時拿著很方便，不用擺桌上' },
+                { text: '用支架立起平板', pic: 'tabStand', why: '正解' }
+              ],
+              ans: 2,
+              explain: '用支架把平板立起來，脖子\u{E01E1}才不酸痛。',
+              praise: '太聰明了！用支架立起，脖子\u{E01E1}不低頭。'
+            }
+          ]
+        },
+
+        /* -------------------- 第 2 關：愛護眼睛 -------------------- */
+        {
+          name: '愛護眼睛',
+          mode: 'cards3',
+          learned: '眼睛酸要望遠方，不摸黑也不走路看',
+          retry: '保護眼睛的方法，再練習一次吧',
+          questions: [
+            {
+              bubble: '{pet}眼睛酸酸的！',
+              q: '眼睛酸酸的，怎麼辦最好？',
+              options: [
+                { text: '用手大力揉眼睛', pic: 'eyeRub', why: '眼睛不舒服時直覺想揉一揉來止癢放鬆' },
+                { text: '把螢幕開到最亮', pic: 'eyeBright', why: '覺得螢幕變亮就比較好閱讀，眼睛不會費力' },
+                { text: '望向窗外大綠樹', pic: 'eyeTree', why: '正解' }
+              ],
+              ans: 2,
+              explain: '眼睛酸了就望向遠方綠樹，讓眼睛放鬆。',
+              praise: '很棒！望向遠方綠樹能讓眼睛放鬆。'
+            },
+            {
+              bubble: '房間好暗呀！',
+              q: '房間暗暗的，怎麼用平板？',
+              options: [
+                { text: '先開室內燈再看', pic: 'roomLamp', why: '正解' },
+                { text: '關燈躲在被窩看', pic: 'roomQuilt', why: '覺得關燈躲棉被看發光螢幕很酷，或怕被家人發現' },
+                { text: '不開燈靠螢幕光', pic: 'roomDark', why: '以為螢幕本身有光線就夠亮，不用另外開燈' }
+              ],
+              ans: 0,
+              explain: '先開室內燈再看平板，才不會傷眼睛。',
+              praise: '太棒了！打開室內燈再看最護眼。'
+            },
+            {
+              bubble: '{pet}在外面散步！',
+              q: '走路時收到訊息，怎麼辦？',
+              options: [
+                { text: '邊走邊低頭滑看', pic: 'walkLook', why: '急著想知道訊息內容，覺得自己走慢點就不會撞到' },
+                { text: '先停在路旁再看', pic: 'walkStop', why: '正解' },
+                { text: '加快腳步繼續看', pic: 'walkRun', why: '以為快點走完就能安心看，反而更容易跌倒' }
+              ],
+              ans: 1,
+              explain: '走路看手機很危險，先停在路旁再看！',
+              praise: '安全滿分！先停在路旁看才不會跌倒。'
+            },
+            {
+              bubble: '陽光好刺眼呀！',
+              q: '陽光直接照螢幕，怎麼辦？',
+              options: [
+                { text: '瞇起眼睛用力看', pic: 'glareSquint', why: '懶得移動位置，想靠瞇眼硬把反光畫面看清楚' },
+                { text: '頭靠很近擋反光', pic: 'glareClose', why: '以為用頭擋住光線就不會反光，卻離螢幕太近' },
+                { text: '拉上窗簾避反光', pic: 'glareCurtain', why: '正解' }
+              ],
+              ans: 2,
+              explain: '拉上窗簾避開反光，看螢幕最輕鬆。',
+              praise: '好聰明！拉窗簾避反光，眼睛不刺眼。'
+            },
+            {
+              bubble: '用完平板要休息！',
+              q: '室內用完平板，怎麼護眼？',
+              options: [
+                { text: '換成看電視節目', pic: 'restTV', why: '以為只要換一台不同的螢幕就算讓眼睛休息了' },
+                { text: '閉起眼睛靜靜坐', pic: 'restClose', why: '正解' },
+                { text: '拿手機改玩遊戲', pic: 'restPhone', why: '把休息誤解成不用看功課、改成玩手機遊戲' }
+              ],
+              ans: 1,
+              explain: '閉眼休息才能放鬆，換看電視不算休息！',
+              praise: '真懂護眼！閉起眼睛才是真的休息。'
+            }
+          ]
+        },
+
+        /* -------------------- 第 3 關：寵物的一天 -------------------- */
+        {
+          name: '寵物的一天',
+          mode: 'timeline',
+          learned: '先寫功課多運動，睡前和吃飯不看平板',
+          retry: '安排一天作息的題目，再練習一次吧',
+          questions: [
+            {
+              kind: 'yn',
+              bubble: '快到晚安時間了！',
+              q: '睡前一直玩平板，好不好？',
+              timeline: [
+                { time: '放學', ic: 'tlStudy', act: '寫功課' },
+                { time: '傍晚', ic: 'tlSport', act: '去運動' },
+                { time: '晚飯', ic: 'tlMeal', act: '專心吃' },
+                { time: '睡前', ic: 'tlNightTab', act: '玩平板', focus: true }
+              ],
+              options: [
+                { text: '這樣很好', why: '以為睡前玩平板可以放鬆心情幫助入睡' },
+                { text: '這樣不好', why: '正解' }
+              ],
+              ans: 1,
+              explain: '睡前玩平板會睡不穩，要早點收起來！',
+              praise: '太棒了！睡前收起平板才能睡香香。'
+            },
+            {
+              kind: 'yn',
+              bubble: '{pet}功課寫完了！',
+              q: '寫完功課先去運動，好不好？',
+              timeline: [
+                { time: '放學', ic: 'tlStudy', act: '寫功課' },
+                { time: '傍晚', ic: 'tlSport', act: '去運動', focus: true },
+                { time: '晚飯', ic: 'tlMeal', act: '專心吃' },
+                { time: '睡前', ic: 'tlSleep', act: '早點睡' }
+              ],
+              options: [
+                { text: '這樣很好', why: '正解' },
+                { text: '這樣不好', why: '覺得寫完功課太辛苦，應該馬上玩平板才開心' }
+              ],
+              ans: 0,
+              explain: '多去戶外運動，身體健康又保護眼睛！',
+              praise: '沒錯！去戶外運動，身體好健康。'
+            },
+            {
+              kind: 'yn',
+              bubble: '香香晚飯上桌了！',
+              q: '邊吃飯邊看平板，好不好？',
+              timeline: [
+                { time: '放學', ic: 'tlStudy', act: '寫功課' },
+                { time: '傍晚', ic: 'tlSport', act: '去運動' },
+                { time: '晚飯', ic: 'tlMealTab', act: '看平板', focus: true },
+                { time: '睡前', ic: 'tlSleep', act: '早點睡' }
+              ],
+              options: [
+                { text: '這樣很好', why: '覺得配著影片吃飯比較有趣、不會無聊' },
+                { text: '這樣不好', why: '正解' }
+              ],
+              ans: 1,
+              explain: '吃飯時專心吃，不看螢幕才能好好消化。',
+              praise: '好乖！吃飯專心不看螢幕最棒了。'
+            },
+            {
+              kind: 'cards3',
+              bubble: '{pet}剛放學回家！',
+              q: '放學回家，先做哪件事最好？',
+              timeline: [
+                { time: '放學', ic: 'tlQ', act: '做哪件？', focus: true },
+                { time: '傍晚', ic: 'tlSport', act: '去運動' },
+                { time: '晚飯', ic: 'tlMeal', act: '專心吃' },
+                { time: '睡前', ic: 'tlSleep', act: '早點睡' }
+              ],
+              options: [
+                { text: '先把功課寫完', pic: 'dayStudy', why: '正解' },
+                { text: '先玩平板到晚飯', pic: 'dayTabLong', why: '想先享受玩平板，把寫功課拖到很晚再說' },
+                { text: '先看卡通影片', pic: 'dayCartoon', why: '想先看影片休息，容易忘記要寫功課' }
+              ],
+              ans: 0,
+              explain: '放學先把功課寫完，才不會寫到很晚！',
+              praise: '真棒！先寫完功課，後面才能安心玩。'
+            },
+            {
+              kind: 'cards3',
+              bubble: '玩平板時間到了！',
+              q: '玩完平板，接下來做哪件事？',
+              timeline: [
+                { time: '放學', ic: 'tlStudy', act: '寫功課' },
+                { time: '下午', ic: 'tlTabOk', act: '玩平板' },
+                { time: '傍晚', ic: 'tlQ', act: '做哪件？', focus: true },
+                { time: '睡前', ic: 'tlSleep', act: '早點睡' }
+              ],
+              options: [
+                { text: '改看電視卡通', pic: 'restTV', why: '以為關掉平板改看電視就算結束 3C 時間' },
+                { text: '拿手機繼續玩', pic: 'restPhone', why: '還沒玩夠，換成手機以為比較不會被發現' },
+                { text: '出門散步運動', pic: 'dayWalk', why: '正解' }
+              ],
+              ans: 2,
+              explain: '玩完平板去散步運動，眼睛和身體最開心！',
+              praise: '安排真好！玩完平板去散步最健康。'
+            }
+          ]
+        }
+      ]
+    };
+
+    /* =====================================================================
+       2. 可愛黏土風 inline SVG 插圖庫（不用外部圖與 emoji）
+       ===================================================================== */
+    var S = 'stroke="#3B2350" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"';
+    var S3 = 'stroke="#3B2350" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"';
+
+    // 小角色圓頭（表情：smile / tired / dizzy / squint / closed）
+    function head(cx, cy, r, mood) {
+      var face = '';
+      if (mood === 'closed') {
+        face = '<path d="M' + (cx - 10) + ' ' + (cy - 1) + 'q4 4 8 0M' + (cx + 2) + ' ' + (cy - 1) + 'q4 4 8 0" fill="none" ' + S3 + '/>' +
+               '<path d="M' + (cx - 5) + ' ' + (cy + 8) + 'q5 4 10 0" fill="none" ' + S3 + '/>';
+      } else if (mood === 'squint') {
+        face = '<path d="M' + (cx - 10) + ' ' + (cy - 3) + 'l6 3-6 3M' + (cx + 10) + ' ' + (cy - 3) + 'l-6 3 6 3" fill="none" ' + S3 + '/>' +
+               '<path d="M' + (cx - 4) + ' ' + (cy + 9) + 'h8" fill="none" ' + S3 + '/>';
+      } else if (mood === 'tired') {
+        face = '<circle cx="' + (cx - 6) + '" cy="' + (cy - 1) + '" r="2.6" fill="#3B2350"/>' +
+               '<circle cx="' + (cx + 6) + '" cy="' + (cy - 1) + '" r="2.6" fill="#3B2350"/>' +
+               '<path d="M' + (cx - 5) + ' ' + (cy + 9) + 'q5-3 10 0" fill="none" ' + S3 + '/>';
+      } else {
+        face = '<circle cx="' + (cx - 6) + '" cy="' + (cy - 2) + '" r="2.8" fill="#3B2350"/>' +
+               '<circle cx="' + (cx + 6) + '" cy="' + (cy - 2) + '" r="2.8" fill="#3B2350"/>' +
+               '<circle cx="' + (cx - 11) + '" cy="' + (cy + 3) + '" r="3.2" fill="#FFAF99"/>' +
+               '<circle cx="' + (cx + 11) + '" cy="' + (cy + 3) + '" r="3.2" fill="#FFAF99"/>' +
+               '<path d="M' + (cx - 5) + ' ' + (cy + 6) + 'q5 5 10 0" fill="none" ' + S3 + '/>';
+      }
+      return '<circle cx="' + (cx - r * 0.68) + '" cy="' + (cy - r * 0.68) + '" r="' + (r * 0.34) + '" fill="#FFD7B5" ' + S3 + '/>' +
+             '<circle cx="' + (cx + r * 0.68) + '" cy="' + (cy - r * 0.68) + '" r="' + (r * 0.34) + '" fill="#FFD7B5" ' + S3 + '/>' +
+             '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#FFE6CE" ' + S + '/>' + face;
+    }
+
+    // 共用卡片底板
+    function cardBg(color) {
+      return '<rect x="8" y="8" width="224" height="184" rx="24" fill="' + color + '" stroke="#E9D5C4" stroke-width="3"/>';
+    }
+
+    var PIC = {
+      /* === 第 1 關插圖 === */
+      sitGood: '<svg viewBox="0 0 240 200">' + cardBg('#EEF8F2') +
+        // 地板線
+        '<line x1="22" y1="172" x2="218" y2="172" ' + S3 + '/>' +
+        // 書桌與螢幕
+        '<rect x="136" y="106" width="76" height="10" rx="4" fill="#F6C89F" ' + S3 + '/>' +
+        '<line x1="150" y1="116" x2="150" y2="172" ' + S + '/><line x1="200" y1="116" x2="200" y2="172" ' + S + '/>' +
+        '<rect x="164" y="54" width="44" height="36" rx="6" fill="#E1EEFB" ' + S + '/>' +
+        '<path d="M186 90v16M174 106h24" ' + S + '/>' +
+        // 椅子
+        '<path d="M56 76v54h48" fill="none" stroke="#6A45C9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<line x1="62" y1="130" x2="62" y2="172" ' + S + '/><line x1="98" y1="130" x2="98" y2="172" ' + S + '/>' +
+        // 坐正身體與腳踩地
+        '<rect x="66" y="82" width="28" height="44" rx="12" fill="#FF8F3F" ' + S + '/>' +
+        '<path d="M88 124h26v44h10" fill="none" stroke="#6A45C9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="M88 124h26v44h10" fill="none" stroke="#3B2350" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="M90 96l28 6h18" fill="none" ' + S + '/>' +
+        head(82, 56, 21, 'smile') +
+        // 視線虛線
+        '<line x1="108" y1="60" x2="158" y2="68" stroke="#186B41" stroke-width="3" stroke-dasharray="6 5" stroke-linecap="round"/>' +
+      '</svg>',
+
+      sitHunch: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        '<line x1="22" y1="172" x2="218" y2="172" ' + S3 + '/>' +
+        '<rect x="136" y="106" width="76" height="10" rx="4" fill="#F6C89F" ' + S3 + '/>' +
+        '<line x1="150" y1="116" x2="150" y2="172" ' + S + '/><line x1="200" y1="116" x2="200" y2="172" ' + S + '/>' +
+        '<rect x="164" y="56" width="44" height="34" rx="6" fill="#E1EEFB" ' + S + '/>' +
+        '<path d="M186 90v16M174 106h24" ' + S + '/>' +
+        // 椅子
+        '<path d="M46 82v48h46" fill="none" stroke="#6A45C9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<line x1="52" y1="130" x2="52" y2="172" ' + S + '/><line x1="88" y1="130" x2="88" y2="172" ' + S + '/>' +
+        // 彎腰駝背弧線
+        '<path d="M74 124c-6-34 16-54 46-46" fill="none" stroke="#FF8F3F" stroke-width="24" stroke-linecap="round"/>' +
+        '<path d="M74 124c-6-34 16-54 46-46" fill="none" stroke="#3B2350" stroke-width="4" stroke-linecap="round"/>' +
+        '<path d="M80 128l22 36" fill="none" ' + S + '/>' +
+        head(132, 72, 20, 'tired') +
+        // 駝背彎曲警示線
+        '<path d="M68 78q12-16 30-14" fill="none" stroke="#B4372B" stroke-width="3.5" stroke-dasharray="5 5"/>' +
+      '</svg>',
+
+      sitDeskLie: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        '<line x1="22" y1="172" x2="218" y2="172" ' + S3 + '/>' +
+        // 大書桌
+        '<rect x="34" y="114" width="174" height="12" rx="5" fill="#F6C89F" ' + S3 + '/>' +
+        '<line x1="48" y1="126" x2="48" y2="172" ' + S + '/><line x1="194" y1="126" x2="194" y2="172" ' + S + '/>' +
+        // 平板平放桌上
+        '<rect x="140" y="102" width="50" height="10" rx="4" fill="#6A45C9" ' + S3 + '/>' +
+        '<line x1="146" y1="102" x2="184" y2="102" stroke="#E1EEFB" stroke-width="4"/>' +
+        // 整個人趴在桌上
+        '<ellipse cx="82" cy="100" rx="34" ry="16" fill="#FF8F3F" ' + S + '/>' +
+        '<path d="M110 112l16-14" fill="none" ' + S + '/>' +
+        head(122, 92, 20, 'tired') +
+        '<path d="M52 108c-8 16-6 36 8 56" fill="none" ' + S + '/>' +
+      '</svg>',
+
+      bedSupine: '<svg viewBox="0 0 240 200">' + cardBg('#F6F0FF') +
+        // 床架與棉被
+        '<rect x="24" y="124" width="192" height="32" rx="10" fill="#ECE3FA" ' + S + '/>' +
+        '<line x1="34" y1="156" x2="34" y2="174" ' + S + '/><line x1="206" y1="156" x2="206" y2="174" ' + S + '/>' +
+        '<rect x="28" y="104" width="38" height="22" rx="10" fill="#fff" ' + S3 + '/>' +
+        // 躺著身體
+        '<path d="M84 124h108c8 0 12-10 6-18-18-12-74-12-114 18z" fill="#FFAF99" ' + S3 + '/>' +
+        head(66, 102, 20, 'tired') +
+        // 雙手高舉平板
+        '<path d="M88 108l14-40M108 112l14-44" fill="none" ' + S + '/>' +
+        '<rect x="88" y="42" width="50" height="30" rx="7" transform="rotate(-12 113 57)" fill="#6A45C9" ' + S3 + '/>' +
+        '<rect x="94" y="47" width="38" height="20" rx="3" transform="rotate(-12 113 57)" fill="#E1EEFB"/>' +
+      '</svg>',
+
+      bedProne: '<svg viewBox="0 0 240 200">' + cardBg('#F6F0FF') +
+        '<rect x="24" y="128" width="192" height="30" rx="10" fill="#ECE3FA" ' + S + '/>' +
+        '<line x1="34" y1="158" x2="34" y2="174" ' + S + '/><line x1="206" y1="158" x2="206" y2="174" ' + S + '/>' +
+        // 趴床上翹腳
+        '<path d="M126 116c26 0 46 8 56-16" fill="none" stroke="#6A45C9" stroke-width="10" stroke-linecap="round"/>' +
+        '<ellipse cx="106" cy="116" rx="34" ry="15" fill="#FF8F3F" ' + S + '/>' +
+        head(72, 92, 19, 'tired') +
+        // 前方床上的平板
+        '<rect x="34" y="114" width="42" height="12" rx="4" fill="#6A45C9" ' + S3 + '/>' +
+        '<line x1="38" y1="114" x2="72" y2="114" stroke="#E1EEFB" stroke-width="4"/>' +
+      '</svg>',
+
+      deskUse: '<svg viewBox="0 0 240 200">' + cardBg('#EEF8F2') +
+        '<line x1="22" y1="172" x2="218" y2="172" ' + S3 + '/>' +
+        // 柔和窗光
+        '<rect x="30" y="24" width="52" height="44" rx="8" fill="#E1EEFB" ' + S3 + '/>' +
+        '<line x1="56" y1="24" x2="56" y2="68" ' + S3 + '/><line x1="30" y1="46" x2="82" y2="46" ' + S3 + '/>' +
+        // 書桌與支架平板
+        '<rect x="128" y="110" width="84" height="10" rx="4" fill="#F6C89F" ' + S3 + '/>' +
+        '<line x1="142" y1="120" x2="142" y2="172" ' + S + '/><line x1="198" y1="120" x2="198" y2="172" ' + S + '/>' +
+        '<path d="M172 110l12-34 10 34" fill="none" ' + S3 + '/>' +
+        '<rect x="156" y="66" width="24" height="42" rx="5" transform="rotate(-12 168 87)" fill="#6A45C9" ' + S3 + '/>' +
+        '<rect x="160" y="72" width="16" height="30" rx="2" transform="rotate(-12 168 87)" fill="#E1EEFB"/>' +
+        // 端正坐著的小角色
+        '<path d="M62 82v48h42" fill="none" stroke="#6A45C9" stroke-width="6" stroke-linecap="round"/>' +
+        '<line x1="66" y1="130" x2="66" y2="172" ' + S + '/><line x1="98" y1="130" x2="98" y2="172" ' + S + '/>' +
+        '<rect x="70" y="88" width="26" height="40" rx="11" fill="#FF8F3F" ' + S + '/>' +
+        head(84, 62, 20, 'smile') +
+        '<path d="M90 100l30 4" fill="none" ' + S + '/>' +
+      '</svg>',
+
+      feetTuck: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        '<line x1="24" y1="172" x2="216" y2="172" ' + S3 + '/>' +
+        // 椅子
+        '<path d="M64 46v78h92" fill="none" stroke="#6A45C9" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<line x1="74" y1="124" x2="74" y2="172" ' + S + '/><line x1="146" y1="124" x2="146" y2="172" ' + S + '/>' +
+        // 身體＋雙腳縮在椅面上
+        '<rect x="84" y="62" width="38" height="48" rx="16" fill="#FF8F3F" ' + S + '/>' +
+        '<path d="M116 106c20-16 32-8 24 12h-36" fill="#6A45C9" ' + S + '/>' +
+        head(104, 42, 18, 'tired') +
+        '<ellipse cx="136" cy="116" rx="12" ry="7" fill="#FFF0C4" ' + S3 + '/>' +
+      '</svg>',
+
+      feetFloor: '<svg viewBox="0 0 240 200">' + cardBg('#EEF8F2') +
+        '<line x1="24" y1="172" x2="216" y2="172" ' + S3 + '/>' +
+        '<rect x="116" y="164" width="66" height="8" rx="4" fill="#DDF3E6" stroke="#186B41" stroke-width="2.5"/>' +
+        // 椅子
+        '<path d="M62 46v74h70" fill="none" stroke="#6A45C9" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<line x1="72" y1="120" x2="72" y2="172" ' + S + '/><line x1="122" y1="120" x2="122" y2="172" ' + S + '/>' +
+        // 身體＋雙腳平穩踩地板
+        '<rect x="78" y="62" width="36" height="52" rx="15" fill="#FF8F3F" ' + S + '/>' +
+        '<path d="M108 112h34v52" fill="none" stroke="#6A45C9" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="M108 112h34v52" fill="none" stroke="#3B2350" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<rect x="132" y="156" width="30" height="14" rx="7" fill="#FFF0C4" ' + S3 + '/>' +
+        head(96, 40, 18, 'smile') +
+      '</svg>',
+
+      feetDesk: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        '<line x1="24" y1="172" x2="216" y2="172" ' + S3 + '/>' +
+        // 桌子
+        '<rect x="142" y="102" width="70" height="10" rx="4" fill="#F6C89F" ' + S3 + '/>' +
+        '<line x1="156" y1="112" x2="156" y2="172" ' + S + '/><line x1="200" y1="112" x2="200" y2="172" ' + S + '/>' +
+        // 後仰的椅子
+        '<path d="M44 64l18 66h50" fill="none" stroke="#6A45C9" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<line x1="66" y1="130" x2="52" y2="172" ' + S + '/><line x1="106" y1="130" x2="112" y2="172" ' + S + '/>' +
+        // 雙腳翹高放桌上
+        '<rect x="64" y="76" width="32" height="48" rx="14" transform="rotate(-16 80 100)" fill="#FF8F3F" ' + S + '/>' +
+        '<path d="M96 118l56-22" fill="none" stroke="#6A45C9" stroke-width="13" stroke-linecap="round"/>' +
+        '<path d="M96 118l56-22" fill="none" stroke="#3B2350" stroke-width="3.5" stroke-linecap="round"/>' +
+        '<ellipse cx="160" cy="92" rx="12" ry="8" fill="#FFF0C4" ' + S3 + '/>' +
+        head(72, 54, 18, 'tired') +
+      '</svg>',
+
+      distArm: '<svg viewBox="0 0 240 200">' + cardBg('#EEF8F2') +
+        // 螢幕
+        '<rect x="166" y="42" width="52" height="72" rx="8" fill="#E1EEFB" ' + S + '/>' +
+        '<path d="M192 114v28M172 142h40" ' + S + '/>' +
+        // 小角色＋伸直手臂量距離
+        head(58, 72, 22, 'smile') +
+        '<rect x="42" y="96" width="32" height="54" rx="14" fill="#FF8F3F" ' + S + '/>' +
+        '<line x1="74" y1="106" x2="152" y2="106" stroke="#FFE6CE" stroke-width="13" stroke-linecap="round"/>' +
+        '<line x1="74" y1="106" x2="152" y2="106" ' + S + '/>' +
+        '<circle cx="154" cy="106" r="7" fill="#FFE6CE" ' + S3 + '/>' +
+        // 雙向距離箭頭
+        '<line x1="84" y1="158" x2="162" y2="158" stroke="#186B41" stroke-width="4" stroke-linecap="round"/>' +
+        '<path d="M92 150l-10 8 10 8M154 150l10 8-10 8" fill="none" stroke="#186B41" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '</svg>',
+
+      distClose: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        '<rect x="148" y="34" width="60" height="86" rx="8" fill="#E1EEFB" ' + S + '/>' +
+        '<path d="M178 120v26M156 146h44" ' + S + '/>' +
+        // 臉幾乎貼著螢幕
+        head(114, 78, 26, 'squint') +
+        '<rect x="66" y="106" width="52" height="44" rx="16" fill="#FF8F3F" ' + S + '/>' +
+        // 螢幕刺眼光線
+        '<path d="M144 62l-8-4M144 78h-9M144 94l-8 4" stroke="#B4372B" stroke-width="4" stroke-linecap="round"/>' +
+      '</svg>',
+
+      distFar: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        // 遠遠的迷你螢幕
+        '<rect x="192" y="72" width="24" height="22" rx="4" fill="#E1EEFB" ' + S3 + '/>' +
+        '<path d="M204 94v12M196 106h16" ' + S3 + '/>' +
+        // 左邊很遠瞇眼看
+        head(48, 80, 20, 'squint') +
+        '<rect x="34" y="102" width="28" height="48" rx="12" fill="#FF8F3F" ' + S + '/>' +
+        '<line x1="76" y1="84" x2="184" y2="84" stroke="#B4372B" stroke-width="3" stroke-dasharray="6 6"/>' +
+        '<text x="128" y="70" text-anchor="middle" font-size="24" font-weight="900" fill="#B4372B">?</text>' +
+      '</svg>',
+
+      tabFlat: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        '<rect x="26" y="132" width="188" height="14" rx="5" fill="#F6C89F" ' + S3 + '/>' +
+        // 平板平躺桌上
+        '<rect x="114" y="120" width="76" height="10" rx="4" fill="#6A45C9" ' + S3 + '/>' +
+        '<line x1="120" y1="120" x2="184" y2="120" stroke="#E1EEFB" stroke-width="4"/>' +
+        // 大幅低頭
+        '<rect x="52" y="96" width="32" height="54" rx="14" transform="rotate(24 68 123)" fill="#FF8F3F" ' + S + '/>' +
+        head(96, 76, 21, 'tired') +
+        // 視線向下
+        '<line x1="112" y1="90" x2="146" y2="114" stroke="#B4372B" stroke-width="3.5" stroke-dasharray="5 5"/>' +
+      '</svg>',
+
+      tabLap: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        '<line x1="24" y1="172" x2="216" y2="172" ' + S3 + '/>' +
+        '<path d="M56 70v56h54" fill="none" stroke="#6A45C9" stroke-width="6" stroke-linecap="round"/>' +
+        '<line x1="64" y1="126" x2="64" y2="172" ' + S + '/><line x1="104" y1="126" x2="104" y2="172" ' + S + '/>' +
+        '<rect x="68" y="84" width="30" height="44" rx="13" transform="rotate(16 83 106)" fill="#FF8F3F" ' + S + '/>' +
+        '<path d="M92 124h44v44" fill="none" stroke="#6A45C9" stroke-width="12" stroke-linecap="round"/>' +
+        // 平板在大腿上
+        '<rect x="108" y="108" width="46" height="10" rx="4" fill="#3B2350"/>' +
+        '<line x1="112" y1="108" x2="150" y2="108" stroke="#E1EEFB" stroke-width="4"/>' +
+        head(98, 62, 20, 'tired') +
+        '<line x1="108" y1="80" x2="128" y2="104" stroke="#B4372B" stroke-width="3.5" stroke-dasharray="5 5"/>' +
+      '</svg>',
+
+      tabStand: '<svg viewBox="0 0 240 200">' + cardBg('#EEF8F2') +
+        '<rect x="26" y="136" width="188" height="14" rx="5" fill="#F6C89F" ' + S3 + '/>' +
+        // 平板＋支架立起來
+        '<path d="M168 136l14-48 16 48" fill="none" stroke="#FF8F3F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="M168 136l14-48 16 48" fill="none" ' + S3 + '/>' +
+        '<rect x="148" y="72" width="26" height="62" rx="6" transform="rotate(-14 161 103)" fill="#6A45C9" ' + S3 + '/>' +
+        '<rect x="153" y="80" width="16" height="46" rx="2" transform="rotate(-14 161 103)" fill="#E1EEFB"/>' +
+        // 挺直脖子平看
+        '<rect x="54" y="96" width="32" height="58" rx="14" fill="#FF8F3F" ' + S + '/>' +
+        head(70, 72, 21, 'smile') +
+        '<line x1="94" y1="78" x2="144" y2="92" stroke="#186B41" stroke-width="3.5" stroke-dasharray="6 5"/>' +
+      '</svg>',
+
+      /* === 第 2 關插圖 === */
+      eyeRub: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        head(120, 98, 44, 'squint') +
+        // 兩隻小手用力揉眼睛
+        '<circle cx="94" cy="96" r="15" fill="#FFE6CE" ' + S + '/>' +
+        '<circle cx="146" cy="96" r="15" fill="#FFE6CE" ' + S + '/>' +
+        '<path d="M72 78l-10-8M168 78l10-8M74 112l-10 6M166 112l10 6" stroke="#B4372B" stroke-width="4" stroke-linecap="round"/>' +
+      '</svg>',
+
+      eyeBright: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        // 刺眼超亮螢幕
+        '<rect x="64" y="42" width="112" height="86" rx="12" fill="#FFF7B8" ' + S + '/>' +
+        '<circle cx="120" cy="85" r="22" fill="#FFCE3B" stroke="#C75F17" stroke-width="3.5"/>' +
+        '<path d="M120 48v10M120 112v10M82 85h10M148 85h10M93 58l7 7M140 105l7 7M147 58l-7 7M100 105l-7 7" stroke="#C75F17" stroke-width="4" stroke-linecap="round"/>' +
+        // 亮度條拉滿
+        '<rect x="62" y="146" width="116" height="16" rx="8" fill="#FFE1CB" ' + S3 + '/>' +
+        '<rect x="64" y="148" width="106" height="12" rx="6" fill="#FF8F3F"/>' +
+        '<circle cx="170" cy="154" r="10" fill="#B4372B" stroke="#3B2350" stroke-width="3"/>' +
+      '</svg>',
+
+      eyeTree: '<svg viewBox="0 0 240 200">' + cardBg('#EEF8F2') +
+        // 窗戶框
+        '<rect x="34" y="24" width="172" height="148" rx="16" fill="#D9F0FF" ' + S + '/>' +
+        // 遠山與綠樹
+        '<path d="M36 138q48-34 94-12t74-6v50H36z" fill="#9BD9B4"/>' +
+        '<rect x="114" y="114" width="14" height="46" rx="4" fill="#B87A4B" ' + S3 + '/>' +
+        '<circle cx="121" cy="88" r="30" fill="#5CB87A" ' + S + '/>' +
+        '<circle cx="96" cy="100" r="20" fill="#5CB87A" ' + S + '/>' +
+        '<circle cx="146" cy="100" r="20" fill="#5CB87A" ' + S + '/>' +
+        // 窗格
+        '<line x1="120" y1="24" x2="120" y2="172" stroke="#3B2350" stroke-width="3.5" opacity=".45"/>' +
+        '<line x1="34" y1="100" x2="206" y2="100" stroke="#3B2350" stroke-width="3.5" opacity=".45"/>' +
+        '<circle cx="64" cy="54" r="13" fill="#FFD65E" stroke="#C75F17" stroke-width="2.5"/>' +
+      '</svg>',
+
+      roomLamp: '<svg viewBox="0 0 240 200">' + cardBg('#FFF9E2') +
+        // 室內明亮吊燈
+        '<line x1="120" y1="12" x2="120" y2="38" ' + S + '/>' +
+        '<path d="M90 62c0-18 60-18 60 0z" fill="#FF8F3F" ' + S + '/>' +
+        '<circle cx="120" cy="66" r="10" fill="#FFE66D" ' + S3 + '/>' +
+        '<path d="M84 74l-14 14M156 74l14 14M120 82v14" stroke="#FF8F3F" stroke-width="4" stroke-linecap="round"/>' +
+        // 明亮書桌看平板
+        '<rect x="44" y="150" width="152" height="14" rx="5" fill="#F6C89F" ' + S3 + '/>' +
+        head(84, 118, 20, 'smile') +
+        '<rect x="134" y="106" width="44" height="44" rx="7" fill="#6A45C9" ' + S3 + '/>' +
+        '<rect x="140" y="112" width="32" height="32" rx="3" fill="#E1EEFB"/>' +
+      '</svg>',
+
+      roomQuilt: '<svg viewBox="0 0 240 200">' + cardBg('#3A3159') +
+        // 月亮與棉被帳篷
+        '<path d="M186 38a14 14 0 1 0 14 18 11 11 0 1 1-14-18z" fill="#FFE66D"/>' +
+        '<path d="M28 164c12-78 62-96 112-90 32 4 62 32 72 90z" fill="#6A45C9" stroke="#241B40" stroke-width="4"/>' +
+        '<path d="M62 164c8-44 38-60 72-54 18 4 36 20 42 54z" fill="#292145"/>' +
+        // 被窩裡刺眼藍光平板
+        '<rect x="120" y="124" width="32" height="24" rx="5" fill="#9BE3FF" stroke="#fff" stroke-width="3"/>' +
+        head(92, 134, 18, 'squint') +
+      '</svg>',
+
+      roomDark: '<svg viewBox="0 0 240 200">' + cardBg('#3A3159') +
+        // 關掉的電燈
+        '<line x1="120" y1="12" x2="120" y2="38" stroke="#9B8FC2" stroke-width="4"/>' +
+        '<path d="M94 60c0-16 52-16 52 0z" fill="#5C4870" stroke="#241B40" stroke-width="4"/>' +
+        // 暗房只靠螢幕光
+        '<polygon points="146,98 84,78 84,154 146,144" fill="#9BE3FF" opacity=".28"/>' +
+        '<rect x="144" y="96" width="36" height="50" rx="6" fill="#9BE3FF" stroke="#fff" stroke-width="3"/>' +
+        head(82, 120, 21, 'squint') +
+      '</svg>',
+
+      walkLook: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        '<line x1="22" y1="170" x2="218" y2="170" ' + S3 + '/>' +
+        // 走路腳步＋低頭看手機
+        '<path d="M88 124l-22 44M102 124l20 44" fill="none" stroke="#6A45C9" stroke-width="10" stroke-linecap="round"/>' +
+        '<rect x="78" y="84" width="32" height="44" rx="14" fill="#FF8F3F" ' + S + '/>' +
+        head(96, 58, 20, 'tired') +
+        '<rect x="122" y="82" width="18" height="28" rx="4" fill="#6A45C9" ' + S3 + '/>' +
+        '<rect x="125" y="86" width="12" height="18" fill="#E1EEFB"/>' +
+        // 前方三角錐障礙物
+        '<polygon points="178,118 158,170 198,170" fill="#FF8F3F" ' + S + '/>' +
+        '<line x1="168" y1="146" x2="188" y2="146" stroke="#fff" stroke-width="5"/>' +
+        '<text x="178" y="106" text-anchor="middle" font-size="26" font-weight="900" fill="#B4372B">!</text>' +
+      '</svg>',
+
+      walkStop: '<svg viewBox="0 0 240 200">' + cardBg('#EEF8F2') +
+        '<line x1="22" y1="170" x2="218" y2="170" ' + S3 + '/>' +
+        // 安全路旁長椅＋停下看手機
+        '<rect x="148" y="116" width="60" height="12" rx="4" fill="#F6C89F" ' + S3 + '/>' +
+        '<line x1="158" y1="128" x2="158" y2="170" ' + S + '/><line x1="198" y1="128" x2="198" y2="170" ' + S + '/>' +
+        // 站定雙腳並攏
+        '<line x1="88" y1="126" x2="88" y2="170" stroke="#6A45C9" stroke-width="10" stroke-linecap="round"/>' +
+        '<line x1="104" y1="126" x2="104" y2="170" stroke="#6A45C9" stroke-width="10" stroke-linecap="round"/>' +
+        '<rect x="78" y="82" width="36" height="48" rx="14" fill="#FF8F3F" ' + S + '/>' +
+        head(96, 56, 20, 'smile') +
+        '<rect x="120" y="88" width="18" height="28" rx="4" fill="#6A45C9" ' + S3 + '/>' +
+        '<rect x="123" y="92" width="12" height="18" fill="#E1EEFB"/>' +
+        // 安全綠圓牌
+        '<circle cx="48" cy="56" r="18" fill="#DDF3E6" stroke="#186B41" stroke-width="3.5"/>' +
+        '<path d="M40 56l6 6 11-12" fill="none" stroke="#186B41" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '</svg>',
+
+      walkRun: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        '<line x1="22" y1="170" x2="218" y2="170" ' + S3 + '/>' +
+        // 速度線
+        '<path d="M26 70h26M22 94h22M30 118h20" stroke="#FF8F3F" stroke-width="4" stroke-linecap="round"/>' +
+        // 跑步姿勢還拿手機
+        '<path d="M98 124l-26 38M112 124l32 24-12 20" fill="none" stroke="#6A45C9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<rect x="88" y="82" width="32" height="44" rx="14" transform="rotate(14 104 104)" fill="#FF8F3F" ' + S + '/>' +
+        head(114, 56, 20, 'squint') +
+        '<rect x="142" y="78" width="18" height="28" rx="4" fill="#6A45C9" ' + S3 + '/>' +
+        '<rect x="145" y="82" width="12" height="18" fill="#E1EEFB"/>' +
+        // 地上石頭
+        '<ellipse cx="182" cy="166" rx="16" ry="9" fill="#C9B9D8" ' + S3 + '/>' +
+      '</svg>',
+
+      glareSquint: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        // 太陽直射
+        '<circle cx="48" cy="46" r="18" fill="#FFD65E" stroke="#C75F17" stroke-width="3.5"/>' +
+        '<line x1="68" y1="62" x2="144" y2="108" stroke="#FF8F3F" stroke-width="5" stroke-dasharray="7 6"/>' +
+        // 刺眼螢幕
+        '<rect x="142" y="74" width="64" height="74" rx="10" fill="#FFF7B8" ' + S + '/>' +
+        '<path d="M154 90l40 42M154 114l22 22" stroke="#fff" stroke-width="6" stroke-linecap="round"/>' +
+        head(82, 118, 26, 'squint') +
+      '</svg>',
+
+      glareClose: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        '<circle cx="46" cy="44" r="16" fill="#FFD65E" stroke="#C75F17" stroke-width="3.5"/>' +
+        '<rect x="146" y="66" width="60" height="82" rx="10" fill="#FFF7B8" ' + S + '/>' +
+        // 頭湊極近螢幕
+        head(122, 108, 25, 'tired') +
+        '<path d="M144 90l-8-4M144 108h-8M144 126l-8 4" stroke="#B4372B" stroke-width="4" stroke-linecap="round"/>' +
+      '</svg>',
+
+      glareCurtain: '<svg viewBox="0 0 240 200">' + cardBg('#EEF8F2') +
+        // 窗戶拉上溫柔窗簾
+        '<rect x="30" y="24" width="114" height="106" rx="10" fill="#E1EEFB" ' + S + '/>' +
+        '<path d="M30 24h58v106H30z" fill="#ECE3FA" ' + S3 + '/>' +
+        '<path d="M88 24h56v106H88z" fill="#ECE3FA" ' + S3 + '/>' +
+        '<line x1="58" y1="24" x2="58" y2="130" stroke="#B7A3EE" stroke-width="3"/>' +
+        '<line x1="116" y1="24" x2="116" y2="130" stroke="#B7A3EE" stroke-width="3"/>' +
+        '<line x1="22" y1="24" x2="152" y2="24" ' + S + '/>' +
+        // 舒服清晰的螢幕
+        '<rect x="148" y="92" width="64" height="58" rx="8" fill="#E1EEFB" ' + S + '/>' +
+        '<path d="M180 150v18M162 168h36" ' + S + '/>' +
+        '<path d="M168 122l8 8 16-18" fill="none" stroke="#186B41" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '</svg>',
+
+      restTV: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        // 大電視
+        '<rect x="38" y="34" width="164" height="104" rx="14" fill="#6A45C9" ' + S + '/>' +
+        '<rect x="52" y="48" width="136" height="76" rx="6" fill="#E1EEFB"/>' +
+        '<polygon points="108,70 108,104 138,87" fill="#FF8F3F" ' + S3 + '/>' +
+        '<path d="M96 138l-14 24M144 138l14 24M74 162h92" ' + S + '/>' +
+      '</svg>',
+
+      restClose: '<svg viewBox="0 0 240 200">' + cardBg('#EEF8F2') +
+        // 溫柔閉眼休息的小臉＋小星星
+        head(120, 108, 44, 'closed') +
+        '<path d="M52 54l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="#FFC233"/>' +
+        '<path d="M188 48l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#FFC233"/>' +
+        '<path d="M174 142c8-8 18-8 24 0" fill="none" stroke="#186B41" stroke-width="3.5" stroke-linecap="round"/>' +
+      '</svg>',
+
+      restPhone: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        // 手機遊戲畫面
+        '<rect x="76" y="24" width="88" height="150" rx="16" fill="#6A45C9" ' + S + '/>' +
+        '<rect x="88" y="42" width="64" height="108" rx="6" fill="#FFE1CB"/>' +
+        // 遊戲手把十字鍵意象
+        '<path d="M104 94h18M113 85v18" stroke="#3B2350" stroke-width="5" stroke-linecap="round"/>' +
+        '<circle cx="136" cy="90" r="5" fill="#B4372B"/>' +
+        '<circle cx="136" cy="104" r="5" fill="#186B41"/>' +
+        '<circle cx="120" cy="162" r="5" fill="#fff"/>' +
+      '</svg>',
+
+      /* === 第 3 關 3 選 1 插圖 === */
+      dayStudy: '<svg viewBox="0 0 240 200">' + cardBg('#EEF8F2') +
+        // 作業本與鉛筆
+        '<rect x="44" y="42" width="124" height="120" rx="12" fill="#fff" ' + S + '/>' +
+        '<line x1="68" y1="74" x2="144" y2="74" stroke="#B7A3EE" stroke-width="5" stroke-linecap="round"/>' +
+        '<line x1="68" y1="100" x2="144" y2="100" stroke="#B7A3EE" stroke-width="5" stroke-linecap="round"/>' +
+        '<line x1="68" y1="126" x2="122" y2="126" stroke="#B7A3EE" stroke-width="5" stroke-linecap="round"/>' +
+        // 鉛筆
+        '<path d="M148 136l46-66 16 12-46 66-22 8z" fill="#FFD65E" ' + S + '/>' +
+        '<path d="M142 156l8-20 14 10z" fill="#FF8F3F" ' + S3 + '/>' +
+      '</svg>',
+
+      dayTabLong: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        // 大平板＋流逝的時鐘
+        '<rect x="34" y="64" width="124" height="88" rx="12" fill="#6A45C9" ' + S + '/>' +
+        '<rect x="46" y="76" width="100" height="64" rx="6" fill="#E1EEFB"/>' +
+        '<circle cx="176" cy="68" r="32" fill="#FFF0C4" ' + S + '/>' +
+        '<path d="M176 48v20l14 8" fill="none" stroke="#B4372B" stroke-width="4.5" stroke-linecap="round"/>' +
+      '</svg>',
+
+      dayCartoon: '<svg viewBox="0 0 240 200">' + cardBg('#FFF3EE') +
+        '<rect x="40" y="44" width="160" height="106" rx="16" fill="#FF8F3F" ' + S + '/>' +
+        '<rect x="54" y="58" width="132" height="78" rx="8" fill="#FFF9F2"/>' +
+        '<polygon points="106,78 106,116 142,97" fill="#6A45C9" ' + S3 + '/>' +
+        '<line x1="92" y1="44" x2="74" y2="24" ' + S + '/><line x1="148" y1="44" x2="166" y2="24" ' + S + '/>' +
+      '</svg>',
+
+      dayWalk: '<svg viewBox="0 0 240 200">' + cardBg('#EEF8F2') +
+        // 戶外藍天、太陽、草地、小足球
+        '<path d="M10 144q60-24 114-6t106-8v62H10z" fill="#9BD9B4"/>' +
+        '<circle cx="62" cy="54" r="20" fill="#FFD65E" stroke="#C75F17" stroke-width="3"/>' +
+        // 小樹
+        '<rect x="174" y="102" width="12" height="36" rx="4" fill="#B87A4B" ' + S3 + '/>' +
+        '<circle cx="180" cy="84" r="24" fill="#5CB87A" ' + S + '/>' +
+        // 跑步運動小人與球
+        head(98, 76, 18, 'smile') +
+        '<rect x="86" y="96" width="24" height="36" rx="10" fill="#FF8F3F" ' + S + '/>' +
+        '<path d="M92 132l-12 24M104 132l14 22" fill="none" stroke="#6A45C9" stroke-width="8" stroke-linecap="round"/>' +
+        '<circle cx="144" cy="148" r="14" fill="#fff" ' + S3 + '/>' +
+        '<circle cx="144" cy="148" r="5" fill="#3B2350"/>' +
+      '</svg>',
+
+      /* === 第 3 關時間軸小圖示（46×46） === */
+      tlStudy: '<svg viewBox="0 0 52 46" fill="none">' +
+        '<rect x="10" y="6" width="26" height="34" rx="5" fill="#fff" ' + S3 + '/>' +
+        '<line x1="16" y1="16" x2="30" y2="16" stroke="#6A45C9" stroke-width="3" stroke-linecap="round"/>' +
+        '<line x1="16" y1="24" x2="28" y2="24" stroke="#6A45C9" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M32 32l10-16 5 3-10 16z" fill="#FFD65E" ' + S3 + '/>' +
+      '</svg>',
+
+      tlSport: '<svg viewBox="0 0 52 46" fill="none">' +
+        '<circle cx="26" cy="23" r="15" fill="#fff" ' + S3 + '/>' +
+        '<circle cx="26" cy="23" r="5" fill="#FF8F3F" stroke="#3B2350" stroke-width="2.5"/>' +
+        '<path d="M26 8v10M26 28v10M11 23h10M31 23h10" stroke="#3B2350" stroke-width="2.5"/>' +
+      '</svg>',
+
+      tlMeal: '<svg viewBox="0 0 52 46" fill="none">' +
+        '<path d="M10 22h32c0 12-7 17-16 17S10 34 10 22z" fill="#FFE1CB" ' + S3 + '/>' +
+        '<path d="M14 22c3-8 21-8 24 0" fill="#fff" ' + S3 + '/>' +
+        '<line x1="30" y1="14" x2="42" y2="6" ' + S3 + '/><line x1="34" y1="16" x2="44" y2="11" ' + S3 + '/>' +
+      '</svg>',
+
+      tlMealTab: '<svg viewBox="0 0 52 46" fill="none">' +
+        '<path d="M6 26h22c0 9-5 13-11 13S6 35 6 26z" fill="#FFE1CB" ' + S3 + '/>' +
+        '<rect x="28" y="10" width="18" height="26" rx="4" fill="#6A45C9" ' + S3 + '/>' +
+        '<rect x="31" y="14" width="12" height="18" rx="1.5" fill="#E1EEFB"/>' +
+      '</svg>',
+
+      tlSleep: '<svg viewBox="0 0 52 46" fill="none">' +
+        '<path d="M28 8a15 15 0 1 0 14 21 12 12 0 1 1-14-21z" fill="#FFD65E" ' + S3 + '/>' +
+        '<circle cx="38" cy="12" r="2.5" fill="#6A45C9"/>' +
+      '</svg>',
+
+      tlNightTab: '<svg viewBox="0 0 52 46" fill="none">' +
+        '<path d="M14 8a10 10 0 1 0 9 14 8 8 0 1 1-9-14z" fill="#FFD65E" ' + S3 + '/>' +
+        '<rect x="24" y="14" width="22" height="26" rx="4" fill="#6A45C9" ' + S3 + '/>' +
+        '<rect x="28" y="18" width="14" height="18" rx="1.5" fill="#9BE3FF"/>' +
+      '</svg>',
+
+      tlTabOk: '<svg viewBox="0 0 52 46" fill="none">' +
+        '<rect x="12" y="8" width="28" height="30" rx="5" fill="#6A45C9" ' + S3 + '/>' +
+        '<rect x="16" y="12" width="20" height="22" rx="2" fill="#E1EEFB"/>' +
+      '</svg>',
+
+      tlQ: '<svg viewBox="0 0 52 46" fill="none">' +
+        '<circle cx="26" cy="23" r="16" fill="#FF8F3F" ' + S3 + '/>' +
+        '<text x="26" y="31" text-anchor="middle" font-size="24" font-weight="900" fill="#3B2350">?</text>' +
+      '</svg>',
+
+      // 通用圖示：箭頭、✓、✗
+      arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="#5C4870" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
+      check: '<svg viewBox="0 0 56 56" fill="none" stroke="#186B41" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 29l11 11 21-24"/></svg>',
+      cross: '<svg viewBox="0 0 56 56" fill="none" stroke="#B4372B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16l24 24M40 16L16 40"/></svg>'
+    };
+
+    /* =====================================================================
+       3. 掛載共用外殼與場景主邏輯
+       ===================================================================== */
+    SmartIsland.mount({
+      unit: 30,
+      title: '寵物作息表',
+      grade: '1–2 年級',
+      zhuyin: true,
+      howto: '幫寵物排好一天，用平板也要愛護眼睛！',
+      teach: '健康使用 3C：坐姿、護眼、作息｜資E11 建立康健的數位使用習慣與態度',
+      levels: SCENE_CONFIG.LEVELS.map(function (lv, idx) {
+        return { name: lv.name, icon: SCENE_CONFIG.LEVEL_ICONS[idx] };
+      }),
+
+      scene: function (api) {
+        var alive = false;
+        var runId = 0;       // 防止舊的 async 回呼跨關干擾
+        var lvIdx = 0;
+        var qIdx = 0;
+        var locked = false;
+        var review = [];
+        var timers = [];
+
+        // 註冊可統一清除的計時器
+        function addTimer(fn, ms) {
+          var id = setTimeout(function () {
+            timers = timers.filter(function (t) { return t !== id; });
+            fn();
+          }, ms);
+          timers.push(id);
+          return id;
+        }
+
+        function clearTimers() {
+          for (var i = 0; i < timers.length; i++) clearTimeout(timers[i]);
+          timers = [];
+        }
+
+        // 把台詞中的 {pet} 替換成孩子的寵物名字
+        function formatBubble(tpl) {
+          var petInfo = api.pet();
+          var petName = (petInfo && petInfo.name) ? petInfo.name : '小雲';
+          return tpl.replace(/\{pet\}/g, petName);
+        }
+
+        // 依答對數換算星星數（5→3、3–4→2、0–2→1）
+        function calcStars(rightCount) {
+          if (rightCount >= SCENE_CONFIG.STARS.three) return 3;
+          if (rightCount >= SCENE_CONFIG.STARS.two) return 2;
+          return 1;
+        }
+
+        // 繪製第 3 關時間軸 HTML
+        function renderTimeline(slots) {
+          var zyCls = api.zy ? ' sm-zy' : '';
+          var html = '<div class="clay sc-timeline" aria-label="寵物的一天時間表">';
+          for (var i = 0; i < slots.length; i++) {
+            var sl = slots[i];
+            if (i > 0) html += '<span class="sc-arrow" aria-hidden="true">' + PIC.arrow + '</span>';
+            html += '<div class="sc-slot' + (sl.focus ? ' sc-slot-focus' : '') + '">' +
+              '<span class="sc-slot-time' + zyCls + '">' + sl.time + '</span>' +
+              '<div class="sc-slot-ic" aria-hidden="true">' + (PIC[sl.ic] || '') + '</div>' +
+              '<span class="sc-slot-act' + zyCls + '">' + sl.act + '</span>' +
+            '</div>';
+          }
+          html += '</div>';
+          return html;
+        }
+
+        // 繪製選項區 HTML（支援 3 選 1 圖文卡 與 2 選 1 好／不好按鈕）
+        function renderOptions(qObj, isTimeline) {
+          var zyCls = api.zy ? ' sm-zy' : '';
+          var wrapCls = 'sc-opts' + (isTimeline ? ' sc-opts-t' : '');
+
+          if (qObj.kind === 'yn') {
+            return '<div class="' + wrapCls + '">' +
+              qObj.options.map(function (opt, idx) {
+                var isGood = idx === 0;
+                return '<button type="button" class="clay sc-yn ' + (isGood ? 'sc-yn-good' : 'sc-yn-bad') + '" data-idx="' + idx + '">' +
+                  '<span class="sc-yn-badge" aria-hidden="true">' + (isGood ? PIC.check : PIC.cross) + '</span>' +
+                  '<span class="sc-yn-txt' + zyCls + '">' + opt.text + '</span>' +
+                '</button>';
+              }).join('') +
+            '</div>';
+          }
+
+          return '<div class="' + wrapCls + '">' +
+            qObj.options.map(function (opt, idx) {
+              return '<button type="button" class="clay sc-opt" data-idx="' + idx + '">' +
+                '<span class="sc-opt-tag">' + (idx + 1) + '</span>' +
+                '<div class="sc-opt-pic" aria-hidden="true">' + (PIC[opt.pic] || '') + '</div>' +
+                '<span class="sc-opt-txt' + zyCls + '">' + opt.text + '</span>' +
+              '</button>';
+            }).join('') +
+          '</div>';
+        }
+
+        // 出目前這一題
+        function renderQuestion() {
+          if (!alive) return;
+          var level = SCENE_CONFIG.LEVELS[lvIdx];
+          var qObj = level.questions[qIdx];
+          var zyCls = api.zy ? ' sm-zy' : '';
+          var isTimeline = level.mode === 'timeline';
+          var petInfo = api.pet();
+          var petName = (petInfo && petInfo.name) ? petInfo.name : '小雲';
+
+          locked = false;
+          api.progress(qIdx + 1, level.questions.length);
+
+          api.field.innerHTML =
+            '<div class="sc-stage">' +
+              (isTimeline ? renderTimeline(qObj.timeline) : '') +
+              '<div class="clay sc-q' + (isTimeline ? ' sc-q-compact' : '') + '">' +
+                '<span class="sc-q-num" aria-hidden="true">' + (qIdx + 1) + '</span>' +
+                '<p class="sc-q-text' + zyCls + '">' + qObj.q + '</p>' +
+              '</div>' +
+              renderOptions(qObj, isTimeline) +
+              '<div class="sc-petbox">' +
+                '<div class="sc-level-chip">' + level.name + '</div>' +
+                '<div class="clay sc-bubble' + zyCls + '">' + formatBubble(qObj.bubble) + '</div>' +
+                '<div class="sc-pet" id="sc-pet-slot">' + api.petSVG('normal', { q: true }) + '</div>' +
+                '<div class="sc-pet-name' + zyCls + '">' + petName + '</div>' +
+              '</div>' +
+            '</div>';
+        }
+
+        // 處理作答點擊（寬鬆過關：對錯皆往前進入下一題）
+        function handlePick(e) {
+          if (!alive || locked) return;
+          var btn = e.target.closest('.sc-opt, .sc-yn');
+          if (!btn || !api.field.contains(btn)) return;
+
+          locked = true;
+          var myRun = runId;
+          var picked = parseInt(btn.getAttribute('data-idx'), 10);
+          var level = SCENE_CONFIG.LEVELS[lvIdx];
+          var qObj = level.questions[qIdx];
+          var ok = picked === qObj.ans;
+
+          // 立刻鎖定所有選項避免連點兩次
+          var allBtns = api.field.querySelectorAll('.sc-opt, .sc-yn');
+          for (var i = 0; i < allBtns.length; i++) allBtns[i].disabled = true;
+
+          // 視覺回饋：卡片高亮＋右側寵物表情切換
+          btn.classList.add(ok ? 'sc-picked-ok' : 'sc-picked-bad');
+          var petSlot = api.field.querySelector('#sc-pet-slot');
+          if (petSlot) {
+            petSlot.innerHTML = ok
+              ? api.petSVG('happy', { spark: true })
+              : api.petSVG('worried', { sweat: true });
+          }
+
+          review.push({ ok: ok, q: qObj.q });
+
+          // 短暫呈現寵物表情後叫出共用回饋卡
+          addTimer(function () {
+            if (!alive || myRun !== runId) return;
+            api.feedback({
+              ok: ok,
+              explain: ok ? qObj.praise : qObj.explain,
+              zyExplain: true
+            }).then(function () {
+              if (!alive || myRun !== runId) return;
+              qIdx++;
+              if (qIdx < level.questions.length) {
+                renderQuestion();
+                return;
+              }
+              var right = review.filter(function (r) { return r.ok; }).length;
+              api.finish({
+                stars: calcStars(right),
+                review: review,
+                learned: level.learned,
+                retry: right < level.questions.length ? level.retry : ''
+              });
+            });
+          }, 260);
+        }
+
+        return {
+          start: function (levelIndex) {
+            clearTimers();
+            runId++;
+            alive = true;
+            lvIdx = (typeof levelIndex === 'number' && SCENE_CONFIG.LEVELS[levelIndex]) ? levelIndex : 0;
+            qIdx = 0;
+            locked = false;
+            review = [];
+            api.field.innerHTML = '';
+            api.field.onclick = handlePick;
+            renderQuestion();
+          },
+          stop: function () {
+            alive = false;
+            runId++;
+            locked = true;
+            clearTimers();
+            api.field.onclick = null;
+          }
+        };
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

@@ -47,7 +47,10 @@ STEP = """() => {
   const done = document.querySelector('.sm-s-done'); if (done && !done.hidden) return 'done';
   const go = document.querySelector('.sm-fb:not([hidden]) .sm-fbgo'); if (go) { go.click(); return 'next'; }
   const vis = el => { const r = el.getBoundingClientRect(); return r.width > 20 && r.height > 20 && !el.disabled && el.getAttribute('aria-disabled') !== 'true' && getComputedStyle(el).pointerEvents !== 'none'; };
-  const c = [...document.querySelectorAll('.sm-field button, .sm-field [role=button], .sm-field [data-k], .sm-field [data-ans], .sm-field [data-i]')].filter(vis);
+  let c = [...document.querySelectorAll('.sm-field button, .sm-field [role=button], .sm-field [data-k], .sm-field [data-ans], .sm-field [data-i]')].filter(vis);
+  if (!c.length)   // 選項用 SVG 群組或 div 做的：找游標是手指、而且上層不是手指的元素
+    c = [...document.querySelectorAll('.sm-field *')].filter(el => getComputedStyle(el).cursor === 'pointer' &&
+      !(el.parentElement && getComputedStyle(el.parentElement).cursor === 'pointer') && vis(el));
   if (!c.length) return 'none';
   c[0].dispatchEvent(new MouseEvent('click', { bubbles: true })); return 'click';
 }"""
@@ -109,12 +112,15 @@ def check(pg, base, key, rel, zy):
                 (r.right > s.right + 2 || r.bottom > s.bottom + 2 || r.left < s.left - 2)) bad++; }); return bad; }""")
         if over:
             fails.append(f"第 {i + 1} 關有 {over} 個元素超出 1366×657 舞台")
-        state, steps = "", 0
-        while steps < 80:
+        state, steps, idle = "", 0, 0
+        while steps < 120:
             state = pg.evaluate(STEP); steps += 1
-            if state in ("done", "none"):
+            if state == "done":
                 break
-            pg.wait_for_timeout(250 if state == "click" else 450)
+            idle = idle + 1 if state == "none" else 0   # 點完後場景常會停一下才跳回饋卡：連續 8 次（約 3 秒）都沒東西可按才算卡住
+            if idle >= 8:
+                break
+            pg.wait_for_timeout(400 if state != "next" else 500)
         played = state == "done"
         if not played:
             notes.append(f"第 {i + 1} 關自動作答沒走完（{state}），改用 finish 收尾")
