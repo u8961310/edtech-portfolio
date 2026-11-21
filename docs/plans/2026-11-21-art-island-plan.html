@@ -1,0 +1,178 @@
+<title>畫畫島改版計畫</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: 單欄閱讀＋每節彩色標題帶；表格走對帳單風（深藍表頭）。沿用打字島改版計畫頁 */
+:root{
+ --bg:#e8edf3; --paper:#f6f8fb; --fg:#1d2733; --muted:#4a5868; --line:#c9d3df;
+ --thead:#1f3a5f; --thead-fg:#ffffff;
+ --b1:#2f6db5; --b2:#2c8a6e; --b3:#b4632a; --b4:#7a4fb0; --b5:#b23a55; --b6:#3d7d93;
+ --chip-bg:#dde6f0; --warn:#8a3f0c; --warn-bg:#fbeadc;
+ --g12:#2c8a6e; --g34:#7a4fb0;
+ --sans:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+ --display:"Space Grotesk","Noto Sans TC",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+ --bg:#1a222c; --paper:#222c38; --fg:#e4eaf1; --muted:#aab6c4; --line:#3a4757;
+ --thead:#2c4d78; --thead-fg:#ffffff; --chip-bg:#2e3b4b; --warn:#f2b483; --warn-bg:#3a2a1e; color-scheme:dark}}
+:root[data-theme="dark"]{
+ --bg:#1a222c; --paper:#222c38; --fg:#e4eaf1; --muted:#aab6c4; --line:#3a4757;
+ --thead:#2c4d78; --thead-fg:#ffffff; --chip-bg:#2e3b4b; --warn:#f2b483; --warn-bg:#3a2a1e; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.7}
+.wrap{max-width:900px;margin:0 auto;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+header h1{font-family:var(--display);font-size:1.9rem;margin:0;text-wrap:balance}
+header p{margin:.3rem 0 0;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{background:var(--chip-bg);border-radius:4px;padding:2px 9px;font-size:.85rem}
+section{background:var(--paper);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+section>h2{margin:0;padding:9px 16px;font-size:1.05rem;color:#fff;font-weight:700;letter-spacing:.02em}
+.c1>h2{background:var(--b1)}.c2>h2{background:var(--b2)}.c3>h2{background:var(--b3)}
+.c4>h2{background:var(--b4)}.c5>h2{background:var(--b5)}.c6>h2{background:var(--b6)}
+.body{padding:12px 16px 16px;min-width:0}
+.body p{margin:.4rem 0}
+ul,ol{margin:.3rem 0;padding-left:1.3rem}
+li{margin:.15rem 0}
+h3{font-size:1rem;margin:1rem 0 .3rem;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.tbl{overflow-x:auto;margin:.5rem 0}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:560px}
+th{background:var(--thead);color:var(--thead-fg);text-align:left;padding:6px 9px;font-weight:500}
+td{padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+code{font-family:Consolas,monospace;font-size:.86em;background:var(--chip-bg);padding:0 4px;border-radius:3px}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:4px;padding:8px 12px;margin:.5rem 0}
+.tag{display:inline-block;color:#fff;border-radius:3px;padding:0 7px;font-size:.82rem;font-weight:700}
+.tag.g12{background:var(--g12)}.tag.g34{background:var(--g34)}
+.tag.new{background:var(--b3)}.tag.old{background:var(--b6)}
+.game{border-top:1px solid var(--line);padding-top:6px;margin-top:10px}
+.game:first-of-type{border-top:0;margin-top:0}
+.game dl{display:grid;grid-template-columns:5.5em minmax(0,1fr);gap:2px 10px;margin:.3rem 0}
+.game dt{color:var(--muted);font-weight:700}
+.game dd{margin:0}
+.check{list-style:none;padding-left:0}
+.check li::before{content:"☐ ";color:var(--muted)}
+.check li.done::before{content:"☑ ";color:var(--b2)}
+@media (max-width:480px){.game dl{grid-template-columns:1fr}.game dt{margin-top:4px}}
+</style>
+
+<div class="wrap">
+<header>
+ <h1>畫畫島改版計畫</h1>
+ <p>edtech-portfolio · 1–4 年級 · 新做 4 套＋舊 2 關換新風格 · 有趣優先，每關對應一項學習能力 · Gemini 製作互動遊戲</p>
+ <div class="meta">
+  <span class="chip">2026-11-21 草案</span>
+  <span class="chip">狀態：M0 規劃，等你確認</span>
+  <span class="chip">部署：GitHub Pages（推 main）</span>
+ </div>
+</header>
+
+<section class="c1"><h2>你已經決定的</h2><div class="body">
+ <div class="tbl"><table>
+  <tr><th>題目</th><th>選擇</th><th>帶來的影響</th></tr>
+  <tr><td>對象</td><td>1–4 年級</td><td>分兩個年段：低年級 1–2、中年級 3–4，難度跟課綱各對一段</td></tr>
+  <tr><td>舊關卡</td><td>保留，用新風格重做</td><td>unit5 像素畫家、unit18 魔法畫畫交給 Gemini 換成同一套外殼；成績 key 沿用 <code>edtech-unit5-score</code>、<code>edtech-unit18-score</code>，地圖徽章不會掉</td></tr>
+  <tr><td>新遊戲</td><td>4 套</td><td>每個年段 2 套：一套偏美術概念、一套偏電腦操作。畫畫島變 6 關（一座島最多 8 關，還留 2 格）</td></tr>
+  <tr><td>教學理論</td><td>只套「對應學習能力」</td><td>每關標明對應的課綱條文＋資訊能力，配合兒童繪畫發展階段（Lowenfeld）設計。Gagné 目標回顧、分層提示、ARCS 這次<b>不硬加</b>，遊戲內引導以好玩為主</td></tr>
+ </table></div>
+</div></section>
+
+<section class="c2"><h2>設計依據：年段特性和課綱</h2><div class="body">
+ <p>課綱的藝術領域是從中年級才開始，1–2 年級屬於「生活課程」，所以兩個年段對到不同文件。下表條文都從國教院官方課綱原文核對過。</p>
+ <div class="tbl"><table>
+  <tr><th>年段</th><th>繪畫發展階段（Lowenfeld）</th><th>對到的課綱條文</th><th>設計上的意思</th></tr>
+  <tr><td><span class="tag g12">1–2 年級</span></td><td>圖式期（7–9 歲）：畫有固定的「符號」、有一條地面線、重要的東西畫特別大</td><td>生活 <code>2-I-1</code> 以感官和知覺探索生活中的人、事、物，覺察事物及環境的特性<br>生活 <code>4-I-1</code> 利用各種生活的媒介與素材進行表現與創作，喚起豐富的想像力<br>生活 <code>4-I-2</code> 使用不同的表徵符號進行表現與分享，感受創作的樂趣</td><td>不評「像不像」；操作只用點和拖曳；畫完馬上有聲光回饋</td></tr>
+  <tr><td><span class="tag g34">3–4 年級</span></td><td>寫實萌芽期（9–12 歲）：開始在意畫得像不像、重視細節，容易因為「畫不好」放棄</td><td>藝術 <code>視E-II-1</code> 色彩感知、造形與空間的探索<br>藝術 <code>視E-II-2</code> 媒材、技法及工具知能<br>藝術 <code>視E-II-3</code> 點線面創作體驗、平面與立體創作、聯想創作</td><td>給「怎麼畫都好看」的工具（對稱、像素格），讓怕畫不好的孩子也做得出作品；加入步數、星等這類可以比的挑戰</td></tr>
+ </table></div>
+</div></section>
+
+<section class="c3"><h2>6 關遊戲設計</h2><div class="body">
+
+ <div class="game">
+  <h3><span class="tag g12">1–2 年級</span><span class="tag new">新</span>調色魔法鍋（unit24）</h3>
+  <dl>
+   <dt>怎麼玩</dt><dd>森林裡的客人來點顏色：「我要橘色的南瓜」「我要紫色的葡萄」。把紅、黃、藍顏料瓶拖進大鍋，攪一攪冒泡泡，倒到圖上就上色了。亂加會煮出「泥巴色」，鍋裡跳出一隻泥巴怪做鬼臉，倒掉重來就好。後半段加白、加黑，調出淺色、深色。</dd>
+   <dt>好玩在哪</dt><dd>鍋子冒泡、泥巴怪搞笑，煮錯也好玩；客人收到顏色會跳舞</dd>
+   <dt>學習能力</dt><dd>三原色混色、深淺變化（生活 <code>2-I-1</code>，銜接中年級 <code>視E-II-1</code>）；滑鼠拖曳放開</dd>
+   <dt>給 Gemini</dt><dd>混色要照美術課的顏料規則（紅＋黃＝橘），用查表，<b>不能</b>用 RGB 平均（電腦的光混色會跟美術課教的對不上）</dd>
+  </dl>
+ </div>
+
+ <div class="game">
+  <h3><span class="tag g12">1–2 年級</span><span class="tag new">新</span>線條小火車（unit25）</h3>
+  <dl>
+   <dt>怎麼玩</dt><dd>按住滑鼠沿著虛線鋪鐵軌：直線、波浪線、鋸齒線、螺旋線、點點線。鋪好後小火車照著<b>孩子自己畫的線</b>開過去，開過的地方長出花草、房子。最後一站「自由軌道」，自己畫一條路讓火車跑。</dd>
+   <dt>好玩在哪</dt><dd>自己畫的線馬上變成火車路線；歪一點也能開，只是火車會晃，很好笑</dd>
+   <dt>學習能力</dt><dd>認識線條種類和感覺（生活 <code>4-I-1</code>）；滑鼠按住拖曳的精細動作。呼應圖式期的「地面線」</dd>
+   <dt>給 Gemini</dt><dd>對線的容錯要寬（一年級手還不穩），偏離太多只是火車放慢，不判失敗</dd>
+  </dl>
+ </div>
+
+ <div class="game">
+  <h3><span class="tag g12">1–2 年級</span><span class="tag old">重做</span>魔法畫畫屋（unit18）</h3>
+  <dl>
+   <dt>怎麼玩</dt><dd>自由畫畫：畫筆、彩虹筆、印章、貼紙。抽一張主題卡（我的家、最喜歡的動物、下雨天），畫完按「魔法」，畫裡的東西會動起來（保留舊版的召喚魔法）。作品收進畫廊，可以下載。</dd>
+   <dt>好玩在哪</dt><dd>自己的畫會動；主題卡解決「不知道畫什麼」</dd>
+   <dt>學習能力</dt><dd>用符號表達想法、感受創作樂趣（生活 <code>4-I-2</code>）。不打分數，成績記完成幾張作品（沿用舊版記法）</dd>
+  </dl>
+ </div>
+
+ <div class="game">
+  <h3><span class="tag g34">3–4 年級</span><span class="tag new">新</span>對稱魔鏡工坊（unit26）</h3>
+  <dl>
+   <dt>怎麼玩</dt><dd>畫左半邊，魔鏡同時畫出右半邊。訂單任務：修好蝴蝶翅膀、做面具、設計班旗。往後解鎖上下對稱、四格萬花筒、六瓣雪花（旋轉對稱）。</dd>
+   <dt>好玩在哪</dt><dd>隨手亂畫都變漂亮圖案，寫實萌芽期怕畫不好的孩子也有成就感；萬花筒模式讓人停不下來</dd>
+   <dt>學習能力</dt><dd>造形與對稱（<code>視E-II-1</code>）、點線面創作（<code>視E-II-3</code>）；可以跟數學的線對稱連起來</dd>
+  </dl>
+ </div>
+
+ <div class="game">
+  <h3><span class="tag g34">3–4 年級</span><span class="tag new">新</span>小畫家任務局（unit27）</h3>
+  <dl>
+   <dt>怎麼玩</dt><dd>任務局發來目標圖（房子、機器人、交通號誌），用繪圖工具照著畫出來：直線、矩形、橢圓、填色桶、橡皮擦、復原、選取移動、複製貼上。像打高爾夫一樣算步數，有「標準桿」，步數越少星星越多。</dd>
+   <dt>好玩在哪</dt><dd>比誰步數少；發現「複製貼上一次搞定四扇窗」那一刻很爽</dd>
+   <dt>學習能力</dt><dd>電腦繪圖工具（<code>視E-II-2</code>，數位媒材）；資訊課的小畫家操作；拆解步驟、找重複的運算思維</dd>
+  </dl>
+ </div>
+
+ <div class="game">
+  <h3><span class="tag g12">1–2</span><span class="tag g34">3–4</span><span class="tag old">重做</span>像素小畫家（unit5）</h3>
+  <dl>
+   <dt>怎麼玩</dt><dd>分兩階。低年級：照號碼填色，一格一格點出小動物。中年級：照座標畫（「B3 塗紅色」），畫完拉遠看才發現是什麼圖；最後自由畫像素圖。</dd>
+   <dt>好玩在哪</dt><dd>格子一點點拼出圖案的揭曉感；中年級有解謎味道</dd>
+   <dt>學習能力</dt><dd>低年級：感官探索、顏色對應（生活 <code>2-I-1</code>）。中年級：認識數位圖片是一格一格的像素組成、座標（<code>視E-II-2</code>）</dd>
+  </dl>
+ </div>
+</div></section>
+
+<section class="c4"><h2>製作方式：共用外殼＋Gemini 寫遊戲</h2><div class="body">
+ <p>沿用打字島那套分工：我做共用外殼和規範，Gemini 只寫每關的遊戲本體，交回來我用自動測試驗收。</p>
+ <ul>
+  <li><b>共用外殼 <code>assets/js/art-ui.js</code></b>：開始畫面（遊戲名＋給老師看的「這關練什麼」）、🏠 回首頁（今天打字島剛補過，這次一開始就做進去）、畫廊（作品存在這台電腦）、下載 PNG、列印、成績存檔</li>
+  <li><b>畫布共用</b>：滑鼠和觸控都用 pointer events，平板也能玩；尺寸以教室電腦 1366×657 為準，頁面不能捲動</li>
+  <li><b>提示詞</b>：<code>docs/plans/art-island-gemini-prompt.md</code>（共用段＋每關一段），用 <code>tools/build-art-island-prompt.py</code> 組成一份交給 Gemini，作法同打字島</li>
+  <li><b>自動驗收 <code>tools/test-art-scenes.py</code></b>：每關模擬滑鼠畫一筆、存進畫廊、頁面不捲動、console 沒錯誤、回首頁按鈕在、成績 key 寫得進去</li>
+  <li><b>學習能力檢核</b>：每關交件後逐條對照上面的「學習能力」欄，確認遊戲裡真的練到</li>
+ </ul>
+ <div class="note">設計規範：開發前照慣例先出 3 版 mockup（frontend-design、ui-ux-pro-max、interface-design），用正式會用的字型與素材，你選定後才寫外殼。</div>
+</div></section>
+
+<section class="c5"><h2>里程碑</h2><div class="body">
+ <div class="tbl"><table>
+  <tr><th>階段</th><th>內容</th><th>誰</th></tr>
+  <tr><td>M0</td><td>規劃定稿（本頁）＋下面 4 個待決事項</td><td>你確認</td></tr>
+  <tr><td>M1</td><td>3 版 mockup → 選定畫畫島風格 → 寫設計規範</td><td>我出圖、你選</td></tr>
+  <tr><td>M2</td><td>共用外殼 <code>art-ui.js</code>＋場景範本＋Gemini 提示詞</td><td>我</td></tr>
+  <tr><td>M3</td><td>新 4 關：調色魔法鍋 → 線條小火車 → 對稱魔鏡工坊 → 小畫家任務局</td><td>Gemini 做、我驗收</td></tr>
+  <tr><td>M4</td><td>舊 2 關換新外殼：魔法畫畫屋、像素小畫家</td><td>Gemini 做、我驗收</td></tr>
+  <tr><td>M5</td><td>自動驗收全過＋學習能力檢核</td><td>我</td></tr>
+  <tr><td>M6</td><td>島圖：<code>island/data.js</code> 加 4 關、跑 <code>render-island.py</code> 重新產圖</td><td>我</td></tr>
+  <tr><td>M7</td><td>推上線＋正式站逐關試玩</td><td>我部署、你試玩</td></tr>
+ </table></div>
+</div></section>
+
+<section class="c6"><h2>還要你決定的</h2><div class="body">
+ <ul class="check">
+  <li><b>6 關名稱</b>：調色魔法鍋、線條小火車、魔法畫畫屋、對稱魔鏡工坊、小畫家任務局、像素小畫家，可以嗎？</li>
+  <li><b>交成績給老師</b>：要不要接現有的 QR 收成績？建議只接有分數的（任務局步數星等、魔法鍋完成單數），自由畫畫只存畫廊</li>
+  <li><b>平板觸控</b>：建議順便支援（pointer events 幾乎不多花工）</li>
+  <li><b>作品出口</b>：下載 PNG＋列印，兩個都做？</li>
+ </ul>
+</div></section>
+</div>

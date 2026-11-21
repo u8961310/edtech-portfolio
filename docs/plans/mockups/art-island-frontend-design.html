@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<title>畫畫島 設計稿｜frontend-design 版「貼紙畫冊」</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+<style>
+@font-face { font-family:'Bpmf Huninn'; src:url('fonts/bpmf-huninn-art.woff2') format('woff2'); }
+:root{
+  /* 畫畫島 6 關共用意思色：藍＝重點／現在、太陽黃＝按鈕、綠＝正確（＋✓）、紅＝錯誤（＋✗） */
+  --lagoon:#E4F1F0;      /* 介面底（柔和，非純白） */
+  --card:#FFFBEF;        /* 面板、卡片 */
+  --ink:#1F2A4D;         /* 文字＋貼紙粗輪廓 */
+  --ink-2:#43507A;       /* 次要文字 */
+  --blue:#2160C4; --blue-soft:#DCE9FB;
+  --sun:#FFB627;  --sun-soft:#FFF0C2;
+  --ok:#1B7F45;   --ok-soft:#D8F1DF;
+  --bad:#C0303A;  --bad-soft:#FFDCD8;
+  --canvas:#FFFFFF;      /* 只有畫布是純白，顏色才看得準 */
+  --font-ui:'Noto Sans TC','Microsoft JhengHei',sans-serif;
+  --font-title:'Chiron GoRound TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
+  --font-num:'Fredoka','Bahnschrift','Noto Sans TC',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#C9D0DA;font-family:var(--font-ui);color:var(--ink);min-width:1366px}
+.tabs{height:52px;display:flex;gap:8px;align-items:center;justify-content:center;background:#2A3358}
+.tabs button{font:700 16px var(--font-ui);padding:8px 16px;border-radius:10px;border:2px solid #fff;background:transparent;color:#fff;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--sun);color:var(--ink);border-color:var(--sun)}
+.tabs button:focus-visible,.btn:focus-visible{outline:4px solid var(--blue);outline-offset:2px}
+
+.screen{display:none;position:relative;width:1366px;height:657px;overflow:hidden;margin:0 auto;
+  background-color:var(--lagoon);background-image:radial-gradient(#C3DEDF 1.6px,transparent 1.7px);background-size:24px 24px}
+.screen.on{display:block}
+.bar{position:absolute;left:0;right:0;top:0;height:62px;padding:0 24px;display:flex;align-items:center;gap:16px;z-index:3}
+.ic{width:26px;height:26px;flex:none;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 20px;font:700 20px var(--font-ui);color:var(--ink);
+  background:var(--card);border:3px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink);text-decoration:none;cursor:pointer}
+.btn.go{background:var(--sun)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.panel{position:absolute;background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink)}
+.board{position:absolute;background:var(--canvas);border:3px solid var(--ink);border-radius:8px;box-shadow:0 6px 0 var(--ink)}
+.tape{position:absolute;width:86px;height:26px;background:#FFD966;opacity:.9;border:2px solid rgba(31,42,77,.35);z-index:2}
+h3{margin:0 0 8px;font:700 16px var(--font-ui);color:var(--ink-2)}
+.zy{font-family:'Bpmf Huninn','Noto Sans TC',sans-serif;letter-spacing:0;color:var(--ink);margin:0}
+.st{fill:#fff;stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round}
+.st.on{fill:var(--sun)}
+.pk{fill:var(--pf,#fff);stroke:var(--ink);stroke-width:4}
+.pk-r{fill:none;stroke:var(--rl,#8FA0DA);stroke-width:3;stroke-linecap:round}
+.pk-s{fill:var(--sf,#fff);stroke:var(--ink);stroke-width:4;stroke-linejoin:round}
+.pk-l{fill:var(--lf,#fff);stroke:var(--ink);stroke-width:4;stroke-linejoin:round}
+
+/* S1 */
+.title{position:absolute;left:452px;top:78px}
+.title h1{position:relative;z-index:1;margin:0;font:900 92px/1.15 var(--font-title);color:var(--ink);letter-spacing:2px}
+.title svg{position:absolute;left:0;bottom:8px;z-index:0}
+.start{position:absolute;left:452px;top:326px;width:340px;height:104px;font:900 56px var(--font-title);gap:16px;border-radius:24px;box-shadow:0 8px 0 var(--ink)}
+.start .ic{width:44px;height:44px;fill:currentColor}
+.teach{position:absolute;left:822px;top:336px;width:508px;padding:12px 16px;border:2.5px dashed var(--ink-2);border-radius:12px;background:#FBF4DD;font-size:17px;line-height:1.55;color:var(--ink)}
+.teach b{font-weight:900}
+.lvrow{position:absolute;left:36px;right:36px;top:476px;display:flex;gap:18px}
+.lvlabel{position:absolute;left:40px;top:438px;font:900 24px var(--font-title)}
+.lv{flex:1;height:164px;display:flex;align-items:center;gap:14px;padding:12px;background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink)}
+.lv .th{flex:none;width:120px;height:120px;background:#fff;border:3px solid var(--ink);border-radius:12px;overflow:hidden}
+.lv .n1{font:700 17px var(--font-ui);color:var(--ink-2)}
+.lv .n2{font:900 27px/1.2 var(--font-title)}
+.lv .n3{display:flex;align-items:center;gap:4px;margin-top:6px;font:700 17px var(--font-ui)}
+.lv .n3 svg.st{width:28px;height:28px}
+.lv.new{border-style:dashed}
+.lv.new .n3{color:var(--blue)}
+.lv.lock{background:#DDE3EA;box-shadow:0 5px 0 #7C86A6;border-color:#4B5578}
+.lv.lock .n3,.lv.lock .n1{color:#3A4568}
+
+/* S2 */
+.bubble{position:absolute;left:24px;top:70px;width:300px;padding:10px 14px;background:#fff;border:3px solid var(--ink);border-radius:22px;box-shadow:0 5px 0 var(--ink)}
+.bubble::after{content:"";position:absolute;left:62px;bottom:-15px;width:24px;height:24px;background:#fff;border-right:3px solid var(--ink);border-bottom:3px solid var(--ink);transform:rotate(45deg)}
+.bottles{position:absolute;left:340px;top:70px;width:540px;display:flex;justify-content:space-between}
+.bt{display:flex;flex-direction:column;align-items:center;gap:0;font:900 22px var(--font-title)}
+.chip{position:absolute;display:flex;align-items:center;gap:8px;font:700 22px var(--font-ui)}
+.dot{display:inline-block;width:26px;height:26px;border-radius:50%;border:3px solid var(--ink);flex:none}
+.mud{left:24px;top:398px;width:300px;height:242px;padding:10px 14px;border-color:var(--bad);box-shadow:0 5px 0 var(--bad)}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;background:var(--bad-soft);color:#8E1F29;border:2px solid var(--bad);font:700 17px var(--font-ui)}
+.badge .ic{width:18px;height:18px;stroke-width:3}
+
+/* S3 */
+.quest{display:flex;align-items:center;gap:14px;padding:6px 18px;background:var(--sun-soft);border:3px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink);font:900 22px var(--font-title);margin-left:auto;margin-right:auto}
+.pips{display:flex;gap:6px}
+.pips i{width:16px;height:16px;border-radius:50%;border:2.5px solid var(--ink);background:#fff}
+.pips i.d{background:var(--ok)}
+.pips i.c{background:var(--blue)}
+.tb{display:flex;gap:8px}
+.tbtn{flex:1;min-width:0;height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:700 16px var(--font-ui);color:var(--ink);
+  background:var(--card);border:3px solid var(--ink);border-radius:12px}
+.tbtn.act{background:var(--blue-soft);border-color:var(--blue);box-shadow:0 0 0 2px var(--blue)}
+.sw{width:48px;height:48px;border-radius:12px;border:3px solid var(--ink);position:relative}
+.sw.act{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--blue)}
+.sw.act::after{content:"";position:absolute;left:12px;top:6px;width:10px;height:18px;border:solid var(--ink);border-width:0 4px 4px 0;transform:rotate(45deg)}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mode{position:relative;height:112px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:700 18px/1.2 var(--font-ui);text-align:center;
+  background:#fff;border:3px solid var(--ink);border-radius:14px}
+.mode.act{background:var(--blue-soft);border-color:var(--blue);box-shadow:0 0 0 2px var(--blue)}
+.mode .ck{position:absolute;right:6px;top:6px;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center}
+.mode .ck .ic{width:14px;height:14px;stroke-width:3.5}
+.tag{position:absolute;padding:2px 10px;font:700 16px var(--font-ui);background:var(--blue-soft);color:var(--blue);border:2px solid var(--blue);border-radius:999px}
+
+/* S4 */
+.ribbon{left:24px;top:68px;width:1318px;height:78px;display:flex;align-items:center;gap:6px;padding:0 14px}
+.rb{width:92px;height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:700 16px var(--font-ui);border:3px solid transparent;border-radius:10px;color:var(--ink)}
+.rb .ic{width:26px;height:26px}
+.rb.act{background:var(--blue-soft);border-color:var(--blue)}
+.sep{width:2px;height:50px;background:var(--ink-2);opacity:.5;margin:0 10px}
+.win{position:absolute;top:160px;height:480px;background:var(--card);border:3px solid var(--ink);border-radius:12px;box-shadow:0 5px 0 var(--ink);overflow:hidden}
+.win .tt{height:40px;display:flex;align-items:center;padding:0 14px;background:var(--ink);color:#fff;font:700 20px var(--font-ui)}
+.win svg.cv{display:block;background:var(--canvas)}
+.pegs{display:flex;gap:7px;margin:10px 0 6px}
+.pegs i{width:24px;height:24px;border-radius:50%;border:3px solid var(--ink);background:#fff}
+.pegs i.f{background:var(--blue)}
+.pegs i.g{border-color:var(--ink);background:var(--sun)}
+
+/* S5 */
+.praise{position:absolute;left:600px;top:24px;width:730px}
+.praise h2{margin:0;font:900 64px/1.15 var(--font-title)}
+.praise p{margin:6px 0 0;font:500 26px/1.5 var(--font-ui)}
+.bs{width:84px;height:84px}
+.bs.st{stroke-width:1.3}
+.acts{position:absolute;left:600px;top:290px;width:730px;display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.acts .btn{height:76px;font-size:23px;padding:0 12px;grid-column:span 2}
+.acts .btn.w3{grid-column:span 3}
+.gal{left:36px;top:444px;width:1294px;height:198px;padding:10px 20px}
+.gal .hd{display:flex;align-items:baseline;gap:14px;margin-bottom:8px}
+.gal .hd b{font:900 24px var(--font-title)}
+.gal .hd span{font:500 17px var(--font-ui);color:var(--ink-2)}
+.gl{display:flex;gap:14px}
+.gl figure{margin:0;position:relative;width:190px}
+.gl figure svg{display:block;width:190px;height:104px;background:#fff;border:3px solid var(--ink);border-radius:8px}
+.gl figcaption{font:700 16px var(--font-ui);margin-top:4px;text-align:center}
+.gl .nw svg{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft)}
+.nwb{position:absolute;right:-6px;top:-10px;z-index:2;padding:1px 10px;border-radius:999px;background:var(--blue);color:#fff;font:700 16px var(--font-ui)}
+@keyframes pop{0%{transform:scale(.2) rotate(-20deg);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+#s5.on .bs{animation:pop .5s both}
+#s5.on .bs:nth-child(2){animation-delay:.15s}#s5.on .bs:nth-child(3){animation-delay:.3s}
+@media (prefers-reduced-motion:reduce){#s5.on .bs{animation:none}}
+</style>
+</head>
+<body>
+
+<!-- 共用圖形：不外連圖片，全部 inline SVG -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="star" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3z"/></symbol>
+  <symbol id="i-gallery" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></symbol>
+  <symbol id="i-cross" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
+  <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 17H4v-8h16v8h-3M7 14h10v7H7z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.5-5.8M20 4v5h-5"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-line" viewBox="0 0 24 24"><path d="M5 19L19 5"/></symbol>
+  <symbol id="i-rect" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12"/></symbol>
+  <symbol id="i-ell" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="6"/></symbol>
+  <symbol id="i-bucket" viewBox="0 0 24 24"><path d="M5 11l7-7 7 7-7 7zM19 15c1 2 2 3 2 4a2 2 0 0 1-4 0c0-1 1-2 2-4z"/></symbol>
+  <symbol id="i-eraser" viewBox="0 0 24 24"><path d="M3 15l9-9 8 8-5 6H8zM8 12l7 7"/></symbol>
+  <symbol id="i-select" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" stroke-dasharray="3 2.5"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></symbol>
+  <symbol id="i-paste" viewBox="0 0 24 24"><path d="M9 4h6v3H9zM7 5H5v16h14V5h-2"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 6L4 11l5 5M4 11h10a6 6 0 0 1 0 12"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10c1 1 1 2 1 3h6c0-1 0-2 1-3a6 6 0 0 0-4-10z"/></symbol>
+
+  <symbol id="pumpkin" viewBox="0 0 200 180">
+    <ellipse class="pk" cx="62" cy="108" rx="44" ry="62"/><ellipse class="pk" cx="138" cy="108" rx="44" ry="62"/><ellipse class="pk" cx="100" cy="108" rx="46" ry="68"/>
+    <path class="pk-r" d="M100 44C86 82 86 138 100 172M72 52C54 90 58 140 78 170M128 52C146 90 142 140 122 170"/>
+    <path class="pk-s" d="M92 46C92 30 96 22 104 14L118 20C112 28 110 36 110 46Z"/>
+    <path class="pk-l" d="M110 40C130 20 156 24 162 38C148 52 124 52 110 40Z"/>
+  </symbol>
+
+  <symbol id="cauldron" viewBox="0 0 400 330">
+    <g fill="#FF8A2A" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round">
+      <path d="M120 328C100 300 122 292 122 270C146 290 152 312 140 328Z"/><path d="M200 330C176 300 200 288 196 262C226 286 232 310 220 330Z"/><path d="M280 328C262 306 280 292 278 272C300 292 306 312 290 328Z"/>
+    </g>
+    <g fill="#2B3560" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"><path d="M108 270L92 306H128L136 284Z"/><path d="M292 270L308 306H272L264 284Z"/></g>
+    <path d="M40 140C2 142 2 198 44 200" fill="none" stroke="#1F2A4D" stroke-width="14" stroke-linecap="round"/><path d="M40 140C2 142 2 198 44 200" fill="none" stroke="#3D4C86" stroke-width="6" stroke-linecap="round"/>
+    <path d="M360 140C398 142 398 198 356 200" fill="none" stroke="#1F2A4D" stroke-width="14" stroke-linecap="round"/><path d="M360 140C398 142 398 198 356 200" fill="none" stroke="#3D4C86" stroke-width="6" stroke-linecap="round"/>
+    <path d="M36 118C28 236 84 292 200 292C316 292 372 236 364 118Z" fill="#3D4C86" stroke="#1F2A4D" stroke-width="4"/>
+    <path d="M64 152C62 205 84 246 118 266" fill="none" stroke="#8FA0DA" stroke-width="6" stroke-linecap="round" opacity=".85"/>
+    <circle cx="158" cy="212" r="14" fill="#fff" stroke="#1F2A4D" stroke-width="3"/><circle cx="242" cy="212" r="14" fill="#fff" stroke="#1F2A4D" stroke-width="3"/>
+    <circle cx="161" cy="215" r="6.5" fill="#1F2A4D"/><circle cx="245" cy="215" r="6.5" fill="#1F2A4D"/>
+    <path d="M176 246Q200 264 224 246" fill="none" stroke="#1F2A4D" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="130" cy="240" r="9" fill="#F59DA0" opacity=".8"/><circle cx="270" cy="240" r="9" fill="#F59DA0" opacity=".8"/>
+    <ellipse cx="200" cy="118" rx="166" ry="36" fill="#5A6AA8" stroke="#1F2A4D" stroke-width="4"/>
+    <ellipse cx="200" cy="122" rx="146" ry="26" style="fill:var(--liq,#F58A1F)" stroke="#1F2A4D" stroke-width="3"/>
+    <ellipse cx="158" cy="118" rx="40" ry="7" fill="#fff" opacity=".4"/>
+    <g fill="#fff" fill-opacity=".65" stroke="#1F2A4D" stroke-width="3"><circle cx="150" cy="98" r="16"/><circle cx="212" cy="82" r="11"/><circle cx="254" cy="102" r="20"/><circle cx="196" cy="56" r="7"/><circle cx="290" cy="72" r="8"/><circle cx="116" cy="70" r="6"/></g>
+    <g fill="#FFD23F" stroke="#1F2A4D" stroke-width="2.5" stroke-linejoin="round"><path transform="translate(76 52)" d="M0-16L4-5 16 0 4 5 0 16-4 5-16 0-4-5Z"/><path transform="translate(336 40) scale(.8)" d="M0-16L4-5 16 0 4 5 0 16-4 5-16 0-4-5Z"/></g>
+  </symbol>
+
+  <symbol id="bottle" viewBox="0 0 100 150">
+    <rect x="34" y="12" width="32" height="22" rx="5" fill="#C9975B" stroke="#1F2A4D" stroke-width="4"/>
+    <path d="M36 34H64V52C86 62 92 80 92 100V126C92 140 84 146 70 146H30C16 146 8 140 8 126V100C8 80 14 62 36 52Z" fill="#EAF6F8" stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M12 84H88V126C88 138 80 142 70 142H30C20 142 12 138 12 126Z" style="fill:var(--c)" stroke="#1F2A4D" stroke-width="2.5"/>
+    <path d="M22 96V122" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".75"/>
+  </symbol>
+</defs></svg>
+
+<nav class="tabs" aria-label="畫面切換">
+  <button aria-selected="true" data-t="s1">① 開始畫面</button>
+  <button aria-selected="false" data-t="s2">② 調色魔法鍋</button>
+  <button aria-selected="false" data-t="s3">③ 對稱魔鏡工坊</button>
+  <button aria-selected="false" data-t="s4">④ 小畫家任務局</button>
+  <button aria-selected="false" data-t="s5">⑤ 完成＋畫廊</button>
+</nav>
+
+<!-- ============ 1 開始畫面 ============ -->
+<section class="screen on" id="s1">
+  <div class="bar">
+    <a class="btn" href="../../index.html"><svg class="ic"><use href="#i-home"/></svg>首頁</a>
+    <span style="flex:1"></span>
+    <a class="btn" href="#"><svg class="ic"><use href="#i-gallery"/></svg>我的畫廊</a>
+  </div>
+
+  <svg style="position:absolute;left:46px;top:84px;--liq:#F58A1F" width="380" height="313" viewBox="0 0 400 330" aria-label="會冒泡泡的魔法大鍋"><use href="#cauldron"/></svg>
+
+  <div class="title">
+    <svg width="460" height="22" viewBox="0 0 460 22" aria-hidden="true"><path d="M6 14C70 2 130 22 200 10S340 2 454 12" fill="none" stroke="#FFB627" stroke-width="12" stroke-linecap="round"/></svg>
+    <h1>調色魔法鍋</h1>
+  </div>
+  <p class="zy" style="position:absolute;left:452px;top:200px;width:860px;font-size:30px;line-height:1.65">把紅、黃、藍顏料拖進大鍋，煮出客人點的顏色！</p>
+  <a class="btn go start" href="#"><svg class="ic"><use href="#i-play"/></svg>開始</a>
+  <div class="teach"><b>這關練什麼：</b>三原色混色、深淺變化｜生活課程 2-I-1</div>
+
+  <div class="lvlabel">選一關</div>
+  <div class="lvrow">
+    <div class="lv">
+      <div class="th"><svg viewBox="0 0 120 120" width="114" height="114"><use href="#pumpkin" x="10" y="14" width="100" height="90" style="--pf:#F58A1F;--lf:#7ACB47;--sf:#8A5A32;--rl:#D9701A"/></svg></div>
+      <div><div class="n1">第 1 關</div><div class="n2">橘色南瓜</div>
+        <div class="n3">已過<svg class="st on" viewBox="0 0 24 24"><use href="#star"/></svg><svg class="st on" viewBox="0 0 24 24"><use href="#star"/></svg><svg class="st on" viewBox="0 0 24 24"><use href="#star"/></svg></div></div>
+    </div>
+    <div class="lv">
+      <div class="th"><svg viewBox="0 0 120 120" width="114" height="114">
+        <g stroke="#1F2A4D" stroke-width="3.5"><ellipse cx="60" cy="78" rx="42" ry="30" fill="#5CC060"/><circle cx="38" cy="46" r="17" fill="#5CC060"/><circle cx="82" cy="46" r="17" fill="#5CC060"/></g>
+        <g stroke="#1F2A4D" stroke-width="3"><circle cx="38" cy="45" r="10" fill="#fff"/><circle cx="82" cy="45" r="10" fill="#fff"/></g><circle cx="40" cy="47" r="4.5" fill="#1F2A4D"/><circle cx="80" cy="47" r="4.5" fill="#1F2A4D"/>
+        <path d="M38 80Q60 98 82 80" fill="none" stroke="#1F2A4D" stroke-width="4" stroke-linecap="round"/><circle cx="26" cy="74" r="6" fill="#F59DA0" opacity=".8"/><circle cx="94" cy="74" r="6" fill="#F59DA0" opacity=".8"/></svg></div>
+      <div><div class="n1">第 2 關</div><div class="n2">綠色青蛙</div>
+        <div class="n3">已過<svg class="st on" viewBox="0 0 24 24"><use href="#star"/></svg><svg class="st on" viewBox="0 0 24 24"><use href="#star"/></svg><svg class="st" viewBox="0 0 24 24"><use href="#star"/></svg></div></div>
+    </div>
+    <div class="lv new">
+      <div class="th"><svg viewBox="0 0 120 120" width="114" height="114">
+        <path d="M60 40C60 26 66 20 76 16" fill="none" stroke="#1F2A4D" stroke-width="4" stroke-linecap="round"/><path d="M62 28C74 14 92 16 96 26C86 36 70 36 62 28Z" fill="#fff" stroke="#1F2A4D" stroke-width="3.5"/>
+        <g fill="#fff" stroke="#1F2A4D" stroke-width="3.5"><circle cx="42" cy="54" r="15"/><circle cx="76" cy="54" r="15"/><circle cx="28" cy="78" r="15"/><circle cx="60" cy="76" r="15"/><circle cx="92" cy="78" r="15"/><circle cx="44" cy="98" r="14"/><circle cx="76" cy="98" r="14"/></g></svg></div>
+      <div><div class="n1">第 3 關</div><div class="n2">紫色葡萄</div>
+        <div class="n3"><svg class="ic" style="width:20px;height:20px;fill:currentColor"><use href="#i-play"/></svg>還沒玩</div></div>
+    </div>
+    <div class="lv lock">
+      <div class="th" style="background:#C9D3DE"><svg viewBox="0 0 120 120" width="114" height="114">
+        <ellipse cx="34" cy="38" rx="22" ry="10" fill="#E6ECF2"/><ellipse cx="86" cy="86" rx="22" ry="10" fill="#E6ECF2"/>
+        <g transform="translate(36 34) scale(2.2)" fill="none" stroke="#3A4568" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-lock" width="24" height="24"/></g></svg></div>
+      <div><div class="n1">第 4 關</div><div class="n2">淺藍天空</div>
+        <div class="n3"><svg class="ic" style="width:22px;height:22px"><use href="#i-lock"/></svg>鎖住</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 遊戲中：調色魔法鍋 ============ -->
+<section class="screen" id="s2">
+  <div class="bar">
+    <a class="btn" href="../../index.html"><svg class="ic"><use href="#i-home"/></svg>首頁</a>
+    <span style="flex:1"></span>
+    <a class="btn" href="#"><svg class="ic"><use href="#i-gallery"/></svg>我的畫廊</a>
+  </div>
+
+  <!-- 客人 -->
+  <div class="bubble"><p class="zy" style="font-size:28px;line-height:1.5">我要橘色的南瓜！</p></div>
+  <svg style="position:absolute;left:44px;top:200px" width="230" height="188" viewBox="0 0 220 180" aria-label="森林小熊客人">
+    <ellipse cx="110" cy="172" rx="80" ry="7" fill="#1F2A4D" opacity=".18"/>
+    <g stroke="#1F2A4D" stroke-width="4" stroke-linejoin="round">
+      <ellipse cx="110" cy="146" rx="52" ry="30" fill="#B07040"/><ellipse cx="110" cy="150" rx="30" ry="20" fill="#F0D2A0" stroke-width="3"/>
+      <circle cx="66" cy="42" r="19" fill="#B07040"/><circle cx="154" cy="42" r="19" fill="#B07040"/>
+      <circle cx="110" cy="86" r="54" fill="#B07040"/>
+      <circle cx="66" cy="42" r="8" fill="#F0D2A0" stroke="none"/><circle cx="154" cy="42" r="8" fill="#F0D2A0" stroke="none"/>
+      <ellipse cx="110" cy="102" rx="25" ry="19" fill="#F0D2A0" stroke-width="3"/>
+      <ellipse cx="118" cy="38" rx="40" ry="14" fill="#E03A3E" transform="rotate(-8 118 38)"/><circle cx="130" cy="22" r="5" fill="#E03A3E"/>
+    </g>
+    <ellipse cx="110" cy="93" rx="8" ry="6" fill="#1F2A4D"/><path d="M110 99v7M100 108Q110 116 120 108" fill="none" stroke="#1F2A4D" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="88" cy="78" r="6.5" fill="#1F2A4D"/><circle cx="132" cy="78" r="6.5" fill="#1F2A4D"/><circle cx="90" cy="76" r="2" fill="#fff"/><circle cx="134" cy="76" r="2" fill="#fff"/>
+    <circle cx="70" cy="100" r="8" fill="#F59DA0" opacity=".7"/><circle cx="150" cy="100" r="8" fill="#F59DA0" opacity=".7"/>
+  </svg>
+
+  <!-- 煮錯小狀態 -->
+  <div class="panel mud">
+    <div style="display:flex;align-items:center;justify-content:space-between"><span class="badge"><svg class="ic"><use href="#i-cross"/></svg>煮錯的時候</span><span style="font:700 16px var(--font-ui);color:var(--ink-2)">泥巴色</span></div>
+    <div style="display:flex;align-items:flex-end;gap:10px;margin:6px 0 4px;height:92px">
+      <svg width="120" height="99" viewBox="0 0 400 330" style="--liq:#7A5C3A"><use href="#cauldron"/></svg>
+      <svg width="104" height="94" viewBox="0 0 100 90" aria-label="泥巴怪做鬼臉">
+        <path d="M12 70C0 40 14 14 50 12C86 14 100 42 88 70C88 82 74 84 70 74C66 86 52 86 50 76C46 86 30 86 28 74C22 84 10 82 12 70Z" fill="#7A5C3A" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="34" cy="42" r="10" fill="#fff" stroke="#1F2A4D" stroke-width="2.5"/><circle cx="68" cy="38" r="7" fill="#fff" stroke="#1F2A4D" stroke-width="2.5"/><circle cx="37" cy="45" r="4" fill="#1F2A4D"/><circle cx="66" cy="41" r="3" fill="#1F2A4D"/>
+        <path d="M24 30L42 34M78 28L62 32" stroke="#1F2A4D" stroke-width="3" stroke-linecap="round"/>
+        <path d="M30 60Q50 74 74 58Z" fill="#3B2A20" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/><path d="M50 66Q54 84 64 76Q68 68 62 63Z" fill="#E86A7C" stroke="#1F2A4D" stroke-width="2.5" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <p class="zy" style="font-size:20px;line-height:1.5">哎呀，煮出泥巴色了！倒掉再試一次。</p>
+  </div>
+
+  <!-- 顏料 -->
+  <div class="bottles">
+    <div class="bt"><svg width="96" height="144" viewBox="0 0 100 150" style="--c:#E03A3E"><use href="#bottle"/></svg>紅色</div>
+    <div class="bt"><svg width="96" height="144" viewBox="0 0 100 150" style="--c:#FFD23F"><use href="#bottle"/></svg>黃色</div>
+    <div class="bt"><svg width="96" height="144" viewBox="0 0 100 150" style="--c:#2E6FD9"><use href="#bottle"/></svg>藍色</div>
+    <div class="bt"><svg width="96" height="144" viewBox="0 0 100 150" style="--c:#FFFFFF"><use href="#bottle"/></svg>白色</div>
+    <div class="bt"><svg width="96" height="144" viewBox="0 0 100 150" style="--c:#2B2B2B"><use href="#bottle"/></svg>黑色</div>
+  </div>
+  <div style="position:absolute;left:566px;top:252px;display:flex;align-items:center;gap:6px;padding:2px 14px;background:var(--blue-soft);border:2.5px solid var(--blue);border-radius:999px;color:var(--blue);font:700 18px var(--font-ui);z-index:2">
+    <svg class="ic" style="width:20px;height:20px;transform:rotate(90deg)"><use href="#i-arrow"/></svg>拖進鍋子</div>
+
+  <!-- 大鍋（視覺焦點） -->
+  <svg style="position:absolute;left:420px;top:276px;--liq:#F58A1F" width="440" height="363" viewBox="0 0 400 330" aria-label="鍋裡是紅加黃混出的橘色"><use href="#cauldron"/></svg>
+
+  <div class="panel" style="left:340px;top:528px;width:150px;height:112px;padding:8px 12px;z-index:2">
+    <h3 style="margin-bottom:4px">鍋裡加了</h3>
+    <div class="chip" style="position:static;margin-bottom:4px"><span class="dot" style="background:#E03A3E"></span>紅 1</div>
+    <div class="chip" style="position:static"><span class="dot" style="background:#FFD23F"></span>黃 1</div>
+  </div>
+  <div class="panel" style="left:742px;top:528px;width:138px;height:112px;padding:8px 10px;z-index:2">
+    <h3 style="margin-bottom:6px">混出來是</h3>
+    <div style="display:flex;align-items:center;gap:8px"><span class="dot" style="width:42px;height:42px;background:#F58A1F"></span><b style="font:900 24px var(--font-title)">橘色</b></div>
+  </div>
+
+  <!-- 客人的圖 -->
+  <div class="board" style="left:904px;top:78px;width:438px;height:420px">
+    <div class="tape" style="left:176px;top:-16px;transform:rotate(-3deg)"></div>
+    <svg style="position:absolute;left:49px;top:26px" width="330" height="297" viewBox="0 0 200 180" aria-label="南瓜線稿等著上色"><use href="#pumpkin" style="--pf:#fff;--rl:#8FA0DA"/></svg>
+    <div style="position:absolute;left:0;right:0;bottom:14px;text-align:center;font:700 20px var(--font-ui);color:var(--ink-2)">南瓜等著上色</div>
+  </div>
+  <div style="position:absolute;left:904px;top:530px;width:438px;display:flex;gap:16px">
+    <a class="btn go" style="flex:1;height:90px;font-size:26px;border-radius:18px;box-shadow:0 6px 0 var(--ink)" href="#"><svg class="ic" style="width:30px;height:30px"><use href="#i-arrow"/></svg>倒到圖上</a>
+    <a class="btn" style="flex:1;height:90px;font-size:26px;border-radius:18px;box-shadow:0 6px 0 var(--ink)" href="#"><svg class="ic" style="width:30px;height:30px"><use href="#i-trash"/></svg>倒掉重來</a>
+  </div>
+</section>
+
+<!-- ============ 3 遊戲中：對稱魔鏡工坊 ============ -->
+<section class="screen" id="s3">
+  <div class="bar">
+    <a class="btn" href="../../index.html"><svg class="ic"><use href="#i-home"/></svg>首頁</a>
+    <div class="quest">訂單 3／5：修好蝴蝶的右邊翅膀<span class="pips" aria-label="第 3 張，共 5 張"><i class="d"></i><i class="d"></i><i class="c"></i><i></i><i></i></span></div>
+    <a class="btn" href="#"><svg class="ic"><use href="#i-gallery"/></svg>我的畫廊</a>
+  </div>
+
+  <!-- 左：工具 -->
+  <div class="panel" style="left:24px;top:76px;width:228px;height:564px;padding:12px">
+    <h3>筆刷粗細</h3>
+    <div class="tb" style="margin-bottom:14px">
+      <div class="tbtn"><svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="3" fill="#1F2A4D"/></svg></div>
+      <div class="tbtn act"><svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="6.5" fill="#1F2A4D"/></svg></div>
+      <div class="tbtn"><svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="11" fill="#1F2A4D"/></svg></div>
+    </div>
+    <h3>顏色</h3>
+    <div style="display:grid;grid-template-columns:repeat(4,48px);gap:6px 8px;margin-bottom:16px">
+      <div class="sw" style="background:#E03A3E"></div><div class="sw act" style="background:#F58A1F"></div><div class="sw" style="background:#FFD23F"></div><div class="sw" style="background:#7ACB47"></div>
+      <div class="sw" style="background:#1E9E6A"></div><div class="sw" style="background:#2E6FD9"></div><div class="sw" style="background:#8A4FD0"></div><div class="sw" style="background:#E85BA0"></div>
+      <div class="sw" style="background:#8A5A32"></div><div class="sw" style="background:#2B2B2B"></div><div class="sw" style="background:#9AA3AE"></div><div class="sw" style="background:#fff"></div>
+    </div>
+    <h3>工具</h3>
+    <div class="tb">
+      <div class="tbtn" style="height:70px"><svg class="ic"><use href="#i-eraser"/></svg>橡皮擦</div>
+      <div class="tbtn" style="height:70px"><svg class="ic"><use href="#i-undo"/></svg>復原</div>
+      <div class="tbtn" style="height:70px"><svg class="ic"><use href="#i-trash"/></svg>清除</div>
+    </div>
+  </div>
+
+  <!-- 中：畫布 -->
+  <div class="board" style="left:276px;top:76px;width:700px;height:564px">
+    <svg width="694" height="558" viewBox="0 0 700 564" style="display:block" aria-label="左半邊蝴蝶翅膀，右邊由魔鏡鏡射">
+      <defs><g id="wing">
+        <path d="M340 252C296 130 160 62 92 120C42 170 108 262 340 282Z" fill="#F58A1F" stroke="#1F2A4D" stroke-width="5" stroke-linejoin="round"/>
+        <path d="M340 296C232 292 122 330 142 424C162 494 290 474 340 356Z" fill="#2E6FD9" stroke="#1F2A4D" stroke-width="5" stroke-linejoin="round"/>
+        <circle cx="168" cy="170" r="30" fill="#FFD23F" stroke="#1F2A4D" stroke-width="4"/><circle cx="168" cy="170" r="12" fill="#8A4FD0"/>
+        <circle cx="262" cy="226" r="16" fill="#fff" stroke="#1F2A4D" stroke-width="4"/>
+        <circle cx="206" cy="402" r="22" fill="#FFD23F" stroke="#1F2A4D" stroke-width="4"/><circle cx="266" cy="356" r="12" fill="#fff" stroke="#1F2A4D" stroke-width="4"/>
+      </g></defs>
+      <use href="#wing"/>
+      <use href="#wing" transform="translate(700 0) scale(-1 1)"/>
+      <ellipse cx="350" cy="316" rx="13" ry="98" fill="#3B2A20" stroke="#1F2A4D" stroke-width="4"/>
+      <circle cx="350" cy="206" r="15" fill="#3B2A20" stroke="#1F2A4D" stroke-width="4"/>
+      <path d="M344 194C330 160 316 150 304 148M356 194C370 160 384 150 396 148" fill="none" stroke="#1F2A4D" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="304" cy="148" r="6" fill="#1F2A4D"/><circle cx="396" cy="148" r="6" fill="#1F2A4D"/>
+      <line x1="350" y1="22" x2="350" y2="548" stroke="#2160C4" stroke-width="3.5" stroke-dasharray="12 9"/>
+      <circle cx="350" cy="22" r="0" fill="none"/>
+    </svg>
+    <div class="tag" style="left:14px;top:12px">我畫的這一邊</div>
+    <div class="tag" style="right:14px;top:12px">魔鏡同時畫的這一邊</div>
+    <div class="tag" style="left:298px;bottom:12px;background:#fff">鏡子線</div>
+  </div>
+
+  <!-- 右：模式 -->
+  <div class="panel" style="left:1000px;top:76px;width:342px;height:292px;padding:12px 14px">
+    <h3>對稱模式</h3>
+    <div class="modes">
+      <div class="mode act"><span class="ck"><svg class="ic"><use href="#i-check"/></svg></span>
+        <svg width="46" height="46" viewBox="0 0 46 46"><path d="M20 8 6 38h14z" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/><path d="M26 8l14 30H26z" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/><path d="M23 4v38" stroke="#2160C4" stroke-width="3" stroke-dasharray="4 3"/></svg>左右對稱</div>
+      <div class="mode">
+        <svg width="46" height="46" viewBox="0 0 46 46"><path d="M8 20 38 6v14z" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/><path d="M8 26l30 14V26z" fill="#DCE9FB" stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"/><path d="M4 23h38" stroke="#2160C4" stroke-width="3" stroke-dasharray="4 3"/></svg>上下對稱</div>
+      <div class="mode">
+        <svg width="46" height="46" viewBox="0 0 46 46"><g transform="translate(23 23)" fill="#FFF0C2" stroke="#1F2A4D" stroke-width="2.5"><ellipse rx="6" ry="18"/><ellipse rx="6" ry="18" transform="rotate(90)"/></g></svg>萬花筒（4 份）</div>
+      <div class="mode">
+        <svg width="46" height="46" viewBox="0 0 46 46"><g transform="translate(23 23)" stroke="#1F2A4D" stroke-width="3" stroke-linecap="round" fill="none"><g id="sf"><path d="M0-19V19M-6-12L0-6 6-12M-6 12L0 6 6 12"/></g><use href="#sf" transform="rotate(60)"/><use href="#sf" transform="rotate(120)"/></g></svg>雪花（6 份）</div>
+    </div>
+  </div>
+  <div class="panel" style="left:1000px;top:388px;width:342px;height:132px;padding:12px 16px;background:var(--sun-soft);display:flex;gap:12px;align-items:center">
+    <svg class="ic" style="width:40px;height:40px;color:var(--ink)"><use href="#i-bulb"/></svg>
+    <p style="margin:0;font:500 19px/1.55 var(--font-ui)">你畫在左邊，魔鏡會同時畫在右邊。</p>
+  </div>
+  <a class="btn go" href="#" style="position:absolute;left:1000px;top:546px;width:342px;height:94px;font:900 34px var(--font-title);border-radius:20px;box-shadow:0 6px 0 var(--ink)"><svg class="ic" style="width:36px;height:36px;stroke-width:3.2"><use href="#i-check"/></svg>完成</a>
+</section>
+
+<!-- ============ 4 遊戲中：小畫家任務局 ============ -->
+<section class="screen" id="s4">
+  <div class="bar">
+    <a class="btn" href="../../index.html"><svg class="ic"><use href="#i-home"/></svg>首頁</a>
+    <div class="quest" style="margin:0 auto">任務 照著目標圖，把房子畫出來</div>
+    <a class="btn" href="#"><svg class="ic"><use href="#i-gallery"/></svg>我的畫廊</a>
+  </div>
+
+  <div class="panel ribbon">
+    <div class="rb"><svg class="ic"><use href="#i-line"/></svg>直線</div>
+    <div class="rb act"><svg class="ic"><use href="#i-rect"/></svg>矩形</div>
+    <div class="rb"><svg class="ic"><use href="#i-ell"/></svg>橢圓</div>
+    <i class="sep"></i>
+    <div class="rb"><svg class="ic"><use href="#i-bucket"/></svg>填色桶</div>
+    <div class="rb"><svg class="ic"><use href="#i-eraser"/></svg>橡皮擦</div>
+    <i class="sep"></i>
+    <div class="rb"><svg class="ic"><use href="#i-select"/></svg>選取</div>
+    <div class="rb"><svg class="ic"><use href="#i-copy"/></svg>複製</div>
+    <div class="rb"><svg class="ic"><use href="#i-paste"/></svg>貼上</div>
+    <i class="sep"></i>
+    <div class="rb"><svg class="ic"><use href="#i-undo"/></svg>復原</div>
+    <span style="margin-left:auto;font:700 18px var(--font-ui);color:var(--ink-2)">目前工具：矩形</span>
+  </div>
+
+  <div class="win" style="left:24px;width:380px">
+    <div class="tt">目標圖</div>
+    <svg class="cv" width="374" height="434" viewBox="0 0 360 418" aria-label="目標圖：有 4 扇窗的房子">
+      <g stroke="#1F2A4D" stroke-width="5" stroke-linejoin="round">
+        <rect x="60" y="170" width="240" height="180" fill="#FFE6A0"/><path d="M30 170L180 60 330 170Z" fill="#E86A5A"/>
+        <rect x="75" y="190" width="50" height="50" fill="#9FD3F2"/><rect x="75" y="255" width="50" height="50" fill="#9FD3F2"/>
+        <rect x="235" y="190" width="50" height="50" fill="#9FD3F2"/><rect x="235" y="255" width="50" height="50" fill="#9FD3F2"/>
+        <rect x="155" y="280" width="50" height="70" fill="#A8693A"/>
+      </g>
+      <g stroke="#1F2A4D" stroke-width="3"><path d="M100 190v50M75 215h50M100 255v50M75 280h50M260 190v50M235 215h50M260 255v50M235 280h50"/></g>
+      <circle cx="193" cy="316" r="3.5" fill="#FFE6A0"/>
+    </svg>
+  </div>
+  <div class="win" style="left:420px;width:640px">
+    <div class="tt">我的畫布</div>
+    <svg class="cv" width="634" height="434" viewBox="0 0 634 434" aria-label="我的畫布：已畫屋身、屋頂和 1 扇窗">
+      <g transform="translate(137 8)" stroke="#1F2A4D" stroke-width="5" stroke-linejoin="round" fill="#fff">
+        <rect x="60" y="170" width="240" height="180"/><path d="M30 170L180 60 330 170Z"/>
+        <rect x="75" y="190" width="50" height="50"/><path d="M100 190v50M75 215h50" stroke-width="3"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="panel" style="left:1076px;top:160px;width:266px;height:480px;padding:14px 16px">
+    <h3>步數計</h3>
+    <div style="font:900 24px/1.3 var(--font-title)">已用 7 步｜標準桿 9 步</div>
+    <div class="pegs"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i class="g"></i></div>
+    <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:var(--ok-soft);color:#0F5C30;border:2px solid var(--ok);font:700 17px var(--font-ui)"><svg class="ic" style="width:18px;height:18px;stroke-width:3.2"><use href="#i-check"/></svg>沒有超過標準桿</div>
+    <div style="margin-top:18px;padding:14px;background:var(--sun-soft);border:3px solid var(--ink);border-radius:14px;display:flex;gap:10px;align-items:flex-start">
+      <svg class="ic" style="width:34px;height:34px"><use href="#i-bulb"/></svg>
+      <p style="margin:0;font:700 20px/1.55 var(--font-ui)">4 扇窗都一樣，有沒有更快的方法？</p>
+    </div>
+    <a class="btn go" href="#" style="position:absolute;left:16px;right:16px;bottom:16px;height:64px;font-size:26px;border-radius:16px"><svg class="ic"><use href="#i-check"/></svg>完成</a>
+  </div>
+</section>
+
+<!-- ============ 5 完成畫面＋畫廊 ============ -->
+<section class="screen" id="s5">
+  <div class="board" style="left:40px;top:28px;width:520px;height:392px">
+    <div class="tape" style="left:60px;top:-16px;transform:rotate(-5deg)"></div><div class="tape" style="right:60px;top:-16px;transform:rotate(4deg)"></div>
+    <svg style="position:absolute;left:70px;top:10px" width="370" height="333" viewBox="0 0 200 180" aria-label="塗好的橘色南瓜"><use href="#pumpkin" style="--pf:#F58A1F;--lf:#7ACB47;--sf:#8A5A32;--rl:#D9701A"/></svg>
+    <div style="position:absolute;left:0;right:0;bottom:0;height:40px;display:flex;align-items:center;justify-content:center;background:var(--card);border-top:3px solid var(--ink);font:700 20px var(--font-ui)">橘色南瓜｜調色魔法鍋</div>
+  </div>
+
+  <div class="praise">
+    <h2>完成了！</h2>
+    <div style="display:flex;gap:10px;margin:10px 0 4px" aria-label="三顆星">
+      <svg class="bs st on" viewBox="0 0 24 24"><use href="#star"/></svg><svg class="bs st on" viewBox="0 0 24 24"><use href="#star"/></svg><svg class="bs st on" viewBox="0 0 24 24"><use href="#star"/></svg>
+    </div>
+    <p>南瓜的橘色調得剛剛好，你是調色小高手！</p>
+  </div>
+  <div class="acts">
+    <a class="btn" href="#"><svg class="ic"><use href="#i-down"/></svg>下載圖片</a>
+    <a class="btn" href="#"><svg class="ic"><use href="#i-print"/></svg>列印</a>
+    <a class="btn go" href="#"><svg class="ic"><use href="#i-send"/></svg>交成績給老師</a>
+    <a class="btn w3" href="#"><svg class="ic"><use href="#i-again"/></svg>再玩一次</a>
+    <a class="btn w3" href="../../index.html"><svg class="ic"><use href="#i-home"/></svg>首頁</a>
+  </div>
+
+  <div class="panel gal">
+    <div class="hd"><b>我的畫廊</b><span>共 6 張作品</span></div>
+    <div class="gl">
+      <figure class="nw"><span class="nwb">新</span>
+        <svg viewBox="0 0 190 104"><use href="#pumpkin" x="50" y="6" width="92" height="83" style="--pf:#F58A1F;--lf:#7ACB47;--sf:#8A5A32;--rl:#D9701A"/></svg><figcaption>調色魔法鍋</figcaption></figure>
+      <figure>
+        <svg viewBox="0 0 190 104"><path d="M10 86C40 66 60 106 90 86S140 66 180 86" fill="none" stroke="#8A5A32" stroke-width="5"/>
+          <g stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"><rect x="26" y="46" width="50" height="28" rx="6" fill="#E03A3E"/><rect x="62" y="32" width="24" height="22" rx="3" fill="#2E6FD9"/><circle cx="38" cy="78" r="7" fill="#2B2B2B"/><circle cx="64" cy="78" r="7" fill="#2B2B2B"/></g>
+          <circle cx="80" cy="20" r="5" fill="#DDE3EA" stroke="#1F2A4D" stroke-width="2"/><circle cx="92" cy="12" r="7" fill="#DDE3EA" stroke="#1F2A4D" stroke-width="2"/></svg><figcaption>線條小火車</figcaption></figure>
+      <figure>
+        <svg viewBox="0 0 190 104"><g stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"><rect x="60" y="50" width="70" height="44" fill="#FFD23F"/><path d="M52 50L95 16 138 50Z" fill="#E03A3E"/><rect x="88" y="68" width="16" height="26" fill="#8A5A32"/></g>
+          <g fill="#FFD23F" stroke="#1F2A4D" stroke-width="2" stroke-linejoin="round"><path transform="translate(30 30)" d="M0-10L3-3 10 0 3 3 0 10-3 3-10 0-3-3Z"/><path transform="translate(162 24)" d="M0-10L3-3 10 0 3 3 0 10-3 3-10 0-3-3Z"/><path transform="translate(158 70) scale(.7)" d="M0-10L3-3 10 0 3 3 0 10-3 3-10 0-3-3Z"/></g></svg><figcaption>魔法畫畫屋</figcaption></figure>
+      <figure>
+        <svg viewBox="0 0 190 104"><g stroke="#1F2A4D" stroke-width="3"><ellipse cx="68" cy="38" rx="28" ry="22" fill="#F58A1F"/><ellipse cx="122" cy="38" rx="28" ry="22" fill="#F58A1F"/><ellipse cx="74" cy="68" rx="20" ry="16" fill="#2E6FD9"/><ellipse cx="116" cy="68" rx="20" ry="16" fill="#2E6FD9"/><rect x="91" y="26" width="8" height="58" rx="4" fill="#3B2A20"/></g>
+          <path d="M93 26 82 10M97 26 108 10" stroke="#1F2A4D" stroke-width="3" stroke-linecap="round"/></svg><figcaption>對稱魔鏡工坊</figcaption></figure>
+      <figure>
+        <svg viewBox="0 0 190 104"><g stroke="#1F2A4D" stroke-width="3" stroke-linejoin="round"><rect x="50" y="48" width="90" height="46" fill="#FFE6A0"/><path d="M42 48L95 14 148 48Z" fill="#E86A5A"/><rect x="58" y="54" width="14" height="12" fill="#9FD3F2"/><rect x="58" y="72" width="14" height="12" fill="#9FD3F2"/><rect x="118" y="54" width="14" height="12" fill="#9FD3F2"/><rect x="118" y="72" width="14" height="12" fill="#9FD3F2"/><rect x="88" y="68" width="14" height="26" fill="#A8693A"/></g></svg><figcaption>小畫家任務局</figcaption></figure>
+      <figure>
+        <svg viewBox="0 0 190 104" shape-rendering="crispEdges"><g fill="#E03A3E"><rect x="59" y="16" width="24" height="12"/><rect x="107" y="16" width="24" height="12"/><rect x="47" y="28" width="96" height="12"/><rect x="47" y="40" width="96" height="12"/><rect x="59" y="52" width="72" height="12"/><rect x="71" y="64" width="48" height="12"/><rect x="83" y="76" width="24" height="12"/></g></svg><figcaption>像素小畫家</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<script>
+document.querySelectorAll('.tabs button').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.tabs button').forEach(function(x){x.setAttribute('aria-selected',x===b)});
+    document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on',s.id===b.dataset.t)});
+  });
+});
+</script>
+</body>
+</html>

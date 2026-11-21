@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<title>畫畫島設計稿｜interface-design 版「顏料管與紙膠帶」</title>
+<meta name="viewport" content="width=1366">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+<style>
+@font-face { font-family:'Bpmf Huninn'; src:url('fonts/bpmf-huninn-art.woff2') format('woff2'); font-display:swap; }
+
+/* ===== tokens：畫室牆、顏料管、紙膠帶 ===== */
+:root{
+  --wall:#F1EEF8;        /* 畫室牆：淡薰衣草灰（亮度約 94%，不用純白） */
+  --paper:#FBFAFE;       /* 圖畫紙卡片 */
+  --paper-2:#EAE6F6;     /* 凹下去的格子、鎖住 */
+  --canvas:#FFFFFF;      /* 畫布永遠是白的，顏色才看得準 */
+  --line:#D3CDEB;        /* 卡片邊與下緣厚度 */
+  --line-2:#B9B2DD;
+  --ink:#2B2A4A;         /* 主要字（不用純黑） */
+  --ink-2:#47456B;       /* 次要字 */
+  --ink-3:#5C5A82;       /* 標籤字（卡片上 ≥ 6:1） */
+  --indigo:#4B3FC9;      /* 重點／按鈕／目前選到（白字 7.3:1） */
+  --indigo-dk:#2F2791;   /* 按鈕下緣 */
+  --indigo-soft:#E0DCFA;
+  --ok:#1F7A46; --ok-soft:#D8F2E2;     /* 正確 + ✓ */
+  --bad:#B3202D; --bad-soft:#FFDDE0;   /* 錯誤 + ✗ */
+  --sun:#FFC83D;                       /* 獎勵：星星、紙膠帶、背景用 */
+  --sun-soft:#FFF0BF;
+  --r-s:10px; --r-m:16px; --r-l:22px;
+  --lip:0 5px 0 var(--line);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif;background:#CFCBE4;color:var(--ink);min-width:1366px;padding-bottom:30px}
+.zy{font-family:'Bpmf Huninn','Noto Sans TC',sans-serif;font-weight:400}
+.num{font-family:'Fredoka','Noto Sans TC',sans-serif;font-variant-numeric:tabular-nums}
+button{font-family:inherit;color:inherit;cursor:pointer}
+a{color:inherit;text-decoration:none}
+
+/* 預覽用分頁列（不屬於產品畫面） */
+.tabs{display:flex;gap:8px;padding:12px 16px;width:1366px;background:#2B2A4A}
+.tabs button{border:0;background:#47456B;color:#fff;font-size:16px;font-weight:700;padding:10px 16px;border-radius:10px;min-height:44px}
+.tabs button[aria-selected=true]{background:var(--sun);color:var(--ink)}
+.tabs span{color:#D3CDEB;font-size:15px;align-self:center;margin-left:auto}
+
+/* ===== 畫面外框：1366×657 一屏 ===== */
+.screen{width:1366px;height:657px;overflow:hidden;position:relative;display:none;flex-direction:column;
+  background:
+    radial-gradient(circle at 4% 96%, rgba(230,57,70,.10) 0 90px, transparent 91px),
+    radial-gradient(circle at 97% 8%, rgba(255,210,63,.20) 0 110px, transparent 111px),
+    radial-gradient(circle at 94% 98%, rgba(47,111,222,.10) 0 80px, transparent 81px),
+    var(--wall)}
+.screen.on{display:flex}
+.top{height:60px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+.crumb{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:900;letter-spacing:.5px}
+.crumb small{font-size:16px;font-weight:700;color:var(--ink-2);background:var(--paper);border:2px solid var(--line);border-radius:99px;padding:3px 14px}
+.body{flex:1;min-height:0;display:grid;padding:6px 28px 14px;gap:24px}
+
+/* ===== 元件 ===== */
+.card{background:var(--paper);border:2px solid var(--line);border-radius:var(--r-l);box-shadow:var(--lip);position:relative}
+.tape{position:absolute;top:-13px;left:50%;width:92px;height:26px;margin-left:-46px;transform:rotate(-3deg);
+  background:repeating-linear-gradient(90deg,rgba(255,200,61,.88) 0 10px,rgba(255,214,102,.88) 10px 20px);
+  clip-path:polygon(0 0,100% 0,97% 50%,100% 100%,0 100%,3% 50%);z-index:3}
+.tape.l{left:46px;margin-left:0;transform:rotate(-7deg)}
+.canvas{background:var(--canvas);border:2px solid var(--line-2);border-radius:var(--r-s);position:relative;overflow:hidden}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 22px;border-radius:var(--r-m);
+  border:2px solid var(--line);background:var(--paper);box-shadow:0 4px 0 var(--line);font-size:19px;font-weight:700;color:var(--ink);white-space:nowrap;
+  transition:transform .12s cubic-bezier(.23,1,.32,1),box-shadow .12s cubic-bezier(.23,1,.32,1),background .12s}
+.btn:hover{background:#fff;transform:translateY(-1px)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.btn:focus-visible,.tool:focus-visible,.sw:focus-visible,.lv:focus-visible{outline:4px solid var(--sun);outline-offset:2px}
+.btn:disabled{background:var(--paper-2);color:var(--ink-3);cursor:not-allowed;box-shadow:none}
+.btn.pri{background:var(--indigo);border-color:var(--indigo-dk);color:#fff;box-shadow:0 5px 0 var(--indigo-dk)}
+.btn.pri:hover{background:#5A4FD6}
+.btn.pri:active{box-shadow:0 1px 0 var(--indigo-dk)}
+.btn.ok{background:var(--ok);border-color:#14522F;color:#fff;box-shadow:0 5px 0 #14522F}
+.btn svg{flex:none}
+.ic{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.st{width:30px;height:30px;fill:var(--sun);stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round}
+.st.off{fill:#fff;stroke:var(--line-2);stroke-dasharray:2.5 2.5}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:16px;font-weight:700;border-radius:99px;padding:3px 12px;border:2px solid transparent;white-space:nowrap}
+.chip.ok{background:var(--ok-soft);color:var(--ok);border-color:#A9DDBD}
+.chip.bad{background:var(--bad-soft);color:var(--bad);border-color:#F1AAB1}
+.chip.go{background:var(--indigo-soft);color:var(--indigo);border-color:#BDB5F0}
+.chip.lock{background:var(--paper-2);color:var(--ink-3);border-color:var(--line)}
+.h-label{font-size:18px;font-weight:900;color:var(--ink-2);letter-spacing:1px;display:flex;align-items:center;gap:8px}
+.dabs{display:inline-flex}
+.dabs i{width:14px;height:14px;border-radius:50%;margin-right:-4px;border:2px solid var(--paper)}
+
+/* ===== 畫面 1：開始 ===== */
+#s1 .body{grid-template-columns:1fr 470px}
+.stage{padding:30px 36px 24px;display:flex;flex-direction:column;overflow:hidden}
+.stage>svg.art{position:absolute;right:0;bottom:0;width:300px;height:520px}
+.stage .tag{align-self:flex-start;font-size:17px;font-weight:700;background:var(--indigo-soft);color:var(--indigo);border-radius:99px;padding:4px 16px}
+.stage h1{font-size:76px;font-weight:900;letter-spacing:-2px;line-height:1.1;margin:14px 0 12px;position:relative}
+.stage h1::after{content:"";position:absolute;left:0;bottom:6px;width:100%;height:16px;background:var(--sun);opacity:.55;border-radius:8px;z-index:-1;transform:rotate(-.6deg)}
+.stage .how{font-size:28px;line-height:1.55;max-width:540px;color:var(--ink)}
+.start{margin-top:22px;align-self:flex-start;min-height:96px;padding:0 54px 0 40px;font-size:40px;font-weight:900;border-radius:26px;gap:16px;letter-spacing:4px;box-shadow:0 8px 0 var(--indigo-dk)}
+.start:active{box-shadow:0 2px 0 var(--indigo-dk);transform:translateY(6px)}
+.teacher{margin-top:auto;border:2px dashed var(--line-2);border-radius:var(--r-m);padding:12px 18px;background:#F4F1FC;max-width:640px;position:relative;z-index:2}
+.teacher b{display:inline-block;font-size:16px;color:var(--ink-2);margin-bottom:2px;letter-spacing:1px}
+.teacher p{font-size:17px;line-height:1.5;color:var(--ink)}
+.levels{display:flex;flex-direction:column;gap:12px;min-height:0}
+.levels .h-label{height:34px;padding-left:6px}
+.lv{flex:1;min-height:0;display:flex;align-items:center;gap:16px;padding:0 18px;text-align:left;width:100%;background:var(--paper);border:2px solid var(--line);border-radius:var(--r-l);box-shadow:var(--lip);transition:transform .12s cubic-bezier(.23,1,.32,1)}
+.lv:hover:not(.locked){transform:translateY(-2px)}
+.lv .thumb{width:84px;height:84px;flex:none;background:var(--canvas);border:2px solid var(--line-2);border-radius:var(--r-m);display:grid;place-items:center}
+.lv .txt{flex:1;display:flex;flex-direction:column;gap:2px}
+.lv .no{font-size:17px;font-weight:700;color:var(--ink-3)}
+.lv .nm{font-size:27px;font-weight:900;line-height:1.2}
+.lv .stars{display:flex;gap:2px;margin-top:2px}
+.lv.next{border-color:var(--indigo);box-shadow:0 5px 0 var(--indigo)}
+.lv.locked{background:var(--paper-2);border-style:dashed;box-shadow:none;cursor:not-allowed}
+.lv.locked .nm{color:var(--ink-3)}
+
+/* ===== 畫面 2：調色魔法鍋 ===== */
+#s2 .body{grid-template-columns:316px 1fr 372px}
+.col{display:flex;flex-direction:column;gap:16px;min-height:0}
+.guest{padding:16px 14px 0;display:flex;flex-direction:column;align-items:center;height:318px;flex:none;overflow:hidden}
+.bubble{background:#fff;border:3px solid var(--ink);border-radius:22px;padding:10px 16px;font-size:30px;line-height:1.4;position:relative;width:100%;text-align:center}
+.bubble::after{content:"";position:absolute;left:62px;bottom:-17px;width:22px;height:22px;background:#fff;border-right:3px solid var(--ink);border-bottom:3px solid var(--ink);transform:rotate(45deg)}
+.guest svg.bear{width:170px;height:190px;margin-top:20px}
+.mud{padding:14px 16px 16px;flex:1;display:flex;flex-direction:column;gap:8px;border-color:#E9B3B8;box-shadow:0 5px 0 #E9B3B8}
+.mud .row{display:flex;gap:10px;align-items:center;flex:1}
+.mud .say{font-size:23px;line-height:1.45}
+.pots{align-items:center;justify-content:flex-start;gap:0}
+.rack{display:flex;gap:18px;justify-content:center;margin-top:2px}
+.bt{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:0;padding:0;cursor:grab;min-width:72px;min-height:44px}
+.bt svg{width:74px;height:116px;transition:transform .15s cubic-bezier(.23,1,.32,1)}
+.bt:hover svg{transform:translateY(-6px) rotate(-4deg)}
+.bt span{font-size:21px;font-weight:900}
+.drag{width:100%;height:34px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;font-weight:700;color:var(--ink-2)}
+.potrow{display:flex;align-items:center;gap:14px;width:100%;flex:1;min-height:0}
+.potrow>svg{width:330px;height:264px;flex:none;filter:drop-shadow(0 8px 0 rgba(43,42,74,.10))}
+.mix{flex:1;padding:12px 14px}
+.mix h3{font-size:17px;font-weight:900;color:var(--ink-2);margin-bottom:6px}
+.mix .it{display:flex;align-items:center;gap:8px;font-size:22px;font-weight:700;padding:3px 0}
+.mix .it i{width:22px;height:22px;border-radius:50%;border:2px solid var(--ink)}
+.mix .res{margin-top:6px;padding-top:8px;border-top:2px dashed var(--line);font-size:18px;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:8px}
+.mix .res i{width:26px;height:26px;border-radius:8px;background:#F28C28;border:2px solid var(--ink)}
+.acts{display:flex;gap:14px;width:100%;margin-top:12px}
+.acts .btn{flex:1;min-height:60px;font-size:22px;font-weight:900}
+.guestpic{flex:1;padding:22px 18px 16px;display:flex;flex-direction:column;gap:12px}
+.guestpic .canvas{flex:1;display:grid;place-items:center}
+.want{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700}
+.want i{width:34px;height:34px;border-radius:10px;border:2px solid var(--ink);flex:none}
+
+/* ===== 畫面 3：對稱魔鏡 ===== */
+#s3 .body{grid-template-columns:248px 1fr 248px;gap:16px}
+.side{padding:16px;display:flex;flex-direction:column;gap:14px;min-height:0}
+.brushes{display:flex;gap:8px}
+.br{width:62px;height:62px;border-radius:var(--r-m);border:2px solid var(--line);background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:16px;font-weight:700}
+.br i{background:var(--ink);border-radius:50%;display:block}
+.br.on,.tool.on,.md.on{background:var(--indigo-soft);border:3px solid var(--indigo);color:var(--indigo)}
+.sws{display:grid;grid-template-columns:repeat(4,44px);gap:8px}
+.sw{width:44px;height:44px;border-radius:var(--r-s);border:2px solid rgba(43,42,74,.35);display:grid;place-items:center}
+.sw.on{border:4px solid var(--ink);box-shadow:0 0 0 3px #fff inset}
+.sw svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.tool{min-height:56px;border-radius:var(--r-m);border:2px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font-size:18px;font-weight:700;transition:transform .12s cubic-bezier(.23,1,.32,1)}
+.tool:hover{background:var(--indigo-soft)}
+.tool:active{transform:translateY(2px)}
+.mission{height:60px;flex:none;display:flex;align-items:center;gap:16px;padding:0 20px;margin-bottom:12px}
+.mission b{font-size:25px;font-weight:900}
+.pips{display:flex;gap:6px;margin-left:auto;align-items:center;font-size:16px;font-weight:700;color:var(--ink-2)}
+.pips i{width:22px;height:22px;border-radius:50%;border:2px solid var(--ink);background:#fff}
+.pips i.f{background:var(--indigo);border-color:var(--indigo-dk)}
+.pips i.c{background:var(--sun);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.15)}}
+.md{min-height:62px;display:flex;align-items:center;gap:12px;padding:0 12px;border-radius:var(--r-m);border:2px solid var(--line);background:#fff;font-size:19px;font-weight:700;text-align:left;width:100%}
+.md:hover{background:var(--indigo-soft)}
+.md small{display:block;font-size:16px;font-weight:500;color:var(--ink-3)}
+.md.on small{color:var(--indigo)}
+.md svg{width:34px;height:34px;flex:none;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+.done{margin-top:auto;min-height:72px;font-size:28px;font-weight:900;border-radius:20px;letter-spacing:3px}
+
+/* ===== 畫面 4：任務局 ===== */
+#s4 .body{grid-template-columns:232px 1fr 1fr;gap:16px;grid-template-rows:60px 1fr}
+.steps{grid-column:1/-1;display:flex;align-items:center;gap:20px;padding:0 20px}
+.steps b.t{font-size:23px;font-weight:900}
+.meter{margin-left:auto;display:flex;align-items:center;gap:14px;background:#fff;border:2px solid var(--line);border-radius:var(--r-m);padding:5px 16px}
+.meter .txt{font-size:21px;font-weight:700}
+.meter .txt .num{font-size:30px;font-weight:600;color:var(--indigo);margin:0 2px}
+.meter .txt .par{color:var(--ink)}
+.meter .txt em{font-style:normal;color:var(--line-2);margin:0 8px}
+.rail{padding:12px;display:flex;flex-direction:column;gap:10px;grid-row:2}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tg .tool{flex-direction:column;gap:2px;min-height:62px;font-size:16px;padding:6px 0}
+.tg .tool.wide{grid-column:1/-1;flex-direction:row;min-height:50px;font-size:17px}
+.hint{margin-top:auto;background:var(--sun-soft);border:2px solid #EBCB69;border-radius:var(--r-m);padding:10px 12px;font-size:18px;line-height:1.5;font-weight:500}
+.hint b{display:flex;align-items:center;gap:6px;font-size:17px;margin-bottom:2px}
+.pane{padding:14px 14px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.pane header{display:flex;align-items:center;justify-content:space-between;height:32px}
+.pane .canvas{flex:1}
+.pane .chip{font-size:16px;padding:2px 9px}
+
+/* ===== 畫面 5：完成＋畫廊 ===== */
+#s5 .body{grid-template-columns:1fr 440px;grid-template-rows:392px 1fr;gap:14px 24px}
+.work{padding:20px 20px 16px;display:flex;flex-direction:column;gap:10px}
+.work .canvas{flex:1}
+.cap{display:flex;justify-content:space-between;align-items:center;font-size:17px;font-weight:700;color:var(--ink-2)}
+.win{padding:18px 22px;display:flex;flex-direction:column;gap:8px}
+.big-st{display:flex;gap:6px;justify-content:center;margin-top:-4px}
+.big-st svg{width:62px;height:62px;animation:pop .5s cubic-bezier(.23,1,.32,1) both}
+.big-st svg:nth-child(2){animation-delay:.12s}.big-st svg:nth-child(3){animation-delay:.24s}
+@keyframes pop{from{transform:scale(.7);opacity:0}}
+.praise{font-size:29px;font-weight:900;text-align:center;line-height:1.3}
+.praise mark{background:linear-gradient(transparent 58%,var(--sun) 58%);color:inherit}
+.sub{font-size:18px;text-align:center;color:var(--ink-2);font-weight:500}
+.brow{display:flex;gap:12px}
+.brow .btn{flex:1;min-height:52px}
+.gal{grid-column:1/-1;padding:12px 18px 10px;display:flex;flex-direction:column;gap:6px}
+.gal .rowt{display:flex;align-items:center;justify-content:space-between}
+.thumbs{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;flex:1;min-height:0}
+.th{background:var(--canvas);border:2px solid var(--line);border-radius:var(--r-m);padding:5px 5px 4px;display:flex;flex-direction:column;gap:2px;min-height:0;box-shadow:0 3px 0 var(--line);position:relative;transition:transform .12s cubic-bezier(.23,1,.32,1)}
+.th:hover{transform:translateY(-2px) rotate(-.6deg)}
+.th svg{flex:1;min-height:0;width:100%;background:#FAF9FD;border-radius:8px}
+.th span{font-size:16px;font-weight:700;text-align:center;color:var(--ink)}
+.th.new{border:3px solid var(--indigo)}
+.th .new{position:absolute;top:-10px;right:-6px;background:var(--sun);color:var(--ink);font-size:16px;font-weight:900;border-radius:99px;padding:0 10px;transform:rotate(5deg);z-index:2}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ============ 共用圖案庫（只放一次，各畫面 <use> 重用） ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- 小圖示（描邊） -->
+    <symbol id="i-line" viewBox="0 0 24 24"><path d="M4.5 19.5 19.5 4.5"/><circle cx="4.5" cy="19.5" r="1.6"/><circle cx="19.5" cy="4.5" r="1.6"/></symbol>
+    <symbol id="i-rect" viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12" rx="1.5"/></symbol>
+    <symbol id="i-ellipse" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="6.5"/></symbol>
+    <symbol id="i-bucket" viewBox="0 0 24 24"><path d="M5 12 11.5 5.5 19 13 12.5 19.5Z"/><path d="M8.5 8.5 16 16"/><path d="M20.5 16c1.6 2 1.6 3.2 0 4-1.6-.8-1.6-2 0-4Z"/></symbol>
+    <symbol id="i-eraser" viewBox="0 0 24 24"><path d="M4 15 12 6.5 20 12.5 13.5 20H8Z"/><path d="M9 11.5 16 17.5"/></symbol>
+    <symbol id="i-select" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="13" height="13" stroke-dasharray="3 2.5"/><path d="M12 12 20.5 15.5 16.5 17 15 21Z"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></symbol>
+    <symbol id="i-paste" viewBox="0 0 24 24"><rect x="4.5" y="5.5" width="15" height="15" rx="2"/><rect x="8.5" y="2.5" width="7" height="5" rx="1.5"/><path d="M8.5 13h7M8.5 16.5h5"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 6 4 11l5 5"/><path d="M4 11h10a5.5 5.5 0 0 1 0 11h-3"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m4.5 12.5 5 5 10-11"/></symbol>
+    <symbol id="i-cross" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.7.6 1 1.3 1 2.1h5c0-.8.3-1.5 1-2.1A6 6 0 0 0 12 3Z"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11m0 0-5-5m5 5 5-5M5 20h14"/></symbol>
+    <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V3.5h10V9M7 17.5H4.5v-8h15v8H17M7 14h10v6.5H7Z"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M3.5 11.5 20.5 4l-4 16-4.5-6.5Z"/><path d="m12 13.5 8.5-9.5"/></symbol>
+    <symbol id="i-replay" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.6-5.9M4 4v4.5h4.5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5Z" fill="currentColor"/></symbol>
+    <symbol id="star" viewBox="0 0 24 24"><path d="m12 2.2 3 6.4 7 .9-5.2 4.8 1.4 7L12 17.8 5.8 21.3l1.4-7L2 9.5l7-.9Z"/></symbol>
+
+    <!-- 顏料瓶：--c 是顏料色 -->
+    <symbol id="bottle" viewBox="0 0 70 112">
+      <rect x="21" y="3" width="28" height="15" rx="4" fill="#FFFDF7" stroke="#2B2A4A" stroke-width="4"/>
+      <path d="M17 18h36q0 10 10 22v56q0 12-12 12H19q-12 0-12-12V40q10-12 10-22Z" fill="var(--c)" stroke="#2B2A4A" stroke-width="4" stroke-linejoin="round"/>
+      <rect x="12" y="56" width="46" height="30" rx="7" fill="#FFFDF7" stroke="#2B2A4A" stroke-width="3"/>
+      <circle cx="35" cy="71" r="9" fill="var(--c)" stroke="#2B2A4A" stroke-width="3"/>
+      <path d="M17 44q-2 10 0 18" stroke="#fff" stroke-opacity=".6" stroke-width="5" stroke-linecap="round" fill="none"/>
+    </symbol>
+
+    <!-- 魔法鍋：--liq 是鍋裡顏色 -->
+    <symbol id="pot" viewBox="0 0 300 240">
+      <path d="M62 206 52 234h30l8-26ZM238 206l10 28h-30l-8-26Z" fill="#3A3558" stroke="#2B2A4A" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M34 98c-30-6-34 30-8 38 6 2 12 2 17 1M266 98c30-6 34 30 8 38-6 2-12 2-17 1" fill="none" stroke="#2B2A4A" stroke-width="9" stroke-linecap="round"/>
+      <path d="M30 82Q18 204 90 216h120q72-12 60-134Z" fill="#4A4470" stroke="#2B2A4A" stroke-width="6" stroke-linejoin="round"/>
+      <ellipse cx="150" cy="82" rx="122" ry="30" fill="#5C5688" stroke="#2B2A4A" stroke-width="6"/>
+      <ellipse cx="150" cy="84" rx="104" ry="21" fill="var(--liq,#F28C28)"/>
+      <path d="M62 124q6 54 36 70" stroke="#9A94CC" stroke-width="9" fill="none" stroke-linecap="round" opacity=".8"/>
+      <circle cx="112" cy="62" r="10" fill="var(--liq,#F28C28)" stroke="#2B2A4A" stroke-width="3"/>
+      <circle cx="168" cy="46" r="15" fill="var(--liq,#F28C28)" stroke="#2B2A4A" stroke-width="3"/>
+      <circle cx="205" cy="68" r="8" fill="var(--liq,#F28C28)" stroke="#2B2A4A" stroke-width="3"/>
+      <circle cx="150" cy="28" r="6" fill="var(--liq,#F28C28)" stroke="#2B2A4A" stroke-width="3"/>
+      <circle cx="166" cy="40" r="4" fill="#fff" opacity=".7"/>
+    </symbol>
+
+    <!-- 南瓜：--pf 瓜色、--sf 梗色（預設白＝線稿） -->
+    <symbol id="pumpkin" viewBox="0 0 240 220">
+      <g stroke="#2B2A4A" stroke-width="5" stroke-linejoin="round">
+        <ellipse cx="82" cy="128" rx="62" ry="76" fill="var(--pf,#fff)"/>
+        <ellipse cx="158" cy="128" rx="62" ry="76" fill="var(--pf,#fff)"/>
+        <ellipse cx="120" cy="128" rx="40" ry="80" fill="var(--pf,#fff)"/>
+        <path d="M110 54q-6-30 18-38 0 18 4 38Z" fill="var(--sf,#fff)"/>
+      </g>
+      <path d="M131 34q30-22 46-2" fill="none" stroke="#2B2A4A" stroke-width="5" stroke-linecap="round"/>
+      <path d="M76 90q-14 36 0 70M164 90q14 36 0 70" fill="none" stroke="#2B2A4A" stroke-width="3" opacity=".35" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- 小熊客人 -->
+    <symbol id="bear" viewBox="0 0 160 190">
+      <g stroke="#2B2A4A" stroke-width="4.5" stroke-linejoin="round">
+        <circle cx="38" cy="50" r="21" fill="#B9855A"/><circle cx="122" cy="50" r="21" fill="#B9855A"/>
+        <ellipse cx="80" cy="150" rx="46" ry="38" fill="#B9855A"/>
+        <circle cx="80" cy="84" r="50" fill="#C99467"/>
+        <ellipse cx="80" cy="104" rx="23" ry="17" fill="#F0D2B0"/>
+        <path d="M44 122q36 22 72 0l-3 17q-33 14-66 0Z" fill="#3FA34D"/>
+      </g>
+      <circle cx="38" cy="50" r="10" fill="#E8C3A0"/><circle cx="122" cy="50" r="10" fill="#E8C3A0"/>
+      <ellipse cx="80" cy="97" rx="9" ry="6.5" fill="#2B2A4A"/>
+      <circle cx="61" cy="78" r="6.5" fill="#2B2A4A"/><circle cx="99" cy="78" r="6.5" fill="#2B2A4A"/>
+      <circle cx="63" cy="76" r="2" fill="#fff"/><circle cx="101" cy="76" r="2" fill="#fff"/>
+      <path d="M72 108q8 7 16 0" fill="none" stroke="#2B2A4A" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M60 66 70 62M100 66 90 62" stroke="#2B2A4A" stroke-width="3.5" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- 泥巴怪 -->
+    <symbol id="mud" viewBox="0 0 140 130">
+      <path d="M18 112C2 62 36 38 70 34c36-2 66 26 54 76-4 14-18 14-26 6-8 11-20 11-28 1-9 11-21 10-28 0-10 8-22 5-24-5Z" fill="#7A6249" stroke="#2B2A4A" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M52 36 46 14l16 14 8-16 6 18 14-12-2 20" fill="#7A6249" stroke="#2B2A4A" stroke-width="4.5" stroke-linejoin="round"/>
+      <circle cx="48" cy="70" r="15" fill="#fff" stroke="#2B2A4A" stroke-width="4"/>
+      <circle cx="94" cy="64" r="11" fill="#fff" stroke="#2B2A4A" stroke-width="4"/>
+      <circle cx="52" cy="73" r="6" fill="#2B2A4A"/><circle cx="91" cy="62" r="4.5" fill="#2B2A4A"/>
+      <path d="M44 94q28 14 58-2" fill="none" stroke="#2B2A4A" stroke-width="4.5" stroke-linecap="round"/>
+      <path d="M78 99q4 20 17 12 4-8-1-18Z" fill="#E85D75" stroke="#2B2A4A" stroke-width="3.5" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- 蝴蝶左翅（畫布座標，鏡線 x=399），右翅用 <use> 鏡射 -->
+    <g id="wingL" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M388 238C372 110 238 52 158 96 98 130 150 224 388 262Z" fill="#F0634A" stroke="#2B2A4A" stroke-width="7"/>
+      <path d="M388 276C284 282 170 300 148 362c-10 50 92 70 152 26 50-36 80-58 88-88Z" fill="#2F6FDE" stroke="#2B2A4A" stroke-width="7"/>
+      <path d="M372 252C300 206 240 196 186 132" fill="none" stroke="#2B2A4A" stroke-width="5"/>
+      <circle cx="262" cy="152" r="32" fill="#FFD23F" stroke="#2B2A4A" stroke-width="6"/>
+      <circle cx="262" cy="152" r="13" fill="#6B3FC4"/>
+      <circle cx="236" cy="366" r="23" fill="#FFD23F" stroke="#2B2A4A" stroke-width="6"/>
+      <circle cx="236" cy="366" r="9" fill="#E04FA0"/>
+      <circle cx="178" cy="150" r="9" fill="#fff"/><circle cx="330" cy="216" r="7" fill="#fff"/><circle cx="196" cy="322" r="8" fill="#fff"/>
+    </g>
+  </defs>
+</svg>
+
+<nav class="tabs" role="tablist" aria-label="畫面切換（預覽用）">
+  <button role="tab" aria-selected="true" data-t="s1">1 開始畫面</button>
+  <button role="tab" aria-selected="false" data-t="s2">2 調色魔法鍋</button>
+  <button role="tab" aria-selected="false" data-t="s3">3 對稱魔鏡工坊</button>
+  <button role="tab" aria-selected="false" data-t="s4">4 小畫家任務局</button>
+  <button role="tab" aria-selected="false" data-t="s5">5 完成＋畫廊</button>
+  <span>interface-design 版・顏料管與紙膠帶</span>
+</nav>
+
+<!-- ================= 畫面 1：開始 ================= -->
+<section class="screen on" id="s1" aria-label="開始畫面">
+  <div class="top">
+    <a class="btn" href="../../index.html">🏠 首頁</a>
+    <div class="crumb">
+      <svg width="40" height="26" viewBox="0 0 40 26" aria-hidden="true"><circle cx="11" cy="13" r="10" fill="#E63946" stroke="#2B2A4A" stroke-width="2"/><circle cx="20" cy="13" r="10" fill="#FFD23F" stroke="#2B2A4A" stroke-width="2"/><circle cx="29" cy="13" r="10" fill="#2F6FDE" stroke="#2B2A4A" stroke-width="2"/></svg>
+      畫畫島 <small>調色魔法鍋</small>
+    </div>
+    <a class="btn" href="#">🖼 我的畫廊</a>
+  </div>
+  <div class="body">
+    <div class="card stage">
+      <span class="tape l"></span>
+      <svg class="art" viewBox="0 0 300 520" aria-hidden="true">
+        <circle cx="210" cy="250" r="120" fill="#E63946" opacity=".12"/><circle cx="130" cy="330" r="110" fill="#FFD23F" opacity=".28"/><circle cx="230" cy="380" r="100" fill="#2F6FDE" opacity=".12"/>
+        <g transform="rotate(-14 70 120)"><use href="#bottle" x="30" y="40" width="64" height="100" style="--c:#E63946"/></g>
+        <use href="#bottle" x="118" y="14" width="64" height="100" style="--c:#FFD23F"/>
+        <g transform="rotate(14 230 120)"><use href="#bottle" x="196" y="40" width="64" height="100" style="--c:#2F6FDE"/></g>
+        <path d="M70 170q8 46 60 76M150 130q0 60 0 98M230 170q-8 46-60 76" fill="none" stroke="#2B2A4A" stroke-width="3.5" stroke-dasharray="2 9" stroke-linecap="round"/>
+        <use href="#pot" x="10" y="250" width="285" height="228" style="--liq:#F28C28"/>
+      </svg>
+      <span class="tag">1–2 年級</span>
+      <h1>調色魔法鍋</h1>
+      <p class="how zy">把紅、黃、藍顏料拖進大鍋，煮出客人點的顏色！</p>
+      <button class="btn pri start"><svg class="ic" style="width:40px;height:40px" aria-hidden="true"><use href="#i-play"/></svg>開始</button>
+      <div class="teacher"><b>給老師看</b><p>這關練什麼：三原色混色、深淺變化｜生活課程 2-I-1</p></div>
+    </div>
+
+    <div class="levels">
+      <div class="h-label"><span class="dabs"><i style="background:#E63946"></i><i style="background:#FFD23F"></i><i style="background:#2F6FDE"></i></span> 選一關</div>
+
+      <button class="lv">
+        <span class="thumb"><svg width="72" height="66" viewBox="0 0 240 220" aria-hidden="true"><use href="#pumpkin" width="240" height="220" style="--pf:#F28C28;--sf:#3FA34D"/></svg></span>
+        <span class="txt"><span class="no">第 1 關</span><span class="nm">橘色南瓜</span>
+          <span class="stars" aria-label="三顆星"><svg class="st"><use href="#star"/></svg><svg class="st"><use href="#star"/></svg><svg class="st"><use href="#star"/></svg></span></span>
+        <span class="chip ok"><svg class="ic" style="width:16px;height:16px;stroke-width:3.2"><use href="#i-check"/></svg>已過 ★★★</span>
+      </button>
+
+      <button class="lv">
+        <span class="thumb"><svg width="70" height="70" viewBox="0 0 64 64" aria-hidden="true"><g stroke="#2B2A4A" stroke-width="3"><ellipse cx="32" cy="40" rx="25" ry="18" fill="#3FA34D"/><circle cx="19" cy="22" r="11" fill="#fff"/><circle cx="45" cy="22" r="11" fill="#fff"/></g><circle cx="20" cy="23" r="4.5" fill="#2B2A4A"/><circle cx="44" cy="23" r="4.5" fill="#2B2A4A"/><path d="M20 44q12 9 24 0" fill="none" stroke="#2B2A4A" stroke-width="3" stroke-linecap="round"/></svg></span>
+        <span class="txt"><span class="no">第 2 關</span><span class="nm">綠色青蛙</span>
+          <span class="stars" aria-label="兩顆星"><svg class="st"><use href="#star"/></svg><svg class="st"><use href="#star"/></svg><svg class="st off"><use href="#star"/></svg></span></span>
+        <span class="chip ok"><svg class="ic" style="width:16px;height:16px;stroke-width:3.2"><use href="#i-check"/></svg>已過 ★★</span>
+      </button>
+
+      <button class="lv next">
+        <span class="thumb"><svg width="70" height="70" viewBox="0 0 64 64" aria-hidden="true"><g fill="#fff" stroke="#8D87B8" stroke-width="3" stroke-dasharray="4 3"><circle cx="20" cy="26" r="10"/><circle cx="40" cy="26" r="10"/><circle cx="30" cy="42" r="10"/><circle cx="50" cy="42" r="8"/><circle cx="10" cy="42" r="8"/></g><path d="M30 14q2-8 12-9" fill="none" stroke="#8D87B8" stroke-width="3" stroke-linecap="round"/></svg></span>
+        <span class="txt"><span class="no">第 3 關</span><span class="nm">紫色葡萄</span><span style="font-size:17px;color:var(--ink-2)">還沒玩，等你上色</span></span>
+        <span class="chip go">下一關</span>
+      </button>
+
+      <button class="lv locked" aria-disabled="true">
+        <span class="thumb" style="background:var(--paper-2)"><svg class="ic" style="width:40px;height:40px;color:var(--ink-3)"><use href="#i-lock"/></svg></span>
+        <span class="txt"><span class="no">第 4 關</span><span class="nm">淺藍天空</span><span style="font-size:17px;color:var(--ink-3)">先過第 3 關就能玩</span></span>
+        <span class="chip lock"><svg class="ic" style="width:16px;height:16px"><use href="#i-lock"/></svg>鎖住</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 畫面 2：調色魔法鍋 ================= -->
+<section class="screen" id="s2" aria-label="遊戲中：調色魔法鍋">
+  <div class="top">
+    <a class="btn" href="../../index.html">🏠 首頁</a>
+    <div class="crumb">
+      <svg width="40" height="26" viewBox="0 0 40 26" aria-hidden="true"><circle cx="11" cy="13" r="10" fill="#E63946" stroke="#2B2A4A" stroke-width="2"/><circle cx="20" cy="13" r="10" fill="#FFD23F" stroke="#2B2A4A" stroke-width="2"/><circle cx="29" cy="13" r="10" fill="#2F6FDE" stroke="#2B2A4A" stroke-width="2"/></svg>
+      調色魔法鍋 <small>第 1 關　橘色南瓜</small>
+    </div>
+    <a class="btn" href="#">🖼 我的畫廊</a>
+  </div>
+  <div class="body">
+    <div class="col">
+      <div class="card guest">
+        <div class="bubble zy">我要橘色的南瓜！</div>
+        <svg class="bear" viewBox="0 0 160 190" aria-label="森林小熊客人"><use href="#bear" width="160" height="190"/></svg>
+      </div>
+      <div class="card mud">
+        <span class="chip bad" style="align-self:flex-start"><svg class="ic" style="width:16px;height:16px;stroke-width:3.2"><use href="#i-cross"/></svg>煮錯了：泥巴色</span>
+        <div class="row">
+          <svg viewBox="0 0 140 130" width="104" height="96" aria-label="泥巴怪做鬼臉"><use href="#mud" width="140" height="130"/></svg>
+          <p class="say zy">哎呀，煮出泥巴色了！倒掉再試一次。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col pots">
+      <div class="rack" role="group" aria-label="5 瓶顏料">
+        <button class="bt"><svg viewBox="0 0 70 112"><use href="#bottle" width="70" height="112" style="--c:#E63946"/></svg><span>紅</span></button>
+        <button class="bt"><svg viewBox="0 0 70 112"><use href="#bottle" width="70" height="112" style="--c:#FFD23F"/></svg><span>黃</span></button>
+        <button class="bt"><svg viewBox="0 0 70 112"><use href="#bottle" width="70" height="112" style="--c:#2F6FDE"/></svg><span>藍</span></button>
+        <button class="bt"><svg viewBox="0 0 70 112"><use href="#bottle" width="70" height="112" style="--c:#FFFFFF"/></svg><span>白</span></button>
+        <button class="bt"><svg viewBox="0 0 70 112"><use href="#bottle" width="70" height="112" style="--c:#2A2A33"/></svg><span>黑</span></button>
+      </div>
+      <div class="drag">
+        <svg width="150" height="26" viewBox="0 0 150 26" aria-hidden="true"><path d="M4 6q70 30 140 8" fill="none" stroke="#4B3FC9" stroke-width="3.5" stroke-dasharray="2 8" stroke-linecap="round"/><path d="m134 5 12 9-14 5" fill="none" stroke="#4B3FC9" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        把顏料瓶拖進大鍋
+      </div>
+      <div class="potrow">
+        <svg viewBox="0 0 300 240" aria-label="大鍋，鍋裡是橘色"><use href="#pot" width="300" height="240" style="--liq:#F28C28"/></svg>
+        <div class="card mix" role="status">
+          <h3>鍋裡加了</h3>
+          <div class="it"><i style="background:#E63946"></i>紅 <span class="num">1</span></div>
+          <div class="it"><i style="background:#FFD23F"></i>黃 <span class="num">1</span></div>
+          <div class="res"><i></i>變成橘色</div>
+        </div>
+      </div>
+      <div class="acts">
+        <button class="btn pri"><svg class="ic" aria-hidden="true"><use href="#i-down"/></svg>倒到圖上</button>
+        <button class="btn"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg>倒掉重來</button>
+      </div>
+    </div>
+
+    <div class="card guestpic">
+      <span class="tape"></span>
+      <div class="h-label">客人的圖：南瓜線稿</div>
+      <div class="canvas">
+        <svg viewBox="0 0 240 220" width="316" height="290" aria-label="等著上色的南瓜線稿"><use href="#pumpkin" width="240" height="220"/></svg>
+        <svg width="94" height="44" viewBox="0 0 94 44" style="position:absolute;left:12px;top:10px" aria-hidden="true"><path d="M86 8q-40 0-70 26" fill="none" stroke="#4B3FC9" stroke-width="3.5" stroke-dasharray="2 8" stroke-linecap="round"/><path d="m8 22 6 14 14-4" fill="none" stroke="#4B3FC9" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="want"><i style="background:#F28C28"></i>客人想要：橘色　<span class="chip ok"><svg class="ic" style="width:16px;height:16px;stroke-width:3.2"><use href="#i-check"/></svg>鍋裡的顏色對了</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 畫面 3：對稱魔鏡工坊 ================= -->
+<section class="screen" id="s3" aria-label="遊戲中：對稱魔鏡工坊">
+  <div class="top">
+    <a class="btn" href="../../index.html">🏠 首頁</a>
+    <div class="crumb">
+      <svg width="40" height="26" viewBox="0 0 40 26" aria-hidden="true"><circle cx="11" cy="13" r="10" fill="#E63946" stroke="#2B2A4A" stroke-width="2"/><circle cx="20" cy="13" r="10" fill="#FFD23F" stroke="#2B2A4A" stroke-width="2"/><circle cx="29" cy="13" r="10" fill="#2F6FDE" stroke="#2B2A4A" stroke-width="2"/></svg>
+      畫畫島 <small>對稱魔鏡工坊</small>
+    </div>
+    <a class="btn" href="#">🖼 我的畫廊</a>
+  </div>
+  <div class="body">
+    <aside class="card side" aria-label="畫筆工具">
+      <div class="h-label">筆刷</div>
+      <div class="brushes">
+        <button class="br"><i style="width:8px;height:8px"></i>細</button>
+        <button class="br on"><i style="width:16px;height:16px;background:var(--indigo)"></i>中</button>
+        <button class="br"><i style="width:26px;height:26px"></i>粗</button>
+      </div>
+      <div class="h-label">顏色</div>
+      <div class="sws">
+        <button class="sw" style="background:#E63946" aria-label="紅"></button>
+        <button class="sw" style="background:#F28C28" aria-label="橘"></button>
+        <button class="sw" style="background:#FFD23F" aria-label="黃"></button>
+        <button class="sw" style="background:#8BC34A" aria-label="淺綠"></button>
+        <button class="sw" style="background:#2E9E5B" aria-label="綠"></button>
+        <button class="sw" style="background:#19B5C8" aria-label="青"></button>
+        <button class="sw on" style="background:#2F6FDE" aria-label="藍（目前）"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></button>
+        <button class="sw" style="background:#6B3FC4" aria-label="紫"></button>
+        <button class="sw" style="background:#E04FA0" aria-label="粉紅"></button>
+        <button class="sw" style="background:#8A5A3A" aria-label="咖啡"></button>
+        <button class="sw" style="background:#9AA0A6" aria-label="灰"></button>
+        <button class="sw" style="background:#2A2A33" aria-label="黑"></button>
+      </div>
+      <div class="h-label">工具</div>
+      <button class="tool"><svg class="ic"><use href="#i-eraser"/></svg>橡皮擦</button>
+      <div style="display:flex;gap:8px">
+        <button class="tool" style="flex:1"><svg class="ic"><use href="#i-undo"/></svg>復原</button>
+        <button class="tool" style="flex:1"><svg class="ic"><use href="#i-trash"/></svg>清除</button>
+      </div>
+    </aside>
+
+    <div style="display:flex;flex-direction:column;min-width:0">
+      <div class="card mission">
+        <span class="tape l" style="left:30px"></span>
+        <b>訂單 <span class="num">3</span>／<span class="num">5</span>：修好蝴蝶的右邊翅膀</b>
+        <div class="pips" aria-label="第 3 張訂單，共 5 張"><i class="f"></i><i class="f"></i><i class="c"></i><i></i><i></i></div>
+      </div>
+      <div class="canvas" style="flex:1;border-width:3px">
+        <svg viewBox="0 0 798 497" width="100%" height="100%" role="img" aria-label="左邊畫好蝴蝶翅膀，右邊魔鏡自動鏡射">
+          <rect x="399" y="0" width="399" height="497" fill="#6B5FE0" opacity=".06"/>
+          <path d="M470 20 560 110M640 14 520 150M720 90 600 220" stroke="#6B5FE0" stroke-opacity=".12" stroke-width="10" stroke-linecap="round"/>
+          <use href="#wingL"/>
+          <use href="#wingL" transform="translate(798 0) scale(-1 1)"/>
+          <line x1="399" y1="16" x2="399" y2="481" stroke="#4B3FC9" stroke-width="3" stroke-dasharray="10 8" stroke-linecap="round"/>
+          <ellipse cx="399" cy="262" rx="11" ry="82" fill="#2B2A4A"/>
+          <circle cx="399" cy="168" r="15" fill="#2B2A4A"/>
+          <path d="M392 156q-14-34-40-42M406 156q14-34 40-42" fill="none" stroke="#2B2A4A" stroke-width="4.5" stroke-linecap="round"/>
+          <circle cx="352" cy="114" r="6" fill="#2B2A4A"/><circle cx="446" cy="114" r="6" fill="#2B2A4A"/>
+          <!-- 畫筆游標與它的鏡像 -->
+          <circle cx="196" cy="246" r="11" fill="none" stroke="#2B2A4A" stroke-width="3"/><path d="M196 230v32M180 246h32" stroke="#2B2A4A" stroke-width="2" opacity=".5"/>
+          <circle cx="602" cy="246" r="11" fill="none" stroke="#4B3FC9" stroke-width="3" stroke-dasharray="4 3"/>
+          <!-- 標籤 -->
+          <g font-family="Noto Sans TC" font-weight="700" font-size="17">
+            <rect x="16" y="16" width="118" height="32" rx="16" fill="#E0DCFA"/><text x="75" y="38" text-anchor="middle" fill="#4B3FC9">我畫的這邊</text>
+            <rect x="664" y="16" width="118" height="32" rx="16" fill="#E0DCFA"/><text x="723" y="38" text-anchor="middle" fill="#4B3FC9">魔鏡畫的這邊</text>
+            <rect x="337" y="455" width="124" height="30" rx="15" fill="#4B3FC9"/><text x="399" y="476" text-anchor="middle" fill="#fff">魔鏡線</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <aside class="card side" aria-label="對稱模式">
+      <div class="h-label">對稱模式</div>
+      <button class="md on"><svg viewBox="0 0 34 34"><path d="M17 3v28" stroke-dasharray="3 3"/><circle cx="9" cy="12" r="3.5"/><circle cx="25" cy="12" r="3.5"/><path d="M6 24q3-5 8 0M20 24q5-5 8 0"/></svg><span>左右對稱</span></button>
+      <button class="md"><svg viewBox="0 0 34 34"><path d="M3 17h28" stroke-dasharray="3 3"/><circle cx="12" cy="9" r="3.5"/><circle cx="12" cy="25" r="3.5"/><path d="M22 7v6M22 21v6"/></svg><span>上下對稱</span></button>
+      <button class="md"><svg viewBox="0 0 34 34"><path d="M17 3v28M3 17h28"/><circle cx="9" cy="9" r="3"/><circle cx="25" cy="9" r="3"/><circle cx="9" cy="25" r="3"/><circle cx="25" cy="25" r="3"/></svg><span>萬花筒<small>（4 份）</small></span></button>
+      <button class="md"><svg viewBox="0 0 34 34"><path d="M17 3v28M4 10l26 14M4 24l26-14"/><circle cx="17" cy="17" r="3" fill="currentColor"/></svg><span>雪花<small>（6 份）</small></span></button>
+      <p style="font-size:16px;line-height:1.5;color:var(--ink-2);margin-top:2px">你畫一筆，魔鏡就幫你多畫一筆。</p>
+      <button class="btn ok done"><svg class="ic" style="width:30px;height:30px;stroke-width:3" aria-hidden="true"><use href="#i-check"/></svg>完成</button>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= 畫面 4：小畫家任務局 ================= -->
+<section class="screen" id="s4" aria-label="遊戲中：小畫家任務局">
+  <div class="top">
+    <a class="btn" href="../../index.html">🏠 首頁</a>
+    <div class="crumb">
+      <svg width="40" height="26" viewBox="0 0 40 26" aria-hidden="true"><circle cx="11" cy="13" r="10" fill="#E63946" stroke="#2B2A4A" stroke-width="2"/><circle cx="20" cy="13" r="10" fill="#FFD23F" stroke="#2B2A4A" stroke-width="2"/><circle cx="29" cy="13" r="10" fill="#2F6FDE" stroke="#2B2A4A" stroke-width="2"/></svg>
+      畫畫島 <small>小畫家任務局</small>
+    </div>
+    <a class="btn" href="#">🖼 我的畫廊</a>
+  </div>
+  <div class="body">
+    <div class="card steps">
+      <span class="tape l" style="left:30px"></span>
+      <b class="t">任務 2　照著目標圖，畫出一模一樣的房子</b>
+      <div class="meter" role="status">
+        <div class="txt">已用<span class="num">7</span>步<em>｜</em><span class="par">標準桿<span class="num" style="color:var(--ink)">9</span>步</span></div>
+        <svg width="238" height="30" viewBox="0 0 238 30" aria-hidden="true">
+          <g stroke="#2B2A4A" stroke-width="2.5">
+            <circle cx="13" cy="19" r="9" fill="#4B3FC9"/><circle cx="39" cy="19" r="9" fill="#4B3FC9"/><circle cx="65" cy="19" r="9" fill="#4B3FC9"/><circle cx="91" cy="19" r="9" fill="#4B3FC9"/><circle cx="117" cy="19" r="9" fill="#4B3FC9"/><circle cx="143" cy="19" r="9" fill="#4B3FC9"/><circle cx="169" cy="19" r="9" fill="#4B3FC9"/>
+            <circle cx="195" cy="19" r="9" fill="#fff"/><circle cx="221" cy="19" r="9" fill="#fff" stroke-dasharray="4 3"/>
+          </g>
+          <path d="M221 11V1l10 4-10 4" fill="#E63946" stroke="#2B2A4A" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <aside class="card rail" aria-label="繪圖工具">
+      <div class="tg">
+        <button class="tool"><svg class="ic"><use href="#i-line"/></svg>直線</button>
+        <button class="tool"><svg class="ic"><use href="#i-rect"/></svg>矩形</button>
+        <button class="tool"><svg class="ic"><use href="#i-ellipse"/></svg>橢圓</button>
+        <button class="tool"><svg class="ic"><use href="#i-bucket"/></svg>填色桶</button>
+        <button class="tool"><svg class="ic"><use href="#i-eraser"/></svg>橡皮擦</button>
+        <button class="tool on"><svg class="ic"><use href="#i-select"/></svg>選取</button>
+        <button class="tool"><svg class="ic"><use href="#i-copy"/></svg>複製</button>
+        <button class="tool"><svg class="ic"><use href="#i-paste"/></svg>貼上</button>
+        <button class="tool wide"><svg class="ic"><use href="#i-undo"/></svg>復原</button>
+      </div>
+      <div class="hint"><b><svg class="ic" style="width:22px;height:22px"><use href="#i-bulb"/></svg>小提示</b>4 扇窗都一樣，有沒有更快的方法？</div>
+    </aside>
+
+    <section class="card pane" aria-label="目標圖">
+      <span class="tape"></span>
+      <header><span class="h-label">目標圖</span><span class="chip go">照這張畫</span></header>
+      <div class="canvas">
+        <svg viewBox="0 0 515 420" width="100%" height="100%" role="img" aria-label="目標圖：房子，4 扇一樣的窗和 1 扇門">
+          <g stroke="#2B2A4A" stroke-width="5" stroke-linejoin="round">
+            <rect x="100" y="196" width="315" height="196" fill="#F4D6A0"/>
+            <path d="M72 200 257 62 442 200Z" fill="#D8574A"/>
+            <rect x="227" y="300" width="62" height="92" fill="#A0623A"/>
+            <g fill="#BFE3F7"><rect x="128" y="222" width="62" height="62"/><rect x="326" y="222" width="62" height="62"/><rect x="128" y="306" width="62" height="62"/><rect x="326" y="306" width="62" height="62"/></g>
+          </g>
+          <g stroke="#2B2A4A" stroke-width="3"><path d="M159 222v62M128 253h62M357 222v62M326 253h62M159 306v62M128 337h62M357 306v62M326 337h62"/></g>
+          <circle cx="276" cy="348" r="4.5" fill="#FFD23F" stroke="#2B2A4A" stroke-width="2"/>
+          <path d="M20 392h475" stroke="#3FA34D" stroke-width="8" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="card pane" aria-label="我的畫布">
+      <span class="tape"></span>
+      <header><span class="h-label">我的畫布</span>
+        <span style="display:flex;gap:6px">
+          <span class="chip ok"><svg class="ic" style="width:14px;height:14px;stroke-width:3.4"><use href="#i-check"/></svg>屋身</span>
+          <span class="chip ok"><svg class="ic" style="width:14px;height:14px;stroke-width:3.4"><use href="#i-check"/></svg>屋頂</span>
+          <span class="chip bad"><svg class="ic" style="width:14px;height:14px;stroke-width:3.4"><use href="#i-cross"/></svg>窗 <span class="num">1</span>／<span class="num">4</span></span>
+          <span class="chip bad"><svg class="ic" style="width:14px;height:14px;stroke-width:3.4"><use href="#i-cross"/></svg>門</span>
+        </span>
+      </header>
+      <div class="canvas">
+        <svg viewBox="0 0 515 420" width="100%" height="100%" role="img" aria-label="我的畫布：已畫屋身、屋頂和 1 扇窗，窗被選取中">
+          <g stroke="#2B2A4A" stroke-width="5" stroke-linejoin="round">
+            <rect x="100" y="196" width="315" height="196" fill="#F4D6A0"/>
+            <path d="M72 200 257 62 442 200Z" fill="#D8574A"/>
+            <rect x="128" y="222" width="62" height="62" fill="#BFE3F7"/>
+          </g>
+          <path d="M159 222v62M128 253h62" stroke="#2B2A4A" stroke-width="3"/>
+          <path d="M20 392h475" stroke="#3FA34D" stroke-width="8" stroke-linecap="round"/>
+          <!-- 選取框：窗被選起來，等著複製 -->
+          <rect x="116" y="210" width="86" height="86" fill="none" stroke="#4B3FC9" stroke-width="3" stroke-dasharray="8 6"/>
+          <g fill="#fff" stroke="#4B3FC9" stroke-width="3"><rect x="110" y="204" width="12" height="12"/><rect x="196" y="204" width="12" height="12"/><rect x="110" y="290" width="12" height="12"/><rect x="196" y="290" width="12" height="12"/></g>
+          <!-- 空位提示 -->
+          <g fill="none" stroke="#B9B2DD" stroke-width="3" stroke-dasharray="5 6"><rect x="326" y="222" width="62" height="62"/><rect x="128" y="306" width="62" height="62"/><rect x="326" y="306" width="62" height="62"/></g>
+        </svg>
+      </div>
+    </section>
+  </div>
+</section>
+
+<!-- ================= 畫面 5：完成＋畫廊 ================= -->
+<section class="screen" id="s5" aria-label="完成畫面與畫廊">
+  <div class="top">
+    <a class="btn" href="../../index.html">🏠 首頁</a>
+    <div class="crumb">
+      <svg width="40" height="26" viewBox="0 0 40 26" aria-hidden="true"><circle cx="11" cy="13" r="10" fill="#E63946" stroke="#2B2A4A" stroke-width="2"/><circle cx="20" cy="13" r="10" fill="#FFD23F" stroke="#2B2A4A" stroke-width="2"/><circle cx="29" cy="13" r="10" fill="#2F6FDE" stroke="#2B2A4A" stroke-width="2"/></svg>
+      調色魔法鍋 <small>第 1 關完成</small>
+    </div>
+    <a class="btn" href="#">🖼 我的畫廊</a>
+  </div>
+  <div class="body">
+    <div class="card work">
+      <span class="tape"></span>
+      <div class="canvas">
+        <svg viewBox="0 0 846 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="塗好的橘色南瓜">
+          <g opacity=".9">
+            <circle cx="150" cy="70" r="22" fill="#E63946" opacity=".55"/><circle cx="196" cy="110" r="12" fill="#FFD23F"/><circle cx="110" cy="190" r="16" fill="#2F6FDE" opacity=".5"/><circle cx="170" cy="245" r="10" fill="#E63946"/>
+            <circle cx="690" cy="60" r="18" fill="#FFD23F"/><circle cx="650" cy="116" r="10" fill="#2F6FDE" opacity=".6"/><circle cx="725" cy="150" r="14" fill="#E63946" opacity=".5"/><circle cx="60" cy="120" r="8" fill="#FFD23F"/>
+          </g>
+          <ellipse cx="423" cy="276" rx="150" ry="13" fill="#2B2A4A" opacity=".1"/>
+          <use href="#pumpkin" x="283" y="10" width="280" height="257" style="--pf:#F28C28;--sf:#3FA34D"/>
+          <path d="M338 96q-12 40 0 90M508 96q12 40 0 90" stroke="#C65A0E" stroke-width="5" fill="none" stroke-linecap="round" opacity=".5"/>
+          <use href="#bear" x="660" y="130" width="130" height="154"/>
+          <g transform="translate(600 62) rotate(-5)">
+            <rect x="0" y="0" width="108" height="46" rx="14" fill="#fff" stroke="#2B2A4A" stroke-width="3"/>
+            <path d="M82 44l10 14 4-16" fill="#fff" stroke="#2B2A4A" stroke-width="3" stroke-linejoin="round"/><rect x="74" y="38" width="22" height="8" fill="#fff"/>
+            <text x="54" y="31" text-anchor="middle" font-family="Noto Sans TC" font-weight="900" font-size="22" fill="#2B2A4A">謝謝你！</text>
+          </g>
+        </svg>
+      </div>
+      <div class="cap"><span>第 1 關　橘色南瓜</span><span>調色魔法鍋　用了 紅 <span class="num">1</span>、黃 <span class="num">1</span></span></div>
+    </div>
+
+    <div class="card win">
+      <div class="big-st" role="img" aria-label="三顆星"><svg class="st"><use href="#star"/></svg><svg class="st"><use href="#star"/></svg><svg class="st"><use href="#star"/></svg></div>
+      <p class="praise">哇，南瓜好<mark>漂亮</mark>！<br>你調出了完美的橘色</p>
+      <p class="sub">三顆星，一次就煮對了</p>
+      <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px">
+        <div class="brow">
+          <button class="btn"><svg class="ic" aria-hidden="true"><use href="#i-down"/></svg>下載圖片</button>
+          <button class="btn"><svg class="ic" aria-hidden="true"><use href="#i-print"/></svg>列印</button>
+        </div>
+        <button class="btn" style="min-height:52px"><svg class="ic" aria-hidden="true"><use href="#i-send"/></svg>交成績給老師</button>
+        <div class="brow">
+          <button class="btn pri" style="flex:1.6;min-height:64px;font-size:24px;font-weight:900"><svg class="ic" aria-hidden="true"><use href="#i-replay"/></svg>再玩一次</button>
+          <a class="btn" href="../../index.html" style="min-height:64px">🏠 首頁</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card gal">
+      <div class="rowt"><div class="h-label"><span class="dabs"><i style="background:#E63946"></i><i style="background:#FFD23F"></i><i style="background:#2F6FDE"></i></span>我的畫廊</div><span style="font-size:16px;font-weight:700;color:var(--ink-2)">已收藏 <span class="num">6</span> 張作品</span></div>
+      <div class="thumbs">
+        <div class="th new"><span class="new">新！</span>
+          <svg viewBox="0 0 160 100" aria-label="橘色南瓜"><use href="#pumpkin" x="38" y="2" width="84" height="96" style="--pf:#F28C28;--sf:#3FA34D"/></svg><span>調色魔法鍋</span></div>
+        <div class="th">
+          <svg viewBox="0 0 160 100" aria-label="線條小火車"><path d="M8 72q18-44 36 0t36 0 36 0 36 0" fill="none" stroke="#2B2A4A" stroke-width="4" stroke-linecap="round"/><path d="M8 80q18-44 36 0t36 0 36 0 36 0" fill="none" stroke="#B9B2DD" stroke-width="3" stroke-dasharray="3 6"/><g stroke="#2B2A4A" stroke-width="3" stroke-linejoin="round"><rect x="56" y="30" width="36" height="22" rx="4" fill="#E63946"/><rect x="82" y="22" width="14" height="14" fill="#FFD23F"/><rect x="94" y="36" width="26" height="16" rx="3" fill="#2F6FDE"/></g><circle cx="66" cy="55" r="5" fill="#2B2A4A"/><circle cx="84" cy="55" r="5" fill="#2B2A4A"/><circle cx="108" cy="55" r="5" fill="#2B2A4A"/></svg><span>線條小火車</span></div>
+        <div class="th">
+          <svg viewBox="0 0 160 100" aria-label="魔法畫畫屋"><g fill="none" stroke-width="9" stroke-linecap="round"><path d="M32 82a48 48 0 0 1 96 0" stroke="#E63946"/><path d="M44 82a36 36 0 0 1 72 0" stroke="#FFD23F"/><path d="M56 82a24 24 0 0 1 48 0" stroke="#2F6FDE"/></g><g fill="#fff" stroke="#2B2A4A" stroke-width="3"><circle cx="24" cy="84" r="9"/><circle cx="38" cy="86" r="8"/><circle cx="136" cy="84" r="9"/><circle cx="122" cy="86" r="8"/></g></svg><span>魔法畫畫屋</span></div>
+        <div class="th">
+          <svg viewBox="0 0 160 100" aria-label="對稱魔鏡工坊"><g transform="translate(0 0)"><path d="M78 48C74 18 38 12 28 30c-8 14 18 26 50 22Z M78 54C50 56 28 66 32 82c6 12 28 6 42-8Z" fill="#F0634A" stroke="#2B2A4A" stroke-width="3.5" stroke-linejoin="round"/><circle cx="48" cy="34" r="8" fill="#FFD23F"/></g><g transform="translate(160 0) scale(-1 1)"><path d="M78 48C74 18 38 12 28 30c-8 14 18 26 50 22Z M78 54C50 56 28 66 32 82c6 12 28 6 42-8Z" fill="#F0634A" stroke="#2B2A4A" stroke-width="3.5" stroke-linejoin="round"/><circle cx="48" cy="34" r="8" fill="#FFD23F"/></g><ellipse cx="80" cy="52" rx="4" ry="26" fill="#2B2A4A"/></svg><span>對稱魔鏡工坊</span></div>
+        <div class="th">
+          <svg viewBox="0 0 160 100" aria-label="小畫家任務局"><g stroke="#2B2A4A" stroke-width="3.5" stroke-linejoin="round"><rect x="40" y="46" width="80" height="46" fill="#F4D6A0"/><path d="M32 48 80 10l48 38Z" fill="#D8574A"/><rect x="72" y="68" width="16" height="24" fill="#A0623A"/><g fill="#BFE3F7"><rect x="48" y="54" width="16" height="14"/><rect x="96" y="54" width="16" height="14"/><rect x="48" y="74" width="16" height="14"/><rect x="96" y="74" width="16" height="14"/></g></g></svg><span>小畫家任務局</span></div>
+        <div class="th">
+          <svg viewBox="0 0 160 100" aria-label="像素小畫家"><path fill="#E63946" stroke="#fff" stroke-width="1" d="M50 12h12v12H50zM62 12h12v12H62zM86 12h12v12H86zM98 12h12v12H98zM38 24h12v12H38zM50 24h12v12H50zM62 24h12v12H62zM74 24h12v12H74zM86 24h12v12H86zM98 24h12v12H98zM110 24h12v12H110zM38 36h12v12H38zM50 36h12v12H50zM62 36h12v12H62zM74 36h12v12H74zM86 36h12v12H86zM98 36h12v12H98zM110 36h12v12H110zM50 48h12v12H50zM62 48h12v12H62zM74 48h12v12H74zM86 48h12v12H86zM98 48h12v12H98zM62 60h12v12H62zM74 60h12v12H74zM86 60h12v12H86zM74 72h12v12H74z"/><path fill="#fff" opacity=".7" d="M50 24h12v12H50z"/></svg><span>像素小畫家</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+document.querySelectorAll('.tabs button').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.tabs button').forEach(function(x){x.setAttribute('aria-selected', x===b ? 'true':'false');});
+    document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on', s.id===b.dataset.t);});
+  });
+});
+</script>
+</body>
+</html>
