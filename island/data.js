@@ -12,6 +12,7 @@
 
 const G1 = '🎒 一年級', GM = '📘 中年級', G3 = '🎓 三年級', GA = '🎲 都能玩';
 const T1 = '🌱 初階 1–3 年級', T2 = '🌿 進階 4–5 年級', T3 = '🌳 高階 6 年級';   // 打字島三階
+const A12 = '🎒 1–2 年級', A34 = '📘 3–4 年級', A14 = '🎨 1–4 年級';                // 畫畫島（2026-11-21 改版）
 
 export const ISLANDS = [
   { id:'mouse', name:'滑鼠島', icon:'🖱️', color:0x5fd38d, units:[
@@ -36,8 +37,13 @@ export const ISLANDS = [
     ['分類隊長','🧺','buckets','units/unit10-classifier-captain/','分類大隊長',G1,10],
     ['襪子配對','🧦','line','units/unit20-sock-matching/','瘋狂襪子配對線',G1,20] ] },
   { id:'art', name:'畫畫島', icon:'🎨', color:0xff8fc4, units:[
-    ['像素畫家','👾','pixels','units/unit5-pixel-art/','像素藝術小畫家',G1,5],
-    ['魔法畫畫','🖌️','easel','units/unit18-magic-paint/','魔法簡約畫畫屋',G1,18] ] },
+    // 畫畫島改版（2026-11-21）：6 關共用 assets/js/art-ui.js；分數存總星數（魔法畫畫存作品張數）
+    ['魔法鍋','🍲','cauldron','units/unit24-color-cauldron/','調色魔法鍋',A12,24],
+    ['小火車','🚂','train','units/unit25-line-train/','線條小火車',A12,25],
+    ['魔法畫畫','🖌️','easel','units/unit18-magic-paint/','魔法畫畫屋',A12,18],
+    ['像素畫家','👾','pixels','units/unit5-pixel-art/','像素小畫家',A14,5],
+    ['對稱魔鏡','🦋','mirror','units/unit26-mirror-workshop/','對稱魔鏡工坊',A34,26],
+    ['任務局','🛠️','toolbox','units/unit27-paint-mission/','小畫家任務局',A34,27] ] },
   { id:'smart', name:'小常識島', icon:'📁', color:0xb69bff, units:[
     ['桌面整理','🗂️','folders','units/unit8-desktop-organizer/','桌面整理大師',G1,8],
     ['網路警察','👮','siren','units/unit9-net-detective/','網路小警察',G1,9] ] },

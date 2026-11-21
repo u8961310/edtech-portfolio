@@ -270,8 +270,8 @@
             <a href="./units/unit5-pixel-art/index.html" class="card" style="--c: #ec4899;">
                 <span class="skill-tag">數位創作</span>
                 <div class="card-cover">🎨🖼️</div>
-                <h3 class="card-title">像素藝術小畫家</h3>
-                <p class="card-desc">一格一格塗顏色，畫出愛心、星星、小屋！或自由發揮，創作你的小作品。</p>
+                <h3 class="card-title">像素小畫家</h3>
+                <p class="card-desc">低年級看數字塗顏色、中年級照座標畫出神祕火箭，最後自由創作像素畫！（1–4 年級）</p>
                 <p class="card-score" id="unit5-score-badge" style="display:none;"></p>
                 <span class="play-btn">▶ 開始玩</span>
             </a>
@@ -348,9 +348,25 @@
             <a href="./units/unit18-magic-paint/index.html" class="card" style="--c: #d946ef;">
                 <span class="skill-tag">數位創作</span>
                 <div class="card-cover">🎨✨</div>
-                <h3 class="card-title">魔法簡約畫畫屋</h3>
-                <p class="card-desc">用聲光畫筆自由塗鴉，邊畫邊有音效與光效，創作專屬你的魔法作品！</p>
+                <h3 class="card-title">魔法畫畫屋</h3>
+                <p class="card-desc">選一張主題卡自由畫畫，彩虹筆、印章都有，按下魔法讓你的畫動起來！（附注音）</p>
                 <p class="card-score" id="unit18-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+            <a href="./units/unit24-color-cauldron/index.html" class="card" style="--c: #fb8c00;">
+                <span class="skill-tag">色彩混色</span>
+                <div class="card-cover">🍲🎨</div>
+                <h3 class="card-title">調色魔法鍋</h3>
+                <p class="card-desc">把紅、黃、藍顏料拖進魔法鍋，煮出客人要的顏色！三種都加會冒出泥巴怪喔。（附注音）</p>
+                <p class="card-score" id="unit24-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+            <a href="./units/unit25-line-train/index.html" class="card" style="--c: #16a34a;">
+                <span class="skill-tag">線條練習</span>
+                <div class="card-cover">🚂〰️</div>
+                <h3 class="card-title">線條小火車</h3>
+                <p class="card-desc">沿著虛線畫鐵軌，直線、波浪線、鋸齒線，小火車照著你畫的線開過去！（附注音）</p>
+                <p class="card-score" id="unit25-score-badge" style="display:none;"></p>
                 <span class="play-btn">▶ 開始玩</span>
             </a>
             <a href="./units/unit19-farm-harvest/index.html" class="card" style="--c: #84cc16;">
@@ -394,6 +410,23 @@
         <p class="grade-hint">挑戰更進階的遊戲，把學會的本領都用出來！</p>
 
         <div class="card-grid">
+            <a href="./units/unit26-mirror-workshop/index.html" class="card" style="--c: #2160c4;">
+                <span class="skill-tag">對稱創作</span>
+                <div class="card-cover">🦋✨</div>
+                <h3 class="card-title">對稱魔鏡工坊</h3>
+                <p class="card-desc">在左邊畫畫，魔鏡同時畫出右邊！左右、上下、萬花筒、雪花四種對稱任你玩。</p>
+                <p class="card-score" id="unit26-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+            <a href="./units/unit27-paint-mission/index.html" class="card" style="--c: #7c3aed;">
+                <span class="skill-tag">電腦繪圖</span>
+                <div class="card-cover">🛠️🏠</div>
+                <h3 class="card-title">小畫家任務局</h3>
+                <p class="card-desc">用直線、矩形、填色桶、複製貼上照著目標圖畫，步數越少星星越多！</p>
+                <p class="card-score" id="unit27-score-badge" style="display:none;"></p>
+                <span class="play-btn">▶ 開始玩</span>
+            </a>
+
             <a href="./units/unit1-typing-adventure/index.html" class="card" style="--c: #ef4444;">
                 <span class="skill-tag">注音打字</span>
                 <div class="card-cover">⚔️🐲</div>
@@ -492,7 +525,7 @@
     function loadLocalScore(unitId) {
         return localStorage.getItem(`edtech-unit${unitId}-score`) || null;
     }
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21].forEach((id) => {
+    [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21].forEach((id) => {
         const score = loadLocalScore(id);
         const badge = document.getElementById(`unit${id}-score-badge`);
         if (score && badge) {
@@ -500,6 +533,19 @@
             badge.style.display = 'inline-block';
         }
     });
+
+    // 畫畫島（2026-11-21 改版）存的是總星星數；魔法畫畫屋（unit18）存完成的作品張數
+    (function loadArtBadges() {
+        [5, 18, 24, 25, 26, 27].forEach((id) => {
+            let v = null;
+            try { v = localStorage.getItem(`edtech-unit${id}-score`); } catch (e) { /* 讀不到就不顯示 */ }
+            const badge = document.getElementById(`unit${id}-score-badge`);
+            if (v && Number(v) > 0 && badge) {
+                badge.textContent = id === 18 ? `🖼 畫了 ${v} 張作品` : `⭐ 共 ${v} 顆星`;
+                badge.style.display = 'inline-block';
+            }
+        });
+    })();
 
     // unit22 存的是主線星星數（0～12），不是分數，另外顯示
     (function loadXmasBadge() {

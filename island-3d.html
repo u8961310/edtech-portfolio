@@ -362,6 +362,27 @@ const PROPS = {
     mesh(B(.02,.38,.02), C.wood, g, 0,.18,-.08).rotation.x = -.35; mesh(B(.26,.2,.015), 0xffffff, g, 0,.28,.03).rotation.x = -.12;
     [[-.06,.3,0xff8fb1],[.04,.26,0x6fb3ff],[.06,.33,0xffc94d]].forEach(([x,y,c]) => mesh(SP(.03,8,6), c, g, x,y,.045).scale.z = .2);
     mesh(CY(.09,.09,.012,16), 0xf3d6a8, g, .2,.01,.12); [0xff6f8f,0x6fb3ff,0x5fd38d].forEach((c,i) => mesh(SP(.016,6,6), c, g, .17+i*.03,.025,.12)); },
+  // ---- 畫畫島改版新關（2026-11-21）----
+  cauldron(g) {   // 調色魔法鍋：深藍鍋＋橘色顏料面＋紅黃藍顏料球（unit24）
+    mesh(SP(.17,20,14,0,Math.PI*2,Math.PI*.35,Math.PI*.65), 0x2f3d6b, g, 0,.17,0);
+    mesh(CY(.15,.15,.02,20), 0xfb8c00, g, 0,.2,0);
+    [[-.17,0],[.17,0]].forEach(([x]) => mesh(new THREE.TorusGeometry(.04,.012,6,12), 0x2f3d6b, g, x,.17,0).rotation.y = Math.PI/2);
+    [[-.09,.32,0xe53935],[0,.36,0xfdd835],[.09,.32,0x1e88e5]].forEach(([x,y,c]) => mesh(SP(.035,10,8), c, g, x,y,0)); },
+  train(g) {   // 線條小火車：波浪鐵軌＋紅色小火車頭（unit25）
+    for (let i=0;i<6;i++) mesh(B(.05,.015,.16), C.wood, g, -.22+i*.09,.008,Math.sin(i)*.04);
+    mesh(B(.16,.1,.11), 0xe53935, g, .02,.08,0); mesh(B(.08,.08,.11), 0x1e5bb8, g, -.08,.13,0);
+    mesh(CY(.02,.02,.07,10), 0x333333, g, .07,.17,0);
+    [[-.05,.06],[.06,.06],[-.05,-.06],[.06,-.06]].forEach(([x,z]) => mesh(CY(.03,.03,.02,12), 0x1f2a4d, g, x,.03,z).rotation.x = Math.PI/2); },
+  mirror(g) {   // 對稱魔鏡：金框橢圓鏡＋中線＋左右對稱小翅膀（unit26）
+    const f = mesh(new THREE.TorusGeometry(.14,.025,8,24), 0xffb627, g, 0,.22,0); f.scale.set(.75,1,1);
+    const m = mesh(CY(.13,.13,.01,24), 0xdce9fb, g, 0,.22,0); m.rotation.x = Math.PI/2; m.scale.set(.75,1,1);
+    mesh(B(.006,.22,.012), 0x2160c4, g, 0,.22,.01);
+    [-1,1].forEach(s => mesh(SP(.06,10,8), 0xff8f3d, g, s*.16,.24,0).scale.set(1,.6,.3));
+    mesh(B(.16,.03,.06), 0x1f2a4d, g, 0,.03,0); },
+  toolbox(g) {   // 小畫家任務局：畫板＋矩形、圓形、三角形積木（unit27）
+    mesh(B(.32,.02,.24), 0xffffff, g, 0,.01,0);
+    mesh(B(.1,.07,.07), 0xffd54f, g, -.08,.055,-.03); mesh(CY(.045,.045,.06,16), 0x1e88e5, g, .07,.05,-.04);
+    mesh(CO(.05,.09,3), 0xe53935, g, 0,.065,.07); mesh(B(.012,.012,.2), 0x1f2a4d, g, .1,.03,.07).rotation.y = .6; },
   folders(g) { [0xffc94d,0x6fb3ff,0xff8fb1].forEach((c,i) => { mesh(B(.26,.05,.19), c, g, .02*i,.025+i*.055,-.01*i).rotation.y = i*.12; mesh(B(.08,.05,.02), c, g, -.08+.02*i,.03+i*.055,-.1-.01*i).rotation.y = i*.12; }); },
   siren(g) { mesh(CY(.1,.12,.08,16), 0x4a5a7a, g, 0,.04,0); mesh(SP(.07,14,10,0,Math.PI*2,0,Math.PI/2), 0xff4d4d, g, -.04,.08,0, { emissive:0xff2a2a, emissiveIntensity:.5, roughness:.2 });
     mesh(SP(.07,14,10,0,Math.PI*2,0,Math.PI/2), 0x4d8bff, g, .06,.08,0, { emissive:0x2a5aff, emissiveIntensity:.5, roughness:.2 }); mesh(CY(.13,.15,.03,6), 0xfff6e6, g, 0,.18,.05).rotation.x = Math.PI/2; },
