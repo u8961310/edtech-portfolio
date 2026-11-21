@@ -1,0 +1,113 @@
+<title>首頁年級入口計畫</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: 單欄；決策 → 舊內容保留清單 → 設計重點 → 年級對照表 → 待決 → 里程碑。沿用前一頁色票 */
+:root{
+ --bg:#e8edf3; --paper:#f6f8fb; --fg:#1d2733; --muted:#4a5868; --line:#c9d3df;
+ --thead:#1f3a5f; --thead-fg:#ffffff; --chip-bg:#dde6f0; --warn:#8a3f0c; --warn-bg:#fbeadc;
+ --b:#2c8a6e; --ok:#1d6b3a;
+ --sans:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+ --display:"Space Grotesk","Noto Sans TC",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+ --bg:#1a222c; --paper:#222c38; --fg:#e4eaf1; --muted:#aab6c4; --line:#3a4757;
+ --thead:#2c4d78; --chip-bg:#2e3b4b; --warn:#f2b483; --warn-bg:#3a2a1e; --ok:#7fd09b; color-scheme:dark}}
+:root[data-theme="dark"]{
+ --bg:#1a222c; --paper:#222c38; --fg:#e4eaf1; --muted:#aab6c4; --line:#3a4757;
+ --thead:#2c4d78; --chip-bg:#2e3b4b; --warn:#f2b483; --warn-bg:#3a2a1e; --ok:#7fd09b; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.7}
+.wrap{max-width:1100px;margin:0 auto;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+header h1{font-family:var(--display);font-size:1.9rem;margin:0;text-wrap:balance}
+header p{margin:.3rem 0 0;color:var(--muted)}
+section{background:var(--paper);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+section>h2{margin:0;padding:9px 16px;font-size:1.05rem;color:#fff;font-weight:700;background:var(--thead)}
+section.b>h2{background:var(--b)}
+.body{padding:12px 16px 16px;min-width:0}
+ul,ol{margin:.3rem 0;padding-left:1.3rem}
+li{margin:.2rem 0}
+.sketch{font-family:Consolas,"Noto Sans TC",monospace;font-size:.82rem;line-height:1.45;background:var(--chip-bg);border-radius:4px;padding:8px 10px;white-space:pre;overflow-x:auto}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:600px}
+th{background:var(--thead);color:var(--thead-fg);text-align:left;padding:6px 9px;font-weight:500}
+td{padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:4px;padding:8px 12px;margin:.5rem 0}
+.ok{color:var(--ok);font-weight:700}
+.ms li{list-style:none;margin-left:-1.3rem}
+</style>
+
+<div class="wrap">
+<header>
+ <h1>首頁年級入口計畫</h1>
+ <p>edtech-portfolio 首頁 · 方案 B「年級入口＋嚮導角色」· 2026-11-21 草案，等你回最下面的待決事項</p>
+</header>
+
+<section class="b"><h2>已決定</h2><div class="body"><ul>
+ <li>首頁走 <b>B 年級入口＋嚮導角色</b>（2026-11-21）</li>
+ <li>順手修的三處一起做：「⭐ 1/30」改成「玩過 1／30 關」、👨‍🏫 旁加「老師」、清單模式加年級篩選</li>
+ <li>首頁是既有頁面，<b>由我直接改，不用 Gemini</b>（Gemini 適合從零做遊戲本體；首頁要接現有熱區、鏡頭、資料，手改比較穩）</li>
+</ul></div></section>
+
+<section><h2>舊內容全部保留（改完逐項比對）</h2><div class="body"><ul>
+ <li>插畫版島嶼地圖＋點島跳關卡面板（熱區、鏡頭縮放）</li>
+ <li>🌏 全景／📋 清單切換；清單裡的「🗂️ 卡片版」「🧊 3D 版」連結</li>
+ <li>📥 收成績（手機隱藏的行為照舊）、👨‍🏫 老師入口（portfolio.html）</li>
+ <li>玩過幾關的計數（只改文字，不改算法）</li>
+ <li>直向／橫向兩組地圖圖、載入失敗退回卡片版</li>
+</ul></div></section>
+
+<section><h2>設計重點</h2><div class="body">
+ <div class="sketch">第一次打開
+┌─────────────────────────────┐
+│   🐾 嗨！我是小嚮導          │
+│   你幾年級？                 │
+│  [1–2 年級] [3–4 年級] [5–6 年級] │
+│        [我是老師／全部看看]   │
+└─────────────────────────────┘
+        ↓ 選 1–2 年級
+地圖鏡頭滑到滑鼠島 → 虛線路線連起這個年級的關卡
+右上角：[🎒 1–2 年級 ✏️]   嚮導泡泡：「下一站：拔蔬菜！」</div>
+ <ul>
+  <li><b>歡迎卡</b>：問年級（大按鈕）；「老師／全部看看」跳過嚮導、什麼都不變淡</li>
+  <li><b>鏡頭</b>：用首頁現成的 focus()（2D 平移縮放，不跑 3D），飛到路線第一個還沒玩的關</li>
+  <li><b>建議路線</b>：在地圖圖層上疊一條 SVG 虛線，依序連接該年級的關卡熱區；玩過的站打勾</li>
+  <li><b>下一站</b>：嚮導泡泡永遠指著路線上第一個還沒玩的關，按下去直接開關卡面板</li>
+  <li><b>不適合的島</b>：輕度變淡，還是點得進去（不擋，只是不推薦）</li>
+  <li><b>改年級</b>：右上角年級膠囊一按就回歡迎卡</li>
+  <li><b>投影／老師用</b>：網址加 <code>?grade=all</code> 或 <code>?grade=12</code> 直接略過歡迎卡</li>
+ </ul>
+ <div class="note">教室電腦是很多班共用的：第 3 節三年級、第 4 節一年級。所以年級<b>不能永久記住</b>，見待決 2。</div>
+</div></section>
+
+<section><h2>年級對照（資料面）</h2><div class="body">
+ <p>island/data.js 現在的年級是文字標籤，而且各島寫法不同。做法：在 data.js 加一張「標籤 → 年級範圍」對照表，每一列關卡都不用改。</p>
+ <div class="tbl"><table>
+  <tr><th>標籤</th><th>用在</th><th>年級範圍</th><th>出現在哪幾個入口</th></tr>
+  <tr><td>🎒 一年級</td><td>滑鼠島等</td><td>1</td><td>1–2</td></tr>
+  <tr><td>📘 中年級</td><td>—</td><td>3–4</td><td>3–4</td></tr>
+  <tr><td>🎓 三年級</td><td>—</td><td>3</td><td>3–4</td></tr>
+  <tr><td>🎲 都能玩</td><td>大富翁港等</td><td>1–6</td><td>全部</td></tr>
+  <tr><td>🌱 初階 1–3 年級</td><td>打字島</td><td>1–3</td><td>1–2、3–4</td></tr>
+  <tr><td>🌿 進階 4–5 年級</td><td>打字島</td><td>4–5</td><td>3–4、5–6</td></tr>
+  <tr><td>🌳 高階 6 年級</td><td>打字島</td><td>6</td><td>5–6</td></tr>
+  <tr><td>🎒 1–2／📘 3–4／🎨 1–4 年級</td><td>畫畫島、之後的小常識島</td><td>照字面</td><td>照字面</td></tr>
+ </table></div>
+ <p>路線順序：預設照「島的順序 → 島內關卡順序」，我會先排一版給你看，你覺得哪關該提前再調。</p>
+</div></section>
+
+<section><h2>待決事項（請回覆）</h2><div class="body"><ol>
+ <li><b>嚮導用誰</b>：建議直接用小常識島的 4 隻原創寵物（孩子在首頁選的嚮導＝之後養的寵物，兩邊串起來）。代價是首頁的嚮導要等寵物長相定稿（小常識島 M1）。另一條路是首頁先用一個獨立的島嶼小精靈，之後再換。</li>
+ <li><b>年級記多久</b>：建議「記到當天結束」——同一天同一台電腦不再問，隔天打開重新問。教室換班時，學生按右上角年級膠囊就能改。</li>
+ <li><b>先做哪個</b>：建議順序 ① 小常識島 M1（定寵物長相）→ ② 首頁 M1 mockup（嚮導直接用定稿的寵物）→ 之後兩邊交錯做。首頁的年級對照、路線、三處小修不需要寵物，可以先做。</li>
+</ol></div></section>
+
+<section><h2>里程碑</h2><div class="body"><ul class="ms">
+ <li>☐ M0 規劃定稿＋3 個待決</li>
+ <li>☐ M1 3 版 mockup（歡迎卡、選嚮導、地圖＋路線＋下一站泡泡），用真的地圖圖與字型 → 你選一版</li>
+ <li>☐ M2 年級對照表＋歡迎卡＋右上角年級膠囊＋<code>?grade=</code> 參數</li>
+ <li>☐ M3 SVG 建議路線＋鏡頭飛到下一站＋不適合的島變淡</li>
+ <li>☐ M4 嚮導角色與泡泡（接寵物）</li>
+ <li>☐ M5 三處小修：玩過 N／30 關、老師字樣、清單年級篩選</li>
+ <li>☐ M6 驗收：橫向／直向、平板觸控、投影機尺寸；舊功能逐項比對</li>
+ <li>☐ M7 上線＋正式站試玩</li>
+</ul></div></section>
+</div>

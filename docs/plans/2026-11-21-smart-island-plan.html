@@ -1,0 +1,148 @@
+<title>小常識島改版計畫</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: 單欄閱讀＋每節彩色標題帶；表格走對帳單風（深藍表頭）。沿用畫畫島計畫頁 */
+:root{
+ --bg:#e8edf3; --paper:#f6f8fb; --fg:#1d2733; --muted:#4a5868; --line:#c9d3df;
+ --thead:#1f3a5f; --thead-fg:#ffffff;
+ --b1:#2f6db5; --b2:#2c8a6e; --b3:#b4632a; --b4:#7a4fb0; --b5:#b23a55; --b6:#3d7d93;
+ --chip-bg:#dde6f0; --warn:#8a3f0c; --warn-bg:#fbeadc;
+ --g12:#2c8a6e; --g34:#7a4fb0;
+ --sans:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+ --display:"Space Grotesk","Noto Sans TC",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+ --bg:#1a222c; --paper:#222c38; --fg:#e4eaf1; --muted:#aab6c4; --line:#3a4757;
+ --thead:#2c4d78; --chip-bg:#2e3b4b; --warn:#f2b483; --warn-bg:#3a2a1e; color-scheme:dark}}
+:root[data-theme="dark"]{
+ --bg:#1a222c; --paper:#222c38; --fg:#e4eaf1; --muted:#aab6c4; --line:#3a4757;
+ --thead:#2c4d78; --chip-bg:#2e3b4b; --warn:#f2b483; --warn-bg:#3a2a1e; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.7}
+.wrap{max-width:900px;margin:0 auto;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+header h1{font-family:var(--display);font-size:1.9rem;margin:0;text-wrap:balance}
+header p{margin:.3rem 0 0;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{background:var(--chip-bg);border-radius:4px;padding:2px 9px;font-size:.85rem}
+section{background:var(--paper);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+section>h2{margin:0;padding:9px 16px;font-size:1.05rem;color:#fff;font-weight:700}
+.c1>h2{background:var(--b1)}.c2>h2{background:var(--b2)}.c3>h2{background:var(--b3)}
+.c4>h2{background:var(--b4)}.c5>h2{background:var(--b5)}.c6>h2{background:var(--b6)}
+.body{padding:12px 16px 16px;min-width:0}
+.body p{margin:.4rem 0}
+ul{margin:.3rem 0;padding-left:1.3rem}
+li{margin:.15rem 0}
+h3{font-size:1rem;margin:1rem 0 .3rem;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.tbl{overflow-x:auto;margin:.5rem 0}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:560px}
+th{background:var(--thead);color:var(--thead-fg);text-align:left;padding:6px 9px;font-weight:500}
+td{padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+code{font-family:Consolas,monospace;font-size:.86em;background:var(--chip-bg);padding:0 4px;border-radius:3px}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:4px;padding:8px 12px;margin:.5rem 0}
+.tag{display:inline-block;color:#fff;border-radius:3px;padding:0 7px;font-size:.82rem;font-weight:700}
+.tag.g12{background:var(--g12)}.tag.g34{background:var(--g34)}.tag.new{background:var(--b3)}.tag.old{background:var(--b6)}
+.game{border-top:1px solid var(--line);padding-top:6px;margin-top:10px}
+.game:first-of-type{border-top:0;margin-top:0}
+.game dl{display:grid;grid-template-columns:5.5em minmax(0,1fr);gap:2px 10px;margin:.3rem 0}
+.game dt{color:var(--muted);font-weight:700}
+.game dd{margin:0}
+.check{list-style:none;padding-left:0}
+.check li::before{content:"☐ ";color:var(--muted)}
+@media (max-width:480px){.game dl{grid-template-columns:1fr}.game dt{margin-top:4px}}
+</style>
+
+<div class="wrap">
+<header>
+ <h1>小常識島改版計畫</h1>
+ <p>edtech-portfolio · 1–4 年級 · B 方案「數位寵物養成」· 新做 4 套＋舊 2 關換新風格 · 有趣可愛 · 教學理論保有彈性 · Gemini 製作互動遊戲</p>
+ <div class="meta"><span class="chip">2026-11-21 草案</span><span class="chip">狀態：M0 規劃，等你確認</span><span class="chip">三方案比較：claude.ai/artifact/BrECHkvDLwX4TeKThNZ5hy</span></div>
+</header>
+
+<section class="c1"><h2>你已經決定的</h2><div class="body"><div class="tbl"><table>
+ <tr><th>題目</th><th>選擇</th><th>帶來的影響</th></tr>
+ <tr><td>方案</td><td>B 數位寵物養成</td><td>每個孩子領養一隻小寵物；任何一關答對、做對都能餵牠、解鎖服裝貼紙。需要一套「跨關卡共用的寵物存檔」</td></tr>
+ <tr><td>舊關卡</td><td>保留，換新風格重做</td><td>unit8 桌面整理大師、unit9 網路小警察換成同一套外殼，成績 key 沿用</td></tr>
+ <tr><td>新遊戲</td><td>4 套</td><td>1–2 年級 2 套、3–4 年級 2 套；小常識島共 6 關（最多 8）</td></tr>
+ <tr><td>主題</td><td>4 個全選</td><td>認識電腦與檔案、網路安全與個資、健康使用、資訊倫理與 AI</td></tr>
+ <tr><td>教學理論</td><td>對應學習能力＋審題檢核＋ARCS</td><td>每關標資訊教育議題實質內涵；題目照審題檢核表出（錯誤選項對應真實迷思、正解位置分散、選項長度一致）；情境都是孩子真實生活。分層提示、Gagné 沒勾不硬加</td></tr>
+ <tr><td>製作</td><td>Gemini</td><td>沿用畫畫島流程：我做外殼＋提示詞＋驗收，Gemini（Antigravity <code>agy</code>）做每關遊戲本體</td></tr>
+</table></div></div></section>
+
+<section class="c2"><h2>寵物系統（6 關共用）</h2><div class="body">
+ <ul>
+  <li><b>領養</b>：第一次進任何一關，先從 4 隻寶寶裡選一隻、取名字（30 秒內完成，不擋上課）</li>
+  <li><b>成長</b>：每關結束依星星得到「點心」；點心可以餵寵物（寵物開心動畫）、累積到一定數量寵物長大一階（寶寶 → 小朋友 → 小勇者）</li>
+  <li><b>收集</b>：每關各有 1 件專屬服裝或道具（例：電腦關得到「小技師帽」、網安關得到「盾牌」），過關就解鎖；可以在寵物小屋換裝</li>
+  <li><b>寵物小屋</b>：島上多一個入口（不算關卡），看寵物、換裝、看貼紙冊收集了幾張</li>
+  <li><b>每關裡</b>：寵物陪在畫面角落，答對開心、答錯會一起「嗯…」想想，結算時寵物吃點心</li>
+  <li><b>彈性</b>：老師只上一關也完整（領養→玩→餵食）；寵物不影響答題，不想養也能直接玩</li>
+ </ul>
+ <div class="note">要注意：寵物存在「這台電腦」的瀏覽器裡。教室電腦是共用的，下一節別班坐同一台會看到上一個人的寵物。處理方式放在最下面「還要你決定的」。</div>
+</div></section>
+
+<section class="c3"><h2>6 關遊戲設計</h2><div class="body">
+ <p>學習能力代碼為國教院《議題融入說明手冊》（109 年定稿版）資訊教育議題國小實質內涵，已核對原文。</p>
+
+ <div class="game"><h3><span class="tag g12">1–2 年級</span><span class="tag new">新</span>寵物的新電腦</h3><dl>
+  <dt>怎麼玩</dt><dd>寵物收到一台新電腦，零件散了一地。把螢幕、主機、鍵盤、滑鼠、喇叭、耳機拖到對的位置組起來；再分類「把東西告訴電腦的（輸入）」和「電腦告訴我們的（輸出）」。組好後寵物開機打招呼</dd>
+  <dt>ARCS</dt><dd>就像家裡、學校電腦教室的電腦</dd>
+  <dt>學習能力</dt><dd>資E1 認識常見的資訊系統</dd>
+ </dl></div>
+
+ <div class="game"><h3><span class="tag g12">1–2 年級</span><span class="tag new">新</span>寵物作息表</h3><dl>
+  <dt>怎麼玩</dt><dd>幫寵物安排一天：玩平板、休息、運動、睡覺排進時間軸；玩太久寵物眼睛會轉圈圈。再幫寵物調坐姿、螢幕距離，計時到了帶牠看遠方 20 秒</dd>
+  <dt>ARCS</dt><dd>孩子自己的平板、手機使用時間</dd>
+  <dt>學習能力</dt><dd>資E11 建立康健的數位使用習慣與態度</dd>
+ </dl></div>
+
+ <div class="game"><h3><span class="tag g34">3–4 年級</span><span class="tag new">新</span>寵物收到怪訊息</h3><dl>
+  <dt>怎麼玩</dt><dd>寵物的手機一直跳出訊息：陌生人要地址、「點這裡領免費遊戲幣」、同學要借密碼。孩子幫寵物選怎麼回覆，選對寵物得到盾牌碎片；最後幫寵物組一組夠強的密碼</dd>
+  <dt>審題重點</dt><dd>錯誤選項用真實迷思：「朋友傳的連結一定安全」「只給生日沒關係」「密碼用寵物名字最好記」</dd>
+  <dt>學習能力</dt><dd>資E12 了解並遵守資訊倫理與使用資訊科技的相關規範；資E7 使用資訊科技與他人建立良好的互動關係</dd>
+ </dl></div>
+
+ <div class="game"><h3><span class="tag g34">3–4 年級</span><span class="tag new">新</span>寵物的 AI 作業</h3><dl>
+  <dt>怎麼玩</dt><dd>寵物用 AI 寫「動物報告」，孩子當小老師檢查：找出 AI 說錯的地方（例：企鵝住在北極）、判斷報告裡的圖哪些可以用（自己畫的、有授權的）、幫寵物用有禮貌的方式回覆同學留言</dd>
+  <dt>審題重點</dt><dd>迷思：「AI 說的都是對的」「網路上找得到的圖都能用」</dd>
+  <dt>學習能力</dt><dd>資E12 了解並遵守資訊倫理；資E2 使用資訊科技解決生活中簡單的問題</dd>
+ </dl></div>
+
+ <div class="game"><h3><span class="tag g12">1–2</span><span class="tag g34">3–4</span><span class="tag old">重做</span>寵物房間大整理（原 桌面整理大師 unit8）</h3><dl>
+  <dt>怎麼玩</dt><dd>寵物的電腦桌面亂七八糟，把照片、音樂、作業檔案拖進對的資料夾；中年級多一步「幫資料夾取好名字」</dd>
+  <dt>學習能力</dt><dd>資E8 認識基本的數位資源整理方法</dd>
+ </dl></div>
+
+ <div class="game"><h3><span class="tag g12">1–2</span><span class="tag g34">3–4</span><span class="tag old">重做</span>寵物警察訓練（原 網路小警察 unit9）</h3><dl>
+  <dt>怎麼玩</dt><dd>寵物去警察學校受訓：看圖判斷網路上的行為是好是壞（保留舊版玩法），通過訓練拿到警徽</dd>
+  <dt>學習能力</dt><dd>資E12 了解並遵守資訊倫理與使用資訊科技的相關規範</dd>
+ </dl></div>
+</div></section>
+
+<section class="c4"><h2>製作方式</h2><div class="body">
+ <ul>
+  <li><b>共用外殼</b>：以畫畫島 <code>art-ui.js</code> 為基礎，改做小常識島外殼（開始畫面、關卡、完成畫面改成「寵物吃點心＋解鎖服裝」、交成績、回首頁）＋寵物存檔模組</li>
+  <li><b>風格</b>：「有趣可愛」是新的視覺方向，照慣例先出 3 版 mockup（三個設計 skill），用真的注音字型，你選定再開發</li>
+  <li><b>題目</b>：用 <code>tw-edu-assessment-theory</code> 的審題檢核表寫進提示詞，交件後逐題檢核（正解位置分散、選項長度、迷思對應）</li>
+  <li><b>寬鬆</b>：沿用畫畫島精神，答錯也能往下玩，答錯後說一句正確觀念，星星反映表現</li>
+  <li><b>驗收</b>：沿用 <code>test-art-scenes.py</code> 的做法另寫小常識島版，加檢查寵物存檔</li>
+ </ul>
+</div></section>
+
+<section class="c5"><h2>里程碑</h2><div class="body"><div class="tbl"><table>
+ <tr><th>階段</th><th>內容</th><th>誰</th></tr>
+ <tr><td>M0</td><td>規劃定稿（本頁）＋下面待決事項</td><td>你確認</td></tr>
+ <tr><td>M1</td><td>3 版 mockup（含寵物、領養畫面、遊戲中、結算吃點心）→ 選定 → 設計規範</td><td>我出圖、你選</td></tr>
+ <tr><td>M2</td><td>小常識島外殼＋寵物模組＋示範關＋Gemini 提示詞（含審題檢核表）</td><td>我</td></tr>
+ <tr><td>M3</td><td>新 4 關</td><td>Gemini 做、我驗收</td></tr>
+ <tr><td>M4</td><td>舊 2 關換新外殼＋寵物小屋</td><td>Gemini 做、我驗收</td></tr>
+ <tr><td>M5</td><td>自動驗收＋逐題審題檢核＋學習能力檢核</td><td>我</td></tr>
+ <tr><td>M6</td><td>島圖、清單頁、README、報表頁名</td><td>我</td></tr>
+ <tr><td>M7</td><td>上線＋正式站試玩</td><td>我部署、你試玩</td></tr>
+</table></div></div></section>
+
+<section class="c6"><h2>還要你決定的</h2><div class="body"><ul class="check">
+ <li><b>共用電腦的寵物怎麼辦</b>：建議「領養時輸入座號＋名字，同一台電腦可以有好幾隻寵物，進來先點自己的」；或簡單版「一台電腦一隻寵物，換人就重新領養」</li>
+ <li><b>寵物種類</b>：建議 4 隻原創寶寶（例：小方塊機器狗、雲朵貓、軟糖恐龍、像素章魚），不用現成卡通角色</li>
+ <li><b>交成績給老師</b>：建議 4 個新關＋2 個重做都接 QR 收成績（顯示第幾關＋星星，跟畫畫島一樣）</li>
+ <li><b>大富翁港重複</b>：大富翁已有資安、護眼、個資題；小常識島題目避開相同題幹，改用情境與操作</li>
+</ul></div></section>
+</div>

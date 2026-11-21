@@ -1,0 +1,128 @@
+<title>小常識島三方案</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: 單欄；上方共同條件，中間三張方案卡（寬螢幕三欄、窄螢幕直排），下方比較表。沿用畫畫島計畫頁色票 */
+:root{
+ --bg:#e8edf3; --paper:#f6f8fb; --fg:#1d2733; --muted:#4a5868; --line:#c9d3df;
+ --thead:#1f3a5f; --thead-fg:#ffffff; --chip-bg:#dde6f0; --warn:#8a3f0c; --warn-bg:#fbeadc;
+ --a:#2f6db5; --b:#2c8a6e; --c:#7a4fb0; --rec:#b4632a;
+ --sans:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+ --display:"Space Grotesk","Noto Sans TC",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+ --bg:#1a222c; --paper:#222c38; --fg:#e4eaf1; --muted:#aab6c4; --line:#3a4757;
+ --thead:#2c4d78; --chip-bg:#2e3b4b; --warn:#f2b483; --warn-bg:#3a2a1e; color-scheme:dark}}
+:root[data-theme="dark"]{
+ --bg:#1a222c; --paper:#222c38; --fg:#e4eaf1; --muted:#aab6c4; --line:#3a4757;
+ --thead:#2c4d78; --chip-bg:#2e3b4b; --warn:#f2b483; --warn-bg:#3a2a1e; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.7}
+.wrap{max-width:1200px;margin:0 auto;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+header h1{font-family:var(--display);font-size:1.9rem;margin:0;text-wrap:balance}
+header p{margin:.3rem 0 0;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{background:var(--chip-bg);border-radius:4px;padding:2px 9px;font-size:.85rem}
+section{background:var(--paper);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+section>h2{margin:0;padding:9px 16px;font-size:1.05rem;color:#fff;font-weight:700;background:var(--thead)}
+.body{padding:12px 16px 16px;min-width:0}
+.body p{margin:.4rem 0}
+ul{margin:.3rem 0;padding-left:1.3rem}
+li{margin:.2rem 0}
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.opt{background:var(--paper);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.opt>h2{margin:0;padding:10px 16px;color:#fff;font-size:1.1rem}
+.opt.a>h2{background:var(--a)}.opt.b>h2{background:var(--b)}.opt.c>h2{background:var(--c)}
+.opt .body{flex:1;display:flex;flex-direction:column;gap:6px}
+.tagline{font-weight:700;font-size:1rem}
+h3{font-size:.95rem;margin:.6rem 0 .1rem;color:var(--muted)}
+.g{display:inline-block;color:#fff;border-radius:3px;padding:0 6px;font-size:.78rem;font-weight:700;margin-right:4px}
+.g12{background:#2c8a6e}.g34{background:#7a4fb0}.gold{background:#3d7d93}
+.rec{display:inline-block;background:var(--rec);color:#fff;border-radius:3px;padding:0 8px;font-size:.82rem;font-weight:700;margin-left:6px;vertical-align:2px}
+.pc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}
+.pc div{background:var(--chip-bg);border-radius:4px;padding:6px 10px;font-size:.9rem}
+.pc b{display:block;font-size:.85rem}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:640px}
+th{background:var(--thead);color:var(--thead-fg);text-align:left;padding:6px 9px;font-weight:500}
+td{padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:4px;padding:8px 12px;margin:.4rem 0}
+@media (max-width:900px){.opts{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:480px){.pc{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+<header>
+ <h1>小常識島三方案</h1>
+ <p>edtech-portfolio · 1–4 年級 · 有趣可愛 · 新做 4 套＋舊 2 關（桌面整理大師、網路小警察）換新風格 · Gemini 做遊戲本體</p>
+ <div class="meta"><span class="chip">2026-11-21 方案比較</span><span class="chip">等你選一個（或混搭）</span></div>
+</header>
+
+<section><h2>三個方案共同的條件（你已經決定的）</h2><div class="body">
+ <ul>
+  <li><b>主題 4 個</b>：認識電腦與檔案、網路安全與個資、健康使用、資訊倫理與 AI</li>
+  <li><b>教學理論</b>：每關對應學習能力（資訊教育議題實質內涵，選定後查國教院原文再寫代碼）；題目照審題檢核（錯誤選項對應真實迷思、正解位置分散、選項長度差不多）；ARCS 情境連到孩子真實生活。分層提示、Gagné 沒勾，不硬加</li>
+  <li><b>保有彈性</b>：每關都能單獨玩、老師可以只挑一關上課；沿用畫畫島「寬鬆過關」精神，答錯也能往下玩，星星反映表現</li>
+  <li><b>避開重複</b>：大富翁港已有資安、護眼、密碼、個資、硬體、檔案題目，小常識島改用「操作／情境」玩法，不做成純答題</li>
+ </ul>
+</div></section>
+
+<div class="opts">
+ <article class="opt a"><h2>A. 資訊小鎮任務<span class="rec">推薦</span></h2><div class="body">
+  <p class="tagline">島就是一座小鎮，每關是一棟建築，可愛小機器人「方方」當嚮導。</p>
+  <h3>4 個新遊戲</h3>
+  <ul>
+   <li><span class="g g12">1–2</span><b>電腦零件醫院</b>：電腦生病了，把滑鼠、鍵盤、螢幕、喇叭拖回正確位置，分出「輸入」和「輸出」</li>
+   <li><span class="g g12">1–2</span><b>健康公園</b>：幫小動物調好坐姿、螢幕距離，計時到了要讓眼睛休息（看遠方 20 秒）</li>
+   <li><span class="g g34">3–4</span><b>密碼城堡</b>：組出夠堅固的密碼擋住小怪獸；分類哪些資料可以說、哪些不能說</li>
+   <li><span class="g g34">3–4</span><b>AI 圖書館</b>：當小偵探找出 AI 答錯的地方；判斷哪些圖可以用、怎麼有禮貌地回覆留言</li>
+  </ul>
+  <h3>舊 2 關</h3>
+  <p><span class="g gold">重做</span>桌面整理大師 → 「檔案郵局」；網路小警察 → 「警察局」</p>
+  <h3>風格</h3>
+  <p>迷你黏土小鎮：圓滾滾建築、粉嫩色、方方機器人有表情</p>
+  <div class="pc"><div><b>優點</b>每關獨立最有彈性；舊關自然變成兩棟建築；最貼近現有「一座島＝多關」結構</div><div><b>要注意</b>關與關之間沒有劇情連貫，靠嚮導角色串起來</div></div>
+ </div></article>
+
+ <article class="opt b"><h2>B. 數位寵物養成</h2><div class="body">
+  <p class="tagline">每個孩子領養一隻數位小寵物，答對、做對就能餵牠、幫牠換裝。</p>
+  <h3>4 個新遊戲</h3>
+  <ul>
+   <li><span class="g g12">1–2</span><b>寵物的新電腦</b>：幫寵物組電腦、認識零件，組好寵物會開心跳舞</li>
+   <li><span class="g g12">1–2</span><b>寵物作息表</b>：幫寵物安排「玩平板、休息、運動、睡覺」，玩太久寵物會累到眼睛轉圈圈</li>
+   <li><span class="g g34">3–4</span><b>寵物收到怪訊息</b>：情境選擇題，陌生人要地址、可疑連結，選對寵物得到盾牌</li>
+   <li><span class="g g34">3–4</span><b>寵物的 AI 作業</b>：寵物用 AI 寫作業，幫牠檢查哪裡錯、哪裡抄了別人的圖</li>
+  </ul>
+  <h3>舊 2 關</h3>
+  <p><span class="g gold">重做</span>變成「整理寵物房間的檔案」「寵物警察訓練」</p>
+  <h3>風格</h3>
+  <p>軟萌貼紙風：大眼睛寵物、表情豐富、收集貼紙冊</p>
+  <div class="pc"><div><b>優點</b>最黏人，想一直回來玩；寵物收集對低年級吸引力最大</div><div><b>要注意</b>寵物狀態要跨關存（多一套存檔）；老師只上一關時養成感變弱</div></div>
+ </div></article>
+
+ <article class="opt c"><h2>C. 小明的數位一天</h2><div class="body">
+  <p class="tagline">跟著主角過一天，從早上開電腦到晚上收訊息，每個時段是一關。</p>
+  <h3>4 個新遊戲</h3>
+  <ul>
+   <li><span class="g g12">1–2</span><b>早上：開機囉</b>：認識電腦零件、開關機順序</li>
+   <li><span class="g g12">1–2</span><b>下課：平板時間</b>：時間到了要休息、坐姿與距離</li>
+   <li><span class="g g34">3–4</span><b>放學：怪怪訊息</b>：陌生人、詐騙連結、個資，選擇不同結局</li>
+   <li><span class="g g34">3–4</span><b>晚上：AI 作業</b>：用 AI 查資料、檢查錯誤、引用來源與著作權</li>
+  </ul>
+  <h3>舊 2 關</h3>
+  <p><span class="g gold">重做</span>變成「上課：整理作業檔案」「午休：網路小警察」</p>
+  <h3>風格</h3>
+  <p>繪本漫畫格：每關開頭一格漫畫交代情境，畫面像故事書</p>
+  <div class="pc"><div><b>優點</b>ARCS 最強，情境全是孩子生活；劇情好記</div><div><b>要注意</b>時間軸讓人想照順序玩，彈性較低；1–2 和 3–4 年級混在同一天裡</div></div>
+ </div></article>
+</div>
+
+<section><h2>三方案比較</h2><div class="body"><div class="tbl"><table>
+ <tr><th>比較</th><th>A 資訊小鎮</th><th>B 寵物養成</th><th>C 數位一天</th></tr>
+ <tr><td>彈性（老師挑一關上）</td><td>最高</td><td>中</td><td>較低</td></tr>
+ <tr><td>想一直玩</td><td>中</td><td>最高</td><td>中</td></tr>
+ <tr><td>連結真實生活（ARCS）</td><td>中高</td><td>中</td><td>最高</td></tr>
+ <tr><td>製作複雜度</td><td>低（沿用畫畫島外殼）</td><td>高（跨關寵物存檔）</td><td>中（漫畫格開場）</td></tr>
+ <tr><td>舊 2 關融入</td><td>自然</td><td>要改主角</td><td>要改成時段</td></tr>
+</table></div>
+<div class="note">我的建議：A。它最符合你說的「保有彈性」，也能直接沿用畫畫島做好的外殼與流程；如果想要 B 的黏著度，可以在 A 加一個「集章卡」：每過一關蓋一個方方印章，不用做整套寵物系統。</div>
+</div></section>
+</div>
