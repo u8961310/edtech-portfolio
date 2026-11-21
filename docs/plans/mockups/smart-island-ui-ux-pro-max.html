@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小常識島 設計稿｜軟黏土點心屋（ui-ux-pro-max 版）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+@font-face { font-family:'Bpmf Huninn'; src:url('fonts/bpmf-huninn-smart.woff2') format('woff2'); }
+/* ===== 色票（6 關共用，意思色固定不換） =====
+   底 --bg #FDEFE3 桃杏奶油（大面積底，L≈95%）
+   卡 --card #FFF9F2 奶油白（不用純白）
+   字 --ink #3B2350 深葡萄（13.0:1 於卡、12.1:1 於底）
+   次字 --ink2 #5C4870（7.7:1 於卡、7.1:1 於底）
+   重點／主要按鈕 --orange #FF8F3F（上面放 ink 字 6.0:1）
+   導覽／資訊 --violet #6A45C9（白字 6.4:1；當字色於卡 6.1:1）
+   正確 --ok #186B41（＋✓）  錯誤 --bad #B4372B（＋✗，5.7:1） */
+:root{
+  --bg:#FDEFE3; --bg2:#F3EAFB; --card:#FFF9F2; --ink:#3B2350; --ink2:#5C4870;
+  --orange:#FF8F3F; --orange-d:#C75F17; --violet:#6A45C9; --violet-d:#4A2C9E;
+  --ok:#186B41; --ok-soft:#DDF3E6; --bad:#B4372B; --bad-soft:#FCE6E1;
+  --lilac:#ECE3FA; --mint:#DDF3E6; --butter:#FFF0C4; --sky:#E1EEFB; --edge:#E9D5C4;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#DCD2E6;font-family:'Noto Sans TC',sans-serif;color:var(--ink)}
+.num{font-family:'Baloo 2','Noto Sans TC',sans-serif;font-weight:800;letter-spacing:.01em}
+/* 分頁 */
+.tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:10px;background:var(--violet-d)}
+.tabs button{font:700 15px 'Noto Sans TC';padding:8px 16px;min-height:40px;border-radius:12px;border:2px solid #B9A8EA;background:var(--card);color:var(--ink);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--orange);border-color:#FFD3B0}
+.tabs button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.stage{width:1366px;margin:0 auto}
+.scr{display:none;position:relative;width:1366px;height:657px;overflow:hidden;
+  background:radial-gradient(circle at 12% 18%,rgba(255,255,255,.55) 0 90px,transparent 91px),
+             radial-gradient(circle at 92% 88%,rgba(236,227,250,.9) 0 160px,transparent 161px),
+             linear-gradient(165deg,var(--bg) 0%,#FCECE6 55%,var(--bg2) 100%)}
+.scr.on{display:block}
+.abs{position:absolute}
+/* 注音句：只給 1–2 年級要讀的句子 */
+.bpmf{font-family:'Bpmf Huninn','Noto Sans TC',sans-serif;font-weight:400;line-height:1.6;letter-spacing:0;color:var(--ink)}
+/* 頂欄（黏土條） */
+.top{position:absolute;left:0;right:0;top:0;height:66px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:10;
+  background:var(--lilac);border-bottom:3px solid #D5C6F2;box-shadow:0 6px 0 rgba(106,69,201,.10)}
+.top .mid{display:flex;align-items:center;gap:12px;font-weight:900;font-size:24px}
+.island{display:inline-flex;align-items:center;gap:6px;background:var(--violet);color:#fff;font-weight:900;font-size:16px;padding:4px 14px 4px 8px;border-radius:99px}
+.island svg{width:26px;height:26px}
+.slot{min-width:190px;display:flex;justify-content:flex-end}
+.slot.l{justify-content:flex-start}
+/* 黏土按鈕：厚邊＋內亮邊＋底部壓痕 */
+.btn{min-height:48px;min-width:48px;padding:0 20px;border:3px solid #D7BFAA;border-radius:18px;background:var(--card);color:var(--ink);
+  font:900 20px 'Noto Sans TC',sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;text-decoration:none;
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.75),inset 0 -5px 0 rgba(59,35,80,.10),0 6px 14px rgba(59,35,80,.16);transition:transform .18s ease-out,box-shadow .18s ease-out}
+.btn:hover{transform:translateY(-2px);box-shadow:inset 0 3px 0 rgba(255,255,255,.75),inset 0 -5px 0 rgba(59,35,80,.10),0 10px 18px rgba(59,35,80,.2)}
+.btn:active{transform:translateY(2px);box-shadow:inset 0 3px 0 rgba(255,255,255,.6),inset 0 -2px 0 rgba(59,35,80,.10),0 3px 8px rgba(59,35,80,.16)}
+.btn.or{background:var(--orange);border-color:var(--orange-d);color:var(--ink)}
+.btn.vi{background:var(--violet);border-color:var(--violet-d);color:#fff}
+.btn:focus-visible,.pick:focus-visible,.opt:focus-visible,.dev:focus-visible,.av:focus-visible,.lv:focus-visible,.wear:focus-visible,input:focus-visible{outline:4px solid var(--violet);outline-offset:3px}
+/* 黏土卡 */
+.clay{background:var(--card);border:3px solid var(--edge);border-radius:26px;
+  box-shadow:inset 0 3px 0 #fff,inset 0 -6px 0 rgba(233,213,196,.55),0 8px 0 #EBD6C5,0 16px 26px rgba(59,35,80,.12)}
+.chip{display:inline-flex;align-items:center;gap:4px;font-weight:900;font-size:15px;padding:3px 12px;border-radius:99px;border:2px solid transparent;white-space:nowrap}
+.g12{background:#FFE1CB;border-color:#F2B88E;color:var(--ink)}
+.g34{background:#E3D9FB;border-color:#B7A3EE;color:var(--ink)}
+.g14{background:#D6F0E2;border-color:#9AD3B3;color:var(--ink)}
+.pet{position:absolute}
+[data-pet] svg{width:100%;height:100%;display:block;overflow:visible}
+.ico{width:24px;height:24px;flex:none}
+.st{fill:#FFC233;stroke:#A8670E;stroke-width:1.6;stroke-linejoin:round}
+.st.off{fill:#F1E6DA;stroke:#B9A28E}
+/* 進度豆 */
+.prog{display:flex;align-items:center;gap:10px;font-weight:900;font-size:19px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid #B7A3EE}
+.dots i.done{background:var(--violet);border-color:var(--violet)}
+.dots i.now{background:var(--orange);border-color:var(--orange-d);transform:scale(1.25)}
+/* 領養 */
+.pick{position:absolute;top:150px;width:202px;height:372px;padding:14px 10px 0;border-radius:28px;cursor:pointer;text-align:center;font-family:inherit;color:var(--ink)}
+.pick .nm{font-size:28px;font-weight:900;margin-top:4px}
+.pick .ds{font-size:16px;font-weight:700;color:var(--ink2);line-height:1.45;margin-top:4px}
+.pick.sel{border-color:var(--orange);border-width:5px;box-shadow:0 0 0 6px #FFE1CB,0 8px 0 #F2B88E,0 18px 28px rgba(199,95,23,.22);transform:translateY(-6px)}
+.pick .badge{position:absolute;left:50%;top:-18px;transform:translateX(-50%);background:var(--orange);border:3px solid var(--orange-d);color:var(--ink);font-weight:900;font-size:17px;padding:2px 14px;border-radius:99px;white-space:nowrap}
+.lab{display:block;font-weight:900;font-size:19px;margin:0 0 6px}
+input.in{width:100%;height:54px;border:3px solid #D7BFAA;border-radius:16px;background:#fff;font:900 26px 'Noto Sans TC';color:var(--ink);padding:0 16px;
+  box-shadow:inset 0 4px 0 rgba(59,35,80,.07)}
+.av{width:62px;height:62px;border-radius:50%;border:3px solid #D7BFAA;background:var(--sky);position:relative;cursor:pointer;padding:0;overflow:hidden}
+.av .pet{left:-4px;top:2px;width:64px;height:64px}
+.avl{font-size:14px;font-weight:700;color:var(--ink2);text-align:center;margin-top:3px}
+/* 寵物小屋 */
+.lv{position:absolute;width:252px;height:152px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;font-family:inherit;color:var(--ink);text-align:left;border-radius:22px}
+.lv .r1{display:flex;align-items:flex-start;justify-content:space-between}
+.lv .tile{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;border:2px solid rgba(59,35,80,.12)}
+.lv .tile svg{width:38px;height:38px}
+.lv strong{font-size:22px;font-weight:900;line-height:1.2}
+.lv .stars{display:flex;align-items:center;gap:2px;height:28px}
+.lv .stars svg{width:26px;height:26px}
+.lv .new{font-size:16px;font-weight:900;color:var(--violet)}
+.cookie{width:34px;height:34px}
+.wear{position:absolute;top:58px;width:236px;height:118px;border-radius:20px;display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;font-family:inherit;color:var(--ink);text-align:left}
+.wear .pic{width:92px;height:92px;border-radius:16px;background:var(--sky);display:grid;place-items:center;flex:none}
+.wear b{display:block;font-size:22px;font-weight:900}
+.wear .tg{display:inline-block;margin-top:6px;font-size:15px;font-weight:900;padding:2px 10px;border-radius:99px}
+.wear.on{border-color:var(--ok);border-width:4px}
+.wear.lock{background:#EFE8F1;border-color:#D4C6DA;box-shadow:inset 0 3px 0 #fff,0 6px 0 #DDD0E2}
+/* 新電腦 */
+.dev{cursor:pointer;outline:none}
+.dev .hl{opacity:0;transition:opacity .2s}
+.dev:hover .hl,.dev:focus-visible .hl{opacity:1}
+.fb{position:absolute;left:980px;width:362px;height:252px;padding:14px 16px}
+.fb .hd{display:flex;align-items:center;gap:10px;font-weight:900;font-size:22px}
+.mk{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:28px;font-weight:900;flex:none;line-height:1}
+.fb.ok{background:#F3FBF5;border-color:#9AD3B3;box-shadow:inset 0 3px 0 #fff,0 8px 0 #C4E6D2,0 16px 26px rgba(24,107,65,.12)}
+.fb.no{background:#FFF5EF;border-color:#F1BFA7;box-shadow:inset 0 3px 0 #fff,0 8px 0 #F3D3C3,0 16px 26px rgba(180,55,43,.10)}
+.fb.flash{box-shadow:0 0 0 6px var(--violet),0 8px 0 #C4E6D2}
+.tagk{position:absolute;right:14px;top:12px;font-size:14px;font-weight:700;color:var(--ink2)}
+/* 怪訊息 */
+.opt{position:absolute;left:916px;width:426px;height:110px;display:flex;align-items:center;gap:14px;padding:0 18px;cursor:pointer;font-family:inherit;color:var(--ink);text-align:left;border-radius:22px}
+.opt .let{width:48px;height:48px;border-radius:50%;background:var(--violet);color:#fff;display:grid;place-items:center;font:800 26px 'Baloo 2';flex:none}
+.opt .oi{width:46px;height:46px;flex:none}
+.opt span{font-size:22px;font-weight:900;line-height:1.35}
+.opt:hover{border-color:var(--violet)}
+/* 結算 */
+.bigst svg{width:70px;height:70px}
+.slotc{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:#F4E7DA;border:3px dashed #CDB39C}
+.slotc.f{background:#FFE7C7;border:3px solid #E3A15A}
+.slotc svg{width:44px;height:44px}
+@keyframes popin{0%,18%{transform:scale(0);opacity:0}38%{transform:scale(1.18);opacity:1}50%,100%{transform:scale(1);opacity:1}}
+.slotc.grow svg{animation:popin 4s ease-out infinite;transform-origin:center}
+@keyframes barw{0%,15%{transform:scaleX(.625)}45%,100%{transform:scaleX(.75)}}
+.gbar{height:22px;border-radius:99px;background:#F4E7DA;border:3px solid #E0C7B0;overflow:hidden}
+.gbar i{display:block;height:100%;width:100%;background:linear-gradient(#FFB872,#FF8F3F);transform-origin:left;animation:barw 4s ease-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.bob{animation:bob 2.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.bob,.gbar i,.slotc.grow svg{animation:none}.gbar i{transform:scaleX(.75)}}
+/* 角色表 */
+.sheet{position:absolute;left:20px;top:80px;width:1326px;border-collapse:separate;border-spacing:0}
+.sheet th{font-size:16px;font-weight:900;color:var(--ink);padding:4px 0;text-align:center}
+.sheet th.grp{font-size:15px;color:#fff;background:var(--violet);border-radius:10px}
+.sheet td{height:112px;text-align:center;vertical-align:middle;border-top:2px dashed #E4CFBE}
+.sheet td .cell{position:relative;width:108px;height:108px;margin:0 auto}
+.sheet td.nm{text-align:left;padding-left:8px;width:170px}
+.sheet td.nm b{font-size:22px;font-weight:900;display:block}
+.sheet td.nm small{font-size:14px;font-weight:700;color:var(--ink2);line-height:1.4;display:block}
+.sw{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--ink2)}
+.sw i{width:30px;height:30px;border-radius:10px;border:2px solid rgba(59,35,80,.25);flex:none}
+.sw b{color:var(--ink);font-weight:900;display:block;font-size:14px}
+</style>
+</head>
+<body>
+
+<!-- 共用圖形 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+  <symbol id="star" viewBox="0 0 24 24"><polygon points="12,1.8 15.1,8.4 22.3,9.2 16.9,14.1 18.4,21.3 12,17.7 5.6,21.3 7.1,14.1 1.7,9.2 8.9,8.4"/></symbol>
+  <symbol id="isl" viewBox="0 0 32 32"><ellipse cx="16" cy="25" rx="14" ry="5" fill="#9BD7F2"/><path d="M6 24 Q16 14 26 24Z" fill="#7CC79A"/><circle cx="16" cy="11" r="7" fill="#FFD65E" stroke="#fff" stroke-width="1.5"/><path d="M13 18h6M14 20.5h4" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ck" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#E9A955" stroke="#A8672A" stroke-width="3"/><circle cx="24" cy="24" r="14" fill="#F3C27A"/><circle cx="17" cy="19" r="2.6" fill="#6B3E1F"/><circle cx="29" cy="17" r="2.2" fill="#6B3E1F"/><circle cx="26" cy="29" r="2.8" fill="#6B3E1F"/><circle cx="16" cy="29" r="1.8" fill="#6B3E1F"/></symbol>
+  <!-- 關卡圖示 -->
+  <symbol id="i-pc" viewBox="0 0 40 40"><rect x="5" y="6" width="30" height="21" rx="4" fill="#fff" stroke="#3B2350" stroke-width="2.6"/><rect x="9" y="10" width="22" height="13" rx="2" fill="#9BD7F2"/><path d="M20 27v5M13 33h14" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 40 40"><circle cx="18" cy="21" r="13" fill="#fff" stroke="#3B2350" stroke-width="2.6"/><path d="M18 13v8l6 3" fill="none" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/><path d="M29 5h6l-6 6h6" fill="none" stroke="#6A45C9" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 40 40"><path d="M6 9a4 4 0 0 1 4-4h20a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H16l-7 6v-6H10a4 4 0 0 1-4-4z" fill="#fff" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/><path d="M20 10v8" stroke="#B4372B" stroke-width="3.2" stroke-linecap="round"/><circle cx="20" cy="22.5" r="1.9" fill="#B4372B"/></symbol>
+  <symbol id="i-ai" viewBox="0 0 40 40"><path d="M9 4h15l7 7v24a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" fill="#fff" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/><path d="M13 17h10M13 23h12M13 29h7" stroke="#3B2350" stroke-width="2.2" stroke-linecap="round"/><path d="M31 18l1.6 3.6 3.6 1.6-3.6 1.6L31 28.4l-1.6-3.6-3.6-1.6 3.6-1.6z" fill="#FFC233" stroke="#A8670E" stroke-width="1.4"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 40 40"><path d="M4 11a3 3 0 0 1 3-3h8l3 4h15a3 3 0 0 1 3 3v16a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z" fill="#FFD65E" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/><path d="M4 16h32" stroke="#3B2350" stroke-width="2.2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 40 40"><path d="M20 4l13 5v9c0 9-6 15-13 18C13 33 7 27 7 18V9z" fill="#fff" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/><path d="M14 19l4.5 4.5L27 15" fill="none" stroke="#186B41" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11 12 3.5 21 11M5.5 9v11h13V9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="10" y="14" width="4" height="6" fill="currentColor"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
+  <!-- 服裝單件（衣櫃用） -->
+  <symbol id="w-scarf" viewBox="0 0 80 80"><rect x="10" y="22" width="60" height="18" rx="9" fill="#E8553D" stroke="#A3321F" stroke-width="3"/><path d="M24 23v16M40 23v16M56 23v16" stroke="#FFE0C8" stroke-width="4"/><rect x="44" y="34" width="16" height="32" rx="6" fill="#E8553D" stroke="#A3321F" stroke-width="3" transform="rotate(-8 52 50)"/><path d="M46 66l1 6M51 66l0 6M56 65l1 6" stroke="#A3321F" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="w-hat" viewBox="0 0 80 80"><path d="M14 54 Q14 18 40 16 Q66 18 66 54Z" fill="#4F7BD9" stroke="#2D4E9A" stroke-width="3"/><path d="M28 24 Q30 40 28 54M52 24 Q50 40 52 54" stroke="#7FA3EE" stroke-width="3" fill="none"/><rect x="10" y="50" width="60" height="14" rx="7" fill="#FFD65E" stroke="#A8670E" stroke-width="3"/><circle cx="40" cy="14" r="8" fill="#FFF9F2" stroke="#2D4E9A" stroke-width="3"/></symbol>
+  <symbol id="w-glass" viewBox="0 0 80 80"><circle cx="24" cy="40" r="14" fill="#E8F4FF" stroke="#3B2350" stroke-width="4"/><circle cx="56" cy="40" r="14" fill="#E8F4FF" stroke="#3B2350" stroke-width="4"/><path d="M38 38q2-4 4 0M10 38 4 34M70 38l6-4" stroke="#3B2350" stroke-width="4" fill="none" stroke-linecap="round"/></symbol>
+</defs>
+</svg>
+
+<nav class="tabs" role="tablist" aria-label="畫面切換">
+  <button role="tab" aria-selected="true" data-t="0">① 領養</button>
+  <button role="tab" aria-selected="false" data-t="1">② 寵物小屋</button>
+  <button role="tab" aria-selected="false" data-t="2">③ 寵物的新電腦（1–2 年級）</button>
+  <button role="tab" aria-selected="false" data-t="3">④ 寵物收到怪訊息（3–4 年級）</button>
+  <button role="tab" aria-selected="false" data-t="4">⑤ 結算：吃點心</button>
+  <button role="tab" aria-selected="false" data-t="5">⑥ 角色表＋色票</button>
+</nav>
+
+<div class="stage">
+
+<!-- ========== ① 領養 ========== -->
+<section class="scr on" aria-label="領養畫面">
+  <header class="top">
+    <div class="slot l"><a class="btn" href="../../index.html">🏠 首頁</a></div>
+    <div class="mid"><span class="island"><svg><use href="#isl"/></svg>小常識島</span>領養寵物寶寶</div>
+    <div class="slot"></div>
+  </header>
+
+  <div class="abs" style="left:28px;top:78px;width:870px;height:60px;display:flex;align-items:center;gap:12px">
+    <svg width="44" height="44" viewBox="0 0 48 48" aria-hidden="true"><use href="#ck"/></svg>
+    <p class="bpmf" style="margin:0;font-size:34px">挑選你的寵物寶寶，幫牠取名吧！</p>
+  </div>
+
+  <button class="pick clay sel" style="left:28px" aria-pressed="true">
+    <span class="badge">✓ 選好了</span>
+    <div class="pet" style="position:relative;width:196px;height:206px;margin:0 auto" data-pet="bunny" data-stage="0" data-mood="happy" data-egg="1"></div>
+    <div class="nm">雲朵兔</div>
+    <div class="ds">軟綿綿的<br>耳朵收得到訊號</div>
+  </button>
+  <button class="pick clay" style="left:248px" aria-pressed="false">
+    <div class="pet" style="position:relative;width:196px;height:206px;margin:0 auto" data-pet="turtle" data-stage="0" data-mood="normal" data-egg="1"></div>
+    <div class="nm">鍵盤龜</div>
+    <div class="ds">慢慢來不著急<br>背上是小鍵盤</div>
+  </button>
+  <button class="pick clay" style="left:468px" aria-pressed="false">
+    <div class="pet" style="position:relative;width:196px;height:206px;margin:0 auto" data-pet="cat" data-stage="0" data-mood="normal" data-egg="1"></div>
+    <div class="nm">螢幕貓</div>
+    <div class="ds">心情寫在臉上<br>臉就是小螢幕</div>
+  </button>
+  <button class="pick clay" style="left:688px" aria-pressed="false">
+    <div class="pet" style="position:relative;width:196px;height:206px;margin:0 auto" data-pet="chick" data-stage="0" data-mood="normal"></div>
+    <div class="nm">燈泡雞</div>
+    <div class="ds">想到點子時<br>頭上燈泡會亮</div>
+  </button>
+
+  <div class="abs" style="left:28px;top:556px;width:862px;display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;color:var(--ink2)">
+    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11V5a2 2 0 0 1 4 0v5l4 .7a2.5 2.5 0 0 1 2 2.7l-.6 4.6A3 3 0 0 1 15.4 21H11a3 3 0 0 1-2.4-1.2L5 15a1.6 1.6 0 0 1 2.4-2z" fill="#FFE1CB" stroke="#5C4870" stroke-width="1.8" stroke-linejoin="round"/></svg>
+    點一下寶寶就能選牠，長大以後會換造型喔
+  </div>
+
+  <!-- 右側表單 -->
+  <form class="abs clay" style="left:918px;top:150px;width:420px;height:488px;padding:20px 24px" onsubmit="return false">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span style="font-size:24px;font-weight:900">寵物資料卡</span>
+      <span class="chip g14">已選：雲朵兔</span>
+    </div>
+    <div style="display:flex;gap:14px">
+      <div style="width:120px"><label class="lab" for="f-no">座號</label><input class="in num" id="f-no" type="number" inputmode="numeric" value="12" style="text-align:center"></div>
+      <div style="flex:1"><label class="lab" for="f-me">你的名字</label><input class="in" id="f-me" value="王小明"></div>
+    </div>
+    <div style="margin-top:14px"><label class="lab" for="f-pet">寵物名字</label><input class="in" id="f-pet" value="小雲"></div>
+    <button class="btn or" style="width:100%;height:64px;margin-top:16px;font-size:30px;letter-spacing:.2em">領養</button>
+    <div style="border-top:2px dashed #E4CFBE;margin:14px 0 10px"></div>
+    <div style="font-size:16px;font-weight:700;color:var(--ink2);margin-bottom:6px">這台電腦已經住了 3 隻寵物（點頭像切換）</div>
+    <div style="display:flex;gap:22px">
+      <div><button class="av" aria-label="切換到 7 號 林小美 的寵物 布丁"><div class="pet" data-pet="chick" data-stage="1" data-mood="happy"></div></button><div class="avl">7 號・布丁</div></div>
+      <div><button class="av" aria-label="切換到 15 號 陳大寶 的寵物 阿鍵" style="background:var(--mint)"><div class="pet" data-pet="turtle" data-stage="2" data-mood="normal"></div></button><div class="avl">15 號・阿鍵</div></div>
+      <div><button class="av" aria-label="切換到 21 號 李安安 的寵物 咪咪" style="background:#FFE9DC"><div class="pet" data-pet="cat" data-stage="1" data-mood="normal"></div></button><div class="avl">21 號・咪咪</div></div>
+    </div>
+  </form>
+</section>
+
+<!-- ========== ② 寵物小屋 ========== -->
+<section class="scr" aria-label="寵物小屋">
+  <header class="top">
+    <div class="slot l"><a class="btn" href="../../index.html">🏠 首頁</a></div>
+    <div class="mid"><span class="island"><svg><use href="#isl"/></svg>小常識島</span>小雲的小屋</div>
+    <div class="slot"><button class="btn vi">🔄 換寵物</button></div>
+  </header>
+
+  <!-- 小屋 -->
+  <div class="abs clay" style="left:24px;top:84px;width:516px;height:556px;padding:12px;overflow:hidden">
+    <div style="position:relative;width:486px;height:320px;border-radius:18px;overflow:hidden">
+      <svg width="486" height="320" viewBox="0 0 486 320" aria-hidden="true">
+        <rect width="486" height="320" fill="#FBE3D3"/>
+        <g fill="#F6D3BE"><circle cx="40" cy="190" r="5"/><circle cx="90" cy="215" r="5"/><circle cx="420" cy="180" r="5"/><circle cx="455" cy="215" r="5"/><circle cx="300" cy="40" r="5"/><circle cx="350" cy="70" r="5"/></g>
+        <rect x="28" y="28" width="150" height="116" rx="18" fill="#E1EEFB" stroke="#D7BFAA" stroke-width="6"/>
+        <ellipse cx="103" cy="128" rx="56" ry="14" fill="#9BD7F2"/><path d="M70 124 Q103 90 136 124Z" fill="#7CC79A"/><circle cx="140" cy="62" r="14" fill="#FFD65E"/>
+        <path d="M103 30v112M30 86h146" stroke="#D7BFAA" stroke-width="5"/>
+        <rect x="320" y="70" width="130" height="10" rx="5" fill="#D7A579"/>
+        <rect x="330" y="38" width="16" height="32" rx="3" fill="#6A45C9"/><rect x="350" y="44" width="16" height="26" rx="3" fill="#FF8F3F"/><rect x="370" y="34" width="14" height="36" rx="3" fill="#7CC79A"/>
+        <circle cx="420" cy="54" r="15" fill="#FFF9F2" stroke="#D7A579" stroke-width="4"/><path d="M420 46v8l5 3" stroke="#5C4870" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <rect y="236" width="486" height="84" fill="#EFCFB2"/><path d="M0 266h486M0 296h486" stroke="#E2BB98" stroke-width="2"/>
+        <ellipse cx="243" cy="278" rx="170" ry="28" fill="#E7DDF7" stroke="#C9B8EE" stroke-width="4"/>
+        <ellipse cx="400" cy="262" rx="58" ry="22" fill="#FFD2C0" stroke="#E7A68C" stroke-width="4"/>
+      </svg>
+      <div class="pet bob" style="left:118px;top:36px;width:250px;height:256px" data-pet="bunny" data-stage="1" data-mood="happy" data-wear="scarf"></div>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:14px;margin:14px 6px 6px">
+      <span style="font-size:36px;font-weight:900">小雲</span>
+      <span class="chip g14">雲朵兔・小朋友</span>
+      <span style="margin-left:auto;font-size:18px;font-weight:700;color:var(--ink2)">主人：12 號 王小明</span>
+    </div>
+    <div style="background:var(--butter);border-radius:18px;padding:10px 14px;margin:6px 4px 0;border:2px solid #F0D488">
+      <div style="font-size:20px;font-weight:900;margin-bottom:6px">點心 <span class="num">5／8</span>，再 3 個就長大</div>
+      <div style="display:flex;gap:8px" aria-label="已有 5 個點心，共 8 格">
+        <svg class="cookie" viewBox="0 0 48 48"><use href="#ck"/></svg><svg class="cookie" viewBox="0 0 48 48"><use href="#ck"/></svg><svg class="cookie" viewBox="0 0 48 48"><use href="#ck"/></svg><svg class="cookie" viewBox="0 0 48 48"><use href="#ck"/></svg><svg class="cookie" viewBox="0 0 48 48"><use href="#ck"/></svg>
+        <svg class="cookie" viewBox="0 0 48 48"><circle cx="24" cy="24" r="19" fill="#FFF9F2" stroke="#D8B98C" stroke-width="3" stroke-dasharray="5 4"/></svg><svg class="cookie" viewBox="0 0 48 48"><circle cx="24" cy="24" r="19" fill="#FFF9F2" stroke="#D8B98C" stroke-width="3" stroke-dasharray="5 4"/></svg><svg class="cookie" viewBox="0 0 48 48"><circle cx="24" cy="24" r="19" fill="#FFF9F2" stroke="#D8B98C" stroke-width="3" stroke-dasharray="5 4"/></svg>
+        <span style="margin-left:auto;align-self:center;font-size:15px;font-weight:900;color:var(--ink2)">→ 大朋友</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 關 -->
+  <div class="abs" style="left:562px;top:82px;font-size:22px;font-weight:900">選一關來玩 <span style="font-size:16px;font-weight:700;color:var(--ink2)">過一關就有點心</span></div>
+  <button class="lv clay" style="left:562px;top:118px">
+    <div class="r1"><span class="tile" style="background:var(--sky)"><svg><use href="#i-pc"/></svg></span><span class="chip g12">1–2 年級</span></div>
+    <strong>寵物的新電腦</strong>
+    <div class="stars" aria-label="3 顆星"><svg class="st"><use href="#star"/></svg><svg class="st"><use href="#star"/></svg><svg class="st"><use href="#star"/></svg></div>
+  </button>
+  <button class="lv clay" style="left:828px;top:118px">
+    <div class="r1"><span class="tile" style="background:var(--butter)"><svg><use href="#i-clock"/></svg></span><span class="chip g12">1–2 年級</span></div>
+    <strong>寵物作息表</strong>
+    <div class="stars" aria-label="2 顆星"><svg class="st"><use href="#star"/></svg><svg class="st"><use href="#star"/></svg><svg class="st off"><use href="#star"/></svg></div>
+  </button>
+  <button class="lv clay" style="left:1094px;top:118px">
+    <div class="r1"><span class="tile" style="background:var(--bad-soft)"><svg><use href="#i-msg"/></svg></span><span class="chip g34">3–4 年級</span></div>
+    <strong>寵物收到怪訊息</strong>
+    <div class="stars"><span class="new">還沒玩・去挑戰 ›</span></div>
+  </button>
+  <button class="lv clay" style="left:562px;top:284px">
+    <div class="r1"><span class="tile" style="background:var(--lilac)"><svg><use href="#i-ai"/></svg></span><span class="chip g34">3–4 年級</span></div>
+    <strong>寵物的 AI 作業</strong>
+    <div class="stars"><span class="new">還沒玩・去挑戰 ›</span></div>
+  </button>
+  <button class="lv clay" style="left:828px;top:284px">
+    <div class="r1"><span class="tile" style="background:#FFF3D6"><svg><use href="#i-folder"/></svg></span><span class="chip g14">1–4 年級</span></div>
+    <strong>寵物房間大整理</strong>
+    <div class="stars" aria-label="3 顆星"><svg class="st"><use href="#star"/></svg><svg class="st"><use href="#star"/></svg><svg class="st"><use href="#star"/></svg></div>
+  </button>
+  <button class="lv clay" style="left:1094px;top:284px">
+    <div class="r1"><span class="tile" style="background:var(--mint)"><svg><use href="#i-shield"/></svg></span><span class="chip g34">3–4 年級</span></div>
+    <strong>寵物警察訓練</strong>
+    <div class="stars"><span class="new">還沒玩・去挑戰 ›</span></div>
+  </button>
+
+  <!-- 衣櫃 -->
+  <div class="abs clay" style="left:562px;top:456px;width:782px;height:184px;padding:12px 18px">
+    <div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px;font-weight:900">衣櫃</span><span style="font-size:16px;font-weight:700;color:var(--ink2)">點一下就能幫小雲換上</span></div>
+    <button class="wear clay on" style="left:18px">
+      <span class="pic"><svg width="78" height="78" viewBox="0 0 80 80"><use href="#w-scarf"/></svg></span>
+      <span><b>圍巾</b><span class="tg" style="background:var(--ok);color:#fff">✓ 穿著中</span></span>
+    </button>
+    <button class="wear clay" style="left:272px">
+      <span class="pic" style="background:var(--lilac)"><svg width="78" height="78" viewBox="0 0 80 80"><use href="#w-hat"/></svg></span>
+      <span><b>帽子</b><span class="tg" style="background:var(--lilac);color:var(--ink)">已解鎖・試穿</span></span>
+    </button>
+    <button class="wear clay lock" style="left:526px" aria-disabled="true">
+      <span class="pic" style="background:#E3DAE7;position:relative"><svg width="78" height="78" viewBox="0 0 80 80" style="opacity:.35;filter:grayscale(1)"><use href="#w-glass"/></svg><svg class="ico" style="position:absolute;color:#5C4870;width:32px;height:32px" viewBox="0 0 24 24"><use href="#i-lock"/></svg></span>
+      <span><b style="color:var(--ink2)">眼鏡</b><span class="tg" style="background:#fff;color:var(--ink2);border:2px solid #D4C6DA">🔒 再過 2 關</span></span>
+    </button>
+  </div>
+</section>
+
+<!-- ========== ③ 寵物的新電腦 ========== -->
+<section class="scr" aria-label="遊戲中：寵物的新電腦">
+  <header class="top">
+    <div class="slot l"><a class="btn" href="../../index.html">🏠 首頁</a></div>
+    <div class="mid"><span class="island"><svg><use href="#isl"/></svg>小常識島</span>寵物的新電腦 <span class="chip g12">1–2 年級</span></div>
+    <div class="slot"><div class="prog">第 <span class="num">2</span> 題／共 <span class="num">5</span> 題<div class="dots"><i class="done"></i><i class="now"></i><i></i><i></i><i></i></div></div></div>
+  </header>
+
+  <div class="abs clay" style="left:24px;top:82px;width:936px;height:64px;display:flex;align-items:center;padding:0 22px;border-radius:20px">
+    <p class="bpmf" style="margin:0;font-size:30px">寵物買了新電腦！請你幫牠找出滑鼠。</p>
+  </div>
+
+  <div class="abs clay" id="desk" style="left:24px;top:160px;width:936px;height:480px;overflow:hidden;padding:0">
+    <svg width="930" height="474" viewBox="0 0 930 474" role="group" aria-label="書桌：點一下你覺得是滑鼠的東西">
+      <rect width="930" height="390" fill="#EEF3FB"/>
+      <g fill="#E1EAF8"><circle cx="620" cy="200" r="6"/><circle cx="700" cy="240" r="6"/><circle cx="30" cy="250" r="6"/></g>
+      <rect y="390" width="930" height="84" fill="#F2DCC4"/><path d="M0 420h930M0 448h930" stroke="#E6C7A6" stroke-width="2"/>
+      <!-- 書桌 -->
+      <path d="M70 296H740L772 344H38Z" fill="#E8B37E" stroke="#9A6236" stroke-width="3.5" stroke-linejoin="round"/>
+      <rect x="38" y="344" width="734" height="24" rx="4" fill="#D69A62" stroke="#9A6236" stroke-width="3.5"/>
+      <rect x="60" y="368" width="22" height="92" fill="#D69A62" stroke="#9A6236" stroke-width="3.5"/><rect x="728" y="368" width="22" height="92" fill="#D69A62" stroke="#9A6236" stroke-width="3.5"/>
+
+      <!-- 主機 -->
+      <g class="dev" tabindex="0" role="button" aria-label="主機" data-k="no">
+        <rect class="hl" x="66" y="128" width="136" height="200" rx="18" fill="none" stroke="#6A45C9" stroke-width="4" stroke-dasharray="10 7"/>
+        <rect x="80" y="140" width="108" height="176" rx="14" fill="#DCDDEB" stroke="#4E5274" stroke-width="4"/>
+        <rect x="94" y="156" width="80" height="12" rx="6" fill="#B9BCD3"/>
+        <circle cx="134" cy="196" r="11" fill="#fff" stroke="#4E5274" stroke-width="3.5"/><path d="M134 189v7" stroke="#4E5274" stroke-width="3" stroke-linecap="round"/>
+        <path d="M100 236h68M100 250h68M100 264h68" stroke="#B9BCD3" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="170" cy="300" r="4" fill="#3FB27A"/>
+      </g>
+      <!-- 螢幕 -->
+      <g class="dev" tabindex="0" role="button" aria-label="螢幕" data-k="no">
+        <rect class="hl" x="232" y="88" width="320" height="236" rx="20" fill="none" stroke="#6A45C9" stroke-width="4" stroke-dasharray="10 7"/>
+        <rect x="244" y="100" width="296" height="186" rx="18" fill="#4A4F72" stroke="#2E3250" stroke-width="4"/>
+        <rect x="258" y="114" width="268" height="148" rx="10" fill="#CFE6FA"/>
+        <ellipse cx="392" cy="252" rx="120" ry="20" fill="#9BD7F2"/><path d="M310 250 Q392 176 474 250Z" fill="#7CC79A"/><circle cx="470" cy="148" r="18" fill="#FFD65E"/>
+        <circle cx="516" cy="274" r="3.5" fill="#5BD08F"/>
+        <rect x="378" y="286" width="28" height="20" fill="#4A4F72" stroke="#2E3250" stroke-width="3.5"/>
+        <ellipse cx="392" cy="310" rx="50" ry="8" fill="#4A4F72" stroke="#2E3250" stroke-width="3.5"/>
+      </g>
+      <!-- 鍵盤 -->
+      <g class="dev" tabindex="0" role="button" aria-label="鍵盤" data-k="no">
+        <rect class="hl" x="238" y="306" width="300" height="48" rx="14" fill="none" stroke="#6A45C9" stroke-width="4" stroke-dasharray="10 7"/>
+        <rect x="250" y="316" width="276" height="28" rx="7" fill="#ECEAF5" stroke="#4E5274" stroke-width="3.5"/>
+        <g fill="#fff" stroke="#9EA2BF" stroke-width="1.6">
+          <rect x="258" y="321" width="20" height="8" rx="2"/><rect x="282" y="321" width="20" height="8" rx="2"/><rect x="306" y="321" width="20" height="8" rx="2"/><rect x="330" y="321" width="20" height="8" rx="2"/><rect x="354" y="321" width="20" height="8" rx="2"/><rect x="378" y="321" width="20" height="8" rx="2"/><rect x="402" y="321" width="20" height="8" rx="2"/><rect x="426" y="321" width="20" height="8" rx="2"/><rect x="450" y="321" width="20" height="8" rx="2"/><rect x="474" y="321" width="20" height="8" rx="2"/><rect x="498" y="321" width="20" height="8" rx="2"/>
+          <rect x="266" y="332" width="20" height="8" rx="2"/><rect x="290" y="332" width="20" height="8" rx="2"/><rect x="314" y="332" width="140" height="8" rx="2"/><rect x="458" y="332" width="20" height="8" rx="2"/><rect x="482" y="332" width="30" height="8" rx="2"/>
+        </g>
+      </g>
+      <!-- 滑鼠 -->
+      <g class="dev" tabindex="0" role="button" aria-label="滑鼠" data-k="ok">
+        <rect class="hl" x="566" y="290" width="76" height="62" rx="16" fill="none" stroke="#6A45C9" stroke-width="4" stroke-dasharray="10 7"/>
+        <path d="M604 306 C606 280 560 286 546 270" fill="none" stroke="#7A7E9C" stroke-width="3.5" stroke-linecap="round"/>
+        <rect x="583" y="304" width="42" height="40" rx="20" fill="#F2F1F8" stroke="#4E5274" stroke-width="3.5"/>
+        <path d="M604 305v14M584 320h40" stroke="#4E5274" stroke-width="2.6"/>
+        <rect x="600" y="309" width="8" height="9" rx="4" fill="#6A45C9"/>
+      </g>
+      <!-- 耳機 -->
+      <g class="dev" tabindex="0" role="button" aria-label="耳機" data-k="no">
+        <rect class="hl" x="652" y="232" width="104" height="100" rx="18" fill="none" stroke="#6A45C9" stroke-width="4" stroke-dasharray="10 7"/>
+        <path d="M672 300 C668 236 740 236 736 300" fill="none" stroke="#6A45C9" stroke-width="9" stroke-linecap="round"/>
+        <rect x="660" y="290" width="26" height="36" rx="11" fill="#9C85E6" stroke="#4A2C9E" stroke-width="3.5"/>
+        <rect x="722" y="290" width="26" height="36" rx="11" fill="#9C85E6" stroke="#4A2C9E" stroke-width="3.5"/>
+      </g>
+      <!-- 題目泡泡 -->
+      <path d="M560 22h340a20 20 0 0 1 20 20v62a20 20 0 0 1-20 20H864l-14 26-8-26H560a20 20 0 0 1-20-20V42a20 20 0 0 1 20-20z" fill="#FFF9F2" stroke="#FF8F3F" stroke-width="5" stroke-linejoin="round"/>
+    </svg>
+    <p class="bpmf abs" style="left:560px;top:32px;width:360px;margin:0;font-size:42px;text-align:center">滑鼠在哪裡？</p>
+    <div class="pet bob" style="left:760px;top:262px;width:176px;height:186px" data-pet="bunny" data-stage="1" data-mood="normal" data-wear="scarf" data-spark="1"></div>
+    <div class="abs" style="left:18px;top:14px;font-size:16px;font-weight:700;color:var(--ink2);background:rgba(255,249,242,.92);padding:4px 12px;border-radius:99px">點一下桌上的東西</div>
+  </div>
+
+  <!-- 回饋小狀態 -->
+  <div class="abs" style="left:982px;top:80px;font-size:15px;font-weight:900;color:var(--ink2)">回饋狀態預覽（點桌上東西會亮）</div>
+  <div class="fb clay ok" id="fbOk" style="top:106px;height:256px">
+    <span class="tagk">答對時</span>
+    <div class="hd"><span class="mk" style="background:var(--ok);color:#fff">✓</span><span style="color:var(--ok)">對！是滑鼠</span></div>
+    <div class="pet" style="left:96px;top:58px;width:150px;height:140px" data-pet="bunny" data-stage="1" data-mood="happy" data-wear="scarf" data-spark="1"></div>
+    <p class="bpmf abs" style="left:16px;top:196px;margin:0;font-size:24px;width:330px;text-align:center">答對了！寵物好開心。</p>
+  </div>
+  <div class="fb clay no" id="fbNo" style="top:384px;height:256px">
+    <span class="tagk">答錯時（還能繼續）</span>
+    <div class="hd"><span class="mk" style="background:var(--bad);color:#fff">✗</span><span style="color:var(--bad)">這是耳機喔</span></div>
+    <div class="pet" style="left:96px;top:58px;width:150px;height:140px" data-pet="bunny" data-stage="1" data-mood="worried" data-wear="scarf" data-sweat="1"></div>
+    <p class="bpmf abs" style="left:16px;top:196px;margin:0;font-size:24px;width:330px;text-align:center">別擔心，再想想看！</p>
+  </div>
+</section>
+
+<!-- ========== ④ 寵物收到怪訊息 ========== -->
+<section class="scr" aria-label="遊戲中：寵物收到怪訊息">
+  <header class="top">
+    <div class="slot l"><a class="btn" href="../../index.html">🏠 首頁</a></div>
+    <div class="mid"><span class="island"><svg><use href="#isl"/></svg>小常識島</span>寵物收到怪訊息 <span class="chip g34">3–4 年級</span></div>
+    <div class="slot"><div class="prog">第 <span class="num">3</span> 題／共 <span class="num">6</span> 題<div class="dots"><i class="done"></i><i class="done"></i><i class="now"></i><i></i><i></i><i></i></div></div></div>
+  </header>
+
+  <!-- 聊天視窗 -->
+  <div class="abs clay" style="left:24px;top:84px;width:616px;height:436px;padding:0;overflow:hidden;border-color:#CFC2EC">
+    <div style="height:46px;background:var(--violet);display:flex;align-items:center;justify-content:space-between;padding:0 18px;color:#fff;font-weight:900;font-size:18px">
+      <span>‹ 訊息</span><span style="letter-spacing:4px">● ● ●</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 18px;background:#F5F0FD;border-bottom:2px solid #E3D9FB">
+      <svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#FFE1CB" stroke="#C75F17" stroke-width="2.5"/><rect x="13" y="22" width="22" height="15" rx="2" fill="#FF8F3F" stroke="#C75F17" stroke-width="2"/><rect x="11" y="17" width="26" height="7" rx="2" fill="#FFB872" stroke="#C75F17" stroke-width="2"/><path d="M24 17v20" stroke="#FFF0C4" stroke-width="3"/><path d="M24 17c-4-7-10-3-6 0M24 17c4-7 10-3 6 0" fill="none" stroke="#C75F17" stroke-width="2"/></svg>
+      <div><div style="font-size:21px;font-weight:900">抽獎小幫手</div><div style="font-size:15px;font-weight:700;color:var(--ink2)">不在你的好友名單裡</div></div>
+    </div>
+    <div style="padding:14px 18px;height:262px;background:#F7F4FB">
+      <div style="text-align:center;font-size:14px;font-weight:700;color:var(--ink2);margin-bottom:10px">今天 下午 4:12</div>
+      <div style="display:flex;gap:10px;align-items:flex-end">
+        <div style="max-width:440px;background:#fff;border:3px solid #E3D9FB;border-radius:22px 22px 22px 6px;padding:14px 18px;font-size:23px;font-weight:700;line-height:1.6;box-shadow:0 4px 0 #E8E0F7">
+          恭喜你中獎了！把你的帳號密碼傳給我，就送你 <span class="num" style="font-size:26px">1000</span> 點遊戲幣
+        </div>
+        <span style="font-size:14px;font-weight:700;color:var(--ink2)">4:12</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:0 18px;height:64px;border-top:2px solid #E3D9FB;background:#fff">
+      <div style="flex:1;height:44px;border-radius:99px;background:#F1EDF7;border:2px solid #DCD3EA;display:flex;align-items:center;padding:0 16px;font-size:16px;font-weight:700;color:var(--ink2)">先想想看要怎麼回應……</div>
+      <div style="width:44px;height:44px;border-radius:50%;background:#DCD3EA;display:grid;place-items:center" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M3 11 21 3l-6 18-3-7z" fill="#5C4870"/></svg></div>
+    </div>
+  </div>
+
+  <!-- 給老師 -->
+  <div class="abs clay" style="left:24px;top:540px;width:616px;height:98px;padding:14px 18px;background:#F6F2FC;border-color:#DCD0F2;box-shadow:inset 0 3px 0 #fff,0 6px 0 #E3D9F5">
+    <span class="chip" style="background:var(--violet);color:#fff">給老師看</span>
+    <div style="font-size:16px;font-weight:700;color:var(--ink2);margin-top:8px;line-height:1.5">這關練什麼：辨識網路詐騙、保護個資｜資E12、資E7</div>
+  </div>
+
+  <!-- 寵物冒問號 -->
+  <div class="abs clay" style="left:660px;top:100px;width:236px;padding:12px 14px;border-radius:22px;font-size:19px;font-weight:900;text-align:center">咦？他怎麼會<br>要我的密碼？</div>
+  <div class="pet bob" style="left:654px;top:236px;width:250px;height:270px" data-pet="bunny" data-stage="1" data-mood="worried" data-wear="scarf" data-q="1"></div>
+
+  <!-- 選項 -->
+  <div class="abs" style="left:916px;top:84px;width:426px;font-size:24px;font-weight:900">小雲該怎麼做？<span style="font-size:16px;font-weight:700;color:var(--ink2)">選一個</span></div>
+  <button class="opt clay" style="top:130px">
+    <span class="let">A</span>
+    <svg class="oi" viewBox="0 0 40 40" aria-hidden="true"><rect x="8" y="17" width="24" height="17" rx="4" fill="#FFE1CB" stroke="#3B2350" stroke-width="2.6"/><path d="M13 17v-4a7 7 0 0 1 14 0v4" fill="none" stroke="#3B2350" stroke-width="2.6"/><circle cx="20" cy="25" r="2.6" fill="#3B2350"/></svg>
+    <span>傳密碼給他，拿遊戲幣</span>
+  </button>
+  <button class="opt clay" style="top:256px">
+    <span class="let">B</span>
+    <svg class="oi" viewBox="0 0 40 40" aria-hidden="true"><circle cx="14" cy="13" r="6" fill="#DDF3E6" stroke="#3B2350" stroke-width="2.6"/><circle cx="27" cy="16" r="4.5" fill="#FFF0C4" stroke="#3B2350" stroke-width="2.4"/><path d="M4 33c0-7 5-11 10-11s10 4 10 11M21 33c0-5 3-9 6-9s7 3 7 9" fill="none" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/></svg>
+    <span>不回覆，告訴爸媽或老師</span>
+  </button>
+  <button class="opt clay" style="top:382px">
+    <span class="let">C</span>
+    <svg class="oi" viewBox="0 0 40 40" aria-hidden="true"><path d="M6 9a4 4 0 0 1 4-4h20a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H16l-7 6v-6H10a4 4 0 0 1-4-4z" fill="#E3D9FB" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/><path d="M16.5 12.5a3.6 3.6 0 1 1 5 3.3c-1.2.6-1.5 1.3-1.5 2.4" fill="none" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/><circle cx="20" cy="22" r="1.7" fill="#3B2350"/></svg>
+    <span>先問他是誰再說</span>
+  </button>
+  <button class="btn" style="position:absolute;left:1186px;top:570px;height:62px;padding:0 22px;font-size:22px;background:var(--butter);border-color:#E3BE5A">💡 提示</button>
+</section>
+
+<!-- ========== ⑤ 結算 ========== -->
+<section class="scr" aria-label="結算：吃點心">
+  <header class="top">
+    <div class="slot l"></div>
+    <div class="mid"><span class="island"><svg><use href="#isl"/></svg>小常識島</span>過關了！<span class="chip g34">寵物收到怪訊息</span></div>
+    <div class="slot"></div>
+  </header>
+
+  <div class="abs clay" style="left:24px;top:84px;width:600px;height:474px;padding:0;overflow:hidden">
+    <div class="bigst" style="display:flex;justify-content:center;gap:10px;margin-top:14px" aria-label="得到 3 顆星">
+      <svg class="st" viewBox="0 0 24 24"><use href="#star"/></svg><svg class="st" viewBox="0 0 24 24" style="transform:translateY(-12px)"><use href="#star"/></svg><svg class="st" viewBox="0 0 24 24"><use href="#star"/></svg>
+    </div>
+    <svg class="abs" style="left:0;top:300px" width="600" height="110" viewBox="0 0 600 110" aria-hidden="true">
+      <ellipse cx="300" cy="62" rx="230" ry="36" fill="#FFE1CB" stroke="#F2B88E" stroke-width="4"/>
+      <path d="M110 52h380M150 80h300" stroke="#FFF0E2" stroke-width="10" stroke-linecap="round"/>
+      <ellipse cx="440" cy="52" rx="44" ry="14" fill="#FFF9F2" stroke="#D7BFAA" stroke-width="3"/>
+      <use href="#ck" x="414" y="22" width="30" height="30"/><use href="#ck" x="436" y="26" width="30" height="30"/>
+    </svg>
+    <div class="pet" style="left:150px;top:96px;width:300px;height:290px" data-pet="bunny" data-stage="1" data-mood="happy" data-wear="scarf" data-snack="1" data-spark="1"></div>
+    <p class="bpmf abs" style="left:0;top:404px;width:600px;margin:0;font-size:32px;text-align:center">寵物吃到點心，好開心！</p>
+  </div>
+
+  <!-- 成長 -->
+  <div class="abs clay" style="left:644px;top:84px;width:698px;height:228px;padding:16px 22px">
+    <div style="display:flex;align-items:baseline;gap:14px">
+      <span style="font-size:22px;font-weight:900">小雲長大中</span>
+      <span style="font-size:20px;font-weight:900;color:var(--ink2)">點心 <span class="num">5／8</span> → <span class="num" style="color:var(--orange-d);font-size:26px">6／8</span></span>
+      <span class="chip g12" style="margin-left:auto">+1 點心</span>
+    </div>
+    <div style="display:flex;gap:12px;margin:12px 0 10px" aria-label="點心從 5 個變成 6 個，共 8 格">
+      <span class="slotc f"><svg viewBox="0 0 48 48"><use href="#ck"/></svg></span><span class="slotc f"><svg viewBox="0 0 48 48"><use href="#ck"/></svg></span><span class="slotc f"><svg viewBox="0 0 48 48"><use href="#ck"/></svg></span><span class="slotc f"><svg viewBox="0 0 48 48"><use href="#ck"/></svg></span><span class="slotc f"><svg viewBox="0 0 48 48"><use href="#ck"/></svg></span>
+      <span class="slotc f grow" style="box-shadow:0 0 0 5px #FFE1CB"><svg viewBox="0 0 48 48"><use href="#ck"/></svg></span>
+      <span class="slotc"></span><span class="slotc"></span>
+    </div>
+    <div class="gbar"><i></i></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
+      <p class="bpmf" style="margin:0;font-size:28px">再過兩關，就能拿到新眼鏡！</p>
+      <svg width="52" height="52" viewBox="0 0 80 80" aria-hidden="true" style="margin-left:auto;opacity:.9"><use href="#w-scarf"/></svg>
+    </div>
+  </div>
+
+  <!-- 回顧 -->
+  <div class="abs clay" style="left:644px;top:330px;width:698px;height:228px;padding:16px 22px">
+    <div style="display:flex;align-items:center;gap:16px">
+      <span style="font-size:22px;font-weight:900">這關回顧</span>
+      <span style="font-size:22px;font-weight:900">答對 <span class="num" style="font-size:30px;color:var(--ok)">5／6</span></span>
+      <div style="display:flex;gap:6px;margin-left:auto" aria-label="第 1 到 3 題、5、6 題答對，第 4 題答錯">
+        <span class="mk" style="width:36px;height:36px;font-size:20px;background:var(--ok-soft);color:var(--ok);border:2px solid #9AD3B3">✓</span><span class="mk" style="width:36px;height:36px;font-size:20px;background:var(--ok-soft);color:var(--ok);border:2px solid #9AD3B3">✓</span><span class="mk" style="width:36px;height:36px;font-size:20px;background:var(--ok-soft);color:var(--ok);border:2px solid #9AD3B3">✓</span><span class="mk" style="width:36px;height:36px;font-size:20px;background:var(--bad-soft);color:var(--bad);border:2px solid #F1BFA7">✗</span><span class="mk" style="width:36px;height:36px;font-size:20px;background:var(--ok-soft);color:var(--ok);border:2px solid #9AD3B3">✓</span><span class="mk" style="width:36px;height:36px;font-size:20px;background:var(--ok-soft);color:var(--ok);border:2px solid #9AD3B3">✓</span>
+      </div>
+    </div>
+    <div style="margin-top:16px;font-size:17px;font-weight:900;color:var(--ink2)">今天學到</div>
+    <div style="margin-top:6px;background:var(--butter);border:2px solid #F0D488;border-radius:18px;padding:14px 18px;display:flex;align-items:center;gap:14px">
+      <svg width="44" height="44" viewBox="0 0 40 40" aria-hidden="true"><use href="#i-shield"/></svg>
+      <span style="font-size:28px;font-weight:900">不認識的人要密碼，一定不給</span>
+    </div>
+    <div style="margin-top:10px;font-size:15px;font-weight:700;color:var(--ink2)">第 4 題要再練習：陌生人傳來的「領獎連結」不要點</div>
+  </div>
+
+  <!-- 按鈕列 -->
+  <div class="abs" style="left:24px;top:576px;width:1318px;display:flex;gap:16px;justify-content:center">
+    <button class="btn or" style="height:62px;font-size:24px;padding:0 30px">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" fill="none" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>交成績給老師</button>
+    <button class="btn" style="height:62px;font-size:22px">再玩一次</button>
+    <button class="btn vi" style="height:62px;font-size:22px">回寵物小屋</button>
+    <a class="btn" href="../../index.html" style="height:62px;font-size:22px">🏠 首頁</a>
+  </div>
+</section>
+
+<!-- ========== ⑥ 角色表＋色票 ========== -->
+<section class="scr" aria-label="角色表與色票">
+  <header class="top">
+    <div class="slot l"><span style="font-size:15px;font-weight:700;color:var(--ink2)">設計規格頁（不是遊戲畫面）</span></div>
+    <div class="mid"><span class="island"><svg><use href="#isl"/></svg>小常識島</span>4 隻寵物角色表</div>
+    <div class="slot"></div>
+  </header>
+  <table class="sheet" id="sheet">
+    <thead>
+      <tr><th></th><th colspan="3" class="grp">成長階段（表情：普通）</th><th style="width:12px"></th><th colspan="3" class="grp">表情（小朋友階段）</th><th style="width:12px"></th><th colspan="3" class="grp">服裝（疊在寵物身上）</th></tr>
+      <tr><th></th><th>寶寶</th><th>小朋友</th><th>大朋友</th><th></th><th>開心</th><th>普通</th><th>驚訝／擔心</th><th></th><th>圍巾</th><th>帽子</th><th>眼鏡</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <div class="abs" style="left:24px;top:596px;width:1318px;display:flex;gap:22px;align-items:center">
+    <span style="font-size:15px;font-weight:900">意思色（6 關共用）</span>
+    <div class="sw"><i style="background:#FF8F3F"></i><span><b>重點・按鈕</b>#FF8F3F＋深字 6.0</span></div>
+    <div class="sw"><i style="background:#6A45C9"></i><span><b>導覽・資訊</b>#6A45C9＋白字 6.4</span></div>
+    <div class="sw"><i style="background:#186B41"></i><span><b>正確 ✓</b>#186B41</span></div>
+    <div class="sw"><i style="background:#B4372B"></i><span><b>錯誤 ✗</b>#B4372B 5.7</span></div>
+    <div class="sw"><i style="background:#3B2350"></i><span><b>字色</b>#3B2350 13.0</span></div>
+    <div class="sw"><i style="background:#FDEFE3"></i><span><b>底色</b>#FDEFE3</span></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+/* ========== 寵物產生器（全部 inline SVG，同一套參數畫 4 隻 × 3 階段 × 表情 × 服裝） ========== */
+const E=(cx,cy,rx,ry,f,x='')=>`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${f}" ${x}/>`;
+function blob(list,fill,line,w=3.5){ // 先畫一層外框色、再疊填色：黏土一體成形的邊
+  return list.map(c=>E(c[0],c[1],c[2]+w,(c[3]??c[2])+w,line)).join('')+list.map(c=>E(c[0],c[1],c[2],c[3]??c[2],fill)).join('');
+}
+const MOUTH='#B8405E';
+function face(x,y,s,mood,col,o={}){
+  const dx=13*s;let g='';
+  [x-dx,x+dx].forEach((ex,i)=>{
+    if(mood==='happy'){g+=`<path d="M${ex-5.5*s} ${y+2*s} Q${ex} ${y-6.5*s} ${ex+5.5*s} ${y+2*s}" fill="none" stroke="${col}" stroke-width="${3.6*s}" stroke-linecap="round"/>`;}
+    else if(mood==='worried'||mood==='surprised'){
+      g+=E(ex,y,5.2*s,6.6*s,col)+`<circle cx="${ex+1.7*s}" cy="${y-2.5*s}" r="${1.9*s}" fill="#fff"/>`;
+      if(mood==='worried'){const a=i?[ex-5*s,y-13*s,ex+6*s,y-9.5*s]:[ex-6*s,y-9.5*s,ex+5*s,y-13*s];
+        g+=`<path d="M${a[0]} ${a[1]} L${a[2]} ${a[3]}" stroke="${col}" stroke-width="${2.6*s}" stroke-linecap="round"/>`;}
+    } else {g+=E(ex,y,4.5*s,5.5*s,col)+`<circle cx="${ex+1.5*s}" cy="${y-2*s}" r="${1.7*s}" fill="#fff"/>`;}
+  });
+  if(o.cheek){ if(o.pixel){g+=`<rect x="${x-dx-11*s}" y="${y+5*s}" width="${7*s}" height="${4*s}" fill="${o.cheek}"/><rect x="${x+dx+4*s}" y="${y+5*s}" width="${7*s}" height="${4*s}" fill="${o.cheek}"/>`;}
+    else g+=E(x-dx-6*s,y+7*s,5.5*s,3.2*s,o.cheek,'opacity=".6"')+E(x+dx+6*s,y+7*s,5.5*s,3.2*s,o.cheek,'opacity=".6"');}
+  if(o.noMouth) return g;
+  const my=y+11*s, mf=o.mouthFill||MOUTH;
+  if(mood==='happy') g+=`<path d="M${x-7*s} ${my-1.5*s} Q${x} ${my+11*s} ${x+7*s} ${my-1.5*s} Z" fill="${mf}" stroke="${col}" stroke-width="${2*s}" stroke-linejoin="round"/>`;
+  else if(mood==='surprised') g+=E(x,my+1.5*s,3.4*s,4.4*s,mf);
+  else if(mood==='worried') g+=`<path d="M${x-6*s} ${my+2.5*s} Q${x-3*s} ${my-1*s} ${x} ${my+2.5*s} Q${x+3*s} ${my+6*s} ${x+6*s} ${my+2.5*s}" fill="none" stroke="${col}" stroke-width="${2.6*s}" stroke-linecap="round"/>`;
+  else g+=`<path d="M${x-6*s} ${my} Q${x-3*s} ${my+4.5*s} ${x} ${my} Q${x+3*s} ${my+4.5*s} ${x+6*s} ${my}" fill="none" stroke="${col}" stroke-width="${2.6*s}" stroke-linecap="round"/>`;
+  return g;
+}
+function eggshell(fill,line){return `<path d="M40 158 L52 146 L64 160 L78 145 L92 160 L106 145 L120 160 L134 146 L148 160 L160 150 Q164 197 100 197 Q36 197 40 158Z" fill="${fill}" stroke="${line}" stroke-width="3.5" stroke-linejoin="round"/><path d="M58 178 Q70 186 84 182" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>`;}
+
+/* --- 雲朵兔：雲團身體＋耳尖 Wi-Fi 弧線（階段越大弧線越多） --- */
+function bunny(st,mood){
+  const F='#F3F5FF',L='#8D93C9';
+  const P=[
+   {body:[[100,150,42],[66,162,24],[134,162,24],[82,124,27],[118,124,27],[100,174,26]],head:[],ears:[[84,112,-14,38,15,1],[116,112,14,38,15,1]],arms:[],feet:[],f:[100,144,1.12],nk:[100,176,70],top:[100,104,62]},
+   {body:[[100,164,30],[78,172,18],[122,172,18]],head:[[100,118,36],[72,124,20],[128,124,20],[100,98,26]],ears:[[86,94,-10,52,16,2],[114,94,10,52,16,2]],arms:[[66,160,11],[134,160,11]],feet:[[84,192,12,6],[116,192,12,6]],f:[100,122,1],nk:[100,150,66],top:[100,80,62]},
+   {body:[[100,156,36],[72,164,22],[128,164,22],[100,178,22]],head:[[100,96,34],[74,102,19],[126,102,19],[100,76,23]],ears:[[88,76,-8,64,16,3],[112,76,8,64,16,3]],arms:[[62,148,12],[138,148,12]],feet:[[82,194,13,6],[118,194,13,6]],f:[100,102,.95],nk:[100,128,62],top:[100,60,58]}
+  ][st];
+  let g='';
+  P.ears.forEach(([bx,by,t,Ln,W,n])=>{
+    let e=E(bx,by-Ln/2,W/2+3.5,Ln/2+3.5,L)+E(bx,by-Ln/2,W/2,Ln/2,F)+E(bx,by-Ln/2+5,W/2-4.5,Ln/2-10,'#F8C9D8');
+    const cy0=by-Ln+Ln*.36;
+    for(let k=1;k<=n;k++){const r=2.5+k*3.8;e+=`<path d="M${bx-r*.72} ${cy0-r*.66} A${r} ${r} 0 0 1 ${bx+r*.72} ${cy0-r*.66}" fill="none" stroke="#2F86C8" stroke-width="2.6" stroke-linecap="round"/>`;}
+    e+=`<circle cx="${bx}" cy="${cy0}" r="2.3" fill="#2F86C8"/>`;
+    g+=`<g transform="rotate(${t} ${bx} ${by})">${e}</g>`;
+  });
+  g+=blob(P.feet,F,L)+blob(P.body.concat(P.arms),F,L)+blob(P.head,F,L);
+  g+=E(P.f[0]-20,P.f[1]-26,10,6,'#fff','opacity=".9"');
+  g+=face(P.f[0],P.f[1],P.f[2],mood,'#3B2350',{cheek:'#F7A0B8'});
+  return {g,a:P};
+}
+/* --- 鍵盤龜：背殼是一格一格的按鍵，長大按鍵排數變多 --- */
+function turtle(st,mood){
+  const F='#A6DDB0',L='#3F8A60',SH='#5AA987',SL='#2F6B50';
+  const P=[
+   {sx:122,by:180,rx:54,ry:60,h:[64,140,33],neck:null,feet:[[90,184],[152,184]],f:[64,142,1.05],nk:[66,172,44],top:[64,112,54],tail:null},
+   {sx:120,by:178,rx:62,ry:70,h:[56,114,30],neck:[64,146,15,24],feet:[[88,184],[154,184]],f:[56,116,.98],nk:[62,144,40],top:[56,90,50],tail:[184,170]},
+   {sx:118,by:178,rx:72,ry:82,h:[46,92,30],neck:[56,134,15,32],feet:[[80,186],[158,186]],f:[46,94,.95],nk:[54,124,38],top:[46,68,50],tail:[192,170]}
+  ][st];
+  let g='';
+  if(P.tail) g+=blob([[P.tail[0],P.tail[1],10,6]],F,L);
+  g+=`<path d="M${P.sx-P.rx} ${P.by} A${P.rx} ${P.ry} 0 0 1 ${P.sx+P.rx} ${P.by} Z" fill="${SH}" stroke="${SL}" stroke-width="4" stroke-linejoin="round"/>`;
+  const kw=17,kh=14,gp=4;let row=0;
+  for(let yc=P.by-P.ry+19;yc<P.by-14;yc+=kh+gp,row++){
+    const dy=(P.by-(yc-kh/2))/P.ry;if(dy>=1)continue;
+    const hw=P.rx*Math.sqrt(1-dy*dy)-7;const n=Math.floor((2*hw+gp)/(kw+gp));if(n<1)continue;
+    const tot=n*kw+(n-1)*gp,x0=P.sx-tot/2;
+    for(let i=0;i<n;i++){const acc=(row===1&&i===Math.floor(n/2));
+      g+=`<rect x="${x0+i*(kw+gp)}" y="${yc-kh/2+2}" width="${kw}" height="${kh}" rx="3.5" fill="${SL}" opacity=".35"/><rect x="${x0+i*(kw+gp)}" y="${yc-kh/2}" width="${kw}" height="${kh}" rx="3.5" fill="${acc?'#FFB648':'#FFF7E6'}" stroke="${SL}" stroke-width="1.8"/>`;}
+  }
+  g+=`<rect x="${P.sx-P.rx-6}" y="${P.by-10}" width="${2*P.rx+12}" height="14" rx="7" fill="#3F8A60" stroke="${SL}" stroke-width="3"/>`;
+  g+=blob(P.feet.map(f=>[f[0],f[1],13,8]),F,L);
+  if(P.neck) g+=blob([P.neck],F,L);
+  g+=blob([[P.h[0],P.h[1],P.h[2]]],F,L);
+  g+=E(P.h[0]-12,P.h[1]-18,8,5,'#fff','opacity=".7"');
+  g+=face(P.f[0],P.f[1],P.f[2],mood,'#24452F',{cheek:'#F4A3A3'});
+  return {g,a:{f:P.f,nk:P.nk,top:P.top}};
+}
+/* --- 螢幕貓：臉是圓角小螢幕（表情是螢幕上的畫素線條），尾巴是電源線＋插頭 --- */
+function cat(st,mood){
+  const B='#FF9E6D',BL='#B65A34',SC='#343A5E',FC='#A9F2D4',BD='#FFB98F';
+  const P=[
+   {h:[100,114,130,100,28],body:[100,180,36,16],stand:false,tail:null,f:[100,112,1.25]},
+   {h:[100,90,112,86,24],body:[100,160,38,30],stand:true,tail:'M134 170 C172 176 180 150 172 126',plug:[172,120],f:[100,88,1.1]},
+   {h:[100,72,108,82,22],body:[100,150,42,40],stand:true,tail:'M138 166 C188 172 192 132 178 104',plug:[178,98],f:[100,70,1.05]}
+  ][st];
+  const [cx,cy,w,h,r]=P.h,tp=cy-h/2;let g='';
+  if(P.tail){g+=`<path d="${P.tail}" fill="none" stroke="#6B6F8F" stroke-width="6" stroke-linecap="round"/>`;
+    const [px,py]=P.plug;g+=`<rect x="${px-9}" y="${py-6}" width="18" height="14" rx="4" fill="#C9CCD9" stroke="#5E627E" stroke-width="2.6"/><path d="M${px-4} ${py-6}v-7M${px+4} ${py-6}v-7" stroke="#5E627E" stroke-width="2.8" stroke-linecap="round"/>`;}
+  g+=E(P.body[0],P.body[1],P.body[2],P.body[3],BD,`stroke="${BL}" stroke-width="4"`);
+  if(st>0) g+=E(P.body[0]-16,P.body[1]+P.body[3]-2,11,7,BD,`stroke="${BL}" stroke-width="3.5"`)+E(P.body[0]+16,P.body[1]+P.body[3]-2,11,7,BD,`stroke="${BL}" stroke-width="3.5"`)+E(P.body[0],P.body[1]+4,P.body[2]*.55,P.body[3]*.55,'#FFD7BD');
+  if(P.stand) g+=`<rect x="${cx-13}" y="${cy+h/2-4}" width="26" height="${P.body[1]-P.body[3]-(cy+h/2)+12}" rx="4" fill="${B}" stroke="${BL}" stroke-width="3.5"/>`;
+  [[1,-1],[-1,1]].forEach(([sg])=>{const ex=cx+sg*(w/2);
+    g+=`<path d="M${ex-sg*6} ${tp+16} L${ex-sg*12} ${tp-22} L${ex-sg*42} ${tp+3}Z" fill="${B}" stroke="${BL}" stroke-width="4" stroke-linejoin="round"/><path d="M${ex-sg*13} ${tp+6} L${ex-sg*15} ${tp-11} L${ex-sg*30} ${tp+3}Z" fill="#FFD9C4"/>`;});
+  g+=`<rect x="${cx-w/2}" y="${tp}" width="${w}" height="${h}" rx="${r}" fill="${B}" stroke="${BL}" stroke-width="4"/>`;
+  g+=`<rect x="${cx-w/2+10}" y="${tp+10}" width="${w-20}" height="${h-26}" rx="${r-9}" fill="${SC}"/>`;
+  g+=`<path d="M${cx-w/2+20} ${tp+30} L${cx-w/2+36} ${tp+16}" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".25"/>`;
+  g+=`<circle cx="${cx+w/2-16}" cy="${tp+h-8}" r="3.4" fill="#5BD08F"/><rect x="${cx-10}" y="${tp+h-10}" width="20" height="4" rx="2" fill="${BL}" opacity=".5"/>`;
+  g+=face(P.f[0],P.f[1]-2,P.f[2],mood,FC,{cheek:'#FF9DB5',pixel:true,mouthFill:'#FF9DB5'});
+  return {g,a:{f:[P.f[0],P.f[1]-2,P.f[2]],nk:[cx,cy+h/2+4,st?36:60],top:[cx,tp+6,64],screen:true}};
+}
+/* --- 燈泡雞：頭頂小燈泡，開心／驚訝（想到點子）時會亮 --- */
+function chick(st,mood,o){
+  const F='#FFD65E',L='#C98A12';
+  const P=[
+   {b:[100,134,44,44],br:9,top:90,f:[100,124,1.1],bk:[100,138],wings:null,feet:null,egg:true,nk:[100,160,90],tail:null},
+   {b:[100,134,46,50],br:12,top:84,f:[100,120,1],bk:[100,134],wings:[[54,142],[146,142]],feet:[[86,186],[114,186]],nk:[100,156,84],tail:null},
+   {b:[100,124,52,60],br:14,top:64,f:[100,104,1],bk:[100,118],wings:[[46,132],[154,132]],feet:[[84,186],[116,186]],nk:[100,144,96],tail:[150,158]}
+  ][st];
+  let g='';
+  if(P.tail) g+=`<g transform="rotate(-20 ${P.tail[0]} ${P.tail[1]})">${blob([[P.tail[0]+10,P.tail[1]-8,8,16],[P.tail[0]+20,P.tail[1]+2,7,14]],'#FFC23A',L)}</g>`;
+  if(P.feet) P.feet.forEach(([x,y])=>{g+=`<path d="M${x} ${y-14}v10M${x} ${y-4}l-7 5M${x} ${y-4}l7 5M${x} ${y-4}v7" stroke="#E87A2E" stroke-width="4" stroke-linecap="round" fill="none"/>`;});
+  g+=blob([[P.b[0],P.b[1],P.b[2],P.b[3]]],F,L);
+  if(P.wings) P.wings.forEach(([x,y],i)=>{const t=i?-22:22;
+    g+=`<g transform="rotate(${t} ${x} ${y})">${E(x,y,15,22,'#FFC23A',`stroke="${L}" stroke-width="3.5"`)}${st===2?`<path d="M${x-4} ${y-10}v8h8v8" fill="none" stroke="${L}" stroke-width="2.2"/><circle cx="${x+4}" cy="${y+6}" r="2.4" fill="${L}"/><circle cx="${x-4}" cy="${y-10}" r="2.4" fill="${L}"/>`:''}</g>`;});
+  g+=E(P.b[0],P.b[1]+P.b[3]*.35,P.b[2]*.6,P.b[3]*.42,'#FFE69A');
+  g+=E(P.b[0]-P.b[2]*.45,P.b[1]-P.b[3]*.5,9,6,'#fff','opacity=".8"');
+  if(P.egg) g+=eggshell('#FFF6E6','#C9B48E');
+  g+=face(P.f[0],P.f[1],P.f[2],mood,'#3B2350',{cheek:'#FF9E8A',noMouth:true});
+  const [bx,by]=P.bk;
+  if(mood==='happy'||mood==='surprised') g+=`<path d="M${bx-9} ${by} L${bx} ${by-7} L${bx+9} ${by}Z" fill="#FF8A3D" stroke="#B8541A" stroke-width="2.4" stroke-linejoin="round"/>${E(bx,by+3,6,4,'#B8433A')}<path d="M${bx-7} ${by+4} L${bx} ${by+12} L${bx+7} ${by+4}Z" fill="#FF8A3D" stroke="#B8541A" stroke-width="2.4" stroke-linejoin="round"/>`;
+  else g+=`<path d="M${bx-8} ${by} L${bx} ${by-6} L${bx+8} ${by} L${bx} ${by+7}Z" fill="#FF8A3D" stroke="#B8541A" stroke-width="2.4" stroke-linejoin="round"/>`;
+  const lit=(mood==='happy'||mood==='surprised');
+  return {g,a:{f:P.f,nk:P.nk,top:[100,P.top+4,64]},bulb:{x:100,top:P.top,r:P.br,lit}};
+}
+function bulbSVG(b,lift){
+  const {x,r,lit}=b,base=b.top-lift,cy=base-r*.8-r*.9;let g='';
+  if(lit){g+=`<circle cx="${x}" cy="${cy}" r="${r+11}" fill="#FFE680" opacity=".55"/>`;
+    for(let k=0;k<7;k++){const a=(-90+(k-3)*32)*Math.PI/180,r1=r+14,r2=r+22;g+=`<path d="M${x+Math.cos(a)*r1} ${cy+Math.sin(a)*r1}L${x+Math.cos(a)*r2} ${cy+Math.sin(a)*r2}" stroke="#D99A00" stroke-width="3" stroke-linecap="round"/>`;}}
+  g+=`<rect x="${x-r*.6}" y="${base-r*.9}" width="${r*1.2}" height="${r*.95}" rx="2" fill="#B5A8C4" stroke="#6F6283" stroke-width="2.4"/><path d="M${x-r*.6} ${base-r*.55}h${r*1.2}" stroke="#6F6283" stroke-width="1.8"/>`;
+  g+=`<circle cx="${x}" cy="${cy}" r="${r}" fill="${lit?'#FFF08A':'#FFF9E6'}" stroke="#C98A12" stroke-width="2.8"/><path d="M${x-r*.35} ${cy+r*.35} L${x-r*.15} ${cy-r*.2} L${x+r*.15} ${cy+r*.1} L${x+r*.35} ${cy-r*.35}" fill="none" stroke="#C98A12" stroke-width="2"/>`;
+  return g;
+}
+/* --- 服裝 --- */
+function scarf([x,y,w]){const h=15;return `<rect x="${x-w/2}" y="${y-h/2}" width="${w}" height="${h}" rx="${h/2}" fill="#E8553D" stroke="#A3321F" stroke-width="2.8"/>`+
+  [-.25,0,.25].map(k=>`<path d="M${x+w*k} ${y-h/2+2}v${h-4}" stroke="#FFE0C8" stroke-width="3.5"/>`).join('')+
+  `<g transform="rotate(-10 ${x+w*.28} ${y})"><rect x="${x+w*.18}" y="${y+2}" width="15" height="28" rx="5" fill="#E8553D" stroke="#A3321F" stroke-width="2.8"/><path d="M${x+w*.18+3} ${y+30}v5M${x+w*.18+7.5} ${y+30}v5M${x+w*.18+12} ${y+30}v5" stroke="#A3321F" stroke-width="2.2" stroke-linecap="round"/></g>`;}
+function hat([x,y,w]){const ww=w*.86,hh=ww*.62;return `<path d="M${x-ww/2} ${y+4} Q${x-ww/2} ${y-hh} ${x} ${y-hh-2} Q${x+ww/2} ${y-hh} ${x+ww/2} ${y+4}Z" fill="#4F7BD9" stroke="#2D4E9A" stroke-width="3"/><path d="M${x-ww*.2} ${y-hh+6} Q${x-ww*.17} ${y-hh/2} ${x-ww*.2} ${y+2}M${x+ww*.2} ${y-hh+6} Q${x+ww*.17} ${y-hh/2} ${x+ww*.2} ${y+2}" stroke="#7FA3EE" stroke-width="3" fill="none"/><rect x="${x-ww/2-4}" y="${y-4}" width="${ww+8}" height="13" rx="6.5" fill="#FFD65E" stroke="#A8670E" stroke-width="2.8"/><circle cx="${x}" cy="${y-hh-4}" r="7.5" fill="#FFF9F2" stroke="#2D4E9A" stroke-width="2.8"/>`;}
+function glasses([x,y,s],dark){const dx=13*s,r=9.5*s,c=dark?'#FFD65E':'#3B2350';return `<circle cx="${x-dx}" cy="${y}" r="${r}" fill="#E8F4FF" fill-opacity=".25" stroke="${c}" stroke-width="${3*s}"/><circle cx="${x+dx}" cy="${y}" r="${r}" fill="#E8F4FF" fill-opacity=".25" stroke="${c}" stroke-width="${3*s}"/><path d="M${x-dx+r} ${y-1} Q${x} ${y-5*s} ${x+dx-r} ${y-1}" stroke="${c}" stroke-width="${2.8*s}" fill="none"/>`;}
+
+function pet(type,st,mood,o={}){
+  const R=type==='bunny'?bunny(st,mood):type==='turtle'?turtle(st,mood):type==='cat'?cat(st,mood):chick(st,mood,o);
+  const a=R.a;let g=R.g;
+  const wear=(o.wear||'').split(',');
+  if(o.egg&&type!=='chick'){const col={bunny:['#E9EEFF','#9AA3D6'],turtle:['#E4F5E8','#7DB892'],cat:['#FFE9DC','#E2A07F']}[type];
+    g=`<g transform="translate(0 -14)">${g}</g>`+eggshell(col[0],col[1]);}
+  if(wear.includes('scarf')) g+=scarf(a.nk);
+  if(wear.includes('glasses')) g+=glasses(a.f,a.screen);
+  if(wear.includes('hat')) g+=hat(a.top);
+  if(R.bulb) g+=bulbSVG(R.bulb,wear.includes('hat')?R.bulb.r+14:0);
+  const [fx,fy,fs]=a.f;
+  if(o.snack){g+=`<use href="#ck" x="${fx+6*fs}" y="${fy+8*fs}" width="${28*fs}" height="${28*fs}"/><circle cx="${fx-14}" cy="${fy+34}" r="2.2" fill="#C98A4A"/><circle cx="${fx+30}" cy="${fy+44}" r="2.6" fill="#C98A4A"/><circle cx="${fx-4}" cy="${fy+46}" r="1.8" fill="#C98A4A"/>`;}
+  if(o.spark){[[28,40,9],[176,58,7],[164,22,5]].forEach(([x,y,r])=>{g+=`<path d="M${x} ${y-r}L${x+r*.3} ${y-r*.3}L${x+r} ${y}L${x+r*.3} ${y+r*.3}L${x} ${y+r}L${x-r*.3} ${y+r*.3}L${x-r} ${y}L${x-r*.3} ${y-r*.3}Z" fill="#FFC233" stroke="#A8670E" stroke-width="1.4"/>`;});}
+  if(o.q){g+=`<g><circle cx="172" cy="34" r="20" fill="#FFF9F2" stroke="#6A45C9" stroke-width="3.5"/><text x="172" y="44" text-anchor="middle" font-family="Baloo 2,Noto Sans TC" font-weight="800" font-size="28" fill="#6A45C9">?</text><circle cx="28" cy="52" r="14" fill="#FFF9F2" stroke="#6A45C9" stroke-width="3"/><text x="28" y="60" text-anchor="middle" font-family="Baloo 2,Noto Sans TC" font-weight="800" font-size="20" fill="#6A45C9">?</text></g>`;}
+  if(o.sweat){g+=`<path d="M164 46 Q172 60 164 64 Q156 60 164 46Z" fill="#9BD7F2" stroke="#2F86C8" stroke-width="2.4"/>`;}
+  const nm={bunny:'雲朵兔',turtle:'鍵盤龜',cat:'螢幕貓',chick:'燈泡雞'}[type],sn=['寶寶','小朋友','大朋友'][st],mn={happy:'開心',normal:'普通',worried:'擔心',surprised:'驚訝'}[mood];
+  return `<svg viewBox="0 0 200 200" role="img" aria-label="${nm}（${sn}）${mn}"><ellipse cx="100" cy="196" rx="58" ry="6" fill="#3B2350" opacity=".10"/>${g}</svg>`;
+}
+function render(root=document){
+  root.querySelectorAll('[data-pet]').forEach(el=>{const d=el.dataset;
+    el.innerHTML=pet(d.pet,+d.stage,d.mood,{egg:d.egg,wear:d.wear,snack:d.snack,spark:d.spark,q:d.q,sweat:d.sweat});});
+}
+/* 角色表 */
+(function(){
+  const rows=[['bunny','雲朵兔','耳尖 Wi-Fi 弧線：寶寶 1 條、小朋友 2 條、大朋友 3 條'],['turtle','鍵盤龜','殼上按鍵排數隨長大變多，正中一顆橘色鍵是記號'],['cat','螢幕貓','臉是小螢幕，表情是螢幕上的線條；長大後多出電源線尾巴'],['chick','燈泡雞','開心或想到點子時燈泡亮；大朋友翅膀有小電路']];
+  const c=(t,s,m,w)=>`<td><div class="cell" data-pet="${t}" data-stage="${s}" data-mood="${m}"${w?` data-wear="${w}"`:''}${s===0&&t!=='chick'?' data-egg="1"':''}></div></td>`;
+  document.querySelector('#sheet tbody').innerHTML=rows.map(([t,n,d])=>`<tr><td class="nm"><b>${n}</b><small>${d}</small></td>${c(t,0,'normal')}${c(t,1,'normal')}${c(t,2,'normal')}<td></td>${c(t,1,'happy')}${c(t,1,'normal')}${c(t,1,t==='chick'?'surprised':'worried')}<td></td>${c(t,1,'normal','scarf')}${c(t,1,'normal','hat')}${c(t,1,'normal','glasses')}</tr>`).join('');
+})();
+render();
+
+/* 分頁 */
+const tabs=[...document.querySelectorAll('.tabs button')],scr=[...document.querySelectorAll('.scr')];
+tabs.forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.t;
+  tabs.forEach((x,j)=>x.setAttribute('aria-selected',j===i));
+  scr.forEach((s,j)=>s.classList.toggle('on',j===i));}));
+/* 領養：選寵物 */
+const picks=[...document.querySelectorAll('.pick')];
+picks.forEach(p=>p.addEventListener('click',()=>{picks.forEach(q=>{q.classList.remove('sel');q.setAttribute('aria-pressed','false');q.querySelector('.badge')?.remove();});
+  p.classList.add('sel');p.setAttribute('aria-pressed','true');p.insertAdjacentHTML('afterbegin','<span class="badge">✓ 選好了</span>');
+  document.querySelector('.chip.g14').textContent='已選：'+p.querySelector('.nm').textContent;}));
+/* 新電腦：點東西 → 對應回饋卡亮起 */
+document.querySelectorAll('.dev').forEach(d=>{const go=()=>{const ok=d.dataset.k==='ok';
+  document.getElementById('fbOk').classList.toggle('flash',ok);document.getElementById('fbNo').classList.toggle('flash',!ok);
+  if(!ok) document.querySelector('#fbNo .hd span:last-child').textContent='這是'+d.getAttribute('aria-label')+'喔';};
+  d.addEventListener('click',go);d.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
+</script>
+</body>
+</html>
