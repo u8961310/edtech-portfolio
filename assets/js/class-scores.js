@@ -17,10 +17,15 @@
   // 關卡代號 → 顯示名稱（跟 island/data.js 的短名一致）
   var UNITS = {
     1: '中文打字', 3: '太空打字', 4: '怪獸冒頭', 11: '英打特攻', 12: '中打特攻',
-    13: '雷射森林', 14: '魔法字彈', 16: '恐龍打字', 23: '打字擂台'
+    13: '雷射森林', 14: '魔法字彈', 16: '恐龍打字', 23: '打字擂台',
+    // 畫畫島（2026-11-21）：lang 填 art；acc 欄放「第幾關」、cpm／min 填 0
+    5: '像素畫家', 18: '魔法畫畫', 24: '調色魔法鍋', 25: '線條小火車', 26: '對稱魔鏡', 27: '小畫家任務局'
   };
   var TIERS = { t1: '初階', t2: '進階', t3: '高階', '-': '—' };
-  var LANGS = { zh: '中打', en: '英打' };
+  var LANGS = { zh: '中打', en: '英打', art: '畫畫' };
+  function isArt(r) { return r && r.lang === 'art'; }
+  /** 一句話的成績摘要（老師頁掃描提示用）：打字「96%　28 字/分」、畫畫「第 2 關」 */
+  function detailText(r) { return isArt(r) ? '第 ' + r.acc + ' 關' : r.acc + '%　' + r.cpm + ' 字/分'; }
 
   function int(v, lo, hi) {
     var n = parseInt(v, 10);
@@ -87,8 +92,10 @@
   function toCSV(list, expected, title) {
     var head = ['座號', '名字', '關卡', '階別', '打字', '正確率(%)', '每分鐘字數', '星等', '選擇分鐘', '日期', '時間', '備註'];
     var rows = list.slice().sort(function (a, b) { return a.seat - b.seat; }).map(function (r) {
-      return [r.seat, r.name, unitName(r.unit), TIERS[r.tier], LANGS[r.lang], r.acc, r.cpm, r.unit === 23 ? '' : r.stars, r.min === 0 ? 0.5 : r.min, dateText(r.time), timeText(r.time),
-        expected && r.seat > expected ? '超過應到人數' : ''];
+      var note = expected && r.seat > expected ? '超過應到人數' : '';
+      if (isArt(r)) return [r.seat, r.name, unitName(r.unit), TIERS[r.tier], LANGS[r.lang], '', '', r.stars, '', dateText(r.time), timeText(r.time),
+        ['第 ' + r.acc + ' 關', note].filter(Boolean).join('；')];
+      return [r.seat, r.name, unitName(r.unit), TIERS[r.tier], LANGS[r.lang], r.acc, r.cpm, r.unit === 23 ? '' : r.stars, r.min === 0 ? 0.5 : r.min, dateText(r.time), timeText(r.time), note];
     });
     if (expected) missing(list, expected).forEach(function (s) { rows.push([s, '', '', '', '', '', '', '', '', '', '', '未交']); });
     rows.sort(function (a, b) { return a[0] - b[0]; });
@@ -100,7 +107,7 @@
   var api = {
     PREFIX: PREFIX, UNITS: UNITS, TIERS: TIERS, LANGS: LANGS, MAX_SEAT: MAX_SEAT,
     encode: encode, parse: parse, upsert: upsert, missing: missing, toCSV: toCSV,
-    unitName: unitName, timeText: timeText, dateText: dateText, stamp: stamp, minText: minText
+    unitName: unitName, timeText: timeText, dateText: dateText, stamp: stamp, minText: minText, isArt: isArt, detailText: detailText
   };
 
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; return; }
@@ -196,8 +203,9 @@
         row('座號', seat ? '<b class="cs-num">' + seat + '</b> 號' : '—') +
         row('名字', name ? esc(name) : '—') +
         row('關卡', esc(unitName(rec.unit)) + (rec.tier && rec.tier !== '-' ? '・' + TIERS[rec.tier] : '')) +
-        row('正確率', '<b class="cs-num">' + Math.round(rec.acc) + '</b> %') +
-        row('每分鐘', '<b class="cs-num">' + Math.round(rec.cpm) + '</b> 字') +
+        (isArt(rec) ? row('過關', '第 <b class="cs-num">' + rec.acc + '</b> 關') :
+          row('正確率', '<b class="cs-num">' + Math.round(rec.acc) + '</b> %') +
+          row('每分鐘', '<b class="cs-num">' + Math.round(rec.cpm) + '</b> 字')) +
         (rec.unit === 23 ? row('打字', LANGS[rec.lang]) : row('星等', '<span class="cs-stars">' + stars + '</span>'));   // 擂台沒有星等
       var box = $('.cs-qr');
       if (!seat) { box.innerHTML = '<p class="cs-wait">先選<br>座號</p>'; return; }

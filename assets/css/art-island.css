@@ -1,0 +1,158 @@
+/* ================= 畫畫島共用樣式（A 版「貼紙畫冊」） =================
+ * 規範：.interface-design/art-island-system.md；設計稿 docs/plans/mockups/art-island-frontend-design.html
+ * 外殼 art-ui.js 的 class 一律 ai- 開頭；各關場景（.ai-field 裡面）自己的樣式請用 sc- 前綴
+ * 舞台固定 1366×657，art-ui.js 依視窗等比縮放（.ai-stage 的 transform），所以場景可以用 px 絕對定位
+ * 字型路徑相對於本檔：../art/fonts/
+ */
+@font-face { font-family: 'Bpmf Huninn'; src: url('../art/fonts/bpmf-huninn-art.woff2') format('woff2'); font-display: block; }
+
+:root {
+  --lagoon: #E4F1F0; --dots: #C3DEDF;
+  --card: #FFFBEF; --canvas: #FFFFFF;
+  --ink: #1F2A4D; --ink-2: #43507A;
+  --blue: #2160C4; --blue-soft: #DCE9FB;
+  --sun: #FFB627; --sun-soft: #FFF0C2;
+  --ok: #1B7F45; --ok-dk: #166B3A; --ok-soft: #D8F1DF;
+  --bad: #C0303A; --bad-dk: #8E1F29; --bad-soft: #FFDCD8;
+  --tape: #FFD966;
+  --lock-bg: #DDE3EA; --lock-edge: #4B5578; --lock-sh: #7C86A6; --lock-ink: #3A4568;
+  --f-ui: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  --f-title: 'Chiron GoRound TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  --f-num: 'Fredoka', 'Bahnschrift', 'Noto Sans TC', sans-serif;
+  --f-zy: 'Bpmf Huninn', 'Noto Sans TC', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body {
+  color: var(--ink); font-family: var(--f-ui); font-size: 18px; -webkit-font-smoothing: antialiased;
+  background: var(--lagoon) radial-gradient(var(--dots) 1.6px, transparent 1.7px) 0 0/24px 24px;
+}
+
+/* ---------- 舞台：固定 1366×657，等比縮放置中 ---------- */
+.ai-app { position: fixed; inset: 0; overflow: hidden; }
+.ai-stage { position: absolute; left: 0; top: 0; width: 1366px; height: 657px; transform-origin: 0 0; }
+.ai-app [hidden] { display: none !important; }
+.ai-screen { position: absolute; inset: 0; }
+:where(.ai-app) :where(button) { font: inherit; color: inherit; cursor: pointer; }
+.ai-app h1, .ai-app h2, .ai-app h3, .ai-app p { margin: 0; }
+.ai-app :focus-visible { outline: 4px solid var(--blue); outline-offset: 2px; }
+
+/* ---------- 共用元件 ---------- */
+.ai-ic { width: 26px; height: 26px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.ai-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 0 20px;
+  font: 700 20px var(--f-ui); color: var(--ink); white-space: nowrap; text-decoration: none;
+  background: var(--card); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 4px 0 var(--ink);
+}
+.ai-btn.go { background: var(--sun); }
+.ai-btn:hover { filter: brightness(1.03); }
+.ai-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+.ai-btn[disabled] { opacity: .55; cursor: not-allowed; transform: none; box-shadow: 0 4px 0 var(--ink); }
+.ai-panel { background: var(--card); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 0 5px 0 var(--ink); }
+.ai-board { background: var(--canvas); border: 3px solid var(--ink); border-radius: 8px; box-shadow: 0 6px 0 var(--ink); position: relative; }
+.ai-tape { position: absolute; width: 86px; height: 26px; background: var(--tape); opacity: .9; border: 2px solid rgba(31,42,77,.35); z-index: 2; pointer-events: none; }
+.ai-zy { font-family: var(--f-zy); letter-spacing: 0; }
+.ai-num { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.ai-star { fill: #fff; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
+.ai-star.on { fill: var(--sun); }
+.ai-badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font: 700 17px var(--f-ui); border: 2px solid; white-space: nowrap; }
+.ai-badge.ok { background: var(--ok-soft); color: var(--ok-dk); border-color: var(--ok); }
+.ai-badge.bad { background: var(--bad-soft); color: var(--bad-dk); border-color: var(--bad); }
+.ai-badge.now { background: var(--blue-soft); color: var(--blue); border-color: var(--blue); }
+
+/* ---------- 頂列 ---------- */
+.ai-bar { position: absolute; left: 0; right: 0; top: 0; height: 62px; padding: 0 24px; display: flex; align-items: center; gap: 16px; z-index: 20; pointer-events: none; }
+.ai-bar > * { pointer-events: auto; }
+.ai-bar .ai-btn { min-height: 46px; font-size: 19px; padding: 0 16px; }
+.ai-quest { margin: 0 auto; display: flex; align-items: center; gap: 14px; padding: 6px 18px; background: var(--sun-soft); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 4px 0 var(--ink); font: 900 22px var(--f-title); white-space: nowrap; max-width: 900px; overflow: hidden; text-overflow: ellipsis; }
+.ai-quest:empty { visibility: hidden; }
+.ai-bar .ai-gal { margin-left: auto; }
+.ai-quest:not(:empty) + .ai-gal { margin-left: 0; }
+
+/* ---------- 開始畫面 ---------- */
+.ai-hero { position: absolute; left: 40px; top: 90px; width: 380px; height: 360px; display: flex; align-items: center; justify-content: center; }
+.ai-hero svg { width: 100%; height: 100%; }
+.ai-title { position: absolute; left: 452px; top: 78px; right: 36px; }
+.ai-title h1 { position: relative; display: inline-block; font: 900 88px/1.15 var(--f-title); letter-spacing: 2px; }
+.ai-title h1::after { content: ""; position: absolute; left: 4px; right: 4px; bottom: 10px; height: 16px; background: var(--sun); border-radius: 8px; z-index: -1; opacity: .85; }
+.ai-howto { margin-top: 10px; font-size: 30px; line-height: 1.75; max-width: 860px; }
+.ai-start { position: absolute; left: 452px; top: 326px; width: 340px; height: 104px; font: 900 56px var(--f-title); gap: 16px; border-radius: 24px; box-shadow: 0 8px 0 var(--ink); }
+.ai-start .ai-ic { width: 44px; height: 44px; fill: currentColor; stroke: none; }
+.ai-teach { position: absolute; left: 822px; top: 336px; width: 508px; padding: 12px 16px; border: 2.5px dashed var(--ink-2); border-radius: 12px; background: #FBF4DD; font-size: 17px; line-height: 1.55; }
+.ai-teach b { font-weight: 900; }
+.ai-lvlabel { position: absolute; left: 40px; top: 438px; font: 900 24px var(--f-title); }
+.ai-levels { position: absolute; left: 36px; right: 36px; top: 476px; display: flex; gap: 18px; }
+.ai-lv { flex: 1; min-width: 0; height: 164px; display: flex; align-items: center; gap: 14px; padding: 12px; text-align: left; background: var(--card); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 0 5px 0 var(--ink); }
+.ai-lv:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--ink); }
+.ai-lv .th { flex: none; width: 120px; height: 120px; background: #fff; border: 3px solid var(--ink); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.ai-lv .th svg { width: 100%; height: 100%; }
+.ai-lv .n1 { font: 700 17px var(--f-ui); color: var(--ink-2); }
+.ai-lv .n2 { font: 900 27px/1.2 var(--f-title); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ai-lv .n3 { display: flex; align-items: center; gap: 4px; margin-top: 6px; font: 700 17px var(--f-ui); white-space: nowrap; }
+.ai-lv .n3 svg { width: 28px; height: 28px; }
+.ai-lv.new { border-style: dashed; }
+.ai-lv.new .n3 { color: var(--blue); }
+.ai-lv.lock { background: var(--lock-bg); border-color: var(--lock-edge); box-shadow: 0 5px 0 var(--lock-sh); cursor: not-allowed; }
+.ai-lv.lock .n1, .ai-lv.lock .n3 { color: var(--lock-ink); }
+.ai-lv.lock .th { background: #CBD3DE; border-color: var(--lock-edge); }
+
+/* ---------- 遊戲畫面 ---------- */
+.ai-field { position: absolute; left: 0; right: 0; top: 62px; bottom: 0; }
+
+/* ---------- 完成畫面 ---------- */
+.ai-done { display: grid; grid-template-columns: 520px 1fr; grid-template-rows: minmax(0, 1fr) 190px; gap: 16px 40px; padding: 74px 36px 16px; position: absolute; inset: 0; }   /* 上留 74px 給頂列 */
+.ai-work { position: relative; grid-row: 1; align-self: stretch; display: flex; flex-direction: column; }
+.ai-work .ai-board { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 8px 8px 0 0; }
+.ai-work img { max-width: 100%; max-height: 100%; display: block; }
+.ai-work .cap { border: 3px solid var(--ink); border-top: 0; border-radius: 0 0 8px 8px; background: var(--card); box-shadow: 0 6px 0 var(--ink); padding: 4px 12px; text-align: center; font: 700 18px var(--f-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ai-praise { grid-row: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0; }
+.ai-praise h2 { font: 900 52px/1.1 var(--f-title); }
+.ai-praise .stars { display: flex; gap: 10px; }
+.ai-praise .stars svg { width: 64px; height: 64px; }
+.ai-praise p { font: 500 24px/1.5 var(--f-ui); }
+.ai-acts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: auto; }
+.ai-acts .ai-btn { height: 58px; font-size: 21px; padding: 0 10px; }
+.ai-gallery { grid-column: 1 / -1; grid-row: 2; padding: 10px 20px; overflow: hidden; }
+.ai-gallery .hd { display: flex; align-items: baseline; gap: 14px; margin-bottom: 8px; }
+.ai-gallery .hd b { font: 900 24px var(--f-title); }
+.ai-gallery .hd span { font: 500 17px var(--f-ui); color: var(--ink-2); }
+.ai-gl { display: flex; gap: 14px; }
+.ai-gl figure { margin: 0; position: relative; width: 190px; flex: none; }
+.ai-gl img, .ai-gl .empty { display: block; width: 190px; height: 104px; object-fit: contain; background: #fff; border: 3px solid var(--ink); border-radius: 8px; }
+.ai-gl .empty { border-style: dashed; border-color: var(--ink-2); }
+.ai-gl figcaption { font: 700 16px var(--f-ui); margin-top: 4px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ai-gl .nw img { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+.ai-gl .nwb { position: absolute; right: -6px; top: -10px; z-index: 2; padding: 1px 10px; border-radius: 999px; background: var(--blue); color: #fff; font: 700 16px var(--f-ui); }
+.ai-msg { font: 700 18px var(--f-ui); color: var(--bad-dk); min-height: 1.5em; }
+
+/* ---------- 我的畫廊（全螢幕） ---------- */
+.ai-galbox { position: absolute; left: 36px; right: 36px; top: 78px; bottom: 20px; padding: 16px 24px; display: flex; flex-direction: column; gap: 12px; }
+.ai-galbox .hd { display: flex; align-items: baseline; gap: 14px; }
+.ai-galbox .hd b { font: 900 30px var(--f-title); }
+.ai-galbox .hd span { color: var(--ink-2); font-size: 17px; }
+.ai-galgrid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(5, 1fr); grid-auto-rows: 200px; gap: 16px; overflow: hidden; }
+.ai-galgrid figure { margin: 0; display: flex; flex-direction: column; min-width: 0; }
+.ai-galgrid img { flex: 1; min-height: 0; width: 100%; object-fit: contain; background: #fff; border: 3px solid var(--ink); border-radius: 8px; }
+.ai-galgrid figcaption { font: 700 16px var(--f-ui); text-align: center; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ai-galgrid .none { grid-column: 1 / -1; align-self: center; text-align: center; color: var(--ink-2); font-size: 22px; }
+
+/* ---------- 共用畫布元件（ArtIsland.canvas） ---------- */
+.ai-cv { display: block; touch-action: none; cursor: crosshair; background: var(--canvas); }
+
+/* ---------- 列印：只印作品 ---------- */
+@media print {
+  body { background: #fff; }
+  .ai-app { position: static; }
+  .ai-stage { transform: none !important; position: static; width: auto; height: auto; }
+  .ai-screen:not(.ai-s-done), .ai-bar, .ai-praise, .ai-gallery, .ai-work .ai-tape { display: none !important; }
+  .ai-done { display: block; position: static; padding: 0; }
+  .ai-work .ai-board { border: 0; box-shadow: none; }
+  .ai-work img { max-width: 100%; max-height: 90vh; margin: 0 auto; }
+  .ai-work .cap { border: 0; box-shadow: none; font-size: 16pt; }
+}
+@media (prefers-reduced-motion: reduce) { .ai-app *, .ai-app *::before, .ai-app *::after { animation: none !important; transition: none !important; } }
+@keyframes ai-pop { 0% { transform: scale(.2) rotate(-20deg); opacity: 0; } 70% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+.ai-praise .stars svg { animation: ai-pop .5s both; }
+.ai-praise .stars svg:nth-child(2) { animation-delay: .15s; }
+.ai-praise .stars svg:nth-child(3) { animation-delay: .3s; }

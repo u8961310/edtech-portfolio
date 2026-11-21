@@ -1,0 +1,83 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>示範關 - 畫畫島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Fredoka:wght@600;700&display=swap">
+  <link rel="stylesheet" href="../css/art-island.css">
+  <style>
+    /* ===== 場景範本：Gemini 照這個寫。場景樣式一律 sc- 開頭，不改 .ai- 樣式 ===== */
+    .sc-tools { position: absolute; left: 24px; top: 8px; width: 226px; bottom: 20px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .sc-tools h3 { font: 700 16px var(--f-ui); color: var(--ink-2); }
+    .sc-sizes { display: flex; gap: 8px; }
+    .sc-size { flex: 1; height: 56px; background: #fff; border: 3px solid var(--ink); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+    .sc-size i { display: block; border-radius: 50%; background: var(--ink); }
+    .sc-colors { display: grid; grid-template-columns: repeat(4, 44px); gap: 8px; }
+    .sc-sw { width: 44px; height: 44px; border-radius: 10px; border: 3px solid var(--ink); }
+    .sc-size.sc-on { background: var(--blue-soft); border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue); }
+    .sc-sw.sc-on { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--blue); }   /* 色塊被選到：保留顏色，只加外圈 */
+    .sc-row { display: flex; gap: 8px; }
+    .sc-row .ai-btn { flex: 1; padding: 0 6px; font-size: 17px; min-height: 52px; }
+    .sc-board { position: absolute; left: 276px; top: 8px; width: 780px; height: 560px; overflow: hidden; }
+    .sc-side { position: absolute; left: 1080px; right: 24px; top: 8px; bottom: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .sc-tip { padding: 16px; font-size: 20px; line-height: 1.6; flex: 1; }
+    .sc-count { font: 700 18px var(--f-ui); margin-top: 8px; color: var(--ink-2); }
+    .sc-done { height: 84px; font: 900 32px var(--f-title); }
+  </style>
+</head><body>
+<script src="../js/art-ui.js"></script>
+<script>
+(function () {
+  'use strict';
+  var COLORS = ['#E53935', '#FB8C00', '#FDD835', '#7CB342', '#1E88E5', '#8E24AA', '#6D4C41', '#1F2A4D'];
+  var SUN = '<svg viewBox="0 0 120 120"><g stroke="#1F2A4D" stroke-width="5" stroke-linecap="round">' +
+    [0, 45, 90, 135, 180, 225, 270, 315].map(function (a) { var r = a * Math.PI / 180; return '<line x1="' + (60 + Math.cos(r) * 38) + '" y1="' + (60 + Math.sin(r) * 38) + '" x2="' + (60 + Math.cos(r) * 52) + '" y2="' + (60 + Math.sin(r) * 52) + '"/>'; }).join('') +
+    '</g><circle cx="60" cy="60" r="28" fill="#FFB627" stroke="#1F2A4D" stroke-width="5"/><circle cx="51" cy="56" r="3.5" fill="#1F2A4D"/><circle cx="69" cy="56" r="3.5" fill="#1F2A4D"/><path d="M50 68q10 8 20 0" fill="none" stroke="#1F2A4D" stroke-width="4" stroke-linecap="round"/></svg>';
+  var FLOWER = '<svg viewBox="0 0 120 120"><g fill="#F06292" stroke="#1F2A4D" stroke-width="4">' +
+    [0, 72, 144, 216, 288].map(function (a) { var r = a * Math.PI / 180; return '<circle cx="' + (60 + Math.cos(r) * 22) + '" cy="' + (52 + Math.sin(r) * 22) + '" r="15"/>'; }).join('') +
+    '</g><circle cx="60" cy="52" r="12" fill="#FFB627" stroke="#1F2A4D" stroke-width="4"/><path d="M60 72v38" stroke="#2E7D32" stroke-width="6"/></svg>';
+
+  ArtIsland.mount({
+    unit: 99, title: '示範關', grade: '1–2 年級',
+    howto: '畫出大大的太陽。', zhuyin: true,
+    teach: '外殼與畫布的示範，不上架',
+    hero: SUN,
+    levels: [{ name: '大太陽', thumb: SUN }, { name: '小花', thumb: FLOWER }],
+    submit: true,
+    scene: function (api) {
+      var cv = null;
+      return {
+        start: function (i) {
+          api.quest(i === 0 ? '第 1 關：畫一個大太陽' : '第 2 關：畫一朵小花');
+          api.field.innerHTML =
+            '<div class="ai-panel sc-tools"><h3>筆刷粗細</h3><div class="sc-sizes">' +
+              [4, 10, 20].map(function (s, k) { return '<button type="button" class="sc-size' + (k === 1 ? ' sc-on' : '') + '" data-size="' + s + '" aria-label="筆刷 ' + s + '"><i style="width:' + (s / 1.4 + 4) + 'px;height:' + (s / 1.4 + 4) + 'px"></i></button>'; }).join('') +
+            '</div><h3>顏色</h3><div class="sc-colors">' +
+              COLORS.map(function (c, k) { return '<button type="button" class="sc-sw' + (k === 7 ? ' sc-on' : '') + '" data-color="' + c + '" style="background:' + c + '" aria-label="顏色"></button>'; }).join('') +
+            '</div><h3>工具</h3><div class="sc-row"><button type="button" class="ai-btn sc-undo">復原</button><button type="button" class="ai-btn sc-clear">清除</button></div></div>' +
+            '<div class="ai-board sc-board"><span class="ai-tape" style="left:340px;top:-10px;transform:rotate(-3deg)"></span></div>' +
+            '<div class="sc-side"><div class="ai-panel sc-tip">按住滑鼠在白紙上畫畫。<br>畫 3 筆以上就有三顆星。<div class="sc-count">已畫 <b class="ai-num sc-n">0</b> 筆</div></div>' +
+            '<button type="button" class="ai-btn go sc-done">完成</button></div>';
+          var board = api.field.querySelector('.sc-board');
+          cv = api.canvas(board, { width: 774, height: 554, size: 10 });
+          cv.onStroke(function () { api.field.querySelector('.sc-n').textContent = cv.strokes(); });
+          api.field.onclick = function (e) {
+            var b;
+            if ((b = e.target.closest('.sc-size'))) { cv.setSize(Number(b.dataset.size)); mark('.sc-size', b); }
+            else if ((b = e.target.closest('.sc-sw'))) { cv.setColor(b.dataset.color); mark('.sc-sw', b); }
+            else if (e.target.closest('.sc-undo')) { cv.undo(); api.field.querySelector('.sc-n').textContent = cv.strokes(); }
+            else if (e.target.closest('.sc-clear')) { cv.clear(); api.field.querySelector('.sc-n').textContent = 0; }
+            else if (e.target.closest('.sc-done')) {
+              var n = cv.strokes();
+              api.finish({ stars: n >= 3 ? 3 : n >= 2 ? 2 : n >= 1 ? 1 : 0, image: cv.el,
+                praise: n >= 3 ? '畫得好用心，顏色好亮！' : '再多畫幾筆，會更漂亮喔！' });
+            }
+          };
+          function mark(sel, b) { api.field.querySelectorAll(sel).forEach(function (x) { x.classList.toggle('sc-on', x === b); }); }
+        },
+        stop: function () { cv = null; api.field.onclick = null; }
+      };
+    }
+  });
+})();
+</script>
+</body></html>

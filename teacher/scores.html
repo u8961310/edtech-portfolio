@@ -357,25 +357,25 @@ td.sub { color: var(--ink3); font-size: 13px; }
   // 收進本機清單，回傳結果（手機配對時這個結果會轉回手機顯示）
   function ingest(text) {
     var rec = CS.parse(text);
-    if (!rec) return { ok: false, reason: 'bad', message: '這不是打字島的成績 QR' };
+    if (!rec) return { ok: false, reason: 'bad', message: '這不是學習樂園的成績 QR' };
     var kind = CS.upsert(S.records, rec);
     lastSeat = rec.seat;
     save();
     renderAll();
     return { ok: true, kind: kind, seat: rec.seat, name: rec.name, unit: CS.unitName(rec.unit) + (rec.tier !== '-' ? '・' + CS.TIERS[rec.tier] : ''),
-      acc: rec.acc, cpm: rec.cpm, have: haveCount(), expected: S.expected };
+      acc: rec.acc, cpm: rec.cpm, detail: CS.detailText(rec), have: haveCount(), expected: S.expected };
   }
   function showFlash(r) {
     var f = $('flash');
     if (!r.ok) {
       f.className = 'flash bad';
-      f.innerHTML = '<span class="tag">✕ 沒收到</span><div class="who">' + esc(r.message || '這不是打字島的成績 QR') + '</div>';
+      f.innerHTML = '<span class="tag">✕ 沒收到</span><div class="who">' + esc(r.message || '這不是學習樂園的成績 QR') + '</div>';
       try { if (navigator.vibrate) navigator.vibrate([80, 60, 80]); } catch (e) { /* 不支援就算了 */ }
       return;
     }
     f.className = 'flash ' + r.kind;
     f.innerHTML = '<span class="seatno num">' + r.seat + '</span><div class="who"><b>' + esc(r.name || '（沒寫名字）') + '</b><br><span class="muted">' +
-      esc(r.unit || '') + '　' + r.acc + '%　' + r.cpm + ' 字/分</span></div>' +
+      esc(r.unit || '') + '　' + esc(r.detail) + '</span></div>' +
       '<span class="tag">' + (r.kind === 'new' ? '✓ 收到' : '↻ 已更新') + '</span>';
     if (r.expected && r.seat > r.expected) toast(r.seat + ' 號超過應到人數 ' + r.expected + '，有收，但不算在應到裡');
     try { if (navigator.vibrate) navigator.vibrate(r.kind === 'new' ? 60 : [30, 40, 30]); } catch (e) { /* 不支援就算了 */ }
@@ -487,8 +487,9 @@ td.sub { color: var(--ink3); font-size: 13px; }
     var rows = S.records.slice().sort(function (a, b) { return a.seat - b.seat; });
     $('tbody').innerHTML = rows.length ? rows.map(function (r) {
       return '<tr' + (r.seat === lastSeat ? ' class="last"' : '') + '><td class="r num">' + r.seat + '</td><td>' + esc(r.name || '—') + '</td>' +
-        '<td>' + esc(CS.unitName(r.unit)) + (r.tier !== '-' ? '<span class="sub">・' + CS.TIERS[r.tier] + '</span>' : '') + (r.min === 0 ? '<span class="sub">・30 秒測試</span>' : '') + '</td>' +
-        '<td class="r num">' + r.acc + '<span class="u">%</span></td><td class="r num">' + r.cpm + '<span class="u">字/分</span></td>' +
+        '<td>' + esc(CS.unitName(r.unit)) + (r.tier !== '-' ? '<span class="sub">・' + CS.TIERS[r.tier] + '</span>' : '') + (r.min === 0 && !CS.isArt(r) ? '<span class="sub">・30 秒測試</span>' : '') + '</td>' +
+        (CS.isArt(r) ? '<td class="r" colspan="2">畫畫・第 <span class="num">' + r.acc + '</span> 關</td>'   // 畫畫島沒有正確率、字數
+          : '<td class="r num">' + r.acc + '<span class="u">%</span></td><td class="r num">' + r.cpm + '<span class="u">字/分</span></td>') +
         '<td class="stars">' + starsHTML(r) + '</td><td class="r num">' + CS.timeText(r.time) + '</td></tr>';
     }).join('') : '<tr><td colspan="7" class="empty-note">還沒有成績。到「掃描」分頁開相機掃學生的 QR。</td></tr>';
   }
@@ -723,7 +724,7 @@ td.sub { color: var(--ink3); font-size: 13px; }
     };
   }
   function phoneSend(text) {
-    if (!CS.parse(text)) { showFlash({ ok: false, message: '這不是打字島的成績 QR' }); return; }
+    if (!CS.parse(text)) { showFlash({ ok: false, message: '這不是學習樂園的成績 QR' }); return; }
     if (!phone.ws || phone.ws.readyState !== 1) { showFlash({ ok: false, message: '還沒連上電腦，等上面顯示「已連到電腦」再掃' }); delete recent[text]; return; }
     var id = 'p' + (++phone.seq);
     phone.pending[id] = text;

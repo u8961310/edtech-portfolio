@@ -60,5 +60,17 @@ ok(lines.some(l => l === '5,,,,,,,,,,,未交'), 'CSV 未交列');
 ok(lines.some(l => l.startsWith('30,') && l.endsWith('超過應到人數')), 'CSV 標出超過應到人數');
 ok(CS.toCSV([Object.assign({}, rec, { name: '=1+1' })], 0).indexOf("'=1+1") > 0, 'CSV 防公式注入');
 
+// 畫畫島（2026-11-21）：lang=art、acc＝第幾關、cpm／min＝0
+const art = { unit: 24, tier: '-', lang: 'art', seat: 3, name: '小華', acc: 2, cpm: 0, stars: 3, min: 0, time: '202611211900' };
+const artS = CS.encode(art);
+ok(artS === 'ETS1|24|-|art|3|小華|2|0|3|0|202611211900', '畫畫島編碼格式');
+const artBack = CS.parse(artS);
+ok(artBack && artBack.lang === 'art' && artBack.acc === 2 && artBack.unit === 24, '畫畫島解得回來');
+ok(CS.isArt(artBack) && !CS.isArt(back), 'isArt 分得出畫畫／打字');
+ok(CS.detailText(artBack) === '第 2 關' && CS.detailText(back) === '96%　28 字/分', 'detailText 兩種摘要');
+ok([5, 18, 24, 25, 26, 27].every(u => CS.parse(CS.encode(Object.assign({}, art, { unit: u })))), '畫畫島 6 關代號都收');
+const artCsv = CS.toCSV([artBack], 0).slice(1).trim().split('\r\n');
+ok(artCsv[1] === '3,小華,調色魔法鍋,—,畫畫,,,3,,2026-11-21,19:00,第 2 關', 'CSV 畫畫島那列（正確率、字數、分鐘留空，備註寫第幾關）');
+
 console.log(fail ? `共 ${fail} 項失敗（通過 ${pass}）` : `全部通過（${pass} 項）`);
 process.exit(fail ? 1 : 0);
