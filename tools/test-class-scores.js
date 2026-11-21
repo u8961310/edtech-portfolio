@@ -72,5 +72,13 @@ ok([5, 18, 24, 25, 26, 27].every(u => CS.parse(CS.encode(Object.assign({}, art, 
 const artCsv = CS.toCSV([artBack], 0).slice(1).trim().split('\r\n');
 ok(artCsv[1] === '3,小華,調色魔法鍋,—,畫畫,,,3,,2026-11-21,19:00,第 2 關', 'CSV 畫畫島那列（正確率、字數、分鐘留空，備註寫第幾關）');
 
+// 小常識島（2026-11-21）：lang=smart，跟畫畫島一樣以「第幾關＋星星」計
+const sm = { unit: 31, tier: '-', lang: 'smart', seat: 12, name: '小明', acc: 1, cpm: 0, stars: 2, min: 0, time: '202611221000' };
+const smBack = CS.parse(CS.encode(sm));
+ok(smBack && smBack.lang === 'smart' && smBack.unit === 31 && CS.isArt(smBack), '小常識島編碼解得回來、算以關計');
+ok([8, 9, 29, 30, 31, 32].every(u => CS.parse(CS.encode(Object.assign({}, sm, { unit: u })))), '小常識島 6 關代號都收');
+const smCsv = CS.toCSV([smBack], 0).slice(1).trim().split('\r\n');
+ok(smCsv[1] === '12,小明,寵物收到怪訊息,—,小常識,,,2,,2026-11-22,10:00,第 1 關', 'CSV 小常識島那列');
+
 console.log(fail ? `共 ${fail} 項失敗（通過 ${pass}）` : `全部通過（${pass} 項）`);
 process.exit(fail ? 1 : 0);

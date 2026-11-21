@@ -1,0 +1,231 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>寵物小屋 - 小常識島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Baloo+2:wght@700;800&display=swap">
+  <link rel="stylesheet" href="../../assets/css/smart-island.css">
+  <style>
+    /* 寵物小屋：小常識島的大廳。領養（座號＋名字，一台電腦多隻）、切換、換衣服、6 關進度 */
+    .hs-view { position: absolute; left: 0; right: 0; top: 66px; bottom: 0; }
+    /* 領養 */
+    .hs-ask { position: absolute; left: 32px; top: 18px; display: flex; align-items: center; gap: 12px; }
+    .hs-ask .sm-zy { font-size: 34px; }
+    .hs-picks { position: absolute; left: 32px; top: 96px; width: 860px; display: flex; gap: 18px; }
+    .hs-pick { flex: 1; height: 360px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; color: var(--ink); position: relative; }
+    .hs-pick .pic { width: 180px; height: 200px; }
+    .hs-pick .pic svg { width: 100%; height: 100%; overflow: visible; }
+    .hs-pick .nm { font-size: 28px; font-weight: 900; margin-top: 8px; }
+    .hs-pick .ds { font-size: 16px; font-weight: 700; color: var(--ink2); }
+    .hs-pick[aria-pressed=true] { border-color: var(--orange); box-shadow: 0 0 0 4px #FFD3B0, 0 8px 0 #EBD6C5, 0 16px 26px rgba(59,35,80,.12); }
+    .hs-pick[aria-pressed=true]::before { content: "✓ 選好了"; position: absolute; top: -16px; left: 50%; transform: translateX(-50%); background: var(--orange); border: 2px solid var(--orange-d); border-radius: 99px; padding: 2px 14px; font: 900 16px var(--f-ui); white-space: nowrap; }
+    .hs-form { position: absolute; left: 920px; top: 18px; right: 32px; height: 540px; padding: 18px 22px; display: flex; flex-direction: column; gap: 10px; }
+    .hs-form h2 { font-size: 24px; font-weight: 900; }
+    .hs-form label { font-size: 18px; font-weight: 900; display: flex; flex-direction: column; gap: 4px; }
+    .hs-form .row { display: flex; gap: 12px; }
+    .hs-form .row label:first-child { width: 110px; flex: none; }
+    .hs-form .row label:last-child { flex: 1; }
+    .hs-form input { height: 52px; border: 3px solid #D7BFAA; border-radius: 16px; background: #fff; padding: 0 14px; font: 900 22px var(--f-ui); color: var(--ink); width: 100%; min-width: 0; }
+    .hs-form input::placeholder { color: #8E7A9C; font-weight: 700; }
+    .hs-form .go { height: 62px; font-size: 26px; margin-top: 4px; }
+    .hs-form .err { min-height: 1.4em; font-size: 17px; font-weight: 700; color: var(--bad); }
+    .hs-form .back { align-self: flex-start; }
+    .hs-note { position: absolute; left: 32px; top: 488px; font-size: 17px; font-weight: 700; color: var(--ink2); }
+    /* 小屋 */
+    .hs-room { position: absolute; left: 32px; top: 18px; width: 440px; height: 540px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .hs-scene { position: relative; height: 330px; border-radius: 20px; overflow: hidden; background: linear-gradient(#FFF3E4 0 62%, #F6DCC6 62%); border: 3px solid var(--edge); }
+    .hs-scene .win { position: absolute; left: 22px; top: 18px; width: 110px; height: 86px; border-radius: 12px; background: #CFE9FA; border: 5px solid #fff; box-shadow: 0 0 0 3px #E2C8B2; }
+    .hs-scene .win::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; border-left: 4px solid #fff; }
+    .hs-scene .rug { position: absolute; left: 60px; right: 60px; bottom: 18px; height: 44px; border-radius: 50%; background: #E3D9FB; border: 3px solid #B7A3EE; }
+    .hs-scene .pet { position: absolute; left: 50%; bottom: 22px; width: 250px; height: 250px; transform: translateX(-50%); }
+    .hs-scene .pet svg { width: 100%; height: 100%; overflow: visible; }
+    .hs-plate { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .hs-plate .nm { font-size: 30px; font-weight: 900; }
+    .hs-plate .ow { margin-left: auto; font-size: 17px; font-weight: 700; color: var(--ink2); }
+    .hs-snack { padding: 8px 14px; border-radius: 18px; background: var(--butter); border: 2px solid #F0D488; }
+    .hs-snack .t { font-size: 18px; font-weight: 900; }
+    .hs-snack .slots { display: flex; gap: 6px; margin-top: 4px; }
+    .hs-snack .slot { width: 34px; height: 34px; border-radius: 50%; border: 2px dashed #D7BFAA; background: #FFF9F2; display: flex; align-items: center; justify-content: center; }
+    .hs-snack .slot.on { border: 2px solid #A8672A; background: #FFE9C9; }
+    .hs-snack .slot svg { width: 28px; height: 28px; }
+    .hs-right { position: absolute; left: 496px; right: 32px; top: 18px; height: 540px; display: flex; flex-direction: column; gap: 16px; }
+    .hs-games { padding: 14px 18px; }
+    .hs-games h2, .hs-closet h2 { font-size: 22px; font-weight: 900; display: flex; align-items: baseline; gap: 10px; }
+    .hs-games h2 small, .hs-closet h2 small { font-size: 15px; color: var(--ink2); font-weight: 700; }
+    .hs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px; }
+    .hs-game { display: flex; flex-direction: column; gap: 4px; padding: 10px 14px; border-radius: 20px; text-decoration: none; color: var(--ink); min-width: 0; }
+    .hs-game:hover { transform: translateY(-2px); }
+    .hs-game .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .hs-game .ic { width: 38px; height: 38px; }
+    .hs-game .ic svg { width: 100%; height: 100%; }
+    .hs-game .nm { font-size: 19px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hs-game .st { display: flex; align-items: center; gap: 2px; font-size: 15px; font-weight: 900; color: var(--violet); white-space: nowrap; min-height: 24px; }
+    .hs-closet { flex: 1; padding: 14px 18px; display: flex; flex-direction: column; }
+    .hs-wear { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 10px; flex: 1; }
+    .hs-w { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 18px; padding: 6px 4px; color: var(--ink); min-width: 0; }
+    .hs-w .pv { width: 64px; height: 64px; }
+    .hs-w .pv svg { width: 100%; height: 100%; overflow: visible; }
+    .hs-w .nm { font-size: 17px; font-weight: 900; }
+    .hs-w .st { font-size: 13px; font-weight: 700; color: var(--ink2); white-space: nowrap; }
+    .hs-w[aria-pressed=true] { border-color: var(--ok); background: var(--ok-soft); }
+    .hs-w[aria-pressed=true] .st { color: var(--ok); }
+    .hs-w.lock { background: #EFE7DE; cursor: not-allowed; }
+    .hs-w.lock .pv { opacity: .35; filter: grayscale(1); }
+    /* 換寵物 */
+    .hs-list { position: absolute; inset: 66px 0 0; z-index: 30; background: rgba(59,35,80,.28); display: flex; align-items: center; justify-content: center; }
+    .hs-list .card { width: 900px; max-height: 540px; padding: 20px 26px; display: flex; flex-direction: column; gap: 12px; }
+    .hs-list h2 { font-size: 26px; font-weight: 900; }
+    .hs-list .ps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; overflow: auto; padding: 4px; }
+    .hs-p { display: flex; flex-direction: column; align-items: center; padding: 8px; border-radius: 18px; color: var(--ink); }
+    .hs-p .av { width: 96px; height: 96px; }
+    .hs-p .av svg { width: 100%; height: 100%; }
+    .hs-p b { font-size: 18px; }
+    .hs-p small { font-size: 15px; font-weight: 700; color: var(--ink2); }
+    .hs-p[aria-current=true] { border-color: var(--violet); box-shadow: 0 0 0 4px #D5C6F2; }
+    .hs-list .acts { display: flex; gap: 12px; justify-content: flex-end; }
+  </style>
+</head><body>
+<div class="sm-app"><div class="sm-stage">
+  <header class="sm-bar">
+    <a class="sm-btn sm-home" href="../../index.html"><svg class="sm-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 3.5 21 11M5.5 9v11h13V9"/><path d="M10 20v-6h4v6"/></svg>首頁</a>
+    <div class="sm-mid"><span class="sm-island" id="isl"></span><b>寵物小屋</b></div>
+    <div class="sm-right"><button class="sm-btn vi" type="button" id="swap" hidden><svg class="sm-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>換寵物</button></div>
+  </header>
+
+  <section class="hs-view" id="adopt" hidden>
+    <div class="hs-ask"><p class="sm-zy">挑選你的寵物寶寶，幫牠取名吧！</p></div>
+    <div class="hs-picks" id="picks"></div>
+    <p class="hs-note" id="here"></p>
+    <form class="hs-form clay" id="form" autocomplete="off">
+      <h2>領養登記</h2>
+      <div class="row">
+        <label>座號<input id="seat" inputmode="numeric" maxlength="3" placeholder="12"></label>
+        <label>你的名字<input id="owner" maxlength="8" placeholder="王小明"></label>
+      </div>
+      <label>寵物名字<input id="pname" maxlength="6" placeholder="例如：小雲"></label>
+      <p class="err" id="err" role="status"></p>
+      <button class="sm-btn or go" type="submit">領養</button>
+      <button class="sm-btn back" type="button" id="cancel" hidden>回到小屋</button>
+    </form>
+  </section>
+
+  <section class="hs-view" id="room" hidden>
+    <div class="hs-room clay">
+      <div class="hs-scene"><span class="win"></span><span class="rug"></span><div class="pet" id="roomPet"></div></div>
+      <div class="hs-plate"><span class="nm" id="pName"></span><span class="chip" id="pKind"></span><span class="ow" id="pOwner"></span></div>
+      <div class="hs-snack"><div class="t" id="snackT"></div><div class="slots" id="snackS"></div></div>
+    </div>
+    <div class="hs-right">
+      <div class="hs-games clay"><h2>選一關來玩 <small>每過一關拿 1 個點心，點心夠了寵物就會長大</small></h2><div class="hs-grid" id="games"></div></div>
+      <div class="hs-closet clay"><h2>衣櫃 <small>點一下穿上或脫下；每一關第一次過關，就解鎖一件</small></h2><div class="hs-wear" id="wear"></div></div>
+    </div>
+  </section>
+
+  <div class="hs-list" id="list" hidden role="dialog" aria-modal="true" aria-label="換寵物"><div class="card clay">
+    <h2>這台電腦住的寵物（點頭像切換）</h2>
+    <div class="ps" id="ps"></div>
+    <div class="acts"><button class="sm-btn or" type="button" id="new">領養新寵物</button><button class="sm-btn" type="button" id="close">關閉</button></div>
+  </div></div>
+</div></div>
+
+<script src="../../assets/js/smart-pet.js"></script>
+<script src="../../assets/js/smart-ui.js"></script>
+<script>
+(function () {
+  'use strict';
+  var SP = window.SmartPet, IC = SmartIsland.IC;
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var stage = document.querySelector('.sm-stage');
+  function fit() { var k = Math.min(innerWidth / 1366, innerHeight / 657); stage.style.transform = 'translate(' + (innerWidth - 1366 * k) / 2 + 'px,' + (innerHeight - 657 * k) / 2 + 'px) scale(' + k + ')'; }
+  fit(); addEventListener('resize', fit);
+  $('isl').innerHTML = IC.isl + '小常識島';
+
+  // 6 關（unit 編號對應 SmartPet.UNIT_OUTFIT 的服裝）
+  var G = function (d) { return '<svg viewBox="0 0 40 40" aria-hidden="true">' + d + '</svg>'; };
+  var GAMES = [
+    { unit: 29, name: '寵物的新電腦', grade: '1–2 年級', url: '../unit29-pet-computer/', icon: G('<rect x="5" y="6" width="30" height="21" rx="4" fill="#fff" stroke="#3B2350" stroke-width="2.6"/><rect x="9" y="10" width="22" height="13" rx="2" fill="#9BD7F2"/><path d="M20 27v5M13 33h14" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/>') },
+    { unit: 30, name: '寵物作息表', grade: '1–2 年級', url: '../unit30-pet-schedule/', icon: G('<circle cx="18" cy="21" r="13" fill="#fff" stroke="#3B2350" stroke-width="2.6"/><path d="M18 13v8l6 3" fill="none" stroke="#3B2350" stroke-width="2.6" stroke-linecap="round"/>') },
+    { unit: 31, name: '寵物收到怪訊息', grade: '3–4 年級', url: '../unit31-pet-message/', icon: G('<path d="M6 9a4 4 0 0 1 4-4h20a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H16l-7 6v-6H10a4 4 0 0 1-4-4z" fill="#fff" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/><path d="M20 10v8" stroke="#B4372B" stroke-width="3.2" stroke-linecap="round"/><circle cx="20" cy="22.5" r="1.9" fill="#B4372B"/>') },
+    { unit: 32, name: '寵物的 AI 作業', grade: '3–4 年級', url: '../unit32-pet-ai-homework/', icon: G('<path d="M9 4h15l7 7v24a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" fill="#fff" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/><path d="M13 17h10M13 23h12M13 29h7" stroke="#3B2350" stroke-width="2.2" stroke-linecap="round"/><path d="M31 18l1.6 3.6 3.6 1.6-3.6 1.6L31 28.4l-1.6-3.6-3.6-1.6 3.6-1.6z" fill="#FFC233" stroke="#A8670E" stroke-width="1.4"/>') },
+    { unit: 8, name: '寵物房間大整理', grade: '1–4 年級', url: '../unit8-desktop-organizer/', icon: G('<path d="M4 11a3 3 0 0 1 3-3h8l3 4h15a3 3 0 0 1 3 3v16a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z" fill="#FFD65E" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/><path d="M4 16h32" stroke="#3B2350" stroke-width="2.2"/>') },
+    { unit: 9, name: '寵物警察訓練', grade: '3–4 年級', url: '../unit9-net-detective/', icon: G('<path d="M20 4l13 5v9c0 9-6 15-13 18C13 33 7 27 7 18V9z" fill="#fff" stroke="#3B2350" stroke-width="2.6" stroke-linejoin="round"/><path d="M14 19l4.5 4.5L27 15" fill="none" stroke="#186B41" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>') }
+  ];
+  var gradeClass = function (g) { return /1.2/.test(g) ? 'g12' : /3.4/.test(g) ? 'g34' : 'g14'; };
+  function bestStars(unit) { var p = SmartIsland.store.progress(unit); return p.length ? Math.max.apply(null, p.map(function (x) { return x || 0; })) : 0; }
+
+  // ---------------- 領養
+  var picked = 'bunny';
+  function renderAdopt() {
+    $('picks').innerHTML = SP.TYPES.map(function (t) {
+      return '<button type="button" class="clay hs-pick" data-t="' + t.id + '" aria-pressed="' + (t.id === picked) + '">' +
+        '<span class="pic">' + SP.svg(t.id, 0, t.id === picked ? 'happy' : 'normal') + '</span><span class="nm">' + t.name + '</span><span class="ds">' + t.desc + '</span></button>';
+    }).join('');
+    var n = SP.list().length;
+    $('here').textContent = n ? '這台電腦已經住了 ' + n + ' 隻寵物，按右上角「換寵物」可以切換' : '點一下寶寶就能選牠，過關拿點心，牠會慢慢長大';
+  }
+  $('picks').addEventListener('click', function (e) { var b = e.target.closest('.hs-pick'); if (b) { picked = b.dataset.t; renderAdopt(); } });
+  $('form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var seat = $('seat').value.trim(), owner = $('owner').value.trim(), name = $('pname').value.trim();
+    if (!/^\d{1,3}$/.test(seat)) { $('err').textContent = '座號請填數字'; $('seat').focus(); return; }
+    if (!owner) { $('err').textContent = '請填你的名字'; $('owner').focus(); return; }
+    SP.adopt({ seat: seat, owner: owner, name: name, type: picked });
+    $('form').reset(); $('err').textContent = '';
+    show('room');
+  });
+  $('cancel').addEventListener('click', function () { show('room'); });
+
+  // ---------------- 小屋
+  function renderRoom() {
+    var p = SP.current(); if (!p) { show('adopt'); return; }
+    var st = SP.stageOf(p.snacks), step = SP.STEP, into = st >= 2 ? step : p.snacks % step;
+    $('roomPet').innerHTML = SP.svgOf(p, 'happy');
+    $('pName').textContent = p.name;
+    $('pKind').textContent = SP.typeName(p.type) + '・' + SP.stageName(st);
+    $('pOwner').textContent = '主人：' + p.seat + ' 號 ' + p.owner;
+    $('snackT').textContent = st >= 2 ? '已經是大朋友了！點心共 ' + p.snacks + ' 個' : '點心 ' + into + '／' + step + '，再 ' + (step - into) + ' 個就長大';
+    var s = ''; for (var k = 0; k < step; k++) s += '<span class="slot' + (k < into ? ' on' : '') + '">' + (k < into ? IC.ck : '') + '</span>';
+    $('snackS').innerHTML = s;
+    $('games').innerHTML = GAMES.map(function (g) {
+      var b = bestStars(g.unit);
+      return '<a class="clay hs-game" href="' + g.url + '"><span class="top"><span class="ic">' + g.icon + '</span><span class="chip ' + gradeClass(g.grade) + '">' + g.grade + '</span></span>' +
+        '<span class="nm">' + esc(g.name) + '</span><span class="st">' + (b ? SmartIsland.starsHTML(b, 22) : '還沒玩・去挑戰 ›') + '</span></a>';
+    }).join('');
+    var byUnit = {}; GAMES.forEach(function (g) { byUnit[SP.UNIT_OUTFIT[g.unit]] = g.name; });
+    $('wear').innerHTML = SP.OUTFITS.map(function (o) {
+      var have = p.outfits.indexOf(o.id) >= 0, on = p.wear.indexOf(o.id) >= 0;
+      return '<button type="button" class="clay hs-w' + (have ? '' : ' lock') + '" data-w="' + o.id + '"' + (have ? ' aria-pressed="' + on + '"' : ' aria-disabled="true"') + '>' +
+        '<span class="pv">' + SP.svgOf({ type: p.type, stage: st }, 'normal', { wear: [o.id] }) + '</span><span class="nm">' + o.name + '</span>' +
+        '<span class="st">' + (have ? (on ? '✓ 穿著中' : '點一下穿上') : '過「' + esc(byUnit[o.id] || '') + '」') + '</span></button>';
+    }).join('');
+  }
+  $('wear').addEventListener('click', function (e) {
+    var b = e.target.closest('.hs-w'); if (!b || b.classList.contains('lock')) return;
+    var p = SP.current(), w = p.wear.slice(), i = w.indexOf(b.dataset.w);
+    if (i >= 0) w.splice(i, 1); else w.push(b.dataset.w);
+    SP.setWear(p.id, w); renderRoom();
+  });
+
+  // ---------------- 換寵物
+  function renderList() {
+    var cur = SP.current();
+    $('ps').innerHTML = SP.list().slice().reverse().map(function (p) {
+      return '<button type="button" class="clay hs-p" data-id="' + p.id + '" aria-current="' + (cur && cur.id === p.id) + '"><span class="av">' + SP.svgOf(p, 'happy') + '</span>' +
+        '<b>' + esc(p.name) + '</b><small>' + esc(p.seat) + ' 號 ' + esc(p.owner) + '</small></button>';
+    }).join('');
+  }
+  $('swap').addEventListener('click', function () { renderList(); $('list').hidden = false; });
+  $('close').addEventListener('click', function () { $('list').hidden = true; });
+  $('ps').addEventListener('click', function (e) { var b = e.target.closest('.hs-p'); if (b) { SP.setCurrent(b.dataset.id); $('list').hidden = true; renderRoom(); } });
+  $('new').addEventListener('click', function () { $('list').hidden = true; show('adopt'); });
+
+  function show(v) {
+    var has = SP.list().length > 0;
+    $('adopt').hidden = v !== 'adopt'; $('room').hidden = v !== 'room';
+    $('swap').hidden = !has; $('cancel').hidden = !has;
+    if (v === 'adopt') { renderAdopt(); setTimeout(function () { $('seat').focus(); }, 30); } else renderRoom();
+  }
+  show(SP.current() ? 'room' : 'adopt');
+})();
+</script>
+</body></html>
