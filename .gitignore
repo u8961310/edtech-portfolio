@@ -43,3 +43,6 @@ tools/og/home.png
 
 # 滑鼠島自動驗收截圖（tools/test-mouse-scenes.py 產生）
 mouse-shots/
+
+# 萌典查詢快取（tools/zy-moe-check.py 產生）
+tools/.zy-cache/
