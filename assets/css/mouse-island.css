@@ -1,0 +1,144 @@
+/* ================= 滑鼠島共用外殼樣式 =================
+ * 規範：.interface-design/mouse-island-system.md（C 版「海島尋寶地圖」）
+ * 外殼 class 一律 mi- 開頭；各關場景自己的 class 用 sc- 開頭，不要改這份
+ */
+@font-face { font-family: 'Bpmf Huninn'; src: url('../mouse/fonts/bpmf-huninn-mouse.woff2') format('woff2'); font-display: swap; }
+
+:root {
+  --sand: #F6E7BE; --parch: #FFF8E4; --sea: #BFE1EA; --sea-d: #236F96;
+  --coral: #C2432A; --coral-l: #E8704F; --palm: #2F7A49; --gold: #F2B134;
+  --ink: #33261B; --ink-2: #6B5A48; --wood: #9A5F36; --wood-d: #6E4125; --rope: #B9794A;
+  --pill: #E9D9B0;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #D8CCAE; }
+body { font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+[hidden] { display: none !important; }
+
+.mi-app { position: fixed; inset: 0; overflow: hidden; }
+.mi-stage { position: absolute; left: 0; top: 0; width: 1366px; height: 657px; transform-origin: 0 0; background: var(--sand); overflow: hidden;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: none; }
+.mi-zy { font-family: 'Bpmf Huninn', 'Noto Sans TC', sans-serif; font-weight: 400; line-height: 1.5; white-space: nowrap; letter-spacing: .02em; }
+.mi-abs { position: absolute; }
+
+/* ---------- 頂欄（76px） ---------- */
+.mi-bar { position: absolute; left: 0; top: 0; width: 1366px; height: 76px; background: var(--sea); display: flex; align-items: center; gap: 14px; padding: 0 16px; z-index: 5; }
+.mi-home, .mi-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 16px; font-weight: 700; text-decoration: none; }
+.mi-home { height: 46px; min-width: 108px; padding: 0 14px; background: var(--parch); border: 2px solid var(--rope); color: var(--ink); font-size: 18px; box-shadow: 0 3px 0 rgba(110,65,37,.3); }
+.mi-title { font-size: 26px; }
+.mi-pills { display: flex; gap: 8px; margin-left: 8px; }
+.mi-pill { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px 0 8px; border-radius: 20px; background: var(--pill); color: var(--ink); border: 2px solid #CDB98A; font-size: 15px; }
+.mi-pill i { font-style: normal; width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,.88); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; font: 900 13px 'Noto Sans TC', sans-serif; }
+.mi-pill.now { background: var(--coral); color: #fff; border-color: #8A2E1A; }
+.mi-pill.done { background: var(--palm); color: #fff; border-color: #1F5A33; }
+.mi-calm { margin-left: auto; font-size: 18px; }
+.mi-sound { margin-left: 8px; width: 46px; height: 46px; border-radius: 50%; background: var(--parch); border: 2px solid var(--rope); display: inline-flex; align-items: center; justify-content: center; }
+.mi-sound svg { width: 24px; height: 24px; }
+.mi-ic { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ---------- 共用按鈕 ---------- */
+.mi-btn { height: 60px; padding: 0 22px; border: 0; color: #fff; font-size: 20px; box-shadow: 0 4px 0 rgba(51,38,27,.35); transition: transform .12s ease-out, box-shadow .12s ease-out; }
+.mi-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 rgba(51,38,27,.35); }
+.mi-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(51,38,27,.35); }
+.mi-btn.coral { background: var(--coral); } .mi-btn.palm { background: var(--palm); } .mi-btn.sea { background: var(--sea-d); }
+.mi-btn.line { background: var(--parch); color: var(--ink); border: 2px solid var(--rope); }
+.mi-btn:focus-visible, .mi-home:focus-visible, .mi-sound:focus-visible, .mi-seg button:focus-visible { outline: 4px solid var(--sea-d); outline-offset: 3px; }
+
+/* ---------- 開始畫面 ---------- */
+.mi-s-setup { position: absolute; inset: 76px 0 0; background: var(--sand); }
+.mi-hero { position: absolute; left: 40px; top: 40px; width: 420px; height: 420px; display: flex; align-items: center; justify-content: center; }
+.mi-hero svg { max-width: 100%; max-height: 100%; }
+.mi-info { position: absolute; left: 500px; top: 40px; width: 820px; }
+.mi-info h1 { margin: 0; font-size: 44px; font-weight: 900; }
+.mi-tags { display: flex; gap: 10px; margin: 10px 0 14px; }
+.mi-tag { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 17px; font-size: 16px; font-weight: 700; color: #fff; }
+.mi-tag.skill { background: var(--wood-d); }
+.mi-tag.g12 { background: var(--coral); } .mi-tag.g14 { background: var(--palm); } .mi-tag.g34 { background: var(--sea-d); }
+.mi-howto { font-size: 28px; margin: 0 0 18px; padding: 14px 20px; background: var(--parch); border: 2px solid var(--rope); border-radius: 18px; display: inline-block; white-space: normal; }
+.mi-howto.mi-zy { white-space: nowrap; }
+.mi-steps { display: flex; gap: 14px; margin-bottom: 22px; }
+.mi-step { width: 250px; padding: 12px 16px; background: var(--parch); border: 2px solid var(--rope); border-radius: 16px; }
+.mi-step b { display: flex; align-items: center; gap: 8px; font-size: 18px; }
+.mi-step b i { font-style: normal; width: 28px; height: 28px; border-radius: 50%; background: var(--coral); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; }
+.mi-step p { margin: 6px 0 0; font-size: 15px; color: var(--ink-2); line-height: 1.5; }
+.mi-go { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.mi-best { font-size: 18px; color: var(--ink); }
+.mi-teach { position: absolute; right: 24px; bottom: 18px; padding: 8px 14px; background: rgba(255,248,228,.92); border: 1px solid var(--rope); border-radius: 10px; font-size: 14px; line-height: 1.5; max-width: 560px; }
+.mi-teach b { color: var(--ink-2); }
+.mi-set { position: absolute; left: 40px; bottom: 18px; display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.mi-seg { display: inline-flex; background: var(--pill); border-radius: 12px; padding: 3px; }
+.mi-seg button { border: 0; background: none; padding: 6px 14px; border-radius: 9px; font-weight: 700; color: var(--ink); }
+.mi-seg button[aria-pressed="true"] { background: var(--sea-d); color: #fff; }
+
+/* ---------- 遊戲 ---------- */
+.mi-s-play { position: absolute; inset: 76px 0 0; }
+.mi-field { position: absolute; left: 0; top: 0; width: 1366px; height: 581px; overflow: hidden; }
+.mi-buddy { position: absolute; left: 14px; bottom: 8px; width: 150px; height: 140px; z-index: 6; pointer-events: none; }
+.mi-buddy svg { width: 130px; height: 122px; animation: mi-bob 2.2s ease-in-out infinite; }
+.mi-say { position: absolute; left: 150px; bottom: 70px; z-index: 6; max-width: 520px; padding: 10px 18px; background: var(--parch); border: 2px solid var(--rope); border-radius: 16px; font-size: 22px; box-shadow: 0 3px 0 rgba(110,65,37,.25); pointer-events: none; }
+.mi-say::before { content: ""; position: absolute; left: -11px; bottom: 16px; border: 10px solid transparent; border-right-color: var(--rope); border-left: 0; }
+.mi-say.hint { background: #FFF1C9; border-color: var(--gold); }
+.mi-banner { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 8; padding: 18px 36px; background: var(--palm); color: #fff; border-radius: 22px; font-size: 34px; box-shadow: 0 6px 0 #1F5A33; pointer-events: none; }
+
+/* 目標發光：金色光暈＋深色虛線外圈（光暈對沙底只有 1.5:1，外圈一定要有） */
+.mi-glow { outline: 3px dashed var(--ink-2); outline-offset: 6px; filter: drop-shadow(0 0 14px rgba(242,177,52,.95)) drop-shadow(0 0 4px rgba(242,177,52,.9)); animation: mi-glow 1.4s ease-in-out infinite; }
+@keyframes mi-glow { 50% { filter: drop-shadow(0 0 22px rgba(242,177,52,1)) drop-shadow(0 0 6px rgba(242,177,52,1)); } }
+
+/* 手指示範：白色大游標（不擋點擊） */
+.mi-demo { position: absolute; left: 0; top: 0; width: 46px; height: 64px; z-index: 9; pointer-events: none; transition: transform .6s cubic-bezier(.4,.1,.3,1); }
+.mi-demo svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 2px rgba(0,0,0,.25)); }
+.mi-demo.press svg { transform: scale(.88); transform-origin: 4px 3px; }
+.mi-demo .mi-rbtn { position: absolute; left: 30px; top: 46px; padding: 2px 10px; border-radius: 10px; background: var(--sea-d); color: #fff; font-size: 15px; font-weight: 700; white-space: nowrap; }
+.mi-rip { position: absolute; width: 70px; height: 70px; margin: -35px 0 0 -35px; border: 5px solid var(--coral-l); border-radius: 50%; z-index: 9; pointer-events: none; animation: mi-rip .5s ease-out forwards; }
+@keyframes mi-rip { from { opacity: .95; transform: scale(.3); } to { opacity: 0; transform: scale(1.3); } }
+.mi-num { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; z-index: 9; color: #fff; font: 900 24px 'Noto Sans TC', sans-serif; display: flex; align-items: center; justify-content: center; border: 3px solid var(--parch); box-shadow: 0 2px 0 rgba(0,0,0,.2); pointer-events: none; }
+.mi-num.a { background: var(--coral); } .mi-num.b { background: var(--palm); }
+.mi-boxsel { position: absolute; z-index: 7; border: 3px dashed var(--sea-d); background: rgba(35,111,150,.12); pointer-events: none; }
+
+/* ---------- 結算 ---------- */
+.mi-s-done { position: absolute; inset: 76px 0 0; background: #F1E3BA; }
+.mi-chest { position: absolute; left: 24px; top: 14px; width: 516px; height: 552px; background: #FFF1D0; border: 3px solid var(--rope); border-radius: 20px; box-shadow: 0 4px 0 rgba(110,65,37,.28); overflow: hidden; }
+.mi-chest > svg { position: absolute; left: 8px; top: 6px; width: 500px; height: 432px; }
+.mi-chest .cap { position: absolute; left: 150px; bottom: 26px; font-size: 18px; line-height: 1.6; }
+.mi-chest .cap b { font-size: 30px; }
+.mi-chest .buddy { position: absolute; left: 14px; bottom: 10px; width: 120px; }
+.mi-praise { position: absolute; left: 570px; top: 18px; width: 772px; height: 70px; font-size: 28px; display: flex; align-items: center; gap: 12px; }
+.mi-stars { display: flex; gap: 2px; flex: none; margin-left: auto; }
+.mi-stars svg { width: 42px; height: 42px; }
+.mi-tiles { position: absolute; left: 570px; top: 104px; display: flex; gap: 20px; }
+.mi-tile { width: 244px; height: 90px; padding: 8px 16px; background: var(--parch); border: 2px solid var(--rope); border-radius: 14px; }
+.mi-tile small { display: block; font-size: 15px; color: var(--ink-2); }
+.mi-tile b { font-size: 30px; font-weight: 900; }
+.mi-tile .rec { font-size: 15px; color: var(--coral); font-weight: 700; margin-left: 6px; }
+.mi-dex { position: absolute; left: 570px; top: 210px; width: 772px; height: 236px; padding: 14px 18px; background: var(--parch); border: 2px solid var(--rope); border-radius: 16px; box-shadow: 0 4px 0 rgba(110,65,37,.2); }
+.mi-dex .hd { display: flex; justify-content: space-between; font-size: 18px; }
+.mi-dex .new { position: absolute; left: 18px; top: 58px; width: 230px; display: flex; gap: 14px; align-items: center; font-size: 20px; }
+.mi-dex .new .pic { width: 110px; height: 110px; border: 3px solid var(--sea-d); border-radius: 16px; background: #DCEFF3; display: flex; align-items: center; justify-content: center; position: relative; }
+.mi-dex .new .pic em { position: absolute; left: -8px; top: -14px; padding: 2px 10px; border-radius: 10px; background: var(--coral); color: #fff; font-style: normal; font-size: 14px; }
+.mi-dex .grid { position: absolute; left: 290px; top: 52px; display: grid; grid-template-columns: repeat(6, 64px); gap: 10px; }
+.mi-dex .slot { width: 64px; height: 64px; border-radius: 12px; background: #FFF8E4; border: 2px solid var(--rope); display: flex; align-items: center; justify-content: center; }
+.mi-dex .slot.q { background: #EBDDB4; border-style: dashed; border-color: #B8A272; color: var(--ink-2); font-size: 24px; font-weight: 900; }
+.mi-dex .slot.now { border: 3px solid var(--sea-d); box-shadow: 0 0 0 4px var(--sea); }
+.mi-dex .slot svg { width: 52px; height: 52px; }
+.mi-dex .tip { position: absolute; left: 290px; bottom: 12px; font-size: 16px; }
+.mi-dex.empty .new { display: none; } .mi-dex.empty .grid, .mi-dex.empty .tip { left: 18px; }
+.mi-acts { position: absolute; left: 570px; top: 476px; display: flex; gap: 12px; width: 772px; }
+.mi-acts .mi-btn { height: 64px; padding: 0 16px; font-size: 18px; flex: 1 1 auto; }
+.mi-msg { position: absolute; left: 570px; top: 448px; font-size: 15px; color: var(--coral); }
+
+/* 寶石落槽（約 0.85 秒，只播一次） */
+@keyframes mi-gemdrop { 0% { transform: translateY(-80px); opacity: 0; } 10% { opacity: 1; } 80% { transform: translateY(0); } 90% { transform: translateY(1.5px) scale(1.12, .88); } 100% { transform: translateY(0) scale(1); } }
+.mi-gemdrop { animation: mi-gemdrop .5s ease-in both; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes mi-halo { 0% { opacity: 0; transform: scale(.4); } 12% { opacity: .95; } 100% { opacity: 0; transform: scale(2.8); } }
+.mi-halo { opacity: 0; fill: none; stroke: var(--gold); stroke-width: 3; transform-box: fill-box; transform-origin: center; animation: mi-halo .45s ease-out .4s both; }
+@keyframes mi-spark { 0% { opacity: 0; transform: translate(0, 0) scale(.4); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1); } }
+.mi-spark { opacity: 0; transform-box: fill-box; transform-origin: center; animation: mi-spark .45s ease-out .4s both; }
+
+@keyframes mi-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes mi-wob { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+.mi-wob { animation: mi-wob .5s ease-in-out 2; transform-origin: 50% 92%; }
+@media (prefers-reduced-motion: reduce) {
+  .mi-stage *, .mi-stage *::before { animation: none !important; transition: none !important; }
+  .mi-halo, .mi-spark { display: none; }
+}

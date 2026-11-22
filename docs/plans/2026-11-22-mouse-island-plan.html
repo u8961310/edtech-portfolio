@@ -1,0 +1,212 @@
+<title>滑鼠島改版計畫</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: 單欄閱讀＋每節彩色標題帶；表格走對帳單風（深藍表頭）。沿用畫畫島、小常識島計畫頁 */
+:root{
+ --bg:#e8edf3; --paper:#f6f8fb; --fg:#1d2733; --muted:#4a5868; --line:#c9d3df;
+ --thead:#1f3a5f; --thead-fg:#ffffff;
+ --b1:#2f6db5; --b2:#2c8a6e; --b3:#b4632a; --b4:#7a4fb0; --b5:#b23a55; --b6:#3d7d93;
+ --chip-bg:#dde6f0; --warn:#8a3f0c; --warn-bg:#fbeadc;
+ --g12:#2c8a6e; --g34:#7a4fb0;
+ --sans:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+ --display:"Space Grotesk","Noto Sans TC",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+ --bg:#1a222c; --paper:#222c38; --fg:#e4eaf1; --muted:#aab6c4; --line:#3a4757;
+ --thead:#2c4d78; --chip-bg:#2e3b4b; --warn:#f2b483; --warn-bg:#3a2a1e; color-scheme:dark}}
+:root[data-theme="dark"]{
+ --bg:#1a222c; --paper:#222c38; --fg:#e4eaf1; --muted:#aab6c4; --line:#3a4757;
+ --thead:#2c4d78; --chip-bg:#2e3b4b; --warn:#f2b483; --warn-bg:#3a2a1e; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.7}
+.wrap{max-width:900px;margin:0 auto;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+header h1{font-family:var(--display);font-size:1.9rem;margin:0;text-wrap:balance}
+header p{margin:.3rem 0 0;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{background:var(--chip-bg);border-radius:4px;padding:2px 9px;font-size:.85rem}
+section{background:var(--paper);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+section>h2{margin:0;padding:9px 16px;font-size:1.05rem;color:#fff;font-weight:700}
+.c1>h2{background:var(--b1)}.c2>h2{background:var(--b2)}.c3>h2{background:var(--b3)}
+.c4>h2{background:var(--b4)}.c5>h2{background:var(--b5)}.c6>h2{background:var(--b6)}
+.body{padding:12px 16px 16px;min-width:0}
+.body p{margin:.4rem 0}
+ul,ol{margin:.3rem 0;padding-left:1.3rem}
+li{margin:.15rem 0}
+h3{font-size:1rem;margin:1rem 0 .3rem;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.tbl{overflow-x:auto;margin:.5rem 0}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:560px}
+th{background:var(--thead);color:var(--thead-fg);text-align:left;padding:6px 9px;font-weight:500}
+td{padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+code{font-family:Consolas,monospace;font-size:.86em;background:var(--chip-bg);padding:0 4px;border-radius:3px}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:4px;padding:8px 12px;margin:.5rem 0}
+.tag{display:inline-block;color:#fff;border-radius:3px;padding:0 7px;font-size:.82rem;font-weight:700}
+.tag.g12{background:var(--g12)}.tag.g34{background:var(--g34)}.tag.g14{background:linear-gradient(90deg,var(--g12) 50%,var(--g34) 50%)}.tag.new{background:var(--b3)}.tag.old{background:var(--b6)}
+.game{border-top:1px solid var(--line);padding-top:6px;margin-top:10px}
+.game:first-of-type{border-top:0;margin-top:0}
+.game dl{display:grid;grid-template-columns:5.5em minmax(0,1fr);gap:2px 10px;margin:.3rem 0}
+.game dt{color:var(--muted);font-weight:700}
+.game dd{margin:0}
+.ladder{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:.5rem 0}
+.ladder span{border:1px solid var(--line);border-radius:4px;padding:2px 9px;background:var(--paper)}
+.ladder span.g12{border-color:var(--g12)} .ladder span.g34{border-color:var(--g34)} .ladder span.g14{border-color:var(--g12);border-right-color:var(--g34);border-bottom-color:var(--g34)}
+.ladder i{font-style:normal;color:var(--muted)}
+@media (max-width:480px){.game dl{grid-template-columns:1fr}.game dt{margin-top:4px}}
+</style>
+
+<div class="wrap">
+<header>
+ <h1>滑鼠島改版計畫</h1>
+ <p>edtech-portfolio · 1–4 年級 · 新做 4 關＋舊 3 關換新外殼 · 教學理論：對應學習能力＋鷹架／難度漸進 · Gemini 製作互動遊戲</p>
+ <div class="meta"><span class="chip">2026-11-22 草案</span><span class="chip">狀態：M0 定案，M1 設計稿製作中</span></div>
+</header>
+
+<section class="c1"><h2>你已經決定的</h2><div class="body"><div class="tbl"><table>
+<tr><th>項目</th><th>決定</th></tr>
+<tr><td>對象</td><td>1–4 年級：① 只給 1–2 年級；②③④ 1–4 年級都能玩（你 11-22 補充「有些一二年級的三四年級也能玩」）；⑤⑥⑦ 給 3–4 年級</td></tr>
+<tr><td>教學理論</td><td>只套兩項：<b>對應學習能力</b>（每關一個滑鼠技能＋課綱條目）、<b>鷹架／難度漸進</b>（技能階梯＋每關由易到難＋卡住逐層提示）。Gagné、ARCS 沒選，不硬加</td></tr>
+<tr><td>舊 3 關</td><td>保留，換新外殼重做（小兔勇者 unit2、滑鼠勇士 unit21、拔蔬菜 unit19）</td></tr>
+<tr><td>新關</td><td>4 關，加舊 3 關共 7 關（跟畫畫島、小常識島同規模）</td></tr>
+<tr><td>製作</td><td>沿用前三座島的流程：共用外殼＋提示詞 md，遊戲本體交給 Gemini（Antigravity <code>agy</code>）</td></tr>
+</table></div></div></section>
+
+<section class="c2"><h2>現況：舊 3 關在練什麼</h2><div class="body">
+<div class="tbl"><table>
+<tr><th>關卡</th><th>現在的玩法</th><th>練到的操作</th><th>問題</th></tr>
+<tr><td>小兔勇者 unit2</td><td>森林→山洞→魔王城 3 關打怪，結尾發證書</td><td>點擊、移動、拖曳、雙擊</td><td>四種操作混在一起，沒有由易到難</td></tr>
+<tr><td>滑鼠勇士 unit21</td><td>餵貓咪、垃圾分類（拖進三個桶子）</td><td>點擊、拖曳</td><td>拖曳垃圾跟小常識島「寵物房間大整理」的拖檔案有點像</td></tr>
+<tr><td>拔蔬菜 unit19</td><td>按鍵盤字母拔蔬菜（中間排／上排／下排／全字母）</td><td><b>鍵盤</b>，不是滑鼠</td><td>放在滑鼠島但練的是打字</td></tr>
+</table></div>
+<p>整座島目前<b>完全沒練到右鍵、滾輪、框選</b>，雙擊也只在小兔勇者裡出現一下。這次的重點就是把技能補齊、排成階梯。</p>
+</div></section>
+
+<section class="c3"><h2>技能階梯（鷹架的骨架）</h2><div class="body">
+<p>7 關照技能難度排成一條階梯，前一關練熟的動作，下一關拿來當基礎。島上的關卡順序就照這條走。</p>
+<div class="ladder">
+ <span class="g12">① 指向＋單擊</span><i>→</i><span class="g14">② 雙擊</span><i>→</i><span class="g14">③ 拖曳</span><i>→</i><span class="g14">④ 基本操作總複習</span><i>→</i><span class="g34">⑤ 右鍵選單</span><i>→</i><span class="g34">⑥ 滾輪</span><i>→</i><span class="g34">⑦ 框選與多選</span>
+</div>
+<h3>每關裡面的鷹架（7 關共用，寫進外殼）</h3>
+<div class="tbl"><table>
+<tr><th>階段</th><th>目標</th><th>速度</th><th>引導</th></tr>
+<tr><td>第 1 段：跟著做</td><td>大、不會動</td><td>不限時</td><td>先播一次「手指示範」動畫，目標發光</td></tr>
+<tr><td>第 2 段：自己做</td><td>中、慢慢動</td><td>寬鬆</td><td>不主動提示，卡住才給</td></tr>
+<tr><td>第 3 段：小挑戰</td><td>小、會動或有干擾物</td><td>正常</td><td>不主動提示，卡住才給</td></tr>
+</table></div>
+<h3>卡住時的逐層提示</h3>
+<ol>
+ <li>連續失手 2 次：目標發光＋一句方向提示（例：「按兩下要快一點喔」）</li>
+ <li>連續失手 4 次：重播手指示範動畫</li>
+ <li>還是不行：這一段自動放慢、目標放大，確保每個小朋友都能做完</li>
+</ol>
+<p>失手不扣命、不會輸，只影響星星數；目的是練到會，不是淘汰。</p>
+<h3>3–4 年級玩 ②③④ 時</h3>
+<ul>
+ <li>第一段「看我示範」可以按「我會了，跳過」直接進第二段</li>
+ <li>第三段目標再小一點、快一點（依首頁選的年級自動調；沒選年級就照 1–2 年級難度）</li>
+ <li>過關後的「最快紀錄」是他們的主要挑戰</li>
+</ul>
+</div></section>
+
+<section class="c4"><h2>7 關遊戲設計</h2><div class="body">
+
+<div class="game"><h3><span class="tag g12">1–2 年級</span><span class="tag old">重做</span> ① 滑鼠勇士（unit21）— 指向＋單擊</h3><dl>
+<dt>學習能力</dt><dd>能移動游標指到目標，並在目標上按一下左鍵｜生活 2-I-5、資E1</dd>
+<dt>玩法</dt><dd>保留餵貓咪：第 1 段游標移到貓咪身上貓咪會醒來（只要指向）；第 2 段點飼料餵貓；第 3 段飼料會在盤子裡滑動，點中才算</dd>
+<dt>改動</dt><dd>垃圾分類的拖曳搬到 ③，這關專心練指向與單擊</dd>
+<dt>好玩</dt><dd>睡著的貓咪會跟著游標轉頭、伸手抓（光是移動滑鼠就好玩）；點到魚骨頭貓咪會做鬼臉吐舌頭；第三段飼料像在冰上滑，貓咪急得跳來跳去</dd></dl></div>
+
+<div class="game"><h3><span class="tag g14">1–4 年級</span><span class="tag new">新</span> ② 敲敲蛋寶寶 — 雙擊</h3><dl>
+<dt>學習能力</dt><dd>能快速連按兩下左鍵（雙擊），知道雙擊是用來「打開」東西｜生活 2-I-5、資E1</dd>
+<dt>玩法</dt><dd>雙擊蛋殼把小動物孵出來；第 1 段蛋很大、間隔很寬鬆；第 2 段要分辨按一下（蛋晃一下）跟按兩下（蛋破開）；第 3 段好幾顆蛋，只孵發光的那顆</dd>
+<dt>老師設定</dt><dd>雙擊速度慢／中／快可調（教室電腦與孩子差異大）</dd>
+<dt>好玩</dt><dd>每顆蛋孵出不同的小動物（小雞、企鵝、小恐龍…），偶爾出現稀有的彩虹蛋；孵過的收進「蛋寶寶圖鑑」，一共 12 種，想集滿就會重玩；只按一下時蛋會晃一晃、咯咯笑</dd></dl></div>
+
+<div class="game"><h3><span class="tag g14">1–4 年級</span><span class="tag old">重做</span> ③ 拔蔬菜（unit19）— 拖曳</h3><dl>
+<dt>學習能力</dt><dd>能按住左鍵移動再放開（拖曳），把東西放到指定位置｜生活 2-I-5、資E1</dd>
+<dt>玩法</dt><dd>改成滑鼠版：按住蔬菜往上拔（第 1 段），拔起來拖進籃子（第 2 段），依種類拖進不同籃子（第 3 段，接手 unit21 原本的分類拖曳）</dd>
+<dt>注意</dt><dd>原本的鍵盤版會被取代（M0 已定案）</dd>
+<dt>好玩</dt><dd>按住往上拉時蔬菜會被拉長像橡皮筋，「啵」一聲拔出來；偶爾拔出意外驚喜（金色紅蘿蔔、戴帽子的蘿蔔）；拖錯籃子蔬菜會自己跳出來搖頭</dd></dl></div>
+
+<div class="game"><h3><span class="tag g14">1–4 年級</span><span class="tag old">重做</span> ④ 小兔勇者（unit2）— 基本操作總複習</h3><dl>
+<dt>學習能力</dt><dd>能依情境選對操作：指向、單擊、雙擊、拖曳｜生活 2-I-5、3-I-3、資E13</dd>
+<dt>玩法</dt><dd>保留森林→山洞→魔王城：每一站畫面提示要用哪個動作，前三關練過的動作輪流出現；魔王戰把四種混在一起。結尾保留證書</dd>
+<dt>好玩</dt><dd>動作提示做成「招式卡」（點點拳、連打雙擊、拖拖盾）；魔王被打中會打噴嚏、帽子歪掉，最後投降變成朋友；證書印上自己的名字</dd></dl></div>
+
+<div class="game"><h3><span class="tag g34">3–4 年級</span><span class="tag new">新</span> ⑤ 右鍵魔法師 — 右鍵選單</h3><dl>
+<dt>學習能力</dt><dd>能按右鍵叫出選單並選對指令，知道右鍵是「看看能對它做什麼」｜資E1、資E2</dd>
+<dt>玩法</dt><dd>右鍵點魔法道具，跳出選單（變大、變色、收起來…）照任務選；第 3 段選單項目跟電腦真的很像（重新命名、複製、刪除），選錯會出現小提醒</dd>
+<dt>觸控</dt><dd>長按當右鍵（M0 已定案）</dd>
+<dt>好玩</dt><dd>選錯指令會發生好笑的魔法（藥水變超大塞滿畫面、貓咪變青蛙呱一聲），再自動變回來；選對才完成任務，所以錯了也想再試；第三段選單長得像電腦，最後一句告訴他「真的電腦也可以這樣按」</dd></dl></div>
+
+<div class="game"><h3><span class="tag g34">3–4 年級</span><span class="tag new">新</span> ⑥ 海底捲捲探險 — 滾輪</h3><dl>
+<dt>學習能力</dt><dd>能用滾輪上下捲動找到內容，並知道滾輪也能放大縮小｜資E1、資E2</dd>
+<dt>玩法</dt><dd>潛水艇往下捲到深海找寶物（第 1 段只要往下捲）；要往回捲找漏掉的（第 2 段上下來回）；用滾輪放大海圖找小魚（第 3 段）</dd>
+<dt>觸控</dt><dd>手指上下滑動、兩指縮放</dd>
+<dt>好玩</dt><dd>越往下捲光線越暗，深海出現會發光的魚；捲太快潛水艇會轉圈頭暈；放大海圖才找得到躲在石頭後面的章魚；收集到的寶物放進「海底寶箱」</dd></dl></div>
+
+<div class="game"><h3><span class="tag g34">3–4 年級</span><span class="tag new">新</span> ⑦ 牧場圍圍樂 — 框選與多選</h3><dl>
+<dt>學習能力</dt><dd>能拖出框框一次選很多個、按住 Ctrl 點選挑幾個，整理一群東西｜資E1、資E8</dd>
+<dt>玩法</dt><dd>拖框把羊群圍進柵欄（第 1 段）；框太大會圍到小狼，要調整範圍（第 2 段）；按住 Ctrl 只挑白羊（第 3 段）</dd>
+<dt>連結</dt><dd>最後一段說明：電腦桌面上一次選好幾個檔案也是這樣做</dd>
+<dt>好玩</dt><dd>羊會亂跑、吃草、互相推擠；有一隻小狼披著羊皮混在裡面，框到牠會「嗷」一聲把羊皮掀開；全部圍好羊群一起咩咩合唱</dd></dl></div>
+
+</div></section>
+
+<section class="c2"><h2>好玩設計（整座島共用）</h2><div class="body">
+<p>練滑鼠本身很單調，所以「為什麼想一直玩」要跟「練什麼」一樣認真設計。原則：<b>好玩的東西放在操作的結果上</b>（按對、按錯都有好笑的反應），不放在目標旁邊搶眼睛。</p>
+<div class="tbl"><table>
+<tr><th>機制</th><th>怎麼做</th><th>為什麼好玩</th></tr>
+<tr><td>島上嚮導角色</td><td>一隻原創小角色陪著闖關，示範動作、卡住時出聲提醒、成功時一起歡呼（長相 M1 選定）</td><td>有人陪，失手不孤單</td></tr>
+<tr><td>技能護照</td><td>7 個技能章，蓋章有動畫和音效；集滿 7 章拿到印自己名字的「滑鼠小達人證書」</td><td>看得到進度，想集滿</td></tr>
+<tr><td>收集圖鑑</td><td>蛋寶寶圖鑑（12 種小動物）、金色蔬菜、海底寶箱；每次玩隨機出現，重玩才集得完</td><td>每次玩都不一樣</td></tr>
+<tr><td>驚喜目標</td><td>第三段偶爾出現閃亮的彩虹目標，按到多一顆星</td><td>期待感</td></tr>
+<tr><td>失手變搞笑</td><td>按錯不是「叭」的錯誤音，而是角色做鬼臉、東西彈回去、蛋咯咯笑</td><td>錯了也想再試，不怕錯</td></tr>
+<tr><td>挑戰自己</td><td>過關後開放「最快紀錄」模式，跟自己上次比（不排行、不比別人）</td><td>學會的孩子還有事做</td></tr>
+<tr><td>音效</td><td>每個動作都有對應聲音（啵、咯咯、咩）；右上角可關，教室預設關、在家可開</td><td>操作有回饋，教室不吵</td></tr>
+</table></div>
+<p class="note">底線：好玩元素不能讓目標變難找。動畫不連續閃爍（每秒 ≤ 3 次），第一段（看我示範）畫面保持乾淨，搞笑反應從第二段才變多。</p>
+</div></section>
+
+<section class="c6"><h2>學習能力對照</h2><div class="body"><div class="tbl"><table>
+<tr><th>代碼</th><th>原文</th><th>用在</th></tr>
+<tr><td>生活 2-I-5</td><td>運用各種探究事物的方法及技能，對訊息做適切的處理，並養成動手做的習慣。</td><td>① ② ③ ④</td></tr>
+<tr><td>生活 3-I-3</td><td>體會學習的樂趣和成就感，主動學習新的事物。</td><td>④</td></tr>
+<tr><td>資E1</td><td>認識常見的資訊系統。</td><td>7 關都是</td></tr>
+<tr><td>資E2</td><td>使用資訊科技解決生活中簡單的問題。</td><td>⑤ ⑥</td></tr>
+<tr><td>資E8</td><td>認識基本的數位資源整理方法。</td><td>⑦</td></tr>
+<tr><td>資E13</td><td>具備學習資訊科技的興趣。</td><td>④</td></tr>
+</table></div>
+<p>出處：國教院《議題融入說明手冊》資訊教育國小實質內涵（資E1–資E13）、《十二年國教課綱 生活課程》學習表現。1–2 年級沒有資訊科目，所以同時對生活課程。原文已從手冊 PDF 抽出核對。</p>
+</div></section>
+
+<section class="c5"><h2>製作方式</h2><div class="body"><ul>
+<li>共用外殼 <code>assets/js/mouse-ui.js</code>：標題卡、三段鷹架流程、逐層提示、手指示範動畫、星星結算、回首頁按鈕、QR 收成績</li>
+<li>技能護照：7 個技能各一個章，玩過就蓋章，首頁和清單看得到進度</li>
+<li>操作偵測寫在外殼裡（雙擊間隔、右鍵、滾輪方向、框選範圍），Gemini 只做畫面與情境，避免每關判斷標準不一樣</li>
+<li>提示詞 <code>docs/plans/mouse-island-gemini-prompt.md</code>＋產生器；自動驗收腳本模擬真的滑鼠動作（雙擊、右鍵、滾輪、拖框）跑完每關</li>
+<li>注音：1–2 年級畫面文字加注音，破音字照萌典核對（同首頁、小常識島做法）</li>
+<li>關卡圖示：島上 7 關換成 Fluent 3D 圖（首頁已經有這套流程）</li>
+</ul></div></section>
+
+<section class="c1"><h2>里程碑</h2><div class="body"><div class="tbl"><table>
+<tr><th>里程碑</th><th>內容</th></tr>
+<tr><td>M0</td><td>規劃定稿＋待決事項</td></tr>
+<tr><td>M1</td><td>3 版 mockup → 選定風格 → 設計規範</td></tr>
+<tr><td>M2</td><td>共用外殼 mouse-ui.js＋示範關＋Gemini 提示詞＋操作偵測測試</td></tr>
+<tr><td>M3</td><td>新 4 關（雙擊、右鍵、滾輪、框選）</td></tr>
+<tr><td>M4</td><td>舊 3 關換新外殼</td></tr>
+<tr><td>M5</td><td>自動驗收＋每關學習能力檢核＋鷹架檢核（三段都有、提示會逐層出現）</td></tr>
+<tr><td>M6</td><td>島圖、清單頁、首頁圖示、README</td></tr>
+<tr><td>M7</td><td>上線＋正式站試玩</td></tr>
+</table></div></div></section>
+
+<section class="c3"><h2>M0 定案（2026-11-22 你回覆「照建議」）</h2><div class="body"><div class="tbl"><table>
+<tr><th>待決</th><th>定案</th></tr>
+<tr><td>拔蔬菜原本是鍵盤遊戲</td><td>改成滑鼠拖曳版（打字島已經有 8 關鍵盤練習）</td></tr>
+<tr><td>關卡名稱</td><td>② 敲敲蛋寶寶、⑤ 右鍵魔法師、⑥ 海底捲捲探險、⑦ 牧場圍圍樂</td></tr>
+<tr><td>平板觸控</td><td>1–2 年級 4 關觸控也能玩（點、點兩下、拖）；3–4 年級長按代替右鍵、手指滑動代替滾輪，畫面註明「用滑鼠練最好」</td></tr>
+<tr><td>成績</td><td>7 關都接 QR 收成績，記星星數與每個技能的成功率</td></tr>
+</table></div>
+<p>下一步 M1：三種設計方法各出一版 mockup（大廳技能護照、敲敲蛋寶寶第一段、卡住提示、右鍵魔法師第三段、蓋章結算）。</p>
+</div></section>
+
+</div>

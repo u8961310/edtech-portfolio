@@ -16,6 +16,10 @@ SRC = {
     "rabbit": "assets/Rabbit face/3D/rabbit_face_3d.png",
     "computer-mouse": "assets/Computer mouse/3D/computer_mouse_3d.png",
     "carrot": "assets/Carrot/3D/carrot_3d.png",
+    "hatching-chick": "assets/Hatching chick/3D/hatching_chick_3d.png",   # 滑鼠島 unit33 敲敲蛋寶寶（2026-11-22）
+    "magic-wand": "assets/Magic wand/3D/magic_wand_3d.png",             # unit34 右鍵魔法師
+    "octopus": "assets/Octopus/3D/octopus_3d.png",                      # unit35 海底捲捲探險
+    "ewe": "assets/Ewe/3D/ewe_3d.png",                                  # unit36 牧場圍圍樂
     "hamster": "assets/Hamster/3D/hamster_3d.png",
     "rocket": "assets/Rocket/3D/rocket_3d.png",
     "t-rex": "assets/T-rex/3D/t-rex_3d.png",

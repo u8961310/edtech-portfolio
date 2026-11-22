@@ -40,3 +40,6 @@ tools/og/home.png
 
 # Playwright MCP 截圖（子代理自檢用，不進版控）
 .playwright-mcp/
+
+# 滑鼠島自動驗收截圖（tools/test-mouse-scenes.py 產生）
+mouse-shots/

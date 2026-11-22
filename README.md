@@ -28,7 +28,13 @@
 
 | 年級 | 資料夾 | 主題 | 教學目標 |
 |------|--------|------|---------|
-| 🎒 一年級 | `unit2-mouse-adventure` | 小兔勇者大冒險 | 滑鼠點擊 / 移動 / 拖曳 / 雙擊 |
+| 🎒 1–2 年級 | `unit21-mouse-challenge` | 滑鼠勇士 | 滑鼠島①：指向與單擊（叫醒貓咪、餵點心；注音）｜生活 2-I-5、資E1 |
+| 🖱️ 1–4 年級 | `unit33-egg-tap` | 敲敲蛋寶寶 | 滑鼠島②：雙擊（孵蛋、蛋寶寶圖鑑；雙擊速度老師可調；注音）｜生活 2-I-5、資E1 |
+| 🖱️ 1–4 年級 | `unit19-farm-harvest` | 拔蔬菜 | 滑鼠島③：拖拉（拔起來拖進菜籃、分類；原鍵盤版已改成滑鼠版；注音）｜生活 2-I-5、資E1 |
+| 🖱️ 1–4 年級 | `unit2-mouse-adventure` | 小兔勇者 | 滑鼠島④：總複習（招式卡選對操作、魔王戰、證書；注音）｜生活 2-I-5、3-I-3、資E13 |
+| 📘 3–4 年級 | `unit34-right-click-wizard` | 右鍵魔法師 | 滑鼠島⑤：右鍵選單（開啟／複製／重新命名／刪除；平板長按）｜資E1、資E2 |
+| 📘 3–4 年級 | `unit35-scroll-sea` | 海底捲捲探險 | 滑鼠島⑥：滾輪捲動與縮放（平板手指滑）｜資E1、資E2 |
+| 📘 3–4 年級 | `unit36-box-farm` | 牧場圍圍樂 | 滑鼠島⑦：框選與 Ctrl 多選｜資E1、資E8 |
 | 🎒 一年級 | `unit4-whack-keyboard` | 鍵盤打地鼠 | 鍵盤入門：數字 / 方向鍵 / 英文字母位置認識 |
 | 🎒 一年級 | `unit3-space-typing` | 太空打字防衛戰 | 英文打字入門：字母 → 短詞 → 3 字母單字 |
 | 🎨 1–4 年級 | `unit5-pixel-art` | 像素小畫家 | 畫畫島：低年級數字填色、中年級座標畫圖、像素概念與自由創作 |
@@ -56,9 +62,7 @@
 | 🎨 1–4 年級 | `unit28-sparkle-fireworks` | 閃亮亮煙火畫 | 畫畫島：自由發揮、不評分，煙火／亮粉／霓虹／泡泡／彩虹筆與煙火秀特效（音效預設關） |
 | 📘 3–4 年級 | `unit26-mirror-workshop` | 對稱魔鏡工坊 | 畫畫島：左右／上下／萬花筒／雪花對稱創作（視E-II-1、視E-II-3） |
 | 📘 3–4 年級 | `unit27-paint-mission` | 小畫家任務局 | 畫畫島：繪圖工具（圖形、填色、選取、複製貼上）、步數與標準桿（視E-II-2） |
-| 🎒 一年級 | `unit19-farm-harvest` | 快樂農場：蔬菜拔拔樂 | 滑鼠拖曳收成、手眼協調、專注力（難度可選） |
 | 🎒 一年級 | `unit20-sock-matching` | 瘋狂襪子配對線 | 連線配對、觀察規律、運算思維邏輯 |
-| 🎒 一年級 | `unit21-mouse-challenge` | 滑鼠小勇士大冒險 | 滑鼠綜合技巧：點擊／拖曳／按住／雙擊 |
 | 📘 中年級 | `unit22-xmas-workshop` | 聖誕工坊大救援 | 聖誕節慶：主線四關（分類、程式序列、網路安全、打字＋快問快答）＋畫畫屋與 4 個小遊戲，全站唯一附注音字型 |
 | ⚔️ 跨年級 | `unit23-typing-duel` | 打字擂台 | 兩台電腦 1 對 1 連線打字對戰（英打／注音中打）、國小 9 領域 57 篇原創選文（注音字型＋破音字）、分層提示、結算看進步 |
 | 🎲 跨年級 | `board/` | 資訊大富翁：森林大冒險 | 資安 / 護眼 / 密碼 / 個資 / 硬體常識；過關發證書可列印 |
@@ -99,7 +103,7 @@ edtech-portfolio/
 └── units/                      # 各單元教材
     ├── unit1-typing-adventure/
     │   └── index.html
-    ├── unit2-mouse-adventure/
+    ├── unit2-mouse-adventure/        # 滑鼠島④（滑鼠島 7 關共用外殼 assets/js/mouse-ui.js＋assets/css/mouse-island.css）
     │   └── index.html
     ├── unit3-space-typing/
     │   └── index.html
@@ -116,6 +120,7 @@ edtech-portfolio/
     ├── unit9-net-detective/          # 小常識島：寵物警察訓練
     │   └── index.html
     ├── unit29-pet-computer/ … unit32-pet-ai-homework/   # 小常識島新 4 關
+    ├── unit33-egg-tap/ … unit36-box-farm/              # 滑鼠島新 4 關（雙擊、右鍵、滾輪、框選）
     ├── smart-pet-house/              # 小常識島：寵物小屋
     ├── unit10-classifier-captain/
     │   └── index.html

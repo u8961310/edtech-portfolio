@@ -14,12 +14,18 @@ const G1 = '🎒 一年級', GM = '📘 中年級', G3 = '🎓 三年級', GA = 
 const T1 = '🌱 初階 1–3 年級', T2 = '🌿 進階 4–5 年級', T3 = '🌳 高階 6 年級';   // 打字島三階
 const A12 = '🎒 1–2 年級', A34 = '📘 3–4 年級', A14 = '🎨 1–4 年級';                // 畫畫島（2026-11-21 改版）
 const S14 = '⭐ 1–4 年級';                                                           // 小常識島 1–4 年級（2026-11-22；A12／A34 共用）
+const M14 = '🖱️ 1–4 年級';                                                          // 滑鼠島 1–4 年級（2026-11-22；A12／A34 共用）
 
 export const ISLANDS = [
   { id:'mouse', name:'滑鼠島', icon:'🖱️', color:0x5fd38d, units:[
-    ['小兔勇者','🐰','bunny','units/unit2-mouse-adventure/','小兔勇者大冒險',G1,2],
-    ['滑鼠勇士','🖱️','mouse','units/unit21-mouse-challenge/','滑鼠小勇士大冒險',G1,21],
-    ['拔蔬菜','🥕','carrots','units/unit19-farm-harvest/','快樂農場：蔬菜拔拔樂',G1,19] ] },
+    // 滑鼠島（2026-11-22 改版）：照技能階梯排 指向單擊→雙擊→拖拉→總複習→右鍵→滾輪→框選；共用外殼 assets/js/mouse-ui.js
+    ['滑鼠勇士','🖱️','mouse','units/unit21-mouse-challenge/','滑鼠勇士：叫醒貓咪',A12,21],
+    ['敲敲蛋寶寶','🐣','egg','units/unit33-egg-tap/','敲敲蛋寶寶（雙擊）',M14,33],
+    ['拔蔬菜','🥕','carrots','units/unit19-farm-harvest/','拔蔬菜（拖拉）',M14,19],
+    ['小兔勇者','🐰','bunny','units/unit2-mouse-adventure/','小兔勇者（總複習）',M14,2],
+    ['右鍵魔法師','🪄','wand','units/unit34-right-click-wizard/','右鍵魔法師',A34,34],
+    ['捲捲探險','🐙','octopus','units/unit35-scroll-sea/','海底捲捲探險（滾輪）',A34,35],
+    ['牧場圍圍樂','🐑','sheep','units/unit36-box-farm/','牧場圍圍樂（框選）',A34,36] ] },
   { id:'type', name:'打字島', icon:'⌨️', color:0xffc94d, units:[
     // 打字島三階（2026-11-20 改版）：每關進去都能自己換階，連結的 ?tier= 只是建議起點
     ['怪獸冒頭','🐹','moles','units/unit4-whack-keyboard/?tier=t1','鍵盤怪獸冒冒頭',T1,4],
@@ -77,7 +83,7 @@ export const ISLANDS = [
 // emoji → assets/unit-icons/<檔名>.webp（Microsoft Fluent Emoji 3D，MIT，tools/build-icons.py 產生）；
 // key:'字'＝自製鍵帽章（emoji 看不懂的關：中文打字、英打、中打）。沒列到的關退回顯示 emoji。
 export const ICON = {
-  '🐰':'rabbit', '🖱️':'computer-mouse', '🥕':'carrot',
+  '🐰':'rabbit', '🖱️':'computer-mouse', '🥕':'carrot', '🐣':'hatching-chick', '🪄':'magic-wand', '🐙':'octopus', '🐑':'ewe',
   '🐹':'hamster', '🚀':'rocket', '🦖':'t-rex', '🔤':{ key:'ㄅ' }, '🌲':'evergreen-tree', '🛸':{ key:'A' }, '🌙':{ key:'中' }, '✨':'sparkles',
   '🐢':'turtle', '🧙':'mage', '🧠':'brain', '🐶':'dog', '🧺':'basket', '🧦':'socks',
   '🍲':'pot-of-food', '🚂':'locomotive', '🖌️':'paintbrush', '👾':'alien-monster', '🦋':'butterfly', '🛠️':'hammer-wrench', '🎆':'fireworks',

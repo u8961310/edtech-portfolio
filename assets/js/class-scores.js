@@ -21,14 +21,18 @@
     // 畫畫島（2026-11-21）：lang 填 art；acc 欄放「第幾關」、cpm／min 填 0
     5: '像素畫家', 18: '魔法畫畫', 24: '調色魔法鍋', 25: '線條小火車', 26: '對稱魔鏡', 27: '小畫家任務局',
     // 小常識島（2026-11-21）：lang 填 smart，其他同畫畫島
-    8: '寵物房間大整理', 9: '寵物警察訓練', 29: '寵物的新電腦', 30: '寵物作息表', 31: '寵物收到怪訊息', 32: '寵物的 AI 作業'
+    8: '寵物房間大整理', 9: '寵物警察訓練', 29: '寵物的新電腦', 30: '寵物作息表', 31: '寵物收到怪訊息', 32: '寵物的 AI 作業',
+    // 滑鼠島（2026-11-22）：lang 填 mouse；acc 欄放「成功率 %」、cpm 填 0、min＝玩了幾分鐘
+    2: '小兔勇者', 19: '拔蔬菜', 21: '滑鼠勇士', 33: '敲敲蛋寶寶', 34: '右鍵魔法師', 35: '海底捲捲探險', 36: '牧場圍圍樂'
   };
   var TIERS = { t1: '初階', t2: '進階', t3: '高階', '-': '—' };
-  var LANGS = { zh: '中打', en: '英打', art: '畫畫', smart: '小常識' };
+  var LANGS = { zh: '中打', en: '英打', art: '畫畫', smart: '小常識', mouse: '滑鼠' };
+  /** 滑鼠島：有成功率、沒有字數 */
+  function isMouse(r) { return !!r && r.lang === 'mouse'; }
   /** 以「第幾關＋星星」計的島（畫畫島、小常識島）：沒有正確率、字數。名字沿用 isArt，舊呼叫端不用改 */
   function isArt(r) { return !!r && (r.lang === 'art' || r.lang === 'smart'); }
   /** 一句話的成績摘要（老師頁掃描提示用）：打字「96%　28 字/分」、畫畫／小常識「第 2 關」 */
-  function detailText(r) { return isArt(r) ? '第 ' + r.acc + ' 關' : r.acc + '%　' + r.cpm + ' 字/分'; }
+  function detailText(r) { return isArt(r) ? '第 ' + r.acc + ' 關' : isMouse(r) ? '成功率 ' + r.acc + '%' : r.acc + '%　' + r.cpm + ' 字/分'; }
 
   function int(v, lo, hi) {
     var n = parseInt(v, 10);
@@ -98,6 +102,8 @@
       var note = expected && r.seat > expected ? '超過應到人數' : '';
       if (isArt(r)) return [r.seat, r.name, unitName(r.unit), TIERS[r.tier], LANGS[r.lang], '', '', r.stars, '', dateText(r.time), timeText(r.time),
         ['第 ' + r.acc + ' 關', note].filter(Boolean).join('；')];
+      if (isMouse(r)) return [r.seat, r.name, unitName(r.unit), TIERS[r.tier], LANGS[r.lang], r.acc, '', r.stars, r.min, dateText(r.time), timeText(r.time),
+        ['正確率欄＝成功率', note].filter(Boolean).join('；')];
       return [r.seat, r.name, unitName(r.unit), TIERS[r.tier], LANGS[r.lang], r.acc, r.cpm, r.unit === 23 ? '' : r.stars, r.min === 0 ? 0.5 : r.min, dateText(r.time), timeText(r.time), note];
     });
     if (expected) missing(list, expected).forEach(function (s) { rows.push([s, '', '', '', '', '', '', '', '', '', '', '未交']); });
@@ -110,7 +116,7 @@
   var api = {
     PREFIX: PREFIX, UNITS: UNITS, TIERS: TIERS, LANGS: LANGS, MAX_SEAT: MAX_SEAT,
     encode: encode, parse: parse, upsert: upsert, missing: missing, toCSV: toCSV,
-    unitName: unitName, timeText: timeText, dateText: dateText, stamp: stamp, minText: minText, isArt: isArt, detailText: detailText
+    unitName: unitName, timeText: timeText, dateText: dateText, stamp: stamp, minText: minText, isArt: isArt, isMouse: isMouse, detailText: detailText
   };
 
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; return; }
@@ -207,6 +213,7 @@
         row('名字', name ? esc(name) : '—') +
         row('關卡', esc(unitName(rec.unit)) + (rec.tier && rec.tier !== '-' ? '・' + TIERS[rec.tier] : '')) +
         (isArt(rec) ? row('過關', '第 <b class="cs-num">' + rec.acc + '</b> 關') :
+          isMouse(rec) ? row('成功率', '<b class="cs-num">' + Math.round(rec.acc) + '</b> %') :
           row('正確率', '<b class="cs-num">' + Math.round(rec.acc) + '</b> %') +
           row('每分鐘', '<b class="cs-num">' + Math.round(rec.cpm) + '</b> 字')) +
         (rec.unit === 23 ? row('打字', LANGS[rec.lang]) : row('星等', '<span class="cs-stars">' + stars + '</span>'));   // 擂台沒有星等

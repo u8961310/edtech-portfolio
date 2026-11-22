@@ -1,0 +1,37 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>偵測器測試 - 滑鼠島</title>
+  <link rel="stylesheet" href="../css/mouse-island.css">
+  <style>
+    .t { position: absolute; width: 150px; height: 110px; border: 3px solid #6E4125; border-radius: 16px; background: #FFF8E4; display: flex; align-items: center; justify-content: center; font: 700 20px 'Noto Sans TC', sans-serif; }
+    #box { left: 820px; top: 300px; width: 500px; height: 260px; background: #EAF5F7; }
+    .it { position: absolute; width: 40px; height: 40px; border-radius: 50%; background: #E8704F; }
+    #log { position: absolute; left: 20px; top: 420px; width: 760px; height: 150px; overflow: auto; font: 14px monospace; background: #fff; border: 1px solid #999; padding: 6px; }
+  </style>
+</head><body>
+  <!-- 給 tools/test-mouse-detect.py 用：每種偵測器綁一個目標，結果寫進 window.__log -->
+  <script src="../js/mouse-ui.js"></script>
+  <script>
+  window.__log = [];
+  MouseIsland.mount({ unit: 98, title: '偵測器測試', skill: 'mix', gem: '測試', grade: '14', howto: '', hints: ['', ''],
+    scene: function (api) {
+      return { start: function () {
+        var f = api.field, log = function (s) { window.__log.push(s); var l = f.querySelector('#log'); l.textContent = window.__log.join('\n'); };
+        f.innerHTML = '<div class="t" id="point" style="left:20px;top:20px">point</div><div class="t" id="click" style="left:200px;top:20px">click</div>' +
+          '<div class="t" id="dbl" style="left:380px;top:20px">dblclick</div><div class="t" id="right" style="left:560px;top:20px">right</div>' +
+          '<div class="t" id="wheel" style="left:740px;top:20px">wheel</div><div class="t" id="drag" style="left:20px;top:200px">drag</div>' +
+          '<div class="t" id="drop" style="left:400px;top:200px">drop</div>' +
+          '<div class="t" id="box"><div class="it" style="left:40px;top:40px"></div><div class="it" style="left:140px;top:60px"></div><div class="it" style="left:380px;top:180px"></div></div><div id="log"></div>';
+        var $ = function (s) { return f.querySelector(s); };
+        api.on($('#point'), 'point', { ok: function () { log('point'); } });
+        api.on($('#click'), 'click', { ok: function (p, e) { log('click' + (e.ctrlKey ? '+ctrl' : '')); }, wrong: function (w) { log('click-wrong:' + w); } });
+        api.on($('#dbl'), 'dblclick', { ok: function () { log('dbl'); }, first: function () { log('dbl-first'); }, single: function () { log('dbl-single'); } });
+        api.on($('#right'), 'right', { ok: function () { log('right'); }, wrong: function (w) { log('right-wrong:' + w); } });
+        api.on($('#wheel'), 'wheel', { wheel: function (dy) { log('wheel:' + (dy > 0 ? 'down' : 'up')); } });
+        api.on($('#drag'), 'drag', { drop: function (p, t) { log('drop:' + (t ? t.id : 'none')); }, tap: function () { log('drag-tap'); } }, { targets: [$('#drop')] });
+        api.on($('#box'), 'box', { select: function (items, r, e) { log('box:' + items.length); }, empty: function () { log('box-empty'); } }, { items: function () { return [].slice.call($('#box').querySelectorAll('.it')); } });
+      } };
+    }
+  });
+  </script>
+</body></html>

@@ -1,0 +1,94 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>示範關：撿貝殼 - 滑鼠島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+  <link rel="stylesheet" href="../css/mouse-island.css">
+  <style>
+    /* 場景樣式：class 一律 sc- 開頭 */
+    .sc-beach { position: absolute; inset: 0; background: linear-gradient(#BFE1EA 0 120px, #F6E7BE 120px); }
+    .sc-wave { position: absolute; left: 0; right: 0; top: 104px; height: 30px; background: radial-gradient(circle at 20px -6px, transparent 22px, #FFF8E4 23px) 0 0 / 40px 30px repeat-x; opacity: .9; }
+    .sc-shell { position: absolute; width: 120px; height: 110px; margin: -55px 0 0 -60px; cursor: pointer; transition: transform .25s; }
+    .sc-shell svg { width: 100%; height: 100%; display: block; }
+    .sc-shell.got { pointer-events: none; transform: scale(.2) translateY(-200px); opacity: 0; transition: transform .45s ease-in, opacity .45s; }
+    .sc-count { position: absolute; right: 24px; top: 14px; padding: 6px 16px; background: #FFF8E4; border: 2px solid #B9794A; border-radius: 14px; font-size: 22px; font-weight: 700; }
+  </style>
+</head><body>
+  <script src="../js/mouse-ui.js"></script>
+  <script>
+  // 示範關：示範外殼 api 怎麼用（Gemini 寫新關時照這個結構）。練的技能：單擊
+  var SHELL = '<svg viewBox="0 0 120 110"><path d="M60 8 C95 8 114 50 108 92 L12 92 C6 50 25 8 60 8 Z" fill="#F7B8A0" stroke="#8A3A22" stroke-width="5" stroke-linejoin="round"/>' +
+    '<path d="M60 14 V90 M40 20 L30 90 M80 20 L90 90 M24 40 L16 90 M96 40 L104 90" stroke="#C2432A" stroke-width="4" stroke-linecap="round"/>' +
+    '<rect x="44" y="88" width="32" height="14" rx="5" fill="#E8704F" stroke="#8A3A22" stroke-width="4"/></svg>';
+  function pearl(c) { return '<svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="22" fill="' + c + '" stroke="#6E4125" stroke-width="3"/><circle cx="22" cy="22" r="6" fill="#fff" opacity=".8"/></svg>'; }
+
+  MouseIsland.mount({
+    unit: 99,                       // 示範用代號，不會出現在首頁
+    title: '撿貝殼（示範關）',
+    skill: 'click', gem: '指向單擊', grade: '12', zhuyin: true,
+    howto: '看到貝殼，按一下撿起來！',
+    teach: '示範外殼用法：單擊｜生活 2-I-5、資E1',
+    hints: ['對準貝殼再按一下喔！', '再看一次示範。'],
+    dex: { name: '珍珠圖鑑', total: 3, tip: '每次玩，都有機會撿到新珍珠！',
+      items: { white: { name: '白珍珠', svg: pearl('#FFF8E4') }, pink: { name: '粉珍珠', svg: pearl('#F7B8A0') }, gold: { name: '金珍珠', svg: pearl('#F2B134') } } },
+    scene: function (api) {
+      var offs = [], raf = 0, target = null, left = 0, moving = [];
+      // 每段的設定：幾個貝殼、大小、會不會動（外殼給的 cfg.size／cfg.speed 會再乘上去）
+      var PLAN = [{ n: 1, size: 1.5, speed: 0 }, { n: 4, size: 1, speed: 40 }, { n: 5, size: .7, speed: 90 }];
+
+      function clear() { offs.forEach(function (f) { f(); }); offs = []; cancelAnimationFrame(raf); moving = []; }
+      function spawn(cfg) {
+        var p = PLAN[cfg.stage], el = document.createElement('div');
+        el.className = 'sc-shell'; el.innerHTML = SHELL;
+        // 目標不要放進左下角寄寄區（x < 560 且 y > 400）：那裡有寄寄和對話泡泡
+        var x = cfg.stage === 0 ? 683 : 220 + Math.random() * 920, y = cfg.stage === 0 ? 330 : 200 + Math.random() * (x < 560 ? 180 : 300);
+        var k = p.size * cfg.size;
+        el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.transform = 'scale(' + k + ')';
+        api.field.appendChild(el); target = el;
+        var vx = (Math.random() < .5 ? -1 : 1) * p.speed * cfg.speed;
+        if (vx) moving.push({ el: el, x: x, vx: vx, k: k });
+        offs.push(api.on(el, 'click', { ok: function () {
+          api.hit(); el.classList.add('got'); target = null;
+          moving = moving.filter(function (m) { return m.el !== el; });
+          if (Math.random() < .4) api.collect(['white', 'pink', 'gold'][Math.floor(Math.random() * 3)]);
+          left--; $count();
+          if (left <= 0) api.stageDone(); else api.later(function () { spawn(api.cfg()); }, 350);
+        } }));
+        if (cfg.stage === 0) { api.glow(el); api.demo(el, 'click'); }
+      }
+      function $count() { var c = api.field.querySelector('.sc-count'); if (c) c.textContent = '貝殼 ' + (PLAN[api.stage()].n - left) + '／' + PLAN[api.stage()].n; }
+      function tick(t0) {
+        var last = performance.now();
+        (function loop(now) {
+          var dt = Math.min(.05, (now - last) / 1000); last = now;
+          moving.forEach(function (m) { m.x += m.vx * dt; if (m.x < 140 || m.x > 1230) m.vx = -m.vx; m.el.style.left = m.x + 'px'; });
+          raf = requestAnimationFrame(loop);
+        })(last);
+      }
+      return {
+        start: function (stage, cfg) {
+          clear();
+          api.field.innerHTML = '<div class="sc-beach"><div class="sc-wave"></div></div><div class="sc-count"></div>';
+          left = PLAN[stage].n; $count();
+          // 點到沙灘（沒點到貝殼）＝失手：外殼會依連續失手次數給提示；貝殼晃一晃、咯咯笑（搞笑反應，不罵人）
+          offs.push(api.on(api.field, 'click', { ok: function (p, e) {
+            if (e.target.closest('.sc-shell')) return;
+            api.miss(); if (target) { api.wob(target); api.sfx('giggle'); }
+          } }));
+          spawn(cfg); tick();
+        },
+        hint: function (level) {   // 1：目標發光；2：重播示範
+          if (!target) return;
+          api.glow(target);
+          if (level === 2) api.demo(target, 'click');
+        },
+        assist: function () {      // 連續失手 6 次：目標放大、停下來
+          moving.forEach(function (m) { m.vx = 0; });
+          if (target) target.style.transform = 'scale(1.6)';
+        },
+        stop: clear
+      };
+    }
+  });
+  </script>
+</body></html>

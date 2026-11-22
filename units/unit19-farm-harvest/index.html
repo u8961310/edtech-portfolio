@@ -1,711 +1,1152 @@
-<!DOCTYPE html>
-<html lang="zh-Hant-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>快樂農場：蔬菜拔拔樂</title>
-    <!-- 引入 Tailwind CSS 提供精美現代的 UI 介面 -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 引入 Google Fonts 圓體中文字型與英文字型 -->
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Noto Sans TC', 'Fredoka One', sans-serif;
-            background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 60%, #fef08a 100%);
-            overflow-x: hidden;
-            user-select: none;
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>拔蔬菜 - 滑鼠島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+  <link rel="stylesheet" href="../../assets/css/mouse-island.css">
+  <style>
+    /* 場景樣式：class 一律 sc- 開頭 */
+    .sc-bg { position: absolute; inset: 0; overflow: hidden; background: #BFE1EA; user-select: none; -webkit-user-select: none; }
+    .sc-sun { position: absolute; left: 78px; top: 24px; width: 76px; height: 76px; pointer-events: none; }
+    .sc-cloud { position: absolute; pointer-events: none; opacity: .92; }
+    .sc-cloud-1 { left: 250px; top: 22px; width: 132px; height: 52px; animation: sc-drift 28s linear infinite; }
+    .sc-cloud-2 { left: 820px; top: 18px; width: 112px; height: 46px; animation: sc-drift 36s linear infinite reverse; }
+    .sc-hills { position: absolute; left: 0; right: 0; top: 96px; height: 64px; pointer-events: none; }
+    .sc-fence { position: absolute; left: 0; right: 0; top: 114px; height: 42px; pointer-events: none; }
+    .sc-soil { position: absolute; left: 0; right: 0; top: 146px; bottom: 0; background: #E9D2A0; border-top: 6px solid #9A5F36; }
+    .sc-field-bed {
+      position: absolute; left: 32px; top: 26px; width: 920px; bottom: 26px;
+      border-radius: 28px; background: #C8915A; border: 4px solid #6E4125;
+      box-shadow: inset 0 8px 0 rgba(110, 65, 37, .18);
+      overflow: hidden;
+    }
+    .sc-furrow {
+      position: absolute; left: -12px; right: -12px; height: 46px;
+      background: #B47843; border-top: 3px solid #9A5F36; border-bottom: 3px solid #9A5F36;
+      opacity: .72; pointer-events: none;
+    }
+    .sc-furrow-1 { top: 44px; }
+    .sc-furrow-2 { top: 150px; }
+    .sc-furrow-3 { top: 256px; }
+    .sc-grass-pad {
+      position: absolute; right: 26px; top: 26px; width: 356px; bottom: 26px;
+      border-radius: 28px; background: #F6E7BE; border: 4px dashed #B9794A;
+      pointer-events: none;
+    }
+
+    /* 右上角計數 */
+    .sc-count {
+      position: absolute; right: 24px; top: 14px; z-index: 40;
+      padding: 6px 18px; background: #FFF8E4; color: #33261B;
+      border: 3px solid #9A5F36; border-radius: 16px;
+      font-size: 22px; font-weight: 900; line-height: 1.3;
+      box-shadow: 0 3px 0 rgba(110, 65, 37, .25);
+      pointer-events: none;
+    }
+
+    /* 土坑 */
+    .sc-hole { position: absolute; pointer-events: none; z-index: 10; }
+    .sc-hole svg { width: 100%; height: 100%; display: block; }
+
+    /* 蔬菜目標 */
+    .sc-veg {
+      position: absolute; z-index: 22; cursor: grab;
+      touch-action: none; user-select: none; -webkit-user-select: none;
+    }
+    .sc-veg.sc-grab { cursor: grabbing; z-index: 65; }
+    .sc-veg.sc-done { pointer-events: none; opacity: 0; transition: opacity .2s; }
+    .sc-veg-clip {
+      position: relative; width: 100%; height: 100%;
+      overflow: hidden;
+    }
+    .sc-veg:not(.sc-buried) .sc-veg-clip { overflow: visible; }
+    .sc-veg-inner {
+      width: 100%; height: 100%;
+      transform-origin: 50% 85%;
+      will-change: transform;
+    }
+    .sc-veg-inner svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    /* 埋在土裡：往下沉，只露出葉子與一點頂部 */
+    .sc-veg.sc-buried .sc-veg-clip {
+      height: 62%;
+    }
+    .sc-veg.sc-buried .sc-veg-inner {
+      transform: translateY(28%);
+      transition: transform .18s ease-out;
+    }
+    .sc-veg.sc-buried.sc-grab .sc-veg-inner { transition: none; }
+    /* 前景小土丘：只在埋著時蓋住底部 */
+    .sc-front-soil {
+      position: absolute; left: -6%; right: -6%; top: 52%; height: 34%;
+      pointer-events: none; z-index: 3;
+      transition: opacity .15s;
+    }
+    .sc-front-soil svg { width: 100%; height: 100%; display: block; }
+    .sc-veg:not(.sc-buried) .sc-front-soil { opacity: 0; }
+
+    /* 蔬菜表情切換 */
+    .sc-veg .sc-face-happy,
+    .sc-veg .sc-face-oops { display: none; }
+    .sc-veg.sc-pulled .sc-face-normal { display: none; }
+    .sc-veg.sc-pulled .sc-face-happy { display: inline; }
+    .sc-veg.sc-oops .sc-face-normal,
+    .sc-veg.sc-oops .sc-face-happy { display: none; }
+    .sc-veg.sc-oops .sc-face-oops { display: inline; }
+
+    /* 金蘿蔔󠇡（彩虹目標）光暈＋深木外圈，脈動頻率 0.6Hz（≤ 3Hz） */
+    .sc-veg.sc-gold::before {
+      content: ""; position: absolute; inset: -10px; border-radius: 50%;
+      border: 4px dashed #6E4125;
+      background: radial-gradient(circle, rgba(242, 177, 52, .45) 0%, rgba(242, 177, 52, 0) 70%);
+      pointer-events: none;
+      animation: sc-gold-pulse 1.6s ease-in-out infinite;
+    }
+
+    /* 失手反應動畫：放錯籃跳出來搖頭、沒拔好彈回去 */
+    .sc-veg.sc-returning { transition: left .36s cubic-bezier(.22, 1.25, .45, 1), top .36s cubic-bezier(.22, 1.25, .45, 1); }
+    .sc-veg.sc-shake-head .sc-veg-inner { animation: sc-headshake .55s ease-in-out; }
+
+    /* 菜籃 */
+    .sc-basket {
+      position: absolute; z-index: 16;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+      transition: transform .18s ease-out;
+      pointer-events: auto;
+    }
+    .sc-basket.sc-basket-over { transform: scale(1.07); }
+    .sc-basket.sc-basket-over .sc-basket-frame { filter: drop-shadow(0 0 10px #F2B134); }
+    .sc-basket.sc-basket-bounce { animation: sc-bounce .42s cubic-bezier(.34, 1.56, .64, 1); }
+    .sc-basket-frame { position: relative; width: 100%; height: 100%; }
+    .sc-basket-back { position: absolute; inset: 0; z-index: 1; }
+    .sc-basket-back svg, .sc-basket-front svg { width: 100%; height: 100%; display: block; }
+    .sc-basket-items {
+      position: absolute; left: 10%; right: 10%; bottom: 44%; height: 54%;
+      z-index: 2; display: flex; align-items: flex-end; justify-content: center; gap: 2px;
+      pointer-events: none;
+    }
+    .sc-in-basket {
+      width: 56px; height: 64px; flex: 0 0 auto; margin: 0 -8px;
+      transform-origin: 50% 90%;
+      animation: sc-drop-in .35s cubic-bezier(.34, 1.45, .64, 1);
+    }
+    .sc-in-basket svg { width: 100%; height: 100%; display: block; }
+    .sc-in-basket.sc-dance { animation: sc-veg-dance .65s ease-in-out infinite; }
+    .sc-basket-front { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+    .sc-basket-tag {
+      position: absolute; left: 50%; bottom: 10%; transform: translateX(-50%);
+      z-index: 4; display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; background: #FFF8E4; color: #33261B;
+      border: 3px solid #6E4125; border-radius: 12px;
+      font-size: 19px; font-weight: 900; line-height: 1.2;
+      box-shadow: 0 2px 0 rgba(110, 65, 37, .28);
+      pointer-events: none; white-space: nowrap;
+    }
+    .sc-basket-tag-icon { width: 32px; height: 32px; flex: 0 0 auto; }
+    .sc-basket-tag-icon svg { width: 100%; height: 100%; display: block; }
+    .sc-basket-s3 .sc-basket-tag { font-size: 17px; padding: 3px 10px; bottom: 9%; }
+    .sc-basket-s3 .sc-basket-tag-icon { width: 28px; height: 28px; }
+    .sc-basket-s3 .sc-in-basket { width: 44px; height: 50px; margin: 0 -6px; }
+
+    /* 特效：拔出土塊與入籃星星 */
+    .sc-fx { position: absolute; pointer-events: none; z-index: 70; }
+    .sc-dirt-dot {
+      position: absolute; width: 14px; height: 10px; border-radius: 50%;
+      background: #6E4125; border: 2px solid #33261B;
+      animation: sc-dirt-fly .48s ease-out forwards;
+    }
+    .sc-pop-ring {
+      position: absolute; left: -34px; top: -34px; width: 68px; height: 68px;
+      border-radius: 50%; border: 4px dashed #F2B134;
+      animation: sc-ring-out .42s ease-out forwards;
+    }
+    .sc-star {
+      position: absolute; width: 24px; height: 24px; margin: -12px 0 0 -12px;
+      animation: sc-star-fly .65s ease-out forwards;
+    }
+    .sc-star svg { width: 100%; height: 100%; display: block; }
+
+    /* 第三段干擾物：田邊散步的小烏鴉 */
+    .sc-crow {
+      position: absolute; width: 82px; height: 70px; z-index: 18;
+      pointer-events: auto;
+    }
+    .sc-crow-inner { width: 100%; height: 100%; transition: transform .15s; }
+    .sc-crow-inner svg { width: 100%; height: 100%; display: block; }
+    .sc-crow.sc-crow-flip .sc-crow-inner { transform: scaleX(-1); }
+    .sc-crow.sc-crow-flap { animation: sc-crow-hop .38s ease-out; }
+
+    @keyframes sc-drift { from { transform: translateX(0); } to { transform: translateX(60px); } }
+    @keyframes sc-gold-pulse { 0%, 100% { transform: scale(.96); opacity: .75; } 50% { transform: scale(1.08); opacity: 1; } }
+    @keyframes sc-bounce {
+      0% { transform: scale(1, 1); }
+      35% { transform: scale(1.12, .88); }
+      70% { transform: scale(.95, 1.06); }
+      100% { transform: scale(1, 1); }
+    }
+    @keyframes sc-drop-in {
+      0% { transform: translateY(-48px) scale(.8); opacity: .4; }
+      70% { transform: translateY(6px) scale(1.06, .92); opacity: 1; }
+      100% { transform: translateY(0) scale(1, 1); opacity: 1; }
+    }
+    @keyframes sc-veg-dance {
+      0%, 100% { transform: translateY(0) rotate(-6deg); }
+      50% { transform: translateY(-12px) rotate(6deg); }
+    }
+    @keyframes sc-headshake {
+      0%, 100% { transform: rotate(0deg); }
+      20% { transform: rotate(-16deg) translateY(-10px); }
+      45% { transform: rotate(16deg) translateY(-10px); }
+      70% { transform: rotate(-12deg) translateY(-6px); }
+    }
+    @keyframes sc-dirt-fly {
+      0% { transform: translate(0, 0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--dx), var(--dy)) scale(.4); opacity: 0; }
+    }
+    @keyframes sc-ring-out {
+      0% { transform: scale(.4); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    @keyframes sc-star-fly {
+      0% { transform: translate(0, 0) scale(.5) rotate(0deg); opacity: 1; }
+      100% { transform: translate(var(--dx), var(--dy)) scale(1.1) rotate(90deg); opacity: 0; }
+    }
+    @keyframes sc-crow-hop {
+      0%, 100% { transform: translateY(0); }
+      45% { transform: translateY(-18px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sc-cloud-1, .sc-cloud-2, .sc-veg.sc-gold::before,
+      .sc-in-basket, .sc-in-basket.sc-dance, .sc-basket.sc-basket-bounce,
+      .sc-veg.sc-shake-head .sc-veg-inner, .sc-crow.sc-crow-flap,
+      .sc-dirt-dot, .sc-pop-ring, .sc-star {
+        animation: none !important;
+      }
+      .sc-veg.sc-returning, .sc-veg.sc-buried .sc-veg-inner, .sc-basket {
+        transition: none !important;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/mouse-ui.js"></script>
+  <script>
+  (function () {
+    // ── 圖鑑用 60×60 SVG 工廠 ─────────────────────────────────
+    function dexSvg(inner) {
+      return '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>';
+    }
+    var DEX_SVGS = {
+      carrot: dexSvg(
+        '<path d="M26 16 C20 6 12 8 15 15 C18 19 24 19 28 20 Z" fill="#2F7A49" stroke="#33261B" stroke-width="2.5" stroke-linejoin="round"/>' +
+        '<path d="M30 16 C28 5 34 5 32 16 Z" fill="#52A66A" stroke="#33261B" stroke-width="2.5" stroke-linejoin="round"/>' +
+        '<path d="M34 16 C40 6 48 8 45 15 C42 19 36 19 32 20 Z" fill="#2F7A49" stroke="#33261B" stroke-width="2.5" stroke-linejoin="round"/>' +
+        '<path d="M18 22 C18 16 42 16 42 22 L33 53 C32 56 28 56 27 53 Z" fill="#E8704F" stroke="#33261B" stroke-width="2.8" stroke-linejoin="round"/>' +
+        '<path d="M22 28 H30 M32 36 H38" stroke="#C2432A" stroke-width="2.4" stroke-linecap="round"/>' +
+        '<circle cx="25" cy="29" r="2.2" fill="#33261B"/><circle cx="35" cy="29" r="2.2" fill="#33261B"/>' +
+        '<path d="M27 34 Q30 37 33 34" fill="none" stroke="#33261B" stroke-width="2.2" stroke-linecap="round"/>'
+      ),
+      radish: dexSvg(
+        '<path d="M28 16 C18 4 12 10 18 18 Z" fill="#2F7A49" stroke="#33261B" stroke-width="2.5" stroke-linejoin="round"/>' +
+        '<path d="M32 16 C42 4 48 10 42 18 Z" fill="#52A66A" stroke="#33261B" stroke-width="2.5" stroke-linejoin="round"/>' +
+        '<path d="M18 24 C18 15 42 15 42 24 C42 39 36 48 30 54 C24 48 18 39 18 24 Z" fill="#FFF8E4" stroke="#6E4125" stroke-width="2.8" stroke-linejoin="round"/>' +
+        '<ellipse cx="22" cy="34" rx="3" ry="1.8" fill="#F2B8A2"/><ellipse cx="38" cy="34" rx="3" ry="1.8" fill="#F2B8A2"/>' +
+        '<circle cx="25" cy="29" r="2.2" fill="#33261B"/><circle cx="35" cy="29" r="2.2" fill="#33261B"/>' +
+        '<path d="M27 34 Q30 37 33 34" fill="none" stroke="#33261B" stroke-width="2.2" stroke-linecap="round"/>'
+      ),
+      potato: dexSvg(
+        '<path d="M28 16 C22 8 18 11 23 17 Z" fill="#2F7A49" stroke="#33261B" stroke-width="2.3" stroke-linejoin="round"/>' +
+        '<path d="M32 16 C38 9 41 12 36 17 Z" fill="#52A66A" stroke="#33261B" stroke-width="2.3" stroke-linejoin="round"/>' +
+        '<path d="M14 34 C13 21 23 16 32 17 C43 18 48 26 47 36 C46 47 37 52 28 51 C18 50 15 43 14 34 Z" fill="#D8A76E" stroke="#6E4125" stroke-width="2.8"/>' +
+        '<circle cx="20" cy="24" r="1.6" fill="#9A5F36"/><circle cx="40" cy="42" r="1.8" fill="#9A5F36"/>' +
+        '<circle cx="25" cy="32" r="2.2" fill="#33261B"/><circle cx="35" cy="32" r="2.2" fill="#33261B"/>' +
+        '<path d="M27 37 Q30 40 33 37" fill="none" stroke="#33261B" stroke-width="2.2" stroke-linecap="round"/>'
+      ),
+      tomato: dexSvg(
+        '<circle cx="30" cy="35" r="18" fill="#C2432A" stroke="#33261B" stroke-width="2.8"/>' +
+        '<ellipse cx="22" cy="27" rx="4.5" ry="2.5" transform="rotate(-25 22 27)" fill="#E8704F"/>' +
+        '<path d="M30 10 L32 17 L41 15 L34 20 L38 25 L30 21 L22 25 L26 20 L19 15 L28 17 Z" fill="#2F7A49" stroke="#33261B" stroke-width="2.2" stroke-linejoin="round"/>' +
+        '<circle cx="24" cy="35" r="2.2" fill="#33261B"/><circle cx="36" cy="35" r="2.2" fill="#33261B"/>' +
+        '<path d="M27 40 Q30 43 33 40" fill="none" stroke="#33261B" stroke-width="2.2" stroke-linecap="round"/>'
+      ),
+      onion: dexSvg(
+        '<path d="M28 20 L24 8 M32 20 L36 7" stroke="#2F7A49" stroke-width="4" stroke-linecap="round"/>' +
+        '<path d="M30 16 C35 23 46 28 46 39 C46 48 39 53 30 53 C21 53 14 48 14 39 C14 28 25 23 30 16 Z" fill="#F2B134" stroke="#6E4125" stroke-width="2.8" stroke-linejoin="round"/>' +
+        '<path d="M25 23 C21 31 21 43 25 51 M35 23 C39 31 39 43 35 51" fill="none" stroke="#B9794A" stroke-width="1.8"/>' +
+        '<circle cx="25" cy="37" r="2.2" fill="#33261B"/><circle cx="35" cy="37" r="2.2" fill="#33261B"/>' +
+        '<path d="M27 42 Q30 45 33 42" fill="none" stroke="#33261B" stroke-width="2.2" stroke-linecap="round"/>'
+      ),
+      pumpkin: dexSvg(
+        '<path d="M30 18 C30 11 36 10 37 14" fill="none" stroke="#6E4125" stroke-width="4" stroke-linecap="round"/>' +
+        '<ellipse cx="21" cy="36" rx="10" ry="15" fill="#E8704F" stroke="#6E4125" stroke-width="2.6"/>' +
+        '<ellipse cx="39" cy="36" rx="10" ry="15" fill="#E8704F" stroke="#6E4125" stroke-width="2.6"/>' +
+        '<ellipse cx="30" cy="36" rx="11" ry="16" fill="#F2B134" stroke="#6E4125" stroke-width="2.6"/>' +
+        '<circle cx="25" cy="34" r="2.2" fill="#33261B"/><circle cx="35" cy="34" r="2.2" fill="#33261B"/>' +
+        '<path d="M27 39 Q30 42 33 39" fill="none" stroke="#33261B" stroke-width="2.2" stroke-linecap="round"/>'
+      ),
+      hat: dexSvg(
+        '<path d="M18 25 C18 19 42 19 42 25 L33 54 C32 56 28 56 27 54 Z" fill="#E8704F" stroke="#33261B" stroke-width="2.6" stroke-linejoin="round"/>' +
+        '<path d="M14 21 Q30 26 46 21 Q44 17 30 18 Q16 17 14 21 Z" fill="#F6E7BE" stroke="#6E4125" stroke-width="2.4" stroke-linejoin="round"/>' +
+        '<path d="M21 19 C22 10 38 10 39 19 Z" fill="#F6E7BE" stroke="#6E4125" stroke-width="2.4" stroke-linejoin="round"/>' +
+        '<path d="M21 17 H39" stroke="#236F96" stroke-width="3.2"/>' +
+        '<circle cx="25" cy="32" r="2.2" fill="#33261B"/><circle cx="35" cy="32" r="2.2" fill="#33261B"/>' +
+        '<path d="M27 37 Q30 40 33 37" fill="none" stroke="#33261B" stroke-width="2.2" stroke-linecap="round"/>'
+      ),
+      gold: dexSvg(
+        '<path d="M25 16 C19 6 12 9 15 16 C18 19 24 19 28 20 Z" fill="#2F7A49" stroke="#33261B" stroke-width="2.4"/>' +
+        '<path d="M35 16 C41 6 48 9 45 16 C42 19 36 19 32 20 Z" fill="#52A66A" stroke="#33261B" stroke-width="2.4"/>' +
+        '<path d="M18 22 C18 16 42 16 42 22 L33 53 C32 56 28 56 27 53 Z" fill="#F2B134" stroke="#6E4125" stroke-width="2.8" stroke-linejoin="round"/>' +
+        '<path d="M23 23 L29 45" stroke="#FFF8E4" stroke-width="3" stroke-linecap="round" opacity=".8"/>' +
+        '<path d="M47 10 L49 14 L53 15 L49 17 L47 21 L45 17 L41 15 L45 14 Z" fill="#F2B134" stroke="#6E4125" stroke-width="1.4"/>' +
+        '<circle cx="25" cy="29" r="2.2" fill="#33261B"/><circle cx="35" cy="29" r="2.2" fill="#33261B"/>' +
+        '<path d="M27 34 Q30 37 33 34" fill="none" stroke="#33261B" stroke-width="2.2" stroke-linecap="round"/>'
+      )
+    };
+
+    // ── 開始畫面主角插圖（400×400） ───────────────────────────
+    var HERO_SVG =
+      '<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">' +
+      '<circle cx="200" cy="200" r="184" fill="#BFE1EA" stroke="#6E4125" stroke-width="7"/>' +
+      '<circle cx="110" cy="96" r="28" fill="#F2B134" stroke="#6E4125" stroke-width="5"/>' +
+      '<path d="M250 84 C250 70 274 66 282 78 C294 74 308 82 304 94 L244 94 C240 88 244 84 250 84 Z" fill="#FFF8E4" stroke="#6E4125" stroke-width="4" stroke-linejoin="round"/>' +
+      '<path d="M30 250 Q200 220 370 250 L370 320 Q200 398 30 320 Z" fill="#C8915A" stroke="#6E4125" stroke-width="6"/>' +
+      '<ellipse cx="148" cy="296" rx="68" ry="20" fill="#6E4125"/>' +
+      /* 被拔起的大紅蘿蔔󠇡 */
+      '<g transform="translate(88 78) rotate(-8 62 105)">' +
+        '<path d="M54 54 C30 16 14 26 26 48 C34 60 48 60 58 64 Z" fill="#2F7A49" stroke="#33261B" stroke-width="5" stroke-linejoin="round"/>' +
+        '<path d="M62 56 C56 12 72 12 68 56 Z" fill="#52A66A" stroke="#33261B" stroke-width="5" stroke-linejoin="round"/>' +
+        '<path d="M70 54 C94 16 110 26 98 48 C90 60 76 60 66 64 Z" fill="#2F7A49" stroke="#33261B" stroke-width="5" stroke-linejoin="round"/>' +
+        '<path d="M26 70 C26 52 98 52 98 70 L72 184 C68 194 56 194 52 184 Z" fill="#E8704F" stroke="#33261B" stroke-width="6" stroke-linejoin="round"/>' +
+        '<path d="M38 92 H58 M66 122 H84 M44 148 H60" stroke="#C2432A" stroke-width="5" stroke-linecap="round"/>' +
+        '<circle cx="48" cy="96" r="5.5" fill="#33261B"/><circle cx="76" cy="96" r="5.5" fill="#33261B"/>' +
+        '<ellipse cx="38" cy="108" rx="6" ry="3.5" fill="#C2432A" opacity=".5"/><ellipse cx="86" cy="108" rx="6" ry="3.5" fill="#C2432A" opacity=".5"/>' +
+        '<path d="M54 110 Q62 120 70 110" fill="none" stroke="#33261B" stroke-width="5" stroke-linecap="round"/>' +
+      '</g>' +
+      /* 拔出動感線與小土塊 */
+      '<path d="M76 232 L62 216 M212 222 L226 206" stroke="#F2B134" stroke-width="6" stroke-linecap="round"/>' +
+      '<circle cx="88" cy="272" r="8" fill="#6E4125"/><circle cx="204" cy="264" r="7" fill="#6E4125"/><circle cx="112" cy="252" r="5" fill="#9A5F36"/>' +
+      /* 右邊木頭菜籃裝滿番茄與南瓜 */
+      '<g transform="translate(212 210)">' +
+        '<circle cx="44" cy="36" r="24" fill="#C2432A" stroke="#33261B" stroke-width="5"/>' +
+        '<path d="M44 12 L48 22 L38 22 Z" fill="#2F7A49" stroke="#33261B" stroke-width="3"/>' +
+        '<ellipse cx="96" cy="38" rx="28" ry="22" fill="#F2B134" stroke="#6E4125" stroke-width="5"/>' +
+        '<path d="M96 16 C96 8 104 8 105 14" fill="none" stroke="#6E4125" stroke-width="5" stroke-linecap="round"/>' +
+        '<path d="M10 46 H132 L118 118 C116 126 108 130 100 130 H42 C34 130 26 126 24 118 Z" fill="#9A5F36" stroke="#6E4125" stroke-width="6" stroke-linejoin="round"/>' +
+        '<rect x="4" y="38" width="134" height="18" rx="9" fill="#B9794A" stroke="#6E4125" stroke-width="5"/>' +
+        '<path d="M22 76 H120 M26 102 H116 M48 56 V128 M71 56 V128 M94 56 V128" stroke="#6E4125" stroke-width="4" opacity=".65"/>' +
+      '</g>' +
+      /* 金星點綴 */
+      '<path d="M312 146 L317 158 L330 161 L318 168 L314 180 L308 168 L296 162 L308 158 Z" fill="#F2B134" stroke="#6E4125" stroke-width="3" stroke-linejoin="round"/>' +
+      '</svg>';
+
+    // ── 場景大型蔬菜 SVG（120×140，含三種表情） ───────────────
+    function faceGroup(y) {
+      return '' +
+        '<g class="sc-face-normal">' +
+          '<circle cx="48" cy="' + y + '" r="4.8" fill="#33261B"/><circle cx="72" cy="' + y + '" r="4.8" fill="#33261B"/>' +
+          '<circle cx="46.5" cy="' + (y - 1.5) + '" r="1.5" fill="#FFF8E4"/><circle cx="70.5" cy="' + (y - 1.5) + '" r="1.5" fill="#FFF8E4"/>' +
+          '<path d="M54 ' + (y + 9) + ' Q60 ' + (y + 15) + ' 66 ' + (y + 9) + '" fill="none" stroke="#33261B" stroke-width="3.6" stroke-linecap="round"/>' +
+        '</g>' +
+        '<g class="sc-face-happy">' +
+          '<path d="M42 ' + (y + 1) + ' Q48 ' + (y - 7) + ' 54 ' + (y + 1) + '" fill="none" stroke="#33261B" stroke-width="3.8" stroke-linecap="round"/>' +
+          '<path d="M66 ' + (y + 1) + ' Q72 ' + (y - 7) + ' 78 ' + (y + 1) + '" fill="none" stroke="#33261B" stroke-width="3.8" stroke-linecap="round"/>' +
+          '<path d="M51 ' + (y + 8) + ' Q60 ' + (y + 20) + ' 69 ' + (y + 8) + ' Z" fill="#C2432A" stroke="#33261B" stroke-width="3" stroke-linejoin="round"/>' +
+        '</g>' +
+        '<g class="sc-face-oops">' +
+          '<circle cx="48" cy="' + y + '" r="4.8" fill="#33261B"/><circle cx="72" cy="' + y + '" r="4.8" fill="#33261B"/>' +
+          '<path d="M51 ' + (y + 12) + ' Q55 ' + (y + 7) + ' 60 ' + (y + 12) + ' Q65 ' + (y + 17) + ' 69 ' + (y + 12) + '" fill="none" stroke="#33261B" stroke-width="3.6" stroke-linecap="round"/>' +
+        '</g>';
+    }
+
+    function sceneVegSvg(type) {
+      var body = '';
+      if (type === 'carrot') {
+        body =
+          '<path d="M54 44 C32 10 14 18 26 40 C34 50 48 50 58 54 Z" fill="#2F7A49" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<path d="M60 46 C55 8 69 8 64 46 Z" fill="#52A66A" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<path d="M66 44 C88 10 106 18 94 40 C86 50 72 50 62 54 Z" fill="#2F7A49" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<path d="M30 56 C30 42 90 42 90 56 L68 128 C65 135 55 135 52 128 Z" fill="#E8704F" stroke="#33261B" stroke-width="5" stroke-linejoin="round"/>' +
+          '<path d="M38 72 H54 M66 96 H80 M46 112 H58" stroke="#C2432A" stroke-width="4" stroke-linecap="round"/>' +
+          faceGroup(78);
+      } else if (type === 'hat') {
+        body =
+          '<path d="M40 44 C26 26 16 32 28 46 Z" fill="#2F7A49" stroke="#33261B" stroke-width="4" stroke-linejoin="round"/>' +
+          '<path d="M80 44 C94 26 104 32 92 46 Z" fill="#52A66A" stroke="#33261B" stroke-width="4" stroke-linejoin="round"/>' +
+          '<path d="M30 58 C30 45 90 45 90 58 L68 128 C65 135 55 135 52 128 Z" fill="#E8704F" stroke="#33261B" stroke-width="5" stroke-linejoin="round"/>' +
+          '<path d="M38 76 H54 M66 98 H80" stroke="#C2432A" stroke-width="4" stroke-linecap="round"/>' +
+          /* 小草帽：埋在土裡也看得到，好認又驚喜 */
+          '<ellipse cx="60" cy="46" rx="40" ry="11" fill="#F6E7BE" stroke="#6E4125" stroke-width="4.5"/>' +
+          '<path d="M36 44 C38 18 82 18 84 44 Z" fill="#F6E7BE" stroke="#6E4125" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<path d="M37 39 H83" stroke="#236F96" stroke-width="7"/>' +
+          faceGroup(80);
+      } else if (type === 'gold') {
+        body =
+          '<path d="M54 44 C32 10 14 18 26 40 C34 50 48 50 58 54 Z" fill="#2F7A49" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<path d="M60 46 C55 8 69 8 64 46 Z" fill="#52A66A" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<path d="M66 44 C88 10 106 18 94 40 C86 50 72 50 62 54 Z" fill="#2F7A49" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<path d="M30 56 C30 42 90 42 90 56 L68 128 C65 135 55 135 52 128 Z" fill="#F2B134" stroke="#6E4125" stroke-width="5" stroke-linejoin="round"/>' +
+          '<path d="M40 58 L54 114" stroke="#FFF8E4" stroke-width="6" stroke-linecap="round" opacity=".82"/>' +
+          '<path d="M98 20 L102 28 L110 30 L102 33 L98 41 L95 33 L87 30 L95 28 Z" fill="#F2B134" stroke="#6E4125" stroke-width="2.5" stroke-linejoin="round"/>' +
+          '<path d="M18 38 L21 44 L27 46 L21 48 L18 54 L16 48 L10 46 L16 44 Z" fill="#FFF8E4" stroke="#6E4125" stroke-width="2.2" stroke-linejoin="round"/>' +
+          faceGroup(78);
+      } else if (type === 'radish') {
+        body =
+          '<path d="M56 46 C30 12 14 22 28 48 Z" fill="#2F7A49" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<path d="M64 46 C90 12 106 22 92 48 Z" fill="#52A66A" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<path d="M28 62 C28 40 92 40 92 62 C92 94 76 116 60 130 C44 116 28 94 28 62 Z" fill="#FFF8E4" stroke="#6E4125" stroke-width="5" stroke-linejoin="round"/>' +
+          '<ellipse cx="38" cy="86" rx="6" ry="3.6" fill="#F2B8A2"/><ellipse cx="82" cy="86" rx="6" ry="3.6" fill="#F2B8A2"/>' +
+          faceGroup(78);
+      } else if (type === 'potato') {
+        body =
+          '<path d="M56 46 C42 20 30 26 44 48 Z" fill="#2F7A49" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<path d="M64 46 C78 20 90 26 76 48 Z" fill="#52A66A" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<path d="M22 86 C20 56 42 44 64 46 C88 48 100 66 98 90 C96 116 78 128 56 126 C32 124 24 108 22 86 Z" fill="#D8A76E" stroke="#6E4125" stroke-width="5"/>' +
+          '<circle cx="38" cy="64" r="3.5" fill="#9A5F36"/><circle cx="84" cy="104" r="4" fill="#9A5F36"/>' +
+          faceGroup(84);
+      } else if (type === 'tomato') {
+        body =
+          '<circle cx="60" cy="84" r="40" fill="#C2432A" stroke="#33261B" stroke-width="5"/>' +
+          '<ellipse cx="42" cy="68" rx="9" ry="5" transform="rotate(-28 42 68)" fill="#E8704F"/>' +
+          '<path d="M60 22 L65 40 L88 34 L70 48 L80 62 L60 52 L40 62 L50 48 L32 34 L55 40 Z" fill="#2F7A49" stroke="#33261B" stroke-width="4.2" stroke-linejoin="round"/>' +
+          faceGroup(84);
+      } else if (type === 'onion') {
+        body =
+          '<path d="M55 48 L44 16 M65 48 L76 14" stroke="#2F7A49" stroke-width="8" stroke-linecap="round"/>' +
+          '<path d="M60 40 C72 56 96 66 96 92 C96 114 80 128 60 128 C40 128 24 114 24 92 C24 66 48 56 60 40 Z" fill="#F2B134" stroke="#6E4125" stroke-width="5" stroke-linejoin="round"/>' +
+          '<path d="M46 56 C38 74 38 104 48 124 M74 56 C82 74 82 104 72 124" fill="none" stroke="#B9794A" stroke-width="3.2"/>' +
+          faceGroup(88);
+      } else if (type === 'pumpkin') {
+        body =
+          '<path d="M60 48 C60 28 74 24 78 34" fill="none" stroke="#6E4125" stroke-width="8" stroke-linecap="round"/>' +
+          '<path d="M58 42 C42 26 32 34 44 46 Z" fill="#2F7A49" stroke="#33261B" stroke-width="3.8" stroke-linejoin="round"/>' +
+          '<ellipse cx="40" cy="88" rx="22" ry="34" fill="#E8704F" stroke="#6E4125" stroke-width="4.8"/>' +
+          '<ellipse cx="80" cy="88" rx="22" ry="34" fill="#E8704F" stroke="#6E4125" stroke-width="4.8"/>' +
+          '<ellipse cx="60" cy="88" rx="24" ry="36" fill="#F2B134" stroke="#6E4125" stroke-width="4.8"/>' +
+          faceGroup(86);
+      }
+      return '<svg viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">' + body + '</svg>';
+    }
+
+    var HOLE_SVG =
+      '<svg viewBox="0 0 140 50" xmlns="http://www.w3.org/2000/svg">' +
+        '<ellipse cx="70" cy="28" rx="58" ry="16" fill="#6E4125"/>' +
+        '<ellipse cx="70" cy="26" rx="46" ry="11" fill="#4E2D18"/>' +
+      '</svg>';
+
+    var FRONT_SOIL_SVG =
+      '<svg viewBox="0 0 140 46" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M12 24 Q34 6 58 18 Q82 4 106 18 Q122 10 130 26 Q70 44 12 24 Z" fill="#9A5F36" stroke="#6E4125" stroke-width="4" stroke-linejoin="round"/>' +
+        '<circle cx="44" cy="24" r="4" fill="#6E4125"/><circle cx="94" cy="22" r="4.5" fill="#6E4125"/>' +
+      '</svg>';
+
+    var BASKET_BACK_SVG =
+      '<svg viewBox="0 0 220 150" xmlns="http://www.w3.org/2000/svg">' +
+        '<ellipse cx="110" cy="54" rx="94" ry="20" fill="#6E4125" stroke="#33261B" stroke-width="5"/>' +
+      '</svg>';
+
+    var BASKET_FRONT_SVG =
+      '<svg viewBox="0 0 220 150" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M18 56 H202 L184 134 C181 142 172 146 162 146 H58 C48 146 39 142 36 134 Z" fill="#9A5F36" stroke="#6E4125" stroke-width="5" stroke-linejoin="round"/>' +
+        '<path d="M26 84 H194 M32 114 H188 M62 58 V144 M110 58 V144 M158 58 V144" stroke="#6E4125" stroke-width="4" opacity=".62"/>' +
+        '<rect x="10" y="46" width="200" height="20" rx="10" fill="#B9794A" stroke="#6E4125" stroke-width="5"/>' +
+      '</svg>';
+
+    var CROW_SVG =
+      '<svg viewBox="0 0 90 76" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M36 58 L32 70 M50 58 L54 70" stroke="#6E4125" stroke-width="4.5" stroke-linecap="round"/>' +
+        '<path d="M14 40 L4 34 L12 46 Z" fill="#33261B"/>' +
+        '<ellipse cx="42" cy="44" rx="24" ry="17" fill="#33261B" stroke="#6E4125" stroke-width="3.5"/>' +
+        '<path d="M28 40 Q42 30 56 44 Q42 52 28 40 Z" fill="#4E4239" stroke="#33261B" stroke-width="2.5"/>' +
+        '<circle cx="62" cy="28" r="14" fill="#33261B" stroke="#6E4125" stroke-width="3.5"/>' +
+        '<path d="M74 26 L87 30 L74 35 Z" fill="#F2B134" stroke="#6E4125" stroke-width="3" stroke-linejoin="round"/>' +
+        '<circle cx="65" cy="25" r="4.5" fill="#FFF8E4"/><circle cx="66.5" cy="25" r="2.2" fill="#33261B"/>' +
+      '</svg>';
+
+    var STAR_SVG =
+      '<svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M15 2 L18.8 10.2 L28 11.4 L21.2 17.8 L22.9 27 L15 22.5 L7.1 27 L8.8 17.8 L2 11.4 L11.2 10.2 Z" fill="#F2B134" stroke="#6E4125" stroke-width="2.2" stroke-linejoin="round"/>' +
+      '</svg>';
+
+    var BG_HTML =
+      '<div class="sc-bg">' +
+        '<div class="sc-sun"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="24" fill="#F2B134" stroke="#6E4125" stroke-width="4"/>' +
+          '<path d="M40 6 V12 M40 68 V74 M6 40 H12 M68 40 H74 M16 16 L21 21 M59 59 L64 64 M64 16 L59 21 M21 59 L16 64" stroke="#F2B134" stroke-width="5" stroke-linecap="round"/></svg></div>' +
+        '<div class="sc-cloud sc-cloud-1"><svg viewBox="0 0 132 52"><path d="M24 44 H108 C118 44 124 34 116 26 C118 14 102 8 92 16 C84 4 62 4 54 16 C42 10 28 18 30 28 C18 28 16 44 24 44 Z" fill="#FFF8E4" stroke="#6E4125" stroke-width="3" stroke-linejoin="round"/></svg></div>' +
+        '<div class="sc-cloud sc-cloud-2"><svg viewBox="0 0 112 46"><path d="M20 38 H92 C100 38 104 30 98 22 C98 12 84 8 76 14 C68 4 50 6 44 16 C34 12 24 18 26 26 C16 26 14 38 20 38 Z" fill="#FFF8E4" stroke="#6E4125" stroke-width="3" stroke-linejoin="round"/></svg></div>' +
+        '<div class="sc-hills"><svg viewBox="0 0 1366 64" preserveAspectRatio="none"><path d="M0 64 Q180 8 420 44 T880 34 T1366 48 L1366 64 Z" fill="#88BA82" opacity=".75"/></svg></div>' +
+        '<div class="sc-fence"><svg viewBox="0 0 1366 42" preserveAspectRatio="none">' +
+          '<rect x="0" y="14" width="1366" height="6" fill="#B9794A" stroke="#6E4125" stroke-width="2"/>' +
+          '<rect x="0" y="28" width="1366" height="6" fill="#B9794A" stroke="#6E4125" stroke-width="2"/>' +
+          '<g fill="#F6E7BE" stroke="#6E4125" stroke-width="2.5">' +
+            '<rect x="60" y="4" width="16" height="36" rx="4"/><rect x="200" y="4" width="16" height="36" rx="4"/>' +
+            '<rect x="340" y="4" width="16" height="36" rx="4"/><rect x="480" y="4" width="16" height="36" rx="4"/>' +
+            '<rect x="620" y="4" width="16" height="36" rx="4"/><rect x="760" y="4" width="16" height="36" rx="4"/>' +
+            '<rect x="900" y="4" width="16" height="36" rx="4"/><rect x="1040" y="4" width="16" height="36" rx="4"/>' +
+            '<rect x="1180" y="4" width="16" height="36" rx="4"/><rect x="1300" y="4" width="16" height="36" rx="4"/>' +
+          '</g></svg></div>' +
+        '<div class="sc-soil">' +
+          '<div class="sc-field-bed">' +
+            '<div class="sc-furrow sc-furrow-1"></div>' +
+            '<div class="sc-furrow sc-furrow-2"></div>' +
+            '<div class="sc-furrow sc-furrow-3"></div>' +
+          '</div>' +
+          '<div class="sc-grass-pad"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sc-count mi-zy"></div>';
+
+    // ── 掛載關卡 ──────────────────────────────────────────────
+    MouseIsland.mount({
+      unit: 19,
+      title: '拔蔬菜',
+      skill: 'drag',
+      gem: '拖拉',
+      grade: '14',
+      zhuyin: true,
+      howto: '按住蔬菜往上拉，拖進菜籃！',
+      teach: '拖拉（按住左鍵移動再放開）｜生活 2-I-5、資E1',
+      hints: ['按住不要放開，再移動滑鼠', '再看一次示範。'],
+      hero: HERO_SVG,
+      dex: {
+        name: '菜園圖鑑',
+        total: 8,
+        tip: '偶爾會拔到金蘿蔔󠇡！',
+        items: {
+          carrot:  { name: '紅蘿蔔󠇡', svg: DEX_SVGS.carrot },
+          radish:  { name: '白蘿蔔󠇡', svg: DEX_SVGS.radish },
+          potato:  { name: '馬鈴薯', svg: DEX_SVGS.potato },
+          tomato:  { name: '番茄',   svg: DEX_SVGS.tomato },
+          onion:   { name: '洋蔥',   svg: DEX_SVGS.onion },
+          pumpkin: { name: '南瓜',   svg: DEX_SVGS.pumpkin },
+          hat:     { name: '戴帽蘿蔔󠇡', svg: DEX_SVGS.hat },
+          gold:    { name: '金蘿蔔󠇡', svg: DEX_SVGS.gold }
         }
-        /* 蔬菜長大時的搖擺動畫 */
-        @keyframes wiggle {
-            0%, 100% { transform: rotate(-3deg); }
-            50% { transform: rotate(3deg); }
+      },
+
+      scene: function (api) {
+        var offs = [];
+        var raf = 0;
+        var vegs = [];
+        var baskets = [];
+        var crow = null;
+        var total = 1;
+        var doneCount = 0;
+        var stageIdx = 0;
+        var stage2Queue = [];
+        var stage2Idx = 0;
+        var assisted = false;
+        var stageEnding = false;
+        var goldCounter = 0; // 第三段每 4 棵出現一次金蘿蔔󠇡（彩虹目標）
+        var reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+        function clear() {
+          offs.forEach(function (f) { try { f(); } catch (e) {} });
+          offs = [];
+          if (raf) cancelAnimationFrame(raf);
+          raf = 0;
+          vegs = [];
+          baskets = [];
+          crow = null;
+          assisted = false;
+          stageEnding = false;
         }
-        .wiggle {
-            animation: wiggle 2s ease-in-out infinite;
+
+        function pullThreshold() {
+          return (assisted || api.cfg().assist) ? 40 : 80;
         }
-        /* 拔出時往籃子飛的動畫 */
-        @keyframes flyToBasket {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            100% { transform: translate(var(--fly-x), var(--fly-y)) scale(0.3); opacity: 0; }
+
+        function updateCount() {
+          var c = api.field.querySelector('.sc-count');
+          if (c) c.textContent = '菜 ' + doneCount + '／' + total;
         }
-        .flying {
-            animation: flyToBasket 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-            pointer-events: none;
-            z-index: 50;
+
+        // ── 視覺特效 ──
+        function spawnDirt(x, y) {
+          if (reducedMotion) return;
+          var wrap = document.createElement('div');
+          wrap.className = 'sc-fx';
+          wrap.style.left = x + 'px';
+          wrap.style.top = y + 'px';
+          var ring = document.createElement('div');
+          ring.className = 'sc-pop-ring';
+          wrap.appendChild(ring);
+          var dirs = [
+            { dx: -56, dy: -46 }, { dx: -32, dy: -66 }, { dx: 0, dy: -74 },
+            { dx: 34, dy: -62 }, { dx: 58, dy: -44 }, { dx: -44, dy: -16 }
+          ];
+          dirs.forEach(function (d) {
+            var dot = document.createElement('div');
+            dot.className = 'sc-dirt-dot';
+            dot.style.setProperty('--dx', d.dx + 'px');
+            dot.style.setProperty('--dy', d.dy + 'px');
+            wrap.appendChild(dot);
+          });
+          api.field.appendChild(wrap);
+          api.later(function () { if (wrap.parentNode) wrap.parentNode.removeChild(wrap); }, 550);
         }
-        /* 閃爍提示目前需要打的字 */
-        @keyframes keyPulse {
-            0%, 100% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.08); filter: brightness(1.2) drop-shadow(0 0 8px rgba(250, 204, 21, 0.8)); }
+
+        function spawnStars(x, y) {
+          if (reducedMotion) return;
+          var wrap = document.createElement('div');
+          wrap.className = 'sc-fx';
+          wrap.style.left = x + 'px';
+          wrap.style.top = y + 'px';
+          var dirs = [
+            { dx: -64, dy: -48 }, { dx: -26, dy: -76 }, { dx: 24, dy: -78 },
+            { dx: 66, dy: -46 }, { dx: 0, dy: -94 }
+          ];
+          dirs.forEach(function (d) {
+            var s = document.createElement('div');
+            s.className = 'sc-star';
+            s.innerHTML = STAR_SVG;
+            s.style.setProperty('--dx', d.dx + 'px');
+            s.style.setProperty('--dy', d.dy + 'px');
+            wrap.appendChild(s);
+          });
+          api.field.appendChild(wrap);
+          api.later(function () { if (wrap.parentNode) wrap.parentNode.removeChild(wrap); }, 700);
         }
-        .pulse-hint {
-            animation: keyPulse 1.2s infinite;
-            border: 4px solid #facc15 !important;
-            z-index: 10;
+
+        // ── 建立菜籃 ──
+        function makeBasket(opts) {
+          var el = document.createElement('div');
+          el.className = 'sc-basket' + (opts.stage3 ? ' sc-basket-s3' : '');
+          el.style.width = opts.w + 'px';
+          el.style.height = opts.h + 'px';
+          el.style.left = (opts.x - opts.w / 2) + 'px';
+          el.style.top = (opts.y - opts.h / 2) + 'px';
+
+          var iconHtml = opts.icon ? '<span class="sc-basket-tag-icon">' + DEX_SVGS[opts.icon] + '</span>' : '';
+          el.innerHTML =
+            '<div class="sc-basket-frame">' +
+              '<div class="sc-basket-back">' + BASKET_BACK_SVG + '</div>' +
+              '<div class="sc-basket-items"></div>' +
+              '<div class="sc-basket-front">' + BASKET_FRONT_SVG + '</div>' +
+              '<div class="sc-basket-tag">' + iconHtml + '<span class="mi-zy">' + opts.label + '</span></div>' +
+            '</div>';
+          api.field.appendChild(el);
+
+          var obj = {
+            el: el,
+            x: opts.x,
+            y: opts.y,
+            w: opts.w,
+            h: opts.h,
+            baseW: opts.w,
+            baseH: opts.h,
+            minX: opts.minX || opts.x,
+            maxX: opts.maxX || opts.x,
+            vx: opts.vx || 0,
+            accept: opts.accept || null // null 表示任意蔬菜都收
+          };
+          baskets.push(obj);
+          return obj;
         }
-        /* 小兔子跳過來的動畫 */
-        @keyframes bunnyHop {
-            0% { left: -100px; transform: scaleX(-1); }
-            45% { left: 45%; transform: scaleX(-1) translateY(0); }
-            50% { left: 50%; transform: scaleX(1) translateY(-20px); }
-            55% { left: 55%; transform: scaleX(1) translateY(0); }
-            100% { left: 110%; transform: scaleX(1); }
+
+        function resizeBasket(b, factor) {
+          b.w = Math.round(b.baseW * factor);
+          b.h = Math.round(b.baseH * factor);
+          b.el.style.width = b.w + 'px';
+          b.el.style.height = b.h + 'px';
+          b.el.style.left = (b.x - b.w / 2) + 'px';
+          b.el.style.top = (b.y - b.h / 2) + 'px';
         }
-        .bunny-anim {
-            animation: bunnyHop 4s ease-in-out forwards;
+
+        function basketAccepts(b, vegType) {
+          if (vegType === 'gold') return true;
+          if (!b.accept) return true;
+          return b.accept.indexOf(vegType) !== -1;
         }
-        /* 星星落下的動畫 */
-        @keyframes starDrop {
-            0% { transform: translateY(-50px) scale(0) rotate(0deg); opacity: 0; }
-            50% { transform: translateY(100px) scale(1.5) rotate(180deg); opacity: 1; }
-            100% { transform: translateY(200px) scale(1) rotate(360deg); opacity: 0; }
+
+        function getRightBasket(v) {
+          if (!baskets.length) return null;
+          for (var i = 0; i < baskets.length; i++) {
+            if (basketAccepts(baskets[i], v.type)) return baskets[i];
+          }
+          return baskets[0];
         }
-        .star-anim {
-            animation: starDrop 2s ease-out forwards;
+
+        function clearBasketHover() {
+          baskets.forEach(function (b) { b.el.classList.remove('sc-basket-over'); });
         }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col justify-between">
-<a href="../../index.html" class="kogao-home-btn" style="position:fixed;top:10px;left:10px;z-index:99999;background:rgba(255,255,255,.92);border:2px solid #f59e0b;color:#b45309;font-family:'Noto Sans TC',sans-serif;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.15)">🏠 首頁</a>
 
-    <!-- 頂部資訊欄（分數、星星、重來、難度選擇） -->
-    <header class="p-4 w-full max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4 z-10">
-        <!-- 標題與標誌 -->
-        <div class="flex items-center gap-3">
-            <span class="text-4xl">🧑‍🌾</span>
-            <div>
-                <h1 class="text-2xl md:text-3xl font-extrabold text-green-700 tracking-wider">快樂農場</h1>
-                <p class="text-xs md:text-sm text-green-600 font-bold">小學一年級專屬 ‧ 蔬菜拔拔樂</p>
-            </div>
-        </div>
-
-        <!-- 難度選擇器 -->
-        <div class="flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-2 rounded-2xl shadow-md">
-            <span class="text-sm font-bold text-slate-600">範圍：</span>
-            <select id="rangeSelect" class="bg-green-100 text-green-800 font-bold rounded-lg px-2 py-1 outline-none text-sm cursor-pointer transition-colors hover:bg-green-200">
-                <option value="homeRow">鍵盤中間排 (A~L)</option>
-                <option value="topRow">鍵盤上排 (Q~P)</option>
-                <option value="bottomRow">鍵盤下排 (Z~M)</option>
-                <option value="full">全英文字母 (A~Z)</option>
-            </select>
-        </div>
-
-        <!-- 計分板 -->
-        <div class="flex items-center gap-4">
-            <!-- 拔起數量計數器 -->
-            <div class="bg-orange-100 border-2 border-orange-300 rounded-2xl px-4 py-2 flex items-center gap-2 shadow-sm">
-                <span class="text-2xl">🥕</span>
-                <div class="text-left">
-                    <div class="text-xs text-orange-500 font-bold">已拔起</div>
-                    <div id="scoreVal" class="text-xl font-black text-orange-700">0</div>
-                </div>
-            </div>
-
-            <!-- 星星收集盒 -->
-            <div class="bg-amber-100 border-2 border-amber-300 rounded-2xl px-4 py-2 flex items-center gap-2 shadow-sm">
-                <span class="text-2xl text-amber-500 animate-bounce">⭐</span>
-                <div class="text-left">
-                    <div class="text-xs text-amber-500 font-bold">兔子星星</div>
-                    <div id="starVal" class="text-xl font-black text-amber-700">0</div>
-                </div>
-            </div>
-
-            <!-- 重開按鈕 -->
-            <button id="resetBtn" class="bg-red-500 hover:bg-red-600 text-white font-black px-4 py-3 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-1">
-                <span>🔄</span><span class="hidden md:inline">重來</span>
-            </button>
-        </div>
-    </header>
-
-    <!-- 遊戲主舞台 -->
-    <main class="relative flex-grow w-full max-w-5xl mx-auto px-4 flex flex-col justify-end pb-4">
-        <!-- 雲朵與背景（純裝飾） -->
-        <div class="absolute top-10 left-10 text-6xl opacity-30 select-none pointer-events-none">☁️</div>
-        <div class="absolute top-24 right-20 text-7xl opacity-20 select-none pointer-events-none">☁️</div>
-        <div class="absolute top-4 left-1/2 -translate-x-1/2 text-8xl opacity-10 select-none pointer-events-none">☀️</div>
-
-        <!-- 蔬菜生長區（農田） -->
-        <div class="relative w-full h-[320px] md:h-[380px] bg-gradient-to-t from-amber-950 to-amber-900/40 border-t-8 border-green-600 rounded-t-[40px] shadow-2xl p-6 flex items-end justify-around gap-2 select-none">
-            <!-- 泥土光影覆蓋 -->
-            <div class="absolute inset-x-0 bottom-0 h-16 bg-amber-950/80 rounded-t-3xl pointer-events-none"></div>
-
-            <!-- 5個固定的生長坑洞 -->
-            <div class="grid grid-cols-5 w-full h-full items-end justify-items-center relative z-10 pb-6">
-                <!-- 坑洞 0 -->
-                <div id="plot-0" class="relative w-full flex flex-col items-center justify-end h-full">
-                    <div class="veggie-container w-full flex justify-center items-end h-4/5 pb-2"></div>
-                    <div class="w-16 h-4 bg-amber-950/90 rounded-full border border-amber-800/60 shadow-inner"></div>
-                </div>
-                <!-- 坑洞 1 -->
-                <div id="plot-1" class="relative w-full flex flex-col items-center justify-end h-full">
-                    <div class="veggie-container w-full flex justify-center items-end h-4/5 pb-2"></div>
-                    <div class="w-16 h-4 bg-amber-950/90 rounded-full border border-amber-800/60 shadow-inner"></div>
-                </div>
-                <!-- 坑洞 2 -->
-                <div id="plot-2" class="relative w-full flex flex-col items-center justify-end h-full">
-                    <div class="veggie-container w-full flex justify-center items-end h-4/5 pb-2"></div>
-                    <div class="w-16 h-4 bg-amber-950/90 rounded-full border border-amber-800/60 shadow-inner"></div>
-                </div>
-                <!-- 坑洞 3 -->
-                <div id="plot-3" class="relative w-full flex flex-col items-center justify-end h-full">
-                    <div class="veggie-container w-full flex justify-center items-end h-4/5 pb-2"></div>
-                    <div class="w-16 h-4 bg-amber-950/90 rounded-full border border-amber-800/60 shadow-inner"></div>
-                </div>
-                <!-- 坑洞 4 -->
-                <div id="plot-4" class="relative w-full flex flex-col items-center justify-end h-full">
-                    <div class="veggie-container w-full flex justify-center items-end h-4/5 pb-2"></div>
-                    <div class="w-16 h-4 bg-amber-950/90 rounded-full border border-amber-800/60 shadow-inner"></div>
-                </div>
-            </div>
-
-            <!-- 收集籃子（放置於右下角） -->
-            <div id="basket" class="absolute bottom-4 right-6 w-24 h-20 md:w-32 md:h-24 bg-orange-800 border-4 border-orange-900 rounded-b-3xl rounded-t-lg shadow-xl flex flex-col items-center justify-center text-white font-extrabold z-20">
-                <!-- 籃子提把 -->
-                <div class="absolute -top-10 w-16 h-10 border-4 border-orange-900 rounded-t-full pointer-events-none"></div>
-                <div class="text-2xl md:text-3xl">🧺</div>
-                <div class="text-[10px] md:text-xs tracking-wider bg-orange-950/60 px-2 py-0.5 rounded-full mt-1">蔬菜籃</div>
-            </div>
-
-            <!-- 動態兔子跑道（小兔子會從後面跳過） -->
-            <div id="bunnyLayer" class="absolute inset-x-0 bottom-12 h-20 overflow-hidden pointer-events-none z-0">
-                <div id="bunny" class="absolute bottom-0 text-5xl hidden select-none">🐇</div>
-            </div>
-
-            <!-- 星星噴發特效層 -->
-            <div id="effectLayer" class="absolute inset-0 pointer-events-none z-30 overflow-hidden"></div>
-        </div>
-    </main>
-
-    <!-- 底部：彩虹虛擬輔助鍵盤（手手對應顏色、提示發光） -->
-    <footer class="w-full bg-slate-900/90 backdrop-blur-md border-t-4 border-slate-700 p-3 md:p-5 pb-6">
-        <div class="max-w-4xl mx-auto">
-            <!-- 鍵盤指引說明 -->
-            <div class="flex justify-between items-center text-xs text-slate-400 font-bold mb-2 px-1">
-                <span class="flex items-center gap-1">👉 請看畫面上亮起的黃色字母，在實體鍵盤按下對應按鍵喔！</span>
-                <span class="hidden md:inline">🎨 顏色說明：左手區域（暖色系） | 右手區域（冷色系）</span>
-            </div>
-
-            <!-- 鍵盤主體 -->
-            <div class="flex flex-col gap-1.5 md:gap-2 select-none" id="virtualKeyboard">
-                <!-- 第一排 (Q-P) -->
-                <div class="flex justify-center gap-1 md:gap-1.5">
-                    <div data-key="Q" class="kb-key kb-left-1 w-8 h-10 md:w-12 md:h-12 bg-rose-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-rose-700 transition-all">Q</div>
-                    <div data-key="W" class="kb-key kb-left-2 w-8 h-10 md:w-12 md:h-12 bg-orange-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-orange-700 transition-all">W</div>
-                    <div data-key="E" class="kb-key kb-left-3 w-8 h-10 md:w-12 md:h-12 bg-amber-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-amber-700 transition-all">E</div>
-                    <div data-key="R" class="kb-key kb-left-4 w-8 h-10 md:w-12 md:h-12 bg-yellow-500 text-slate-800 rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-yellow-700 transition-all">R</div>
-                    <div data-key="T" class="kb-key kb-left-4 w-8 h-10 md:w-12 md:h-12 bg-yellow-500 text-slate-800 rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-yellow-700 transition-all">T</div>
-                    <div data-key="Y" class="kb-key kb-right-4 w-8 h-10 md:w-12 md:h-12 bg-emerald-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-emerald-700 transition-all">Y</div>
-                    <div data-key="U" class="kb-key kb-right-4 w-8 h-10 md:w-12 md:h-12 bg-emerald-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-emerald-700 transition-all">U</div>
-                    <div data-key="I" class="kb-key kb-right-3 w-8 h-10 md:w-12 md:h-12 bg-cyan-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-cyan-700 transition-all">I</div>
-                    <div data-key="O" class="kb-key kb-right-2 w-8 h-10 md:w-12 md:h-12 bg-blue-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-blue-700 transition-all">O</div>
-                    <div data-key="P" class="kb-key kb-right-1 w-8 h-10 md:w-12 md:h-12 bg-indigo-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-indigo-700 transition-all">P</div>
-                </div>
-                <!-- 第二排 (A-L) -->
-                <div class="flex justify-center gap-1 md:gap-1.5 ml-2 md:ml-4">
-                    <div data-key="A" class="kb-key kb-left-1 w-8 h-10 md:w-12 md:h-12 bg-rose-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-rose-700 transition-all">A</div>
-                    <div data-key="S" class="kb-key kb-left-2 w-8 h-10 md:w-12 md:h-12 bg-orange-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-orange-700 transition-all">S</div>
-                    <div data-key="D" class="kb-key kb-left-3 w-8 h-10 md:w-12 md:h-12 bg-amber-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-amber-700 transition-all">D</div>
-                    <div data-key="F" class="kb-key kb-left-4 w-8 h-10 md:w-12 md:h-12 bg-yellow-500 text-slate-800 rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-yellow-700 transition-all">F</div>
-                    <div data-key="G" class="kb-key kb-left-4 w-8 h-10 md:w-12 md:h-12 bg-yellow-500 text-slate-800 rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-yellow-700 transition-all">G</div>
-                    <div data-key="H" class="kb-key kb-right-4 w-8 h-10 md:w-12 md:h-12 bg-emerald-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-emerald-700 transition-all">H</div>
-                    <div data-key="J" class="kb-key kb-right-4 w-8 h-10 md:w-12 md:h-12 bg-emerald-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-emerald-700 transition-all">J</div>
-                    <div data-key="K" class="kb-key kb-right-3 w-8 h-10 md:w-12 md:h-12 bg-cyan-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-cyan-700 transition-all">K</div>
-                    <div data-key="L" class="kb-key kb-right-2 w-8 h-10 md:w-12 md:h-12 bg-blue-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-blue-700 transition-all">L</div>
-                </div>
-                <!-- 第三排 (Z-M) -->
-                <div class="flex justify-center gap-1 md:gap-1.5 ml-4 md:ml-8">
-                    <div data-key="Z" class="kb-key kb-left-1 w-8 h-10 md:w-12 md:h-12 bg-rose-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-rose-700 transition-all">Z</div>
-                    <div data-key="X" class="kb-key kb-left-2 w-8 h-10 md:w-12 md:h-12 bg-orange-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-orange-700 transition-all">X</div>
-                    <div data-key="C" class="kb-key kb-left-3 w-8 h-10 md:w-12 md:h-12 bg-amber-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-amber-700 transition-all">C</div>
-                    <div data-key="V" class="kb-key kb-left-4 w-8 h-10 md:w-12 md:h-12 bg-yellow-500 text-slate-800 rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-yellow-700 transition-all">V</div>
-                    <div data-key="B" class="kb-key kb-left-4 w-8 h-10 md:w-12 md:h-12 bg-yellow-500 text-slate-800 rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-yellow-700 transition-all">B</div>
-                    <div data-key="N" class="kb-key kb-right-4 w-8 h-10 md:w-12 md:h-12 bg-emerald-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-emerald-700 transition-all">N</div>
-                    <div data-key="M" class="kb-key kb-right-4 w-8 h-10 md:w-12 md:h-12 bg-emerald-500 text-white rounded-lg flex items-center justify-center font-black text-sm md:text-lg shadow border-b-4 border-emerald-700 transition-all">M</div>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- 開頭/暫停 引導覆蓋畫面 -->
-    <div id="startOverlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-[32px] border-8 border-green-400 p-8 max-w-md w-full text-center shadow-2xl transform scale-100 transition-transform">
-            <span class="text-7xl block mb-4 animate-bounce">🥕🐰🌟</span>
-            <h2 class="text-3xl font-black text-green-700 mb-2">蔬菜拔拔樂</h2>
-            <p class="text-slate-600 font-bold mb-6 text-sm leading-relaxed">
-                哇！農場裡的蔬菜長大囉！<br>
-                看著葉子上的字母，按下鍵盤對應鍵，<br>
-                把蔬菜「啵」地拔出來吧！
-            </p>
-            
-            <div class="bg-green-50 p-4 rounded-2xl mb-6 text-left border border-green-100">
-                <h3 class="font-black text-green-800 mb-1 flex items-center gap-1">⭐ 小朋友，你會得到：</h3>
-                <ul class="text-xs text-slate-600 space-y-1 font-bold">
-                    <li>🔸 拔起 5 顆菜：小白兔會跑出來送你星星喔！</li>
-                    <li>🔸 溫和無壓力：蔬菜長大不會消失，可以慢慢找。</li>
-                    <li>🔸 彩虹鍵盤：看著畫面下亮晶晶的鍵盤指引打字。</li>
-                </ul>
-            </div>
-
-            <button id="startBtn" class="w-full bg-green-500 hover:bg-green-600 text-white font-black text-xl py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl transform active:scale-95 transition-all">
-                開始拔蔬菜 🚀
-            </button>
-        </div>
-    </div>
-
-    <!-- 腳本邏輯 -->
-    <script>
-        // --- 音效生成器 (Web Audio API 避免依賴外部音檔) ---
-        class SoundEffects {
-            constructor() {
-                this.ctx = null;
+        function highlightNearBasket(cx, cy) {
+          clearBasketHover();
+          for (var i = 0; i < baskets.length; i++) {
+            var b = baskets[i];
+            if (Math.abs(cx - b.x) < b.w * 0.6 && Math.abs(cy - b.y) < b.h * 0.65) {
+              b.el.classList.add('sc-basket-over');
+              break;
             }
-            init() {
-                if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+          }
+        }
+
+        // ── 建立第三段干擾物：小烏鴉 ──
+        function makeCrow(cfg) {
+          var el = document.createElement('div');
+          el.className = 'sc-crow';
+          el.innerHTML = '<div class="sc-crow-inner">' + CROW_SVG + '</div>';
+          var obj = {
+            el: el,
+            x: 320,
+            y: 146,
+            w: 82,
+            h: 70,
+            minX: 160,
+            maxX: 900,
+            vx: (reducedMotion ? 0 : 62 * cfg.speed)
+          };
+          el.style.left = (obj.x - obj.w / 2) + 'px';
+          el.style.top = (obj.y - obj.h / 2) + 'px';
+          api.field.appendChild(el);
+          crow = obj;
+          return obj;
+        }
+
+        // ── 建立蔬菜與拔拉邏輯 ──
+        function placeVeg(v, cx, cy) {
+          v.el.style.left = (cx - v.size / 2) + 'px';
+          v.el.style.top = (cy - v.size / 2) + 'px';
+        }
+
+        function resizeVeg(v, newSize) {
+          // 限制大小確保絕不進入左下角寄寄區（x < 560 且 y > 400）
+          var maxAllowed = 260;
+          if (v.x - newSize / 2 < 560 && v.y + newSize / 2 > 396) {
+            newSize = Math.min(newSize, Math.max(80, (396 - v.y) * 2));
+          }
+          v.size = Math.min(maxAllowed, Math.round(newSize));
+          v.el.style.width = v.size + 'px';
+          v.el.style.height = v.size + 'px';
+          placeVeg(v, v.x, v.y);
+          var hw = Math.round(v.size * 0.88);
+          var hh = Math.round(v.size * 0.34);
+          v.hole.style.width = hw + 'px';
+          v.hole.style.height = hh + 'px';
+          v.hole.style.left = (v.x - hw / 2) + 'px';
+          v.hole.style.top = (v.y + v.size * 0.08) + 'px';
+        }
+
+        function spawnVeg(opts) {
+          var hole = document.createElement('div');
+          hole.className = 'sc-hole';
+          hole.innerHTML = HOLE_SVG;
+          api.field.appendChild(hole);
+
+          var el = document.createElement('div');
+          el.className = 'sc-veg sc-buried' + (opts.type === 'gold' ? ' sc-gold' : '');
+          el.innerHTML =
+            '<div class="sc-veg-clip"><div class="sc-veg-inner">' + sceneVegSvg(opts.type) + '</div></div>' +
+            '<div class="sc-front-soil">' + FRONT_SOIL_SVG + '</div>';
+          api.field.appendChild(el);
+
+          var v = {
+            type: opts.type,
+            el: el,
+            inner: el.querySelector('.sc-veg-inner'),
+            hole: hole,
+            x: opts.x,
+            y: opts.y,
+            baseSize: opts.baseSize,
+            size: opts.size,
+            pulled: false,
+            done: false
+          };
+          resizeVeg(v, opts.size);
+          vegs.push(v);
+
+          var targetEls = baskets.map(function (b) { return b.el; });
+          if (crow) targetEls.push(crow.el);
+
+          function resetToHole(withOops) {
+            v.pulled = false;
+            el.classList.remove('sc-grab', 'sc-pulled');
+            el.classList.add('sc-buried', 'sc-returning');
+            v.inner.style.transform = '';
+            placeVeg(v, v.x, v.y);
+            if (withOops) {
+              el.classList.add('sc-oops', 'sc-shake-head');
+              api.later(function () {
+                el.classList.remove('sc-oops', 'sc-shake-head', 'sc-returning');
+              }, 580);
+            } else {
+              api.later(function () { el.classList.remove('sc-returning'); }, 400);
+            }
+          }
+
+          var off = api.on(el, 'drag', {
+            start: function () {
+              if (v.done || stageEnding) return;
+              v.pulled = false;
+              el.classList.remove('sc-returning', 'sc-oops', 'sc-shake-head');
+              el.classList.add('sc-grab');
+              v.inner.style.transform = 'translateY(24%) scale(1.04, 0.96)';
+            },
+            move: function (pos, dx, dy) {
+              if (v.done || stageEnding) return;
+              var ddx = dx || 0;
+              var ddy = dy || 0;
+              var th = pullThreshold();
+
+              if (!v.pulled) {
+                var pullUp = Math.max(0, -ddy);
+                var dist = Math.hypot(ddx, ddy);
+                var ratio = Math.min(1, Math.max(pullUp, dist * 0.72) / th);
+                var sx = 1 - ratio * 0.16;
+                var sy = 1 + ratio * 0.42;
+                var tilt = Math.max(-14, Math.min(14, ddx * 0.16));
+                var liftPct = 28 - ratio * 28;
+                v.inner.style.transform =
+                  'translateY(' + liftPct.toFixed(1) + '%) rotate(' + tilt.toFixed(1) + 'deg) scale(' + sx.toFixed(3) + ',' + sy.toFixed(3) + ')';
+
+                // 拉超過門檻（80px，assist 時 40px）啵一聲拔出來
+                if (pullUp >= th || dist >= th * 1.18) {
+                  v.pulled = true;
+                  el.classList.remove('sc-buried');
+                  el.classList.add('sc-pulled');
+                  v.inner.style.transform = 'scale(1.06)';
+                  api.sfx('pop');
+                  spawnDirt(v.x, v.y + v.size * 0.1);
+                  placeVeg(v, v.x + ddx, v.y + ddy);
+                  highlightNearBasket(v.x + ddx, v.y + ddy);
                 }
+              } else {
+                var nx = v.x + ddx;
+                var ny = v.y + ddy;
+                placeVeg(v, nx, ny);
+                highlightNearBasket(nx, ny);
+              }
+            },
+            drop: function (pos, target) {
+              if (v.done || stageEnding) return;
+              clearBasketHover();
+              el.classList.remove('sc-grab');
+
+              // 還沒拔出來就放手：彈回土裡、晃一晃
+              if (!v.pulled) {
+                resetToHole(false);
+                api.sfx('boing');
+                api.wob(el);
+                api.miss();
+                return;
+              }
+
+              // 第三段拖到小烏鴉身上：無效果、不算失手
+              if (crow && target === crow.el) {
+                crow.el.classList.remove('sc-crow-flap');
+                void crow.el.offsetWidth;
+                crow.el.classList.add('sc-crow-flap');
+                resetToHole(false);
+                return;
+              }
+
+              // 找放進哪一個菜籃
+              var hitBasket = null;
+              for (var i = 0; i < baskets.length; i++) {
+                if (baskets[i].el === target) { hitBasket = baskets[i]; break; }
+              }
+
+              // 放在菜籃以外的地方：咚掉回原位、晃一晃
+              if (!hitBasket) {
+                resetToHole(false);
+                api.sfx('boing');
+                api.wob(el);
+                api.miss();
+                return;
+              }
+
+              // 放進錯的菜籃（第三段）：從籃子裡跳出來搖頭回原位
+              if (!basketAccepts(hitBasket, v.type)) {
+                placeVeg(v, hitBasket.x, hitBasket.y - hitBasket.h * 0.25);
+                el.classList.add('sc-oops', 'sc-shake-head');
+                api.sfx('giggle');
+                api.wob(hitBasket.el);
+                api.miss();
+                api.later(function () {
+                  if (!v.done) resetToHole(true);
+                }, 260);
+                return;
+              }
+
+              // 放進對的菜籃！
+              v.done = true;
+              api.glow(el, false);
+              el.classList.add('sc-done');
+
+              // 蔬菜跳進籃子裡露臉＋籃子彈一下＋星星
+              var inEl = document.createElement('div');
+              inEl.className = 'sc-in-basket';
+              inEl.innerHTML = sceneVegSvg(v.type);
+              var faceN = inEl.querySelector('.sc-face-normal');
+              var faceH = inEl.querySelector('.sc-face-happy');
+              if (faceN) faceN.style.display = 'none';
+              if (faceH) faceH.style.display = 'inline';
+              hitBasket.el.querySelector('.sc-basket-items').appendChild(inEl);
+
+              hitBasket.el.classList.remove('sc-basket-bounce');
+              void hitBasket.el.offsetWidth;
+              hitBasket.el.classList.add('sc-basket-bounce');
+              spawnStars(hitBasket.x, hitBasket.y - hitBasket.h * 0.3);
+
+              api.collect(v.type);
+              api.hit();
+              doneCount++;
+              updateCount();
+
+              onVegHarvested();
+            },
+            tap: function () {
+              if (v.done || stageEnding) return;
+              el.classList.remove('sc-grab');
+              v.inner.style.transform = '';
+              api.sfx('giggle');
+              api.wob(el);
+              api.miss();
             }
-            // 啵！ (拔菜成功音效)
-            playPop() {
-                this.init();
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
+          }, { follow: false, targets: targetEls });
 
-                osc.type = 'sine';
-                // 快速升高的頻率產生「啵」聲
-                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.15);
-
-                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
-
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.2);
-            }
-            // 叮咚！ (獲得星星音效)
-            playStar() {
-                this.init();
-                if (!this.ctx) return;
-                const now = this.ctx.currentTime;
-                // 兩個音符和弦
-                [523.25, 659.25, 783.99].forEach((freq, idx) => {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
-
-                    gain.gain.setValueAtTime(0.15, now + idx * 0.08);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.4);
-
-                    osc.start(now + idx * 0.08);
-                    osc.stop(now + idx * 0.08 + 0.5);
-                });
-            }
-            // 溫和的打錯提示音
-            playWrong() {
-                this.init();
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(120, this.ctx.currentTime);
-                osc.frequency.linearRampToValueAtTime(80, this.ctx.currentTime + 0.25);
-
-                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
-
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.3);
-            }
+          offs.push(off);
+          return v;
         }
-        const sfx = new SoundEffects();
 
-        // --- 遊戲資料與設定 ---
-        const rangeLetters = {
-            homeRow: ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-            topRow: ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-            bottomRow: ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
-            full: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-        };
+        function onVegHarvested() {
+          if (stageIdx === 0) {
+            stageEnding = true;
+            api.later(function () { api.stageDone(); }, 550);
+          } else if (stageIdx === 1) {
+            stage2Idx++;
+            if (doneCount >= total) {
+              stageEnding = true;
+              api.later(function () { api.stageDone(); }, 550);
+            } else {
+              api.later(function () { spawnStage2Next(); }, 360);
+            }
+          } else if (stageIdx === 2) {
+            if (doneCount >= total) {
+              stageEnding = true;
+              // 菜籃裡的蔬菜一起跳舞
+              var allIn = api.field.querySelectorAll('.sc-in-basket');
+              for (var i = 0; i < allIn.length; i++) {
+                allIn[i].classList.add('sc-dance');
+                allIn[i].style.animationDelay = (i * 0.12) + 's';
+              }
+              api.sfx('ok');
+              api.say('電腦上搬檔案，也是這樣拖！');
+              api.later(function () { api.stageDone(); }, 3000);
+            }
+          }
+        }
 
-        const veggieTypes = [
-            { name: '紅蘿蔔', emoji: '🥕', stemColor: 'text-orange-500', leafColor: 'bg-green-500' },
-            { name: '大頭菜', emoji: '🧅', stemColor: 'text-indigo-200', leafColor: 'bg-green-600' },
-            { name: '馬鈴薯', emoji: '🥔', stemColor: 'text-amber-700', leafColor: 'bg-emerald-500' },
-            { name: '南瓜', emoji: '🎃', stemColor: 'text-yellow-600', leafColor: 'bg-green-700' }
+        // ── 第二段：一次出一棵（涵蓋多種普通菜＋偶爾戴帽蘿蔔󠇡） ──
+        var S2_SPOTS = [
+          { x: 250, y: 265 },
+          { x: 470, y: 280 },
+          { x: 685, y: 405 },
+          { x: 360, y: 255 }
         ];
 
-        let score = 0;
-        let starCount = 0;
-        let gameActive = false;
-        let currentRange = 'homeRow';
-
-        // 追蹤每個坑洞的蔬菜狀態 (總共5個坑洞，對應 plot-0 ~ plot-4)
-        // 坑洞蔬菜資料結構：{ active: boolean, typeIndex: number, letter: string, growth: number, element: HTMLElement, isHarvesting: boolean }
-        const plots = Array(5).fill(null).map(() => ({
-            active: false,
-            typeIndex: 0,
-            letter: '',
-            growth: 0,
-            element: null,
-            isHarvesting: false
-        }));
-
-        // --- DOM 節點 ---
-        const startOverlay = document.getElementById('startOverlay');
-        const startBtn = document.getElementById('startBtn');
-        const rangeSelect = document.getElementById('rangeSelect');
-        const scoreVal = document.getElementById('scoreVal');
-        const starVal = document.getElementById('starVal');
-        const resetBtn = document.getElementById('resetBtn');
-        const bunny = document.getElementById('bunny');
-        const effectLayer = document.getElementById('effectLayer');
-        const basket = document.getElementById('basket');
-
-        // --- 初始化遊戲 ---
-        startBtn.addEventListener('click', () => {
-            sfx.init(); // 啟動 AudioContext
-            startOverlay.classList.add('hidden');
-            gameActive = true;
-            startGameLoop();
-        });
-
-        resetBtn.addEventListener('click', () => {
-            resetGame();
-        });
-
-        rangeSelect.addEventListener('change', (e) => {
-            currentRange = e.target.value;
-            // 清除現有蔬菜，換新字母範圍
-            clearAllPlots();
-            updateKeyboardHints();
-        });
-
-        function resetGame() {
-            score = 0;
-            starCount = 0;
-            scoreVal.textContent = score;
-            starVal.textContent = starCount;
-            clearAllPlots();
-            gameActive = true;
-            updateKeyboardHints();
+        function buildStage2Queue() {
+          var got = api.collected() || [];
+          var normals = ['radish', 'potato', 'onion', 'tomato', 'pumpkin', 'carrot'];
+          // 優先把還沒收集過的普通菜排前面，幫助收集圖鑑
+          normals.sort(function (a, b) {
+            var ga = got.indexOf(a) === -1 ? 0 : 1;
+            var gb = got.indexOf(b) === -1 ? 0 : 1;
+            return ga - gb || (Math.random() - 0.5);
+          });
+          var picks = normals.slice(0, 4);
+          // 偶爾出現戴帽蘿蔔󠇡小驚喜
+          if (Math.random() < (got.indexOf('hat') === -1 ? 0.55 : 0.25)) {
+            picks[Math.floor(Math.random() * 4)] = 'hat';
+          }
+          // 座標洗牌
+          var spots = S2_SPOTS.slice().sort(function () { return Math.random() - 0.5; });
+          stage2Queue = picks.map(function (t, idx) {
+            return { type: t, x: spots[idx].x, y: spots[idx].y };
+          });
+          stage2Idx = 0;
         }
 
-        function clearAllPlots() {
-            for (let i = 0; i < 5; i++) {
-                removeVeggie(i);
+        function spawnStage2Next() {
+          if (stage2Idx >= stage2Queue.length) return;
+          var item = stage2Queue[stage2Idx];
+          var cfg = api.cfg();
+          var k = assisted ? Math.max(cfg.size, 1.35) : cfg.size;
+          spawnVeg({
+            type: item.type,
+            x: item.x,
+            y: item.y,
+            baseSize: 180,
+            size: 180 * k
+          });
+        }
+
+        // ── 第三段：5 棵同時種在田裡（紅蘿蔔󠇡/戴帽、番茄、南瓜＋每 4 棵一次金蘿蔔󠇡） ──
+        var S3_SPOTS = [
+          { x: 215, y: 245 },
+          { x: 445, y: 235 },
+          { x: 675, y: 240 },
+          { x: 665, y: 415 },
+          { x: 855, y: 365 }
+        ];
+
+        function buildStage3Types() {
+          var got = api.collected() || [];
+          var list = ['carrot', 'tomato', 'pumpkin'];
+          var extras = ['carrot', 'tomato', 'pumpkin'];
+          while (list.length < 5) {
+            list.push(extras[Math.floor(Math.random() * extras.length)]);
+          }
+          // 偶爾把其中一棵紅蘿蔔󠇡變成戴帽蘿蔔󠇡（算紅蘿蔔󠇡籃）
+          var cIdx = list.indexOf('carrot');
+          if (cIdx !== -1 && Math.random() < (got.indexOf('hat') === -1 ? 0.7 : 0.35)) {
+            list[cIdx] = 'hat';
+          }
+          // 打亂順序後，依 goldCounter 約每 4 棵出現一次金蘿蔔󠇡（彩虹目標）
+          list.sort(function () { return Math.random() - 0.5; });
+          for (var i = 0; i < list.length; i++) {
+            goldCounter++;
+            if (goldCounter % 4 === 0) {
+              list[i] = 'gold';
             }
+          }
+          return list;
         }
 
-        // --- 核心遊戲循環 ---
-        let lastSpawnTime = 0;
-        function startGameLoop() {
-            function loop(timestamp) {
-                if (!gameActive) return;
+        // ── 主動畫迴圈（第二段移動菜籃、第三段田邊小烏鴉） ──
+        function startLoop() {
+          var last = performance.now();
+          (function tick(now) {
+            var dt = Math.min(0.05, (now - last) / 1000);
+            last = now;
 
-                // 1. 蔬菜生長邏輯
-                plots.forEach((plot, index) => {
-                    if (plot.active && !plot.isHarvesting) {
-                        if (plot.growth < 100) {
-                            plot.growth += 0.5; // 生長速度極緩慢，適合小一兒童
-                            if (plot.growth > 100) plot.growth = 100;
-                            updateVeggieDOM(index);
-                        }
-                    }
-                });
+            if (!reducedMotion && !stageEnding) {
+              baskets.forEach(function (b) {
+                if (!b.vx) return;
+                b.x += b.vx * dt;
+                if (b.x < b.minX) { b.x = b.minX; b.vx = Math.abs(b.vx); }
+                if (b.x > b.maxX) { b.x = b.maxX; b.vx = -Math.abs(b.vx); }
+                b.el.style.left = (b.x - b.w / 2) + 'px';
+              });
 
-                // 2. 自動補充蔬菜 (如果坑洞有空缺，每隔一小段時間隨機生長)
-                if (timestamp - lastSpawnTime > 2000) {
-                    trySpawnVeggie();
-                    lastSpawnTime = timestamp;
+              if (crow && crow.vx) {
+                crow.x += crow.vx * dt;
+                if (crow.x < crow.minX) {
+                  crow.x = crow.minX;
+                  crow.vx = Math.abs(crow.vx);
+                  crow.el.classList.remove('sc-crow-flip');
+                } else if (crow.x > crow.maxX) {
+                  crow.x = crow.maxX;
+                  crow.vx = -Math.abs(crow.vx);
+                  crow.el.classList.add('sc-crow-flip');
                 }
-
-                requestAnimationFrame(loop);
+                crow.el.style.left = (crow.x - crow.w / 2) + 'px';
+              }
             }
-            requestAnimationFrame(loop);
+            raf = requestAnimationFrame(tick);
+          })(last);
         }
 
-        // 嘗試在隨機空坑洞中長出新蔬菜
-        function trySpawnVeggie() {
-            // 找出目前空的坑洞
-            const emptyPlotIndices = [];
-            plots.forEach((plot, index) => {
-                if (!plot.active) emptyPlotIndices.push(index);
-            });
-
-            if (emptyPlotIndices.length === 0) return;
-
-            // 隨機選一個空坑洞
-            const targetIndex = emptyPlotIndices[Math.floor(Math.random() * emptyPlotIndices.length)];
-            spawnVeggie(targetIndex);
+        function activeVeg() {
+          for (var i = 0; i < vegs.length; i++) {
+            if (!vegs[i].done) return vegs[i];
+          }
+          return null;
         }
 
-        // 產生一個新蔬菜
-        function spawnVeggie(index) {
-            const letterPool = rangeLetters[currentRange];
-            
-            // 確保畫面上重複的字母不要太多，盡量挑選目前畫面上沒有的字母
-            const activeLetters = plots.filter(p => p.active).map(p => p.letter);
-            let availableLetters = letterPool.filter(l => !activeLetters.includes(l));
-            if (availableLetters.length === 0) availableLetters = letterPool; // 如果都用光了就用整池
+        return {
+          start: function (stage, cfg) {
+            clear();
+            stageIdx = stage;
+            doneCount = 0;
+            assisted = !!cfg.assist;
+            api.field.innerHTML = BG_HTML;
 
-            const randomLetter = availableLetters[Math.floor(Math.random() * availableLetters.length)];
-            const randomTypeIdx = Math.floor(Math.random() * veggieTypes.length);
+            if (stage === 0) {
+              // 第一段「看我示範」：1 棵大紅蘿蔔󠇡（220px）＋大菜籃（220px），乾淨無干擾
+              total = 1;
+              updateCount();
+              var b0 = makeBasket({ x: 1065, y: 300, w: 224, h: 174, label: '菜籃' });
+              var v0 = spawnVeg({
+                type: 'carrot',
+                x: 640,
+                y: 265,
+                baseSize: 220,
+                size: 220 * cfg.size
+              });
+              api.glow(v0.el, true);
+              api.demo(v0.el, 'drag', { to: b0.el });
 
-            plots[index] = {
-                active: true,
-                typeIndex: randomTypeIdx,
-                letter: randomLetter,
-                growth: 10, // 從10%大小開始長
-                isHarvesting: false,
-                element: createVeggieElement(randomTypeIdx, randomLetter)
-            };
+            } else if (stage === 1) {
+              // 第二段「自己來」：4 棵一次一棵（180px，使用者試玩前放大），右邊菜籃慢慢左右移動
+              total = 4;
+              updateCount();
+              var speed = (assisted || reducedMotion) ? 0 : 56 * cfg.speed;
+              makeBasket({
+                x: 1070, y: 315, w: 196, h: 152,
+                minX: 965, maxX: 1185, vx: speed,
+                label: '菜籃'
+              });
+              buildStage2Queue();
+              spawnStage2Next();
 
-            // 放進 DOM 中
-            const container = document.querySelector(`#plot-${index} .veggie-container`);
-            container.innerHTML = '';
-            container.appendChild(plots[index].element);
-
-            updateVeggieDOM(index);
-            updateKeyboardHints();
-        }
-
-        // 創造蔬菜的 DOM 元素 (使用豐富的 SVG 與 Tailwind 樣式)
-        function createVeggieElement(typeIdx, letter) {
-            const type = veggieTypes[typeIdx];
-            const wrapper = document.createElement('div');
-            wrapper.className = 'relative flex flex-col items-center transition-all duration-300 transform origin-bottom wiggle';
-            
-            // 1. 頂部葉子與字母泡泡
-            const leafWrapper = document.createElement('div');
-            leafWrapper.className = 'relative flex flex-col items-center z-10';
-
-            // 字母氣泡（亮眼且字體特大，方便一年級觀看）
-            const letterBubble = document.createElement('div');
-            letterBubble.className = 'letter-bubble bg-white text-slate-800 font-black text-2xl md:text-3xl px-3 py-1 rounded-full shadow-lg border-4 border-amber-400 min-w-[50px] text-center mb-1 transition-all';
-            letterBubble.textContent = letter;
-            // 預設成熟度低時，字母為半透明，長成後為深色
-            letterBubble.style.opacity = "0.4"; 
-
-            // 葉子裝飾
-            const leaves = document.createElement('div');
-            leaves.className = 'flex gap-1 justify-center -mb-2';
-            leaves.innerHTML = `
-                <div class="w-3 h-8 ${type.leafColor} rounded-full transform -rotate-12 origin-bottom"></div>
-                <div class="w-3.5 h-10 ${type.leafColor} rounded-full origin-bottom"></div>
-                <div class="w-3 h-8 ${type.leafColor} rounded-full transform rotate-12 origin-bottom"></div>
-            `;
-
-            leafWrapper.appendChild(letterBubble);
-            leafWrapper.appendChild(leaves);
-
-            // 2. 蔬菜身體
-            const body = document.createElement('div');
-            body.className = 'text-6xl md:text-7xl filter drop-shadow-md select-none mt-1';
-            body.textContent = type.emoji;
-
-            wrapper.appendChild(leafWrapper);
-            wrapper.appendChild(body);
-
-            return wrapper;
-        }
-
-        // 根據生長百分比更新蔬菜外觀
-        function updateVeggieDOM(index) {
-            const plot = plots[index];
-            if (!plot.active || !plot.element) return;
-
-            // 縮放比例與泥土深度：沒成熟時縮得很小，並且埋在比較深的地方
-            const scale = 0.3 + (plot.growth / 100) * 0.7;
-            const translateY = 45 - (plot.growth / 100) * 45; // 0%時埋在地下45px，100%時完全冒出
-
-            plot.element.style.transform = `scale(${scale}) translateY(${translateY}px)`;
-            
-            // 字母顏色深淺隨成熟度調整 (10% -> opacity 0.4, 100% -> opacity 1)
-            const bubble = plot.element.querySelector('.letter-bubble');
-            if (bubble) {
-                bubble.style.opacity = (0.4 + (plot.growth / 100) * 0.6).toFixed(2);
-                if (plot.growth >= 100) {
-                    bubble.classList.remove('border-amber-400');
-                    bubble.classList.add('border-green-400', 'bg-yellow-50');
-                }
-            }
-        }
-
-        // 移除單一坑洞蔬菜
-        function removeVeggie(index) {
-            plots[index].active = false;
-            plots[index].isHarvesting = false;
-            plots[index].growth = 0;
-            const container = document.querySelector(`#plot-${index} .veggie-container`);
-            if (container) container.innerHTML = '';
-        }
-
-        // --- 動態更新虛擬鍵盤提示亮燈 ---
-        function updateKeyboardHints() {
-            // 先清除所有鍵盤的亮燈狀態
-            document.querySelectorAll('.kb-key').forEach(keyEl => {
-                keyEl.classList.remove('pulse-hint');
-                // 回復原先高度與陰影
-                keyEl.style.transform = 'translateY(0)';
-            });
-
-            if (!gameActive) return;
-
-            // 收集當前畫面上所有蔬菜代表的字母
-            const activeLetters = plots
-                .filter(p => p.active && !p.isHarvesting)
-                .map(p => p.letter);
-
-            // 在鍵盤上把這些字母標記上「脈衝亮燈」效果，提示小朋友去按
-            activeLetters.forEach(letter => {
-                const keyEl = document.querySelector(`.kb-key[data-key="${letter}"]`);
-                if (keyEl) {
-                    keyEl.classList.add('pulse-hint');
-                }
-            });
-        }
-
-        // --- 鍵盤監聽與打字判定 ---
-        window.addEventListener('keydown', (e) => {
-            if (!gameActive) return;
-
-            const pressedKey = e.key.toUpperCase();
-            
-            // 1. 檢查是否打中畫面上存在的蔬菜
-            // 為了鼓勵孩子，如果有多個相同字母，先拔起成熟度最高的那一個
-            let targetPlotIndex = -1;
-            let maxGrowth = -1;
-
-            plots.forEach((plot, index) => {
-                if (plot.active && !plot.isHarvesting && plot.letter === pressedKey) {
-                    if (plot.growth > maxGrowth) {
-                        maxGrowth = plot.growth;
-                        targetPlotIndex = index;
-                    }
-                }
-            });
-
-            // 模擬虛擬鍵盤按下去的反饋
-            const keyEl = document.querySelector(`.kb-key[data-key="${pressedKey}"]`);
-            if (keyEl) {
-                keyEl.style.transform = 'translateY(4px)';
-                keyEl.style.borderBottomWidth = '1px';
-                setTimeout(() => {
-                    keyEl.style.transform = '';
-                    keyEl.style.borderBottomWidth = '';
-                }, 150);
-            }
-
-            if (targetPlotIndex !== -1) {
-                // 打對了！拔出蔬菜！
-                harvestVeggie(targetPlotIndex);
             } else {
-                // 打錯了，給予溫和的提示音，且不扣分、不有任何懲罰
-                // 檢查按下的鍵是否在當前範圍內，若在才播放錯誤音，避免玩家按 shift 等功能鍵也被判定錯誤
-                if (rangeLetters[currentRange].includes(pressedKey)) {
-                    sfx.playWrong();
-                }
+              // 第三段「小挑戰」：5 棵同時種在田裡（120px 乘 cfg.size）＋3 個分類菜籃＋田邊小烏鴉
+              total = 5;
+              updateCount();
+              makeBasket({ x: 1155, y: 248, w: 256, h: 118, stage3: true, icon: 'carrot',  label: '紅蘿蔔󠇡籃', accept: ['carrot', 'hat'] });
+              makeBasket({ x: 1155, y: 372, w: 256, h: 118, stage3: true, icon: 'tomato',  label: '番茄籃',   accept: ['tomato'] });
+              makeBasket({ x: 1155, y: 496, w: 256, h: 118, stage3: true, icon: 'pumpkin', label: '南瓜籃',   accept: ['pumpkin'] });
+              makeCrow(cfg);
+
+              var types = buildStage3Types();
+              var spots = S3_SPOTS.slice().sort(function () { return Math.random() - 0.5; });
+              for (var i = 0; i < 5; i++) {
+                spawnVeg({
+                  type: types[i],
+                  x: spots[i].x,
+                  y: spots[i].y,
+                  baseSize: 120,
+                  size: 120 * cfg.size
+                });
+              }
             }
-        });
 
-        // 拔菜動畫與加分
-        function harvestVeggie(index) {
-            const plot = plots[index];
-            plot.isHarvesting = true;
-            
-            // 播放啵啵音效
-            sfx.playPop();
+            if (assisted) this.assist();
+            startLoop();
+          },
 
-            // 計算動畫起點與終點（籃子位置）
-            const veggieEl = plot.element;
-            const veggieRect = veggieEl.getBoundingClientRect();
-            const basketRect = basket.getBoundingClientRect();
-
-            // 計算位移向量
-            const dx = (basketRect.left + basketRect.width / 2) - (veggieRect.left + veggieRect.width / 2);
-            const dy = (basketRect.top + basketRect.height / 2) - (veggieRect.top + veggieRect.height / 2);
-
-            // 停止原先的搖擺動畫，並注入飛向籃子的動畫參數
-            veggieEl.classList.remove('wiggle');
-            veggieEl.style.setProperty('--fly-x', `${dx}px`);
-            veggieEl.style.setProperty('--fly-y', `${dy}px`);
-            veggieEl.classList.add('flying');
-
-            // 飛完之後正式刪除與加分
-            setTimeout(() => {
-                removeVeggie(index);
-                score++;
-                scoreVal.textContent = score;
-                // 存最高分，學習樂園島會讀 edtech-unit19-score 顯示成績
-                try {
-                    const prev = parseInt(localStorage.getItem('edtech-unit19-score') || '0', 10);
-                    if (score > prev) localStorage.setItem('edtech-unit19-score', score);
-                } catch (e) { /* localStorage 不能用就略過 */ }
-
-                // 每 5 分觸發一次兔子送星星事件！
-                if (score > 0 && score % 5 === 0) {
-                    triggerBunnyCelebration();
-                }
-
-                updateKeyboardHints();
-            }, 800);
-        }
-
-        // --- 兔子慶祝事件 (獎勵機制) ---
-        function triggerBunnyCelebration() {
-            // 播放獲得星星的前奏叮咚聲
-            sfx.playStar();
-
-            // 讓兔子跑出來
-            bunny.classList.remove('hidden');
-            bunny.classList.add('bunny-anim');
-
-            // 在兔子跑到中間時 (大約動畫 2 秒處)，空中噴發出星星
-            setTimeout(() => {
-                spawnStarsEffect();
-                starCount++;
-                starVal.textContent = starCount;
-            }, 2000);
-
-            // 動態結束後重設兔子
-            setTimeout(() => {
-                bunny.classList.remove('bunny-anim');
-                bunny.classList.add('hidden');
-            }, 4100);
-        }
-
-        // 星星落下的視覺特效
-        function spawnStarsEffect() {
-            const stageWidth = effectLayer.clientWidth;
-            
-            // 產生 3 顆落下的大星星
-            for (let i = 0; i < 3; i++) {
-                const star = document.createElement('div');
-                star.className = 'absolute text-4xl star-anim z-40 select-none';
-                star.textContent = '⭐';
-                // 散佈在螢幕中間區域
-                const randomX = (stageWidth / 2) - 100 + (Math.random() * 200);
-                star.style.left = `${randomX}px`;
-                star.style.top = `60px`;
-
-                effectLayer.appendChild(star);
-
-                // 動畫結束後移除
-                setTimeout(() => {
-                    star.remove();
-                }, 2000);
+          hint: function (level) {
+            var v = activeVeg();
+            if (!v) return;
+            vegs.forEach(function (item) { api.glow(item.el, false); });
+            api.glow(v.el, true);
+            if (level === 2) {
+              var b = getRightBasket(v);
+              if (b) api.demo(v.el, 'drag', { to: b.el });
             }
-        }
-    </script>
-<script defer src="../../assets/js/beacon.js"></script>
-</body>
-</html>
+          },
+
+          assist: function () {
+            assisted = true;
+            var k = Math.max(api.cfg().size, 1.35);
+            // 蔬菜放大、門檻在 pullThreshold() 自動降為 40px
+            vegs.forEach(function (v) {
+              if (!v.done) resizeVeg(v, v.baseSize * k);
+            });
+            // 菜籃停止移動並放大
+            baskets.forEach(function (b) {
+              b.vx = 0;
+              resizeBasket(b, stageIdx === 2 ? 1.12 : 1.2);
+            });
+            var v = activeVeg();
+            if (v) api.glow(v.el, true);
+          },
+
+          stop: clear
+        };
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

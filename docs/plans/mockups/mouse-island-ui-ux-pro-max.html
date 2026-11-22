@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>滑鼠島 mockup｜ui-ux-pro-max 版（郵票護照）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'Bpmf Huninn';src:url('fonts/bpmf-huninn-mouse.woff2') format('woff2');font-display:block}
+:root{
+  --bg:#EAF5E8;          /* 柔和薄荷底 */
+  --dot:#CFE6CF;
+  --card:#FFFDF5;        /* 卡片底（不用純白） */
+  --ink:#1E2B3A;         /* 字與粗輪廓 */
+  --ink2:#40505F;        /* 次要字 */
+  --green:#17794F; --green-soft:#D6F0DF; --island:#5FD38D;
+  --violet:#5B3AA6; --violet-soft:#E7DEF7;   /* 3–4 年級 */
+  --blue:#2858C8; --blue-soft:#DCE7FB;       /* 現在／被選到 */
+  --sun:#FFB32B; --sun-soft:#FFEFC2;         /* 主要按鈕、星星 */
+  --ok:#146B3A; --ok-soft:#D6F0DF;           /* 正確 */
+  --stamp:#C2410C;                           /* 印章墨色 */
+  --glow:#A85F00;                            /* 目標發光輪廓 */
+  --dim:#E1E8E0; --dim-ink:#3F4F5E;
+  --sh:0 4px 0 var(--ink);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif;background:#C5D2C8;color:var(--ink);font-size:16px}
+.ico{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.zy{font-family:'Bpmf Huninn','Noto Sans TC',sans-serif;line-height:1.5;white-space:nowrap;font-weight:400;color:var(--ink)}
+.num{font-family:'Fredoka','Bahnschrift','Noto Sans TC',sans-serif;font-variant-numeric:tabular-nums}
+h1,h2,.hd{font-family:'Chiron GoRound TC','Noto Sans TC','Microsoft JhengHei',sans-serif;font-weight:900}
+
+/* 預覽分頁（不屬於 mockup 畫面） */
+.tabs{height:38px;display:flex;gap:8px;align-items:center;padding:0 12px;background:#1E2B3A;position:sticky;top:0;z-index:50}
+.tabs button{font:700 14px 'Noto Sans TC',sans-serif;height:28px;padding:0 12px;border-radius:8px;border:2px solid #8FA3B8;background:transparent;color:#EAF0F6;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--sun);border-color:var(--sun);color:var(--ink)}
+.tabs button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+
+/* 畫面外框 1366×657 */
+.screen{display:none;width:1366px;height:657px;overflow:hidden;position:relative;margin:0 auto;
+  background:var(--bg) radial-gradient(var(--dot) 1.6px,transparent 1.7px) 0 0/26px 26px}
+.screen.on{display:flex;flex-direction:column}
+a,button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+.top{height:56px;flex:none;display:flex;align-items:center;gap:14px;padding:0 24px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:3px solid var(--ink);border-radius:14px;background:var(--card);color:var(--ink);font:700 18px 'Noto Sans TC',sans-serif;box-shadow:0 3px 0 var(--ink);text-decoration:none;white-space:nowrap}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.btn.sun{background:var(--sun)}
+.btn svg{width:22px;height:22px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{width:40px;height:46px}
+.brand h1{font-size:28px;line-height:1}
+.brand small{font:500 16px 'Noto Sans TC';color:var(--ink2)}
+.sp{flex:1}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 14px;border:3px solid var(--ink);border-radius:999px;background:var(--card);font:700 17px 'Noto Sans TC'}
+.chip svg{width:20px;height:20px}
+.teacher{border:3px dashed var(--ink2);border-radius:14px;background:var(--card);padding:8px 12px;font:500 15px/1.45 'Noto Sans TC';color:var(--ink2)}
+.teacher b{color:var(--ink);font-weight:700}
+.st{width:22px;height:22px;fill:var(--card);stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round}
+.st.on{fill:var(--sun)}
+
+/* ===== 1 大廳 ===== */
+.hero{height:92px;flex:none;display:flex;align-items:center;gap:16px;padding:0 24px}
+.hero .pipbig{width:70px;height:82px;flex:none}
+.bubble{position:relative;background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:var(--sh);padding:4px 22px;font-size:34px}
+.bubble::before{content:"";position:absolute;left:-12px;top:50%;width:18px;height:18px;margin-top:-9px;background:var(--card);border-left:3px solid var(--ink);border-bottom:3px solid var(--ink);transform:rotate(45deg)}
+.legend{display:flex;gap:10px;align-items:center}
+.tag{display:inline-flex;align-items:center;height:30px;padding:0 12px;border:3px solid var(--ink);border-radius:999px;font:700 16px 'Noto Sans TC';color:#fff;white-space:nowrap}
+.tag.g{background:var(--green)} .tag.v{background:var(--violet)} .tag.m{background:linear-gradient(90deg,var(--green) 50%,var(--violet) 50%)}
+.stairs{height:362px;flex:none;display:grid;grid-template-columns:repeat(7,1fr);gap:10px;padding:0 24px;align-items:end}
+.col{position:relative;display:flex;flex-direction:column;justify-content:flex-end}
+.col .tag{position:absolute;top:-36px;left:0}
+.lv{position:relative;height:156px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px 8px;background:var(--card);border:3px solid var(--ink);border-radius:16px;box-shadow:var(--sh)}
+.lv::after{content:"";position:absolute;inset:4px;border:2px dashed #B7C4B7;border-radius:11px;pointer-events:none}
+.lv.todo{border-style:dashed;box-shadow:none;background:#F4F7EC}
+.lv.next{border-color:var(--ink);background:var(--sun-soft);box-shadow:0 0 0 3px var(--sun),var(--sh)}
+.lv .li{width:54px;height:54px;flex:none}
+.lv .nm{font:900 19px/1.2 'Chiron GoRound TC','Noto Sans TC';white-space:nowrap}
+.lv .sk{font:700 16px/1 'Noto Sans TC';padding:4px 10px;border-radius:999px;white-space:nowrap}
+.g12 .sk,.lv.a .sk{background:var(--green-soft);color:var(--ok)}
+.lv.m .sk{background:#E3EEF2;color:#2B4A63}
+.lv.b .sk{background:var(--violet-soft);color:var(--violet)}
+.lv .rate{display:flex;gap:1px;height:24px;align-items:center;font:700 16px 'Noto Sans TC';color:var(--ink2)}
+.badge{position:absolute;right:-10px;top:-12px;z-index:2;display:flex;align-items:center;gap:4px;height:28px;padding:0 10px;border:3px solid var(--ink);border-radius:999px;font:700 15px 'Noto Sans TC';white-space:nowrap}
+.badge.ok{background:var(--ok-soft);color:var(--ok)} .badge.ok svg{width:16px;height:16px;stroke-width:3.2}
+.badge.nx{background:var(--sun);color:var(--ink);right:-6px}
+.step{flex:none;margin-top:12px;height:var(--h);border:3px solid var(--ink);border-radius:10px 10px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:6px;line-height:1;overflow:hidden;font:700 28px/1 'Fredoka',sans-serif;color:#fff}
+.lv{flex:none}
+.step.m{background:linear-gradient(135deg,var(--green) 50%,var(--violet) 50%)} .step.g{background:var(--green)} .step.v{background:var(--violet)}
+.passport{margin:6px 24px 0;height:114px;flex:none;display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:var(--sh)}
+.passport .pt{display:flex;flex-direction:column;gap:2px;width:150px;flex:none}
+.passport .pt b{font:900 22px 'Chiron GoRound TC','Noto Sans TC'}
+.passport .pt span{font:700 16px 'Noto Sans TC';color:var(--ink2)}
+.slots{flex:1;display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.slot{display:flex;flex-direction:column;align-items:center;gap:3px}
+.slot i{font-style:normal;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 22px 'Fredoka',sans-serif;color:var(--dim-ink);border:3px dashed #7F8E83;background:#F4F7EC}
+.slot.got i{border:4px double var(--stamp);background:var(--card);color:var(--stamp);font:900 17px 'Chiron GoRound TC','Noto Sans TC';transform:rotate(-8deg)}
+.slot.got:nth-child(2) i{transform:rotate(6deg)}
+.slot span{font:700 15px 'Noto Sans TC';color:var(--ink2);white-space:nowrap}
+
+/* ===== 2/4 遊戲版型 ===== */
+.play{flex:1;display:grid;grid-template-columns:1fr 300px;gap:20px;padding:6px 24px 18px;min-height:0}
+.main{display:flex;flex-direction:column;gap:10px;min-height:0}
+.head{height:62px;flex:none;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--card);border:3px solid var(--ink);border-radius:16px;box-shadow:0 3px 0 var(--ink)}
+.segs{display:flex;gap:8px;margin-left:auto}
+.seg{display:flex;align-items:center;gap:8px;height:40px;padding:0 12px 0 6px;border:3px solid var(--ink);border-radius:999px;font:700 16px 'Noto Sans TC';white-space:nowrap;background:var(--dim);color:var(--dim-ink)}
+.seg em{font-style:normal;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;border:2px solid var(--dim-ink);font:700 16px 'Fredoka',sans-serif;color:var(--dim-ink)}
+.seg.now{background:var(--blue-soft);color:var(--blue);border-color:var(--blue);box-shadow:0 0 0 2px var(--blue)}
+.seg.now em{background:var(--blue);border-color:var(--blue);color:#fff}
+.seg.done{background:var(--ok-soft);color:var(--ok)}
+.seg.done em{background:var(--ok);border-color:var(--ok);color:#fff}
+.seg.done svg{width:16px;height:16px;stroke-width:3.4}
+.stage{position:relative;flex:1;min-height:0;border:3px solid var(--ink);border-radius:20px;box-shadow:var(--sh);overflow:hidden;background:linear-gradient(#D2EAF7 70%,#A8DDB5 70%)}
+.stage::after{content:"";position:absolute;left:0;right:0;top:70%;border-top:3px solid var(--ink)}
+.stage.magic{background:linear-gradient(#E7DEF7 70%,#D3C3F0 70%)}
+.side{display:flex;flex-direction:column;gap:12px;min-height:0}
+.panel{background:var(--card);border:3px solid var(--ink);border-radius:16px;box-shadow:0 3px 0 var(--ink);padding:12px 14px}
+.panel h2{font-size:19px;margin-bottom:6px}
+.panel p{font:500 16px/1.5 'Noto Sans TC';color:var(--ink2)}
+.panel p b{color:var(--ink)}
+.pipcard{display:flex;gap:10px;align-items:center}
+.pipcard svg{width:76px;height:88px;flex:none}
+
+/* 手指示範元件：400×400 座標，蛋中心 (200,200) */
+.demo{position:relative;width:400px;height:400px}
+.demo>*{position:absolute}
+.demo .glow{left:20px;top:20px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,#FFE38F 0 58%,rgba(255,227,143,0) 72%)}
+.demo .rays{left:0;top:0;width:400px;height:400px}
+.demo .nest{left:70px;top:318px;width:260px;height:62px}
+.demo .egg{left:84px;top:55px;width:232px;height:290px}
+.demo .hand{left:152px;top:200px;width:96px;height:132px;transform-origin:48px 5px;transform:translate(24px,16px) rotate(-14deg);animation:hand 5s ease-in-out infinite;filter:drop-shadow(0 4px 0 rgba(30,43,58,.25))}
+.demo .rip{left:150px;top:150px;width:100px;height:100px;border-radius:50%;border:6px solid var(--blue);opacity:0}
+.demo .r1{animation:rip1 5s ease-out infinite}
+.demo .r2{animation:rip2 5s ease-out infinite}
+.demo .n{width:48px;height:48px;border-radius:50%;background:var(--blue);color:#fff;border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;font:700 28px 'Fredoka',sans-serif}
+.demo .n1{left:276px;top:74px;animation:b1 5s infinite}
+.demo .n2{left:76px;top:74px;animation:b2 5s infinite}
+@keyframes hand{
+ 0%,6%{transform:translate(150px,130px) rotate(-14deg);opacity:0}
+ 18%{transform:translate(24px,16px) rotate(-14deg);opacity:1}
+ 26%{transform:translate(24px,42px) rotate(-14deg)}
+ 32%{transform:translate(24px,16px) rotate(-14deg)}
+ 40%{transform:translate(24px,42px) rotate(-14deg)}
+ 46%{transform:translate(24px,16px) rotate(-14deg)}
+ 80%{transform:translate(24px,16px) rotate(-14deg);opacity:1}
+ 92%,100%{transform:translate(150px,130px) rotate(-14deg);opacity:0}}
+@keyframes rip1{0%,25%{opacity:0;transform:scale(.3)}26%{opacity:1;transform:scale(.4)}36%{opacity:0;transform:scale(1.5)}100%{opacity:0}}
+@keyframes rip2{0%,39%{opacity:0;transform:scale(.3)}40%{opacity:1;transform:scale(.4)}50%{opacity:0;transform:scale(1.5)}100%{opacity:0}}
+@keyframes b1{0%,25%{opacity:0;transform:scale(.5)}28%,90%{opacity:1;transform:scale(1)}96%,100%{opacity:0}}
+@keyframes b2{0%,39%{opacity:0;transform:scale(.5)}42%,90%{opacity:1;transform:scale(1)}96%,100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.stage .demo{position:absolute;left:50%;top:74px;margin-left:-200px}
+.stage .ask{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:var(--sh);padding:2px 24px;font-size:32px}
+.eggcount{position:absolute;left:16px;bottom:14px;display:flex;align-items:center;gap:10px;background:var(--card);border:3px solid var(--ink);border-radius:14px;padding:6px 14px;font:700 20px 'Noto Sans TC';box-shadow:0 3px 0 var(--ink)}
+.eggcount .dots{display:flex;gap:5px}
+.eggcount .dots svg{width:18px;height:22px}
+.mode{position:absolute;right:16px;bottom:14px;display:flex;align-items:center;gap:8px;background:var(--blue-soft);color:var(--blue);border:3px solid var(--blue);border-radius:999px;padding:6px 16px;font:700 18px 'Noto Sans TC'}
+.mode svg{width:20px;height:20px}
+
+/* ===== 3 提示 ===== */
+.hint{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:332px 1fr;gap:12px 20px;padding:4px 24px 14px;min-height:0}
+.strip{grid-column:1/-1;height:44px;display:flex;align-items:center;gap:12px}
+.hc{display:flex;flex-direction:column;background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:var(--sh);overflow:hidden}
+.hc .hh{height:48px;flex:none;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:3px solid var(--ink);font:900 19px 'Chiron GoRound TC','Noto Sans TC'}
+.hc .hh .miss{margin-left:auto;display:flex;gap:4px;align-items:center;font:700 16px 'Noto Sans TC';color:var(--ink2)}
+.hc .hh .miss svg{width:22px;height:22px;stroke:var(--ink);stroke-width:3.2}
+.hc .view{position:relative;height:178px;flex:none;background:linear-gradient(#D2EAF7 68%,#A8DDB5 68%);border-bottom:3px solid var(--ink);overflow:hidden}
+.hc .view .sm{position:absolute;left:50%;top:50%;width:400px;height:400px;margin:-200px 0 0 -200px;transform:scale(.43)}
+.hc .view .sm .demo{margin:0}
+.hc .say{flex:1;display:flex;align-items:center;justify-content:center;gap:12px;font-size:30px}
+.hc .why{height:34px;display:flex;align-items:center;gap:8px;padding:0 14px;font:500 16px 'Noto Sans TC';color:var(--ink2);border-top:2px dashed #B7C4B7}
+.hc .why svg{width:20px;height:20px;color:var(--blue)}
+.wob{position:absolute;left:84px;top:55px;width:232px;height:290px;transform-origin:50% 90%;animation:wob .9s ease-in-out infinite}
+@keyframes wob{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+.giggle{position:absolute;left:50%;top:44px;margin-left:44px;z-index:3;transform:rotate(8deg);background:var(--card);border:3px solid var(--ink);border-radius:14px;padding:0 10px;font:900 22px/1.4 'Chiron GoRound TC','Noto Sans TC'}
+.dex{display:flex;align-items:center;gap:14px;background:var(--sun-soft);border:3px solid var(--ink);border-radius:16px;box-shadow:0 3px 0 var(--ink);padding:8px 14px}
+.dex>svg{width:62px;height:62px;flex:none;background:var(--card);border:3px solid var(--ink);border-radius:50%}
+.dex .tx{display:flex;flex-direction:column;gap:3px;min-width:0}
+.dex .tx b{font:900 19px 'Chiron GoRound TC','Noto Sans TC';white-space:nowrap}
+.dex .tx small{font:500 15px 'Noto Sans TC';color:var(--ink2)}
+.dex .new{margin-left:auto;background:var(--blue);color:#fff;border:3px solid var(--ink);border-radius:999px;padding:2px 12px;font:700 16px 'Noto Sans TC';white-space:nowrap}
+.dex .pips{display:flex;gap:4px}
+.dex .pips i{width:14px;height:14px;border-radius:50%;border:2px solid var(--ink);background:var(--card)}
+.dex .pips i.g{background:var(--sun)} .dex .pips i.n{background:var(--blue)}
+.tip{position:absolute;left:12px;top:10px;display:flex;align-items:center;gap:6px;background:var(--card);border:3px solid var(--ink);border-radius:999px;padding:2px 12px 2px 8px;font:700 15px 'Noto Sans TC';z-index:3}
+.tip svg{width:18px;height:18px;color:var(--ink)}
+.tip.miss{left:auto;right:12px;background:#FFF1E8}
+.row2{grid-column:1/-1;display:grid;grid-template-columns:1.55fr 1fr;gap:20px;min-height:0}
+.okcard{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--ok-soft);border:3px solid var(--ok);border-radius:18px;box-shadow:0 4px 0 var(--ok)}
+.okcard .seq{display:flex;align-items:center;gap:6px}
+.okcard .seq svg.e{width:74px;height:92px}
+.okcard .seq svg.ar{width:30px;height:30px;color:var(--ok);stroke-width:3.4}
+.okcard .tx{display:flex;flex-direction:column;gap:2px}
+.okcard .ok{display:inline-flex;align-items:center;gap:6px;font:900 19px 'Chiron GoRound TC','Noto Sans TC';color:var(--ok)}
+.okcard .ok svg{width:24px;height:24px;stroke-width:3.4}
+.t3{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--card);border:3px dashed var(--ink);border-radius:18px}
+.t3 .grow{display:flex;align-items:flex-end;gap:6px}
+.t3 p{font:500 16px/1.5 'Noto Sans TC';color:var(--ink2)}
+.t3 p b{display:block;color:var(--ink);font:900 19px 'Chiron GoRound TC','Noto Sans TC'}
+
+/* ===== 4 右鍵 ===== */
+.task{height:64px;flex:none;display:flex;align-items:center;gap:12px;padding:0 20px;background:var(--violet);border:3px solid var(--ink);border-radius:16px;box-shadow:0 3px 0 var(--ink);color:#fff;font:900 27px 'Chiron GoRound TC','Noto Sans TC';white-space:nowrap}
+.task svg{width:30px;height:30px;color:var(--sun)}
+.task b{color:var(--sun-soft)}
+.qdots{display:flex;gap:6px;align-items:center;margin-left:8px}
+.qdots i{width:16px;height:16px;border-radius:50%;border:3px solid var(--ink);background:var(--dim)}
+.qdots i.d{background:var(--ok)} .qdots i.n{background:var(--blue);box-shadow:0 0 0 3px var(--blue-soft)}
+.item{position:absolute}
+.item .cap{position:absolute;left:0;right:0;bottom:-32px;text-align:center;font:700 16px 'Noto Sans TC';color:var(--ink)}
+.item.target svg{filter:drop-shadow(0 0 0 transparent)}
+.mark{position:absolute;border:4px dashed var(--blue);border-radius:16px}
+.ctx{position:absolute;width:250px;background:#F6F6F2;border:2px solid #5B6572;border-radius:8px;box-shadow:6px 8px 0 rgba(30,43,58,.35);padding:6px;font:500 19px 'Noto Sans TC';color:var(--ink)}
+.ctx div{height:44px;display:flex;align-items:center;gap:10px;padding:0 12px;border-radius:5px;white-space:nowrap}
+.ctx div svg{width:20px;height:20px}
+.ctx hr{border:0;border-top:2px solid #C9CED4;margin:4px 6px}
+.ctx .on{background:var(--blue);color:#fff;font-weight:700}
+.trail{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.note{position:absolute;left:16px;bottom:14px;display:flex;align-items:center;gap:8px;background:var(--card);border:3px solid var(--ink);border-radius:14px;padding:6px 14px;font:700 16px 'Noto Sans TC';box-shadow:0 3px 0 var(--ink)}
+.hintbtn{width:100%;height:60px;font-size:22px}
+
+/* ===== 5 結算 ===== */
+.done5{flex:1;display:grid;grid-template-columns:690px 1fr;gap:26px;padding:6px 32px 18px;min-height:0}
+.book{position:relative;align-self:center;background:var(--green);border:3px solid var(--ink);border-radius:24px;box-shadow:0 6px 0 var(--ink);padding:16px 16px 18px;height:520px}
+.book .page{height:100%;background:var(--card);border:3px solid var(--ink);border-radius:14px;padding:14px 22px;position:relative;background-image:repeating-linear-gradient(transparent 0 33px,#EEF0E4 33px 35px)}
+.book .page h2{font-size:26px;display:flex;align-items:center;gap:10px}
+.book .page h2 small{font:700 16px 'Noto Sans TC';color:var(--ink2)}
+.pgrid{margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,196px);gap:8px}
+.cell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;position:relative}
+.cell .ring{width:104px;height:104px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px dashed #7F8E83;background:#F4F7EC;font:700 30px 'Fredoka';color:var(--dim-ink)}
+.cell.got .ring{border:5px double var(--stamp);background:var(--card);color:var(--stamp);font:900 24px 'Chiron GoRound TC','Noto Sans TC';transform:rotate(-8deg)}
+.cell span.l{font:700 17px 'Noto Sans TC';color:var(--ink2);white-space:nowrap}
+.cell.now .ring{width:150px;height:150px;border:7px double var(--stamp);background:#FFF6EC;color:var(--stamp);font:900 44px 'Chiron GoRound TC','Noto Sans TC';transform:rotate(7deg);box-shadow:inset 0 0 0 4px #FFF6EC,inset 0 0 0 6px var(--stamp)}
+.cell.now span.l{color:var(--stamp);font-weight:900}
+.tool{position:absolute;width:176px;height:220px;left:276px;top:-62px;transform:rotate(9deg);z-index:5;filter:drop-shadow(0 8px 0 rgba(30,43,58,.28));animation:press 3.2s ease-in-out infinite}
+@keyframes press{0%,60%,100%{transform:rotate(9deg) translateY(-6px)}30%{transform:rotate(9deg) translateY(10px)}}
+.burst{position:absolute;left:206px;top:60px;width:230px;height:230px;z-index:4}
+.res{display:flex;flex-direction:column;justify-content:center;gap:14px;min-width:0}
+.res .say{display:flex;align-items:center;gap:14px}
+.res .say svg{width:84px;height:98px;flex:none}
+.res .say .zy{font-size:36px;background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:var(--sh);padding:4px 20px}
+.bigstars{display:flex;gap:10px;align-items:center}
+.bigstars svg{width:78px;height:78px;fill:var(--sun);stroke:var(--ink);stroke-width:1.5;stroke-linejoin:round;filter:drop-shadow(0 4px 0 var(--ink))}
+.bigstars svg:nth-child(2){transform:translateY(-8px)}
+.bigstars span{font:900 26px 'Chiron GoRound TC','Noto Sans TC';margin-left:6px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{display:flex;align-items:center;gap:10px;background:var(--card);border:3px solid var(--ink);border-radius:16px;box-shadow:0 3px 0 var(--ink);padding:10px 12px}
+.stat>svg{width:38px;height:38px;flex:none;padding:7px;border-radius:50%;background:var(--ok-soft);color:var(--ok);border:2px solid var(--ok)}
+.stat.t>svg{background:var(--blue-soft);color:var(--blue);border-color:var(--blue)}
+.stat.h>svg{background:var(--sun-soft);color:#7A4A00;border-color:#7A4A00}
+.stat div{display:flex;flex-direction:column;line-height:1.25}
+.stat small{font:500 15px 'Noto Sans TC';color:var(--ink2)}
+.stat b{font:700 22px 'Noto Sans TC';white-space:nowrap}
+.stat b .num{font-size:28px}
+.acts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.acts .btn.big{grid-column:1/-1;height:62px;font-size:24px}
+</style>
+</head>
+<body>
+
+<!-- ============ SVG 素材庫（全部原創） ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+  <!-- 點點：滑鼠本人。身體是一顆圓潤的滑鼠，頭頂有左右鍵分割線，尾巴是滑鼠線 -->
+  <symbol id="pip" viewBox="0 0 120 140">
+    <path d="M60 124 C60 140 92 140 98 128 C104 116 114 124 110 134" fill="none" stroke="#1E2B3A" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="25" cy="36" r="15" fill="#8FE0B0" stroke="#1E2B3A" stroke-width="4"/>
+    <circle cx="95" cy="36" r="15" fill="#8FE0B0" stroke="#1E2B3A" stroke-width="4"/>
+    <circle cx="25" cy="36" r="6" fill="#FFC2D0"/><circle cx="95" cy="36" r="6" fill="#FFC2D0"/>
+    <ellipse cx="42" cy="128" rx="11" ry="6" fill="#6FCB95" stroke="#1E2B3A" stroke-width="3.5"/>
+    <ellipse cx="78" cy="128" rx="11" ry="6" fill="#6FCB95" stroke="#1E2B3A" stroke-width="3.5"/>
+    <path d="M60 12 C92 12 104 44 104 76 C104 108 86 126 60 126 C34 126 16 108 16 76 C16 44 28 12 60 12Z" fill="#8FE0B0" stroke="#1E2B3A" stroke-width="4"/>
+    <path d="M60 15 C38 15 24 34 20 54 H60Z" fill="#C3F3D6"/>
+    <path d="M60 14 V54 M19 54 H101" stroke="#1E2B3A" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="46" cy="84" r="6.5" fill="#1E2B3A"/><circle cx="74" cy="84" r="6.5" fill="#1E2B3A"/>
+    <circle cx="48" cy="82" r="2.2" fill="#fff"/><circle cx="76" cy="82" r="2.2" fill="#fff"/>
+    <circle cx="35" cy="97" r="6" fill="#FFB3C4" opacity=".85"/><circle cx="85" cy="97" r="6" fill="#FFB3C4" opacity=".85"/>
+    <path d="M52 97 Q60 108 68 97" fill="none" stroke="#1E2B3A" stroke-width="3.5" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="egg" viewBox="0 0 200 250">
+    <path d="M100 8 C152 8 190 92 190 160 C190 214 150 242 100 242 C50 242 10 214 10 160 C10 92 48 8 100 8Z" fill="#FFF3D6" stroke="#1E2B3A" stroke-width="5"/>
+    <ellipse cx="62" cy="152" rx="15" ry="10" fill="#FFC857"/><circle cx="132" cy="112" r="12" fill="#7FD1A8"/>
+    <circle cx="122" cy="192" r="9" fill="#FFC857"/><circle cx="72" cy="92" r="7" fill="#7FD1A8"/>
+    <path d="M50 122 C54 92 70 64 88 46" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".85"/>
+  </symbol>
+  <symbol id="egg-crack" viewBox="0 0 200 250">
+    <path d="M100 8 C152 8 190 92 190 160 C190 214 150 242 100 242 C50 242 10 214 10 160 C10 92 48 8 100 8Z" fill="#FFF3D6" stroke="#1E2B3A" stroke-width="5"/>
+    <ellipse cx="62" cy="168" rx="15" ry="10" fill="#FFC857"/><circle cx="136" cy="196" r="9" fill="#7FD1A8"/>
+    <path d="M22 118 L56 98 L80 126 L108 94 L134 124 L160 100 L180 116" fill="none" stroke="#1E2B3A" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+  </symbol>
+  <!-- 蛋寶寶：原創小絨球，戴著半個蛋殼 -->
+  <symbol id="baby" viewBox="0 0 200 200">
+    <path d="M86 40 C84 22 98 20 100 34 C102 20 118 22 114 40" fill="#FFC24B" stroke="#1E2B3A" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="100" cy="86" r="58" fill="#FFC24B" stroke="#1E2B3A" stroke-width="5"/>
+    <path d="M40 84 C28 70 24 84 30 96" fill="#FFC24B" stroke="#1E2B3A" stroke-width="5" stroke-linecap="round"/>
+    <path d="M160 84 C172 70 176 84 170 96" fill="#FFC24B" stroke="#1E2B3A" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="78" cy="80" r="8" fill="#1E2B3A"/><circle cx="122" cy="80" r="8" fill="#1E2B3A"/>
+    <circle cx="81" cy="77" r="2.8" fill="#fff"/><circle cx="125" cy="77" r="2.8" fill="#fff"/>
+    <circle cx="62" cy="100" r="8" fill="#FF9FB3" opacity=".9"/><circle cx="138" cy="100" r="8" fill="#FF9FB3" opacity=".9"/>
+    <path d="M91 98 L109 98 L100 112Z" fill="#F26B3A" stroke="#1E2B3A" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M18 134 L48 114 L72 138 L100 112 L128 138 L152 114 L182 134 C182 178 148 196 100 196 C52 196 18 178 18 134Z" fill="#FFF3D6" stroke="#1E2B3A" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="66" cy="164" r="8" fill="#FFC857"/><circle cx="134" cy="170" r="6" fill="#7FD1A8"/>
+  </symbol>
+
+  <!-- 卡通手套：食指在頂端，指尖在 (40,4) -->
+  <symbol id="hand" viewBox="0 0 80 110">
+    <rect x="30" y="4" width="20" height="58" rx="10" fill="#fff" stroke="#1E2B3A" stroke-width="4"/>
+    <rect x="12" y="46" width="58" height="50" rx="20" fill="#fff" stroke="#1E2B3A" stroke-width="4"/>
+    <ellipse cx="13" cy="72" rx="10" ry="14" fill="#fff" stroke="#1E2B3A" stroke-width="4"/>
+    <path d="M44 58 V70 M56 58 V70" stroke="#1E2B3A" stroke-width="3.5" stroke-linecap="round"/>
+    <rect x="22" y="92" width="38" height="16" rx="5" fill="#17794F" stroke="#1E2B3A" stroke-width="4"/>
+  </symbol>
+
+  <symbol id="rays" viewBox="0 0 400 400">
+    <g stroke="#A85F00" stroke-width="9" stroke-linecap="round">
+      <path d="M200 22 V48"/><path d="M200 352 V378"/><path d="M22 200 H48"/><path d="M352 200 H378"/>
+      <path d="M74 74 L92 92"/><path d="M326 74 L308 92"/><path d="M74 326 L92 308"/><path d="M326 326 L308 308"/>
+      <path d="M126 36 L136 58"/><path d="M274 36 L264 58"/><path d="M36 126 L58 136"/><path d="M364 126 L342 136"/>
+    </g>
+  </symbol>
+  <symbol id="nest" viewBox="0 0 260 62">
+    <ellipse cx="130" cy="34" rx="124" ry="26" fill="#E3B97A" stroke="#1E2B3A" stroke-width="4"/>
+    <path d="M30 28 Q70 46 110 30 M120 34 Q170 50 232 28 M60 40 L96 52 M160 44 L196 50" fill="none" stroke="#9C6B2E" stroke-width="4" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="star" viewBox="0 0 24 24"><path d="M12 2 L15 9 L22.5 9.6 L16.8 14.6 L18.6 22 L12 18 L5.4 22 L7.2 14.6 L1.5 9.6 L9 9Z"/></symbol>
+  <symbol id="house" viewBox="0 0 24 24"><path d="M3 11 L12 3 L21 11"/><path d="M5.5 9.5 V20 H18.5 V9.5"/><path d="M10 20 V14 H14 V20"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="M4 12.5 L9.5 18 L20 6.5"/></symbol>
+  <symbol id="x" viewBox="0 0 24 24"><path d="M6 6 L18 18 M18 6 L6 18"/></symbol>
+  <symbol id="bulb" viewBox="0 0 24 24"><path d="M9 18 H15 M10 21 H14"/><path d="M12 3 A6.2 6.2 0 0 0 8.3 14.2 C9 14.8 9 15.6 9 16 V18 H15 V16 C15 15.6 15 14.8 15.7 14.2 A6.2 6.2 0 0 0 12 3Z"/></symbol>
+  <symbol id="replay" viewBox="0 0 24 24"><path d="M4 12 A8 8 0 1 0 7 5.7"/><path d="M4 4 V8.5 H8.5"/></symbol>
+  <symbol id="play" viewBox="0 0 24 24"><path d="M7 4.5 V19.5 L19 12Z"/></symbol>
+  <symbol id="arrow" viewBox="0 0 24 24"><path d="M4 12 H19 M13 6 L19 12 L13 18"/></symbol>
+  <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7 V12 L15.5 14"/></symbol>
+  <symbol id="slow" viewBox="0 0 24 24"><path d="M3 12 H15 M10 6 L16 12 L10 18"/><path d="M19 7 V17"/></symbol>
+  <symbol id="stampico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><path d="M9.8 12.2 L11.4 13.8 L14.4 10.4"/></symbol>
+  <symbol id="cursor" viewBox="0 0 28 36"><path d="M3 2 L3 28 L10 21.5 L15 33 L20.5 30.5 L15.6 19.4 L25 19 Z" fill="#fff" stroke="#1E2B3A" stroke-width="2.6" stroke-linejoin="round"/></symbol>
+  <symbol id="spark" viewBox="0 0 24 24"><path d="M12 1 L14.5 9.5 L23 12 L14.5 14.5 L12 23 L9.5 14.5 L1 12 L9.5 9.5Z"/></symbol>
+
+  <!-- 7 關小圖示 -->
+  <symbol id="i-cat" viewBox="0 0 48 48">
+    <path d="M7 22 L9 6 L20 13 Q24 12.4 28 13 L39 6 L41 22 Q43 41 24 43 Q5 41 7 22Z" fill="#FFC857" stroke="#1E2B3A" stroke-width="2.6" stroke-linejoin="round"/>
+    <circle cx="17" cy="25" r="2.8" fill="#1E2B3A"/><circle cx="31" cy="25" r="2.8" fill="#1E2B3A"/>
+    <path d="M22 30 H26 L24 33Z" fill="#F26B8A" stroke="#1E2B3A" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M10 30 L3 29 M10 34 L4 36 M38 30 L45 29 M38 34 L44 36" stroke="#1E2B3A" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-egg" viewBox="0 0 48 48">
+    <path d="M24 3 C34 3 41 18 41 28 C41 38 34 45 24 45 C14 45 7 38 7 28 C7 18 14 3 24 3Z" fill="#FFF3D6" stroke="#1E2B3A" stroke-width="2.8"/>
+    <path d="M9 24 L17 19 L23 26 L30 18 L39 24" fill="none" stroke="#1E2B3A" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="18" cy="35" r="3" fill="#FFC857"/><circle cx="31" cy="36" r="2.4" fill="#7FD1A8"/>
+  </symbol>
+  <symbol id="i-carrot" viewBox="0 0 48 48">
+    <path d="M26 15 L36 5 M28 18 L43 13 M24 12 L27 2" stroke="#17794F" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+    <path d="M8 42 L14 18 Q21 9 30 18 Q38 27 32 34 Z" fill="#FF8A3D" stroke="#1E2B3A" stroke-width="2.8" stroke-linejoin="round"/>
+    <path d="M17 24 L22 25 M14 32 L20 33 M22 31 L26 28" stroke="#1E2B3A" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-rabbit" viewBox="0 0 48 48">
+    <ellipse cx="16" cy="12" rx="5.5" ry="11" fill="#fff" stroke="#1E2B3A" stroke-width="2.6"/>
+    <ellipse cx="32" cy="12" rx="5.5" ry="11" fill="#fff" stroke="#1E2B3A" stroke-width="2.6"/>
+    <ellipse cx="16" cy="13" rx="2" ry="6" fill="#FFB3C4"/><ellipse cx="32" cy="13" rx="2" ry="6" fill="#FFB3C4"/>
+    <circle cx="24" cy="31" r="13.5" fill="#fff" stroke="#1E2B3A" stroke-width="2.8"/>
+    <circle cx="19" cy="30" r="2.4" fill="#1E2B3A"/><circle cx="29" cy="30" r="2.4" fill="#1E2B3A"/>
+    <path d="M22 35 Q24 37.5 26 35" fill="none" stroke="#1E2B3A" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="15" cy="35" r="2.6" fill="#FFB3C4"/><circle cx="33" cy="35" r="2.6" fill="#FFB3C4"/>
+  </symbol>
+  <symbol id="i-wand" viewBox="0 0 48 48">
+    <path d="M8 41 L28 21" stroke="#1E2B3A" stroke-width="7" stroke-linecap="round"/>
+    <path d="M8 41 L28 21" stroke="#B58CF0" stroke-width="3" stroke-linecap="round"/>
+    <path d="M33 4 L36.5 13 L45 14.5 L38.5 20.5 L40 29 L33 25 L26 29 L27.5 20.5 L21 14.5 L29.5 13Z" fill="#FFB32B" stroke="#1E2B3A" stroke-width="2.6" stroke-linejoin="round"/>
+    <circle cx="10" cy="14" r="2.5" fill="#B58CF0"/><circle cx="42" cy="38" r="2.5" fill="#B58CF0"/>
+  </symbol>
+  <symbol id="i-wave" viewBox="0 0 48 48">
+    <rect x="3" y="6" width="42" height="38" rx="8" fill="#BFE6FA" stroke="#1E2B3A" stroke-width="2.8"/>
+    <path d="M3 28 Q9 21 15 28 T27 28 T39 28 T45 26 V36 A8 8 0 0 1 37 44 H11 A8 8 0 0 1 3 36Z" fill="#4FB4E8" stroke="#1E2B3A" stroke-width="2.6" stroke-linejoin="round"/>
+    <circle cx="14" cy="16" r="3" fill="#fff" stroke="#1E2B3A" stroke-width="2"/><circle cx="22" cy="11" r="2" fill="#fff" stroke="#1E2B3A" stroke-width="1.8"/>
+    <path d="M30 40 Q36 34 31 33 Q26 33 28 38" fill="none" stroke="#1E2B3A" stroke-width="2.4" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-sheep" viewBox="0 0 48 48">
+    <rect x="3" y="5" width="42" height="38" rx="6" fill="none" stroke="#2858C8" stroke-width="3" stroke-dasharray="6 4"/>
+    <circle cx="19" cy="22" r="7" fill="#fff" stroke="#1E2B3A" stroke-width="2.4"/><circle cx="27" cy="20" r="7" fill="#fff" stroke="#1E2B3A" stroke-width="2.4"/>
+    <circle cx="24" cy="27" r="8" fill="#fff" stroke="#1E2B3A" stroke-width="2.4"/><circle cx="16" cy="28" r="6" fill="#fff" stroke="#1E2B3A" stroke-width="2.4"/>
+    <ellipse cx="34" cy="27" rx="5.5" ry="6.5" fill="#6B5A4E" stroke="#1E2B3A" stroke-width="2.4"/>
+    <circle cx="35" cy="26" r="1.5" fill="#fff"/>
+    <path d="M17 34 V40 M25 34 V40" stroke="#1E2B3A" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="i-penguin" viewBox="0 0 60 60">
+    <path d="M14 36 Q4 40 10 48 Q16 44 18 40Z" fill="#3B4A63" stroke="#1E2B3A" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M46 36 Q56 40 50 48 Q44 44 42 40Z" fill="#3B4A63" stroke="#1E2B3A" stroke-width="2.4" stroke-linejoin="round"/>
+    <ellipse cx="30" cy="32" rx="17" ry="21" fill="#3B4A63" stroke="#1E2B3A" stroke-width="2.8"/>
+    <ellipse cx="30" cy="37" rx="11" ry="15" fill="#FFFDF5"/>
+    <circle cx="24" cy="24" r="3.4" fill="#fff" stroke="#1E2B3A" stroke-width="1.8"/><circle cx="36" cy="24" r="3.4" fill="#fff" stroke="#1E2B3A" stroke-width="1.8"/>
+    <circle cx="24.6" cy="24.4" r="1.5" fill="#1E2B3A"/><circle cx="36.6" cy="24.4" r="1.5" fill="#1E2B3A"/>
+    <path d="M26 29 L34 29 L30 35Z" fill="#F28C28" stroke="#1E2B3A" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M20 54 H27 M33 54 H40" stroke="#F28C28" stroke-width="4.5" stroke-linecap="round"/>
+  </symbol>
+  <!-- 魔法道具 -->
+  <symbol id="book" viewBox="0 0 120 120">
+    <rect x="20" y="12" width="80" height="98" rx="9" fill="#7B4FC4" stroke="#1E2B3A" stroke-width="4.5"/>
+    <rect x="20" y="12" width="15" height="98" rx="7" fill="#5B3AA6" stroke="#1E2B3A" stroke-width="4.5"/>
+    <rect x="46" y="38" width="44" height="28" rx="5" fill="#FFFDF5" stroke="#1E2B3A" stroke-width="3.5"/>
+    <path d="M52 48 H84 M52 57 H74" stroke="#1E2B3A" stroke-width="3" stroke-linecap="round"/>
+    <path d="M68 76 L71.5 85 L80 86.5 L73.5 92.5 L75 101 L68 97 L61 101 L62.5 92.5 L56 86.5 L64.5 85Z" fill="#FFB32B" stroke="#1E2B3A" stroke-width="2.6" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="potion" viewBox="0 0 120 120">
+    <rect x="44" y="4" width="32" height="12" rx="4" fill="#C79A5E" stroke="#1E2B3A" stroke-width="4"/>
+    <path d="M48 16 H72 V40 L97 88 Q104 108 84 110 H36 Q16 108 23 88 L48 40Z" fill="#FFFDF5" stroke="#1E2B3A" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M32 82 H88 L96 94 Q100 106 84 106 H36 Q20 106 24 94Z" fill="#F06A9B"/>
+    <circle cx="50" cy="94" r="5" fill="#FFD1E1"/><circle cx="70" cy="90" r="3.5" fill="#FFD1E1"/><circle cx="64" cy="100" r="3" fill="#FFD1E1"/>
+  </symbol>
+  <symbol id="orb" viewBox="0 0 120 120">
+    <path d="M32 98 H88 L82 114 H38Z" fill="#C79A5E" stroke="#1E2B3A" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="60" cy="56" r="42" fill="#BFE3FF" stroke="#1E2B3A" stroke-width="4.5"/>
+    <path d="M36 44 Q40 30 54 24" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+    <path d="M66 50 L69 58 L77 60 L69 63 L66 71 L63 63 L55 60 L63 58Z" fill="#7B4FC4" stroke="#1E2B3A" stroke-width="2.4" stroke-linejoin="round"/>
+  </symbol>
+
+  <!-- 印章工具：木柄＋印面 -->
+  <symbol id="stampTool" viewBox="0 0 160 200">
+    <ellipse cx="80" cy="32" rx="30" ry="26" fill="#E9A15B" stroke="#1E2B3A" stroke-width="5"/>
+    <path d="M68 54 H92 L98 106 H62Z" fill="#E9A15B" stroke="#1E2B3A" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="28" y="104" width="104" height="30" rx="9" fill="#C2410C" stroke="#1E2B3A" stroke-width="5"/>
+    <rect x="22" y="134" width="116" height="20" rx="7" fill="#7A2A08" stroke="#1E2B3A" stroke-width="5"/>
+    <path d="M56 24 Q62 14 74 14" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+  </symbol>
+</defs>
+</svg>
+
+<nav class="tabs" role="tablist" aria-label="畫面切換">
+  <button role="tab" aria-selected="true" data-i="0">1 滑鼠島大廳</button>
+  <button role="tab" aria-selected="false" data-i="1">2 敲敲蛋寶寶・第一段</button>
+  <button role="tab" aria-selected="false" data-i="2">3 卡住時的提示</button>
+  <button role="tab" aria-selected="false" data-i="3">4 右鍵魔法師・第三段</button>
+  <button role="tab" aria-selected="false" data-i="4">5 結算蓋章</button>
+  <span style="margin-left:auto;color:#C9D6E4;font:500 14px 'Noto Sans TC'">郵票護照風｜ui-ux-pro-max 版</span>
+</nav>
+
+<!-- ================= 畫面 1：大廳 ================= -->
+<section class="screen on" id="s0" aria-label="滑鼠島大廳">
+  <div class="top">
+    <a class="btn" href="../../index.html"><svg class="ico"><use href="#house"/></svg>首頁</a>
+    <div class="brand"><svg><use href="#pip"/></svg><div><h1>滑鼠島</h1></div></div>
+    <small style="font:500 16px 'Noto Sans TC';color:var(--ink2)">滑鼠技能階梯・7 關</small>
+    <span class="sp"></span>
+    <span class="chip"><svg class="ico"><use href="#stampico"/></svg>技能護照　<span class="num">2</span>／<span class="num">7</span> 章</span>
+  </div>
+
+  <div class="hero">
+    <svg class="pipbig"><use href="#pip"/></svg>
+    <div class="bubble zy">選一關，開始練滑鼠！</div>
+    <span class="sp"></span>
+    <div class="legend">
+      <span class="tag g">1–2 年級</span><span class="tag m">1–4 年級</span><span class="tag v">3–4 年級</span>
+      <span class="chip" style="height:30px;min-height:0"><svg class="st on" style="width:18px;height:18px"><use href="#star"/></svg>越少失手星星越多</span>
+    </div>
+  </div>
+
+  <div class="stairs">
+    <div class="col"><span class="tag g">1–2 年級</span>
+      <div class="lv a"><span class="badge ok"><svg class="ico"><use href="#check"/></svg>已過</span>
+        <svg class="li"><use href="#i-cat"/></svg><b class="nm">滑鼠勇士</b><span class="sk">指向＋單擊</span>
+        <span class="rate"><svg class="st on"><use href="#star"/></svg><svg class="st on"><use href="#star"/></svg><svg class="st on"><use href="#star"/></svg></span></div>
+      <div class="step g" style="--h:44px">1</div></div>
+    <div class="col"><span class="tag m">1–4 年級</span>
+      <div class="lv m"><span class="badge ok"><svg class="ico"><use href="#check"/></svg>已過</span>
+        <svg class="li"><use href="#i-egg"/></svg><b class="nm">敲敲蛋寶寶</b><span class="sk">雙擊</span>
+        <span class="rate"><svg class="st on"><use href="#star"/></svg><svg class="st on"><use href="#star"/></svg><svg class="st"><use href="#star"/></svg></span></div>
+      <div class="step m" style="--h:68px">2</div></div>
+    <div class="col">
+      <div class="lv m next"><span class="badge nx">下一關</span>
+        <svg class="li"><use href="#i-carrot"/></svg><b class="nm">拔蔬菜</b><span class="sk">拖曳</span>
+        <span class="rate">還沒玩</span></div>
+      <div class="step m" style="--h:92px">3</div></div>
+    <div class="col">
+      <div class="lv m todo"><svg class="li"><use href="#i-rabbit"/></svg><b class="nm">小兔勇者</b><span class="sk">總複習</span>
+        <span class="rate">還沒玩</span></div>
+      <div class="step m" style="--h:116px">4</div></div>
+    <div class="col"><span class="tag v">3–4 年級</span>
+      <div class="lv b todo"><svg class="li"><use href="#i-wand"/></svg><b class="nm">右鍵魔法師</b><span class="sk">右鍵選單</span>
+        <span class="rate">還沒玩</span></div>
+      <div class="step v" style="--h:140px">5</div></div>
+    <div class="col">
+      <div class="lv b todo"><svg class="li"><use href="#i-wave"/></svg><b class="nm">海底捲捲探險</b><span class="sk">滾輪</span>
+        <span class="rate">還沒玩</span></div>
+      <div class="step v" style="--h:164px">6</div></div>
+    <div class="col">
+      <div class="lv b todo"><svg class="li"><use href="#i-sheep"/></svg><b class="nm">牧場圍圍樂</b><span class="sk">框選＋Ctrl</span>
+        <span class="rate">還沒玩</span></div>
+      <div class="step v" style="--h:188px">7</div></div>
+  </div>
+
+  <div class="passport">
+    <div class="pt"><b>技能護照</b><span>集滿 7 個章</span></div>
+    <div class="slots">
+      <div class="slot got"><i>單擊</i><span>指向＋單擊</span></div>
+      <div class="slot got"><i>雙擊</i><span>雙擊</span></div>
+      <div class="slot"><i>3</i><span>拖曳</span></div>
+      <div class="slot"><i>4</i><span>總複習</span></div>
+      <div class="slot"><i>5</i><span>右鍵選單</span></div>
+      <div class="slot"><i>6</i><span>滾輪</span></div>
+      <div class="slot"><i>7</i><span>框選＋Ctrl</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 畫面 2：第一段 看我示範 ================= -->
+<section class="screen" id="s1" aria-label="敲敲蛋寶寶第一段">
+  <div class="top">
+    <a class="btn" href="../../index.html"><svg class="ico"><use href="#house"/></svg>首頁</a>
+    <div class="brand"><svg><use href="#pip"/></svg><div><h1 style="font-size:24px">敲敲蛋寶寶</h1></div></div>
+    <span class="tag m">1–4 年級・雙擊</span>
+    <span class="sp"></span>
+    <a class="btn" href="#" onclick="return false">回滑鼠島</a>
+  </div>
+  <div class="play">
+    <div class="main">
+      <div class="head">
+        <span class="zy" style="font-size:28px">第一段：看我示範</span>
+        <div class="segs" aria-label="三段進度">
+          <span class="seg now"><em>1</em>看我示範</span>
+          <span class="seg"><em>2</em>自己試試</span>
+          <span class="seg"><em>3</em>小挑戰</span>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="ask zy">快快按兩下，把蛋敲開！</div>
+        <div class="demo">
+          <div class="glow"></div>
+          <svg class="rays"><use href="#rays"/></svg>
+          <svg class="nest"><use href="#nest"/></svg>
+          <svg class="egg"><use href="#egg"/></svg>
+          <div class="rip r1"></div><div class="rip r2"></div>
+          <svg class="hand"><use href="#hand"/></svg>
+          <div class="n n1">1</div><div class="n n2">2</div>
+        </div>
+        <div class="eggcount">
+          <svg class="ico" style="width:24px;height:24px"><use href="#stampico"/></svg>
+          蛋 <span class="num" style="font-size:24px">1</span>／<span class="num" style="font-size:24px">5</span>
+          <span class="dots">
+            <svg viewBox="0 0 200 250"><use href="#egg"/></svg>
+            <svg viewBox="0 0 200 250" style="opacity:.45"><use href="#egg"/></svg>
+            <svg viewBox="0 0 200 250" style="opacity:.45"><use href="#egg"/></svg>
+            <svg viewBox="0 0 200 250" style="opacity:.45"><use href="#egg"/></svg>
+            <svg viewBox="0 0 200 250" style="opacity:.45"><use href="#egg"/></svg>
+          </span>
+        </div>
+        <div class="mode"><svg class="ico"><use href="#play"/></svg>示範中（不計分）</div>
+      </div>
+    </div>
+    <aside class="side">
+      <div class="teacher"><b>老師看這裡</b><br>這關練什麼：<b>雙擊</b>｜生活 2-I-5、資E1</div>
+      <div class="panel">
+        <div class="pipcard"><svg><use href="#pip"/></svg><p><b>點點</b>說：<br>先看手指怎麼按，等一下換你。</p></div>
+      </div>
+      <div class="panel">
+        <h2>這一段</h2>
+        <p>目標<b>很大、不會動</b>，會發光。看完一次示範，就換你自己按。</p>
+      </div>
+      <div class="panel">
+        <h2>星星</h2>
+        <p style="display:flex;gap:4px;align-items:center"><svg class="st"><use href="#star"/></svg><svg class="st"><use href="#star"/></svg><svg class="st"><use href="#star"/></svg></p>
+        <p style="margin-top:4px">失手不會輸，只會少一顆星。</p>
+      </div>
+      <span class="sp"></span>
+      <button class="btn" style="width:100%"><svg class="ico"><use href="#replay"/></svg>再看一次示範</button>
+      <button class="btn sun" style="width:100%;height:56px;font-size:21px">我會了，開始！<svg class="ico"><use href="#arrow"/></svg></button>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= 畫面 3：提示 ================= -->
+<section class="screen" id="s2" aria-label="卡住時的提示">
+  <div class="top">
+    <a class="btn" href="../../index.html"><svg class="ico"><use href="#house"/></svg>首頁</a>
+    <div class="brand"><svg><use href="#pip"/></svg><div><h1 style="font-size:24px">敲敲蛋寶寶</h1></div></div>
+    <span class="tag m">1–4 年級・雙擊</span>
+    <span class="sp"></span>
+    <div class="teacher">這關練什麼：<b>雙擊</b>｜生活 2-I-5、資E1</div>
+  </div>
+  <div class="hint">
+    <div class="strip">
+      <div class="segs" style="margin:0" aria-label="三段進度">
+        <span class="seg done"><em><svg class="ico"><use href="#check"/></svg></em>看我示範</span>
+        <span class="seg now"><em>2</em>自己試試</span>
+        <span class="seg"><em>3</em>小挑戰</span>
+      </div>
+      <span class="sp"></span>
+      <span class="chip"><svg class="ico"><use href="#bulb"/></svg>卡住時，提示一層一層出現；失手不扣命，只影響星星數</span>
+    </div>
+
+    <div class="hc">
+      <div class="hh"><svg class="ico" style="width:26px;height:26px;color:var(--blue)"><use href="#bulb"/></svg>提示 1：發光＋一句話
+        <span class="miss">失手 <svg class="ico"><use href="#x"/></svg><svg class="ico"><use href="#x"/></svg> 2 次</span></div>
+      <div class="view">
+        <span class="tip miss"><svg class="ico"><use href="#x"/></svg>還差一點：兩下間隔太久</span>
+        <div class="sm"><div class="demo">
+          <div class="glow"></div><svg class="rays"><use href="#rays"/></svg>
+          <svg class="nest"><use href="#nest"/></svg>
+          <div class="wob"><svg class="egg" style="left:0;top:0"><use href="#egg"/></svg>
+            <svg class="egg" style="left:0;top:0" viewBox="0 0 200 250"><path d="M52 118 Q64 104 76 118 M124 118 Q136 104 148 118" fill="none" stroke="#1E2B3A" stroke-width="6" stroke-linecap="round"/><path d="M70 142 Q100 190 130 142 Z" fill="#8E1F29" stroke="#1E2B3A" stroke-width="5" stroke-linejoin="round"/><circle cx="50" cy="146" r="9" fill="#FF9FB3"/><circle cx="150" cy="146" r="9" fill="#FF9FB3"/></svg></div>
+        </div></div>
+        <span class="giggle">咯咯咯～</span>
+      </div>
+      <div class="say zy">按兩下要快一點喔！</div>
+      <div class="why"><svg class="ico"><use href="#clock"/></svg>蛋殼發光，告訴你「就是這顆」</div>
+    </div>
+
+    <div class="hc">
+      <div class="hh"><svg class="ico" style="width:26px;height:26px;color:var(--blue)"><use href="#replay"/></svg>提示 2：重播手指示範
+        <span class="miss">失手 <svg class="ico"><use href="#x"/></svg><svg class="ico"><use href="#x"/></svg><svg class="ico"><use href="#x"/></svg><svg class="ico"><use href="#x"/></svg> 4 次</span></div>
+      <div class="view">
+        <span class="tip"><svg class="ico"><use href="#play"/></svg>示範再出現</span>
+        <div class="sm"><div class="demo">
+          <div class="glow"></div><svg class="rays"><use href="#rays"/></svg>
+          <svg class="nest"><use href="#nest"/></svg><svg class="egg"><use href="#egg"/></svg>
+          <div class="rip r1"></div><div class="rip r2"></div>
+          <svg class="hand"><use href="#hand"/></svg>
+          <div class="n n1">1</div><div class="n n2">2</div>
+        </div></div>
+      </div>
+      <div class="say zy">再看一次示範。</div>
+      <div class="why"><svg class="ico"><use href="#play"/></svg>手指在蛋上「點、點」，慢慢示範一次</div>
+    </div>
+
+    <div class="row2">
+      <div class="okcard">
+        <div class="seq">
+          <svg class="e" viewBox="0 0 200 250"><use href="#egg-crack"/></svg>
+          <svg class="ico ar"><use href="#arrow"/></svg>
+          <svg class="e" viewBox="0 0 200 200" style="height:92px;width:92px"><use href="#baby"/></svg>
+        </div>
+        <div class="tx">
+          <span class="ok"><svg class="ico"><use href="#check"/></svg>成功！蛋破開了</span>
+          <span class="zy" style="font-size:32px">蛋寶寶出來了！</span>
+        </div>
+        <span class="sp"></span>
+        <span class="bigstars" style="gap:2px"><svg style="width:36px;height:36px;filter:none"><use href="#star"/></svg><svg style="width:36px;height:36px;filter:none;transform:none"><use href="#star"/></svg></span>
+      </div>
+      <div class="t3">
+        <div class="grow">
+          <svg viewBox="0 0 200 250" style="width:44px;height:55px"><use href="#egg"/></svg>
+          <svg class="ico" style="width:26px;height:26px;margin-bottom:12px"><use href="#slow"/></svg>
+          <svg viewBox="0 0 200 250" style="width:70px;height:88px"><use href="#egg"/></svg>
+        </div>
+        <p><b>提示 3：還是不行</b>自動放慢，蛋變大，慢慢來。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 畫面 4：右鍵魔法師 ================= -->
+<section class="screen" id="s3" aria-label="右鍵魔法師第三段">
+  <div class="top">
+    <a class="btn" href="../../index.html"><svg class="ico"><use href="#house"/></svg>首頁</a>
+    <div class="brand"><svg><use href="#pip"/></svg><div><h1 style="font-size:24px">右鍵魔法師</h1></div></div>
+    <span class="tag v">3–4 年級・右鍵選單</span>
+    <span class="sp"></span>
+    <a class="btn" href="#" onclick="return false">回滑鼠島</a>
+  </div>
+  <div class="play">
+    <div class="main">
+      <div class="head">
+        <div class="segs" style="margin:0" aria-label="三段進度">
+          <span class="seg done"><em><svg class="ico"><use href="#check"/></svg></em>看我示範</span>
+          <span class="seg done"><em><svg class="ico"><use href="#check"/></svg></em>自己試試</span>
+          <span class="seg now"><em>3</em>小挑戰</span>
+        </div>
+        <span class="sp"></span>
+        <span style="font:700 20px 'Noto Sans TC'">第 <span class="num" style="font-size:26px">3</span> 題／共 <span class="num" style="font-size:26px">4</span> 題</span>
+        <span class="qdots" aria-hidden="true"><i class="d"></i><i class="d"></i><i class="n"></i><i></i></span>
+      </div>
+      <div class="task"><svg class="ico"><use href="#i-wand"/></svg>幫魔法書改名字：按右鍵，選<b>『重新命名』</b></div>
+      <div class="stage magic">
+        <!-- 會飄的水晶球軌跡（第三段：目標小、有干擾物） -->
+        <svg class="trail" viewBox="0 0 920 410" aria-hidden="true">
+          <path d="M690 250 C 760 190, 820 300, 860 220" fill="none" stroke="#5B3AA6" stroke-width="4" stroke-dasharray="3 12" stroke-linecap="round"/>
+          <path d="M850 214 L862 220 L852 230" fill="none" stroke="#5B3AA6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="item target" style="left:120px;top:96px;width:150px;height:150px">
+          <div class="mark" style="inset:-12px"></div>
+          <svg width="150" height="150"><use href="#book"/></svg><span class="cap" style="bottom:-36px">魔法書</span>
+        </div>
+        <div class="item" style="left:84px;top:288px;width:96px;height:96px"><svg width="96" height="96"><use href="#potion"/></svg><span class="cap" style="display:none">藥水瓶</span></div>
+        <div class="item" style="left:640px;top:232px;width:96px;height:96px"><svg width="96" height="96"><use href="#orb"/></svg></div>
+        <div class="item" style="left:210px;top:300px;width:84px;height:84px"><svg width="84" height="84"><use href="#potion"/></svg></div>
+
+        <div class="ctx" style="left:292px;top:150px" role="menu" aria-label="右鍵選單">
+          <div role="menuitem">開啟</div>
+          <div role="menuitem">複製</div>
+          <div role="menuitem" class="on"><svg class="ico"><use href="#check"/></svg>重新命名</div>
+          <hr>
+          <div role="menuitem">刪除</div>
+        </div>
+        <svg style="position:absolute;left:470px;top:253px;width:30px;height:38px;filter:drop-shadow(2px 3px 0 rgba(30,43,58,.35))"><use href="#cursor"/></svg>
+        <span class="chip" style="position:absolute;left:520px;top:252px;height:34px;font-size:15px;background:var(--sun-soft)"><svg class="ico"><use href="#arrow" transform="rotate(180 12 12)"/></svg>滑鼠停在這一項</span>
+
+        <div class="note"><svg class="ico" style="width:22px;height:22px"><use href="#bulb"/></svg>第三段：道具變小、水晶球會飄來飄去</div>
+      </div>
+    </div>
+    <aside class="side">
+      <div class="teacher"><b>老師看這裡</b><br>這關練什麼：<b>右鍵選單</b>｜資E1、資E2</div>
+      <div class="panel">
+        <div class="pipcard"><svg><use href="#pip"/></svg><p><b>點點</b>說：<br>先在魔法書上按<b>右鍵</b>，再從選單選。</p></div>
+      </div>
+      <div class="panel">
+        <h2>星星</h2>
+        <p style="display:flex;gap:4px"><svg class="st on"><use href="#star"/></svg><svg class="st on"><use href="#star"/></svg><svg class="st"><use href="#star"/></svg></p>
+        <p style="margin-top:4px">失手不會輸，只會少一顆星。</p>
+      </div>
+      <span class="sp"></span>
+      <button class="btn sun hintbtn"><svg class="ico" style="width:28px;height:28px"><use href="#bulb"/></svg>提示</button>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= 畫面 5：結算蓋章 ================= -->
+<section class="screen" id="s4" aria-label="結算蓋章">
+  <div class="top">
+    <a class="btn" href="../../index.html"><svg class="ico"><use href="#house"/></svg>首頁</a>
+    <div class="brand"><svg><use href="#pip"/></svg><div><h1 style="font-size:24px">敲敲蛋寶寶・過關</h1></div></div>
+    <span class="sp"></span>
+    <div class="teacher">這關練什麼：<b>雙擊</b>｜生活 2-I-5、資E1</div>
+  </div>
+  <div class="done5">
+    <div class="book" role="img" aria-label="技能護照，雙擊章正在蓋下">
+      <div class="page">
+        <h2>技能護照<small>滑鼠島　已蓋 <span class="num">2</span>／<span class="num">7</span></small></h2>
+        <div class="pgrid">
+          <div class="cell got"><div class="ring">單擊</div><span class="l">指向＋單擊</span></div>
+          <div class="cell now"><div class="ring">雙擊</div><span class="l">雙擊章</span></div>
+          <div class="cell"><div class="ring">3</div><span class="l">拖曳</span></div>
+          <div class="cell"><div class="ring">4</div><span class="l">總複習</span></div>
+          <div class="cell"><div class="ring">5</div><span class="l">右鍵選單</span></div>
+          <div class="cell"><div class="ring">6</div><span class="l">滾輪</span></div>
+          <div class="cell"><div class="ring">7</div><span class="l">框選＋Ctrl</span></div>
+          <div class="cell"><svg width="96" height="112" viewBox="0 0 120 140"><use href="#pip"/></svg></div>
+        </div>
+        <!-- 蓋章瞬間：衝擊線＋印章工具 -->
+        <svg class="burst" viewBox="0 0 230 230" aria-hidden="true">
+          <g stroke="#A85F00" stroke-width="7" stroke-linecap="round">
+            <path d="M115 6 V26"/><path d="M26 56 L42 68"/><path d="M204 56 L188 68"/>
+            <path d="M8 120 H28"/><path d="M222 120 H202"/>
+            <path d="M30 192 L46 180"/><path d="M200 192 L184 180"/><path d="M115 224 V204"/>
+          </g>
+        </svg>
+        <svg class="tool"><use href="#stampTool"/></svg>
+      </div>
+    </div>
+
+    <div class="res">
+      <div class="say">
+        <svg viewBox="0 0 120 140"><use href="#pip"/></svg>
+        <div class="zy">你拿到雙擊章！好棒！</div>
+      </div>
+      <div class="bigstars" aria-label="三顆星">
+        <svg><use href="#star"/></svg><svg><use href="#star"/></svg><svg><use href="#star"/></svg>
+        <span>3 顆星</span>
+      </div>
+      <div class="stats">
+        <div class="stat"><svg class="ico"><use href="#check"/></svg><div><small>成功</small><b><span class="num">5</span>／<span class="num">5</span> 顆</b></div></div>
+        <div class="stat t"><svg class="ico"><use href="#clock"/></svg><div><small>平均每顆蛋</small><b><span class="num">3</span> 秒</b></div></div>
+        <div class="stat h"><svg class="ico"><use href="#bulb"/></svg><div><small>提示</small><b>用了 <span class="num">1</span> 次</b></div></div>
+      </div>
+      <div class="dex">
+        <svg viewBox="0 0 60 60"><use href="#i-penguin"/></svg>
+        <div class="tx"><b>蛋寶寶圖鑑：新朋友小企鵝</b><small>已收集 <span class="num">3</span>／<span class="num">12</span> 種，重玩還會孵出別的</small>
+          <span class="pips"><i class="g"></i><i class="g"></i><i class="n"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+        <span class="new">新</span>
+      </div>
+      <div class="acts">
+        <button class="btn sun big"><svg class="ico"><use href="#check"/></svg>交成績給老師</button>
+        <button class="btn"><svg class="ico"><use href="#replay"/></svg>再玩一次</button>
+        <button class="btn"><svg class="ico"><use href="#arrow" transform="rotate(180 12 12)"/></svg>回滑鼠島</button>
+        <a class="btn" href="../../index.html"><svg class="ico"><use href="#house"/></svg>首頁</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var tabs=[].slice.call(document.querySelectorAll('.tabs button'));
+  var screens=[].slice.call(document.querySelectorAll('.screen'));
+  function show(i){
+    tabs.forEach(function(t,k){t.setAttribute('aria-selected',k===i?'true':'false')});
+    screens.forEach(function(s,k){s.classList.toggle('on',k===i)});
+    try{history.replaceState(null,'','#s'+i)}catch(e){}
+  }
+  tabs.forEach(function(t,k){t.addEventListener('click',function(){show(k)})});
+  var m=/^#s([0-4])$/.exec(location.hash);
+  if(m)show(+m[1]);
+})();
+</script>
+</body>
+</html>

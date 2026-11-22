@@ -80,5 +80,16 @@ ok([8, 9, 29, 30, 31, 32].every(u => CS.parse(CS.encode(Object.assign({}, sm, { 
 const smCsv = CS.toCSV([smBack], 0).slice(1).trim().split('\r\n');
 ok(smCsv[1] === '12,小明,寵物收到怪訊息,—,小常識,,,2,,2026-11-22,10:00,第 1 關', 'CSV 小常識島那列');
 
+// 滑鼠島（2026-11-22）：lang=mouse、acc＝成功率 %、cpm＝0、min＝分鐘
+const ms = { unit: 33, tier: '-', lang: 'mouse', seat: 5, name: '小美', acc: 88, cpm: 0, stars: 2, min: 3, time: '202611221400' };
+const msS = CS.encode(ms);
+ok(msS === 'ETS1|33|-|mouse|5|小美|88|0|2|3|202611221400', '滑鼠島編碼格式');
+const msBack = CS.parse(msS);
+ok(msBack && msBack.lang === 'mouse' && msBack.acc === 88 && CS.isMouse(msBack) && !CS.isArt(msBack), '滑鼠島解得回來、不算以關計');
+ok([2, 19, 21, 33, 34, 35, 36].every(u => CS.parse(CS.encode(Object.assign({}, ms, { unit: u })))), '滑鼠島 7 關代號都收');
+ok(CS.detailText(msBack) === '成功率 88%', '滑鼠島摘要');
+const msCsv = CS.toCSV([msBack], 0).slice(1).trim().split('\r\n');
+ok(msCsv[1] === '5,小美,敲敲蛋寶寶,—,滑鼠,88,,2,3,2026-11-22,14:00,正確率欄＝成功率', 'CSV 滑鼠島那列');
+
 console.log(fail ? `共 ${fail} 項失敗（通過 ${pass}）` : `全部通過（${pass} 項）`);
 process.exit(fail ? 1 : 0);

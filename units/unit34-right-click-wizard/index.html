@@ -1,0 +1,1505 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>右鍵魔法師 - 滑鼠島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+  <link rel="stylesheet" href="../../assets/css/mouse-island.css">
+  <style>
+    /* 場景樣式：class 與 keyframes 一律以 sc- 開頭 */
+    .sc-bg {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #F6E7BE;
+      user-select: none;
+    }
+    .sc-bg svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* 上方 HUD：任務條與計數器 */
+    .sc-hud {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .sc-mission {
+      position: absolute;
+      left: 50%;
+      top: 14px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 26px;
+      background: #FFF8E4;
+      border: 3px solid #6E4125;
+      border-radius: 18px;
+      box-shadow: 0 4px 0 #9A5F36;
+      color: #33261B;
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: .5px;
+      white-space: nowrap;
+    }
+    .sc-mission-star {
+      width: 28px;
+      height: 28px;
+      flex: 0 0 auto;
+    }
+    .sc-mission-tag {
+      display: inline-block;
+      padding: 2px 10px;
+      margin-right: 4px;
+      border-radius: 10px;
+      background: #236F96;
+      color: #FFF8E4;
+      font-size: 16px;
+      font-weight: 700;
+      vertical-align: middle;
+    }
+    .sc-mission-em {
+      color: #C2432A;
+    }
+    .sc-count {
+      position: absolute;
+      right: 24px;
+      top: 16px;
+      padding: 8px 18px;
+      background: #FFF8E4;
+      border: 2px solid #B9794A;
+      border-radius: 14px;
+      color: #33261B;
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .sc-toast {
+      position: absolute;
+      right: 24px;
+      top: 72px;
+      padding: 8px 16px;
+      background: #2F7A49;
+      color: #FFF8E4;
+      border: 2px solid #6E4125;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 700;
+      box-shadow: 0 4px 10px rgba(51, 38, 27, .18);
+      opacity: 0;
+      transform: translateY(-6px);
+      transition: opacity .22s ease, transform .22s ease;
+    }
+    .sc-toast.sc-show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* 道具容器層 */
+    .sc-props {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      pointer-events: none;
+    }
+    .sc-prop {
+      position: absolute;
+      pointer-events: auto;
+      cursor: context-menu;
+      user-select: none;
+      border-radius: 22px;
+    }
+    .sc-prop-art {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform .25s ease, opacity .25s ease, filter .25s ease;
+    }
+    .sc-prop-art > svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: drop-shadow(0 6px 8px rgba(110, 65, 37, .24));
+    }
+    .sc-prop:hover .sc-prop-art {
+      transform: translateY(-4px) scale(1.04);
+    }
+
+    /* 桌面道具小名牌（方便辨識與展示「重新命名」） */
+    .sc-prop-label {
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 4px);
+      transform: translateX(-50%);
+      padding: 3px 12px;
+      background: #FFF8E4;
+      border: 2px solid #6E4125;
+      border-radius: 10px;
+      color: #33261B;
+      font-size: 16px;
+      font-weight: 700;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 2px 0 rgba(110, 65, 37, .2);
+    }
+    .sc-prop-label.sc-renamed {
+      background: #236F96;
+      color: #FFF8E4;
+      border-color: #33261B;
+      box-shadow: 0 0 0 3px #F2B134;
+    }
+
+    /* 彩虹目標光環（含深色外圈，對比清楚，緩慢旋轉 ≤ 0.5Hz） */
+    .sc-rainbow-ring {
+      position: absolute;
+      inset: -12px;
+      border-radius: 50%;
+      border: 4px dashed #6E4125;
+      box-shadow: 0 0 0 5px #F2B134, 0 0 18px 6px rgba(242, 177, 52, .65);
+      pointer-events: none;
+      animation: sc-ring-pulse 2.2s ease-in-out infinite;
+    }
+    .sc-rainbow-badge {
+      position: absolute;
+      left: 50%;
+      top: -22px;
+      transform: translateX(-50%);
+      padding: 2px 10px;
+      border-radius: 10px;
+      background: #C2432A;
+      color: #FFF8E4;
+      border: 2px solid #33261B;
+      font-size: 14px;
+      font-weight: 900;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* 左鍵彈一下 */
+    .sc-prop.sc-left-bounce .sc-prop-art {
+      animation: sc-bounce .42s ease;
+    }
+
+    /* 選對的魔法特效 */
+    .sc-prop.sc-ok-grow .sc-prop-art {
+      transform: scale(1.42);
+    }
+    .sc-prop.sc-ok-open .sc-prop-art {
+      transform: scale(1.16) translateY(-10px);
+      filter: drop-shadow(0 0 18px #F2B134);
+    }
+    .sc-prop.sc-ok-glow .sc-prop-art {
+      transform: scale(1.14);
+      filter: drop-shadow(0 0 22px #F2B134) brightness(1.12);
+    }
+    .sc-prop.sc-ok-color .sc-prop-art {
+      transform: scale(1.12) rotate(-6deg);
+      filter: hue-rotate(115deg) saturate(1.25);
+    }
+    .sc-prop.sc-ok-float .sc-prop-art {
+      transform: translateY(-48px) rotate(-8deg) scale(1.08);
+    }
+    .sc-prop.sc-ok-pack .sc-prop-art {
+      transform: scale(.15) translateY(55px) rotate(18deg);
+      opacity: 0;
+      transition: transform .55s ease-in, opacity .55s ease-in;
+    }
+    .sc-prop.sc-ok-delete .sc-prop-art {
+      transform: scale(.1) rotate(220deg);
+      opacity: 0;
+      transition: transform .55s ease-in, opacity .55s ease-in;
+    }
+    .sc-prop.sc-ok-copy .sc-prop-art {
+      transform: translateX(-28px) scale(1.06);
+    }
+
+    /* 選錯的搞笑魔法（1 秒內自動恢復） */
+    .sc-prop.sc-funny-giant {
+      z-index: 60;
+    }
+    .sc-prop.sc-funny-giant .sc-prop-art {
+      transform: scale(2.45);
+      transition: transform .22s cubic-bezier(.22, 1.4, .36, 1);
+    }
+    .sc-prop.sc-funny-fly {
+      z-index: 60;
+    }
+    .sc-prop.sc-funny-fly .sc-prop-art {
+      animation: sc-wild-fly .9s ease-in-out;
+    }
+    .sc-prop.sc-funny-spin {
+      z-index: 60;
+    }
+    .sc-prop.sc-funny-spin .sc-prop-art {
+      animation: sc-silly-spin .9s ease-in-out;
+    }
+    .sc-prop.sc-funny-jiggle {
+      z-index: 60;
+    }
+    .sc-prop.sc-funny-jiggle .sc-prop-art {
+      animation: sc-jiggle .9s ease-in-out;
+    }
+    .sc-funny-addon {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 150%;
+      height: 150%;
+      pointer-events: none;
+    }
+    .sc-funny-pop {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 10px);
+      transform: translateX(-50%);
+      padding: 6px 14px;
+      background: #FFF8E4;
+      border: 3px solid #6E4125;
+      border-radius: 14px;
+      color: #33261B;
+      font-size: 18px;
+      font-weight: 900;
+      white-space: nowrap;
+      box-shadow: 0 4px 10px rgba(51, 38, 27, .2);
+      pointer-events: none;
+      z-index: 65;
+    }
+
+    /* 魔法特效層（星星爆開、複製分身、收納盒） */
+    .sc-fx {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 45;
+      overflow: hidden;
+    }
+    .sc-spark {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      margin: -14px 0 0 -14px;
+      animation: sc-spark-out .7s ease-out forwards;
+    }
+    .sc-clone-ghost {
+      position: absolute;
+      pointer-events: none;
+      animation: sc-clone-pop .55s cubic-bezier(.22, 1.35, .36, 1) forwards;
+    }
+    .sc-clone-ghost svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: drop-shadow(0 0 12px #F2B134);
+    }
+    .sc-chest-mini {
+      position: absolute;
+      width: 90px;
+      height: 70px;
+      margin: -35px 0 0 -45px;
+      animation: sc-pop-in .22s ease-out;
+    }
+
+    /* 自製右鍵選單（電腦選單風格：白底、細灰框、陰影、每項 44px 高） */
+    .sc-menu-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 80;
+    }
+    .sc-menu {
+      position: absolute;
+      min-width: 196px;
+      padding: 6px 0;
+      background: #FFFFFF;
+      border: 1px solid #C6BEB4;
+      border-radius: 10px;
+      box-shadow: 0 12px 28px rgba(51, 38, 27, .22), 0 2px 6px rgba(51, 38, 27, .12);
+      pointer-events: auto;
+      user-select: none;
+      animation: sc-menu-in .12s ease-out;
+    }
+    .sc-menu-head {
+      padding: 4px 16px 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #6B5A48;
+      border-bottom: 1px solid #EAE4DC;
+      margin-bottom: 4px;
+    }
+    .sc-menu-item {
+      height: 44px;
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #33261B;
+      cursor: pointer;
+      transition: background-color .1s ease, color .1s ease;
+    }
+    .sc-menu-item:hover,
+    .sc-menu-item:focus-visible {
+      background: #236F96;
+      color: #FFF8E4;
+      outline: none;
+    }
+    .sc-menu-ico {
+      width: 20px;
+      height: 20px;
+      flex: 0 0 auto;
+    }
+    .sc-menu-sep {
+      height: 1px;
+      margin: 4px 10px;
+      background: #E5DED4;
+    }
+
+    /* assist 模式：選單項目字放大到 22px */
+    .sc-assist .sc-menu {
+      min-width: 230px;
+    }
+    .sc-assist .sc-menu-item {
+      height: 52px;
+      font-size: 22px;
+      padding: 0 20px;
+    }
+    .sc-assist .sc-menu-ico {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* 動畫定義（皆低頻 ≤ 2Hz） */
+    @keyframes sc-menu-in {
+      from { opacity: 0; transform: scale(.94) translateY(-4px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes sc-bounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      35%      { transform: translateY(-18px) scale(1.06, .95); }
+      70%      { transform: translateY(4px) scale(.96, 1.04); }
+    }
+    @keyframes sc-ring-pulse {
+      0%, 100% { transform: scale(1); opacity: .95; }
+      50%      { transform: scale(1.06); opacity: .75; }
+    }
+    @keyframes sc-wild-fly {
+      0%   { transform: translate(0, 0) rotate(0deg); }
+      25%  { transform: translate(-42px, -46px) rotate(-18deg); }
+      55%  { transform: translate(48px, -58px) rotate(16deg); }
+      80%  { transform: translate(-18px, -24px) rotate(-8deg); }
+      100% { transform: translate(0, 0) rotate(0deg); }
+    }
+    @keyframes sc-silly-spin {
+      0%   { transform: rotate(0deg) scale(1); }
+      50%  { transform: rotate(360deg) scale(1.18); }
+      100% { transform: rotate(720deg) scale(1); }
+    }
+    @keyframes sc-jiggle {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      20%      { transform: rotate(-14deg) scale(1.16); }
+      45%      { transform: rotate(14deg) scale(1.2); }
+      70%      { transform: rotate(-10deg) scale(1.12); }
+    }
+    @keyframes sc-spark-out {
+      0%   { opacity: 1; transform: translate(0, 0) scale(.5) rotate(0deg); }
+      100% { opacity: 0; transform: translate(var(--sc-dx), var(--sc-dy)) scale(1.15) rotate(90deg); }
+    }
+    @keyframes sc-clone-pop {
+      0%   { opacity: 0; transform: translateX(0) scale(.4); }
+      100% { opacity: 1; transform: translateX(46px) scale(1.04); }
+    }
+    @keyframes sc-pop-in {
+      from { opacity: 0; transform: scale(.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* 尊重使用者的減少動態設定 */
+    @media (prefers-reduced-motion: reduce) {
+      .sc-prop-art,
+      .sc-toast,
+      .sc-menu,
+      .sc-rainbow-ring,
+      .sc-spark,
+      .sc-clone-ghost,
+      .sc-chest-mini,
+      .sc-prop.sc-left-bounce .sc-prop-art,
+      .sc-prop.sc-funny-fly .sc-prop-art,
+      .sc-prop.sc-funny-spin .sc-prop-art,
+      .sc-prop.sc-funny-jiggle .sc-prop-art {
+        animation: none !important;
+        transition: none !important;
+      }
+      .sc-prop:hover .sc-prop-art {
+        transform: none;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/mouse-ui.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    /* ============================================================
+     * 1. 原創 Inline SVG 素材（道具、圖鑑、選單圖示、搞笑元素、Hero）
+     * ============================================================ */
+    var SVGS = {
+      book:
+        '<svg viewBox="0 0 120 120" aria-hidden="true">' +
+          '<rect x="22" y="18" width="76" height="86" rx="10" fill="#236F96" stroke="#33261B" stroke-width="4.5"/>' +
+          '<rect x="22" y="18" width="16" height="86" rx="6" fill="#6E4125" stroke="#33261B" stroke-width="4.5"/>' +
+          '<rect x="34" y="25" width="58" height="72" rx="6" fill="#2B7FA8"/>' +
+          '<path d="M94 28 H101 C104 28 105 30 105 33 V93 C105 96 103 98 99 98 H34" fill="none" stroke="#FFF8E4" stroke-width="6" stroke-linecap="round"/>' +
+          '<path d="M94 28 H101 C104 28 105 30 105 33 V93 C105 96 103 98 99 98 H34" fill="none" stroke="#33261B" stroke-width="2.5" stroke-linecap="round"/>' +
+          '<polygon points="65,37 70,51 85,51 73,60 77,74 65,65 53,74 57,60 45,51 60,51" fill="#F2B134" stroke="#33261B" stroke-width="3.5" stroke-linejoin="round"/>' +
+          '<path d="M52 104 V116 L59 111 L66 116 V104 Z" fill="#C2432A" stroke="#33261B" stroke-width="3" stroke-linejoin="round"/>' +
+        '</svg>',
+
+      potion:
+        '<svg viewBox="0 0 120 120" aria-hidden="true">' +
+          '<rect x="49" y="12" width="22" height="14" rx="4" fill="#9A5F36" stroke="#33261B" stroke-width="4"/>' +
+          '<rect x="44" y="24" width="32" height="10" rx="4" fill="#BFE1EA" stroke="#33261B" stroke-width="4"/>' +
+          '<path d="M50 34 V44 C31 50 22 65 24 83 C26 99 40 108 60 108 C80 108 94 99 96 83 C98 65 89 50 70 44 V34 Z" fill="#FFF8E4" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<path d="M30 74 C40 69 52 78 64 73 C75 68 84 71 91 75 C93 92 81 103 60 103 C39 103 28 92 30 74 Z" fill="#E8704F"/>' +
+          '<circle cx="48" cy="86" r="5" fill="#FFF8E4" opacity=".85"/>' +
+          '<circle cx="67" cy="91" r="4" fill="#F2B134"/>' +
+          '<circle cx="72" cy="79" r="3.5" fill="#FFF8E4" opacity=".9"/>' +
+          '<path d="M39 58 C34 64 33 70 33 75" fill="none" stroke="#BFE1EA" stroke-width="5" stroke-linecap="round"/>' +
+          '<rect x="45" y="38" width="30" height="7" rx="3.5" fill="#F2B134" stroke="#33261B" stroke-width="3"/>' +
+        '</svg>',
+
+      crystal:
+        '<svg viewBox="0 0 120 120" aria-hidden="true">' +
+          '<circle cx="60" cy="52" r="38" fill="#BFE1EA" stroke="#33261B" stroke-width="4.5"/>' +
+          '<path d="M34 62 C44 48 64 46 86 58 C82 76 72 86 60 86 C45 86 35 76 34 62 Z" fill="#236F96" opacity=".45"/>' +
+          '<polygon points="60,31 63,41 73,41 65,47 68,57 60,51 52,57 55,47 47,41 57,41" fill="#F2B134" stroke="#33261B" stroke-width="2.5" stroke-linejoin="round"/>' +
+          '<circle cx="44" cy="36" r="6" fill="#FFF8E4" opacity=".9"/>' +
+          '<circle cx="78" cy="40" r="3.5" fill="#FFF8E4"/>' +
+          '<path d="M32 88 H88 L96 106 H24 Z" fill="#9A5F36" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<rect x="38" y="82" width="44" height="10" rx="4" fill="#F2B134" stroke="#33261B" stroke-width="3.5"/>' +
+          '<circle cx="60" cy="97" r="4" fill="#FFF8E4" stroke="#33261B" stroke-width="2.5"/>' +
+        '</svg>',
+
+      wand:
+        '<svg viewBox="0 0 120 120" aria-hidden="true">' +
+          '<path d="M22 98 L76 44" stroke="#33261B" stroke-width="17" stroke-linecap="round"/>' +
+          '<path d="M22 98 L76 44" stroke="#9A5F36" stroke-width="10" stroke-linecap="round"/>' +
+          '<path d="M32 88 L42 78 M49 71 L59 61" stroke="#F2B134" stroke-width="4" stroke-linecap="round"/>' +
+          '<polygon points="82,14 89,31 108,32 93,43 98,61 82,51 66,61 71,43 56,32 75,31" fill="#F2B134" stroke="#33261B" stroke-width="4" stroke-linejoin="round"/>' +
+          '<circle cx="44" cy="30" r="5" fill="#E8704F" stroke="#33261B" stroke-width="2.5"/>' +
+          '<circle cx="96" cy="76" r="4.5" fill="#BFE1EA" stroke="#33261B" stroke-width="2.5"/>' +
+          '<circle cx="62" cy="18" r="3.5" fill="#FFF8E4" stroke="#33261B" stroke-width="2"/>' +
+        '</svg>',
+
+      hat:
+        '<svg viewBox="0 0 120 120" aria-hidden="true">' +
+          '<ellipse cx="60" cy="94" rx="48" ry="15" fill="#236F96" stroke="#33261B" stroke-width="4.5"/>' +
+          '<path d="M28 90 L52 24 C56 14 70 14 78 24 L94 34 L76 38 L92 90 Z" fill="#236F96" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<path d="M31 80 Q60 90 89 80 L92 90 Q60 100 28 90 Z" fill="#E8704F" stroke="#33261B" stroke-width="3.5"/>' +
+          '<rect x="52" y="79" width="16" height="14" rx="3" fill="#F2B134" stroke="#33261B" stroke-width="3"/>' +
+          '<polygon points="60,44 63,52 72,52 65,57 67,65 60,60 53,65 55,57 48,52 57,52" fill="#F2B134" stroke="#33261B" stroke-width="2.5" stroke-linejoin="round"/>' +
+        '</svg>',
+
+      lamp:
+        '<svg viewBox="0 0 120 120" aria-hidden="true">' +
+          '<circle cx="60" cy="18" r="7" fill="none" stroke="#6E4125" stroke-width="4.5"/>' +
+          '<path d="M34 34 Q60 20 86 34 Z" fill="#9A5F36" stroke="#33261B" stroke-width="4" stroke-linejoin="round"/>' +
+          '<rect x="36" y="34" width="48" height="58" rx="10" fill="#FFF8E4" stroke="#33261B" stroke-width="4.5"/>' +
+          '<path d="M36 52 H84 M36 74 H84" stroke="#B9794A" stroke-width="2.5" opacity=".55"/>' +
+          '<polygon points="60,42 65,56 80,56 68,65 72,79 60,70 48,79 52,65 40,56 55,56" fill="#F2B134" stroke="#33261B" stroke-width="3" stroke-linejoin="round"/>' +
+          '<rect x="28" y="92" width="64" height="14" rx="6" fill="#9A5F36" stroke="#33261B" stroke-width="4.5"/>' +
+        '</svg>',
+
+      broom:
+        '<svg viewBox="0 0 120 120" aria-hidden="true">' +
+          '<path d="M22 24 L82 82" stroke="#33261B" stroke-width="15" stroke-linecap="round"/>' +
+          '<path d="M22 24 L82 82" stroke="#9A5F36" stroke-width="8.5" stroke-linecap="round"/>' +
+          '<path d="M62 66 L104 72 L98 106 L64 96 Z" fill="#F2B134" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<path d="M72 76 L98 84 M69 84 L96 94 M74 91 L92 101" stroke="#9A5F36" stroke-width="3.5" stroke-linecap="round"/>' +
+          '<rect x="57" y="59" width="22" height="12" rx="4" transform="rotate(-45 68 65)" fill="#C2432A" stroke="#33261B" stroke-width="3.5"/>' +
+          '<circle cx="22" cy="24" r="6" fill="#F2B134" stroke="#33261B" stroke-width="3"/>' +
+        '</svg>',
+
+      rainbow:
+        '<svg viewBox="0 0 120 120" aria-hidden="true">' +
+          '<polygon points="60,8 65,18 76,18 68,24 71,33 60,28 49,33 52,24 44,18 55,18" fill="#F2B134" stroke="#33261B" stroke-width="3" stroke-linejoin="round"/>' +
+          '<rect x="46" y="28" width="28" height="10" rx="4" fill="#FFF8E4" stroke="#33261B" stroke-width="4"/>' +
+          '<clipPath id="sc-rb-clip"><path d="M48 38 V46 C28 52 21 67 24 85 C27 101 41 109 60 109 C79 109 93 101 96 85 C99 67 92 52 72 46 V38 Z"/></clipPath>' +
+          '<g clip-path="url(#sc-rb-clip)">' +
+            '<rect x="20" y="38" width="80" height="22" fill="#FFF8E4"/>' +
+            '<rect x="20" y="58" width="80" height="13" fill="#E8704F"/>' +
+            '<rect x="20" y="71" width="80" height="13" fill="#F2B134"/>' +
+            '<rect x="20" y="84" width="80" height="13" fill="#2F7A49"/>' +
+            '<rect x="20" y="97" width="80" height="15" fill="#236F96"/>' +
+          '</g>' +
+          '<path d="M48 38 V46 C28 52 21 67 24 85 C27 101 41 109 60 109 C79 109 93 101 96 85 C99 67 92 52 72 46 V38 Z" fill="none" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<circle cx="44" cy="70" r="4" fill="#FFF8E4"/>' +
+          '<circle cx="74" cy="86" r="4.5" fill="#FFF8E4"/>' +
+          '<circle cx="56" cy="96" r="3.5" fill="#FFF8E4"/>' +
+        '</svg>'
+    };
+
+    /* 開始畫面左側主角插圖（400×400，暖色魔法桌＋右鍵選單＋可愛滑鼠） */
+    var HERO_SVG =
+      '<svg viewBox="0 0 400 400" aria-hidden="true">' +
+        '<circle cx="200" cy="200" r="182" fill="#FFF8E4" stroke="#B9794A" stroke-width="6" stroke-dasharray="12 8"/>' +
+        '<circle cx="200" cy="200" r="168" fill="#F6E7BE"/>' +
+        /* 帳篷上方小星旗 */
+        '<path d="M62 118 Q200 148 338 118" fill="none" stroke="#6E4125" stroke-width="4"/>' +
+        '<polygon points="116,126 121,137 133,137 123,144 127,155 116,148 105,155 109,144 99,137 111,137" fill="#F2B134" stroke="#33261B" stroke-width="2.5"/>' +
+        '<polygon points="282,124 287,135 299,135 289,142 293,153 282,146 271,153 275,142 265,135 277,135" fill="#F2B134" stroke="#33261B" stroke-width="2.5"/>' +
+        /* 暖木頭桌 */
+        '<path d="M48 266 H352 L366 318 C320 358 80 358 34 318 Z" fill="#9A5F36" stroke="#6E4125" stroke-width="5" stroke-linejoin="round"/>' +
+        '<rect x="52" y="256" width="296" height="22" rx="10" fill="#B9794A" stroke="#6E4125" stroke-width="4.5"/>' +
+        /* 魔法帽 */
+        '<ellipse cx="144" cy="212" rx="64" ry="18" fill="#236F96" stroke="#33261B" stroke-width="5"/>' +
+        '<path d="M102 206 L132 108 C138 92 158 92 170 108 L194 124 L168 130 L188 206 Z" fill="#236F96" stroke="#33261B" stroke-width="5" stroke-linejoin="round"/>' +
+        '<path d="M106 194 Q145 206 184 194 L188 206 Q145 218 102 206 Z" fill="#E8704F" stroke="#33261B" stroke-width="4"/>' +
+        '<rect x="135" y="193" width="20" height="16" rx="4" fill="#F2B134" stroke="#33261B" stroke-width="3.5"/>' +
+        '<polygon points="145,144 149,155 161,155 151,162 155,173 145,166 135,173 139,162 129,155 141,155" fill="#F2B134" stroke="#33261B" stroke-width="3" stroke-linejoin="round"/>' +
+        /* 桌上魔法書 */
+        '<rect x="86" y="216" width="96" height="50" rx="8" fill="#2F7A49" stroke="#33261B" stroke-width="4.5"/>' +
+        '<rect x="96" y="224" width="76" height="10" rx="4" fill="#FFF8E4" stroke="#33261B" stroke-width="2.5"/>' +
+        /* 桌上藥水瓶 */
+        '<rect x="218" y="194" width="16" height="12" rx="3" fill="#9A5F36" stroke="#33261B" stroke-width="3.5"/>' +
+        '<path d="M218 206 V214 C202 220 198 236 200 250 C202 262 214 268 226 268 C238 268 250 262 252 250 C254 236 250 220 234 214 V206 Z" fill="#FFF8E4" stroke="#33261B" stroke-width="4"/>' +
+        '<path d="M204 242 C214 237 238 247 248 242 C249 256 240 264 226 264 C212 264 203 256 204 242 Z" fill="#E8704F"/>' +
+        /* 懸浮迷你右鍵選單 */
+        '<rect x="242" y="128" width="98" height="82" rx="10" fill="#FFFFFF" stroke="#6E4125" stroke-width="4"/>' +
+        '<rect x="252" y="140" width="78" height="16" rx="5" fill="#F6E7BE"/>' +
+        '<rect x="252" y="161" width="78" height="18" rx="5" fill="#236F96"/>' +
+        '<rect x="252" y="184" width="78" height="16" rx="5" fill="#F6E7BE"/>' +
+        /* 可愛右鍵亮起的小滑鼠 */
+        '<g transform="translate(278 242)">' +
+          '<rect x="0" y="0" width="56" height="78" rx="28" fill="#FFF8E4" stroke="#33261B" stroke-width="4.5"/>' +
+          '<path d="M28 2 H28 C44 2 54 13 54 28 V34 H28 Z" fill="#F2B134" stroke="#33261B" stroke-width="3.5"/>' +
+          '<line x1="28" y1="2" x2="28" y2="34" stroke="#33261B" stroke-width="4"/>' +
+          '<line x1="2" y1="34" x2="54" y2="34" stroke="#33261B" stroke-width="4"/>' +
+          '<rect x="24" y="11" width="8" height="14" rx="4" fill="#E8704F" stroke="#33261B" stroke-width="2.5"/>' +
+        '</g>' +
+        /* 閃亮小星星 */
+        '<polygon points="74,174 78,184 88,184 80,190 83,200 74,194 65,200 68,190 60,184 70,184" fill="#F2B134" stroke="#33261B" stroke-width="2.5"/>' +
+        '<circle cx="232" cy="144" r="6" fill="#F2B134" stroke="#33261B" stroke-width="2.5"/>' +
+      '</svg>';
+
+    /* 暖色明亮魔法帳篷與木頭桌背景 */
+    var BG_SVG =
+      '<svg viewBox="0 0 1366 581" preserveAspectRatio="none" aria-hidden="true">' +
+        '<defs>' +
+          '<pattern id="sc-tent-stripe" width="120" height="581" patternUnits="userSpaceOnUse">' +
+            '<rect width="60" height="581" fill="#F6E7BE"/>' +
+            '<rect x="60" width="60" height="581" fill="#FFF8E4"/>' +
+          '</pattern>' +
+        '</defs>' +
+        /* 帳篷條紋布幕 */
+        '<rect width="1366" height="310" fill="url(#sc-tent-stripe)"/>' +
+        /* 帳篷左右上角柔和帷幕（不搶目標視覺） */
+        '<path d="M0 0 H250 Q160 120 0 195 Z" fill="#E8704F" opacity=".28"/>' +
+        '<path d="M1366 0 H1116 Q1206 120 1366 195 Z" fill="#236F96" opacity=".22"/>' +
+        /* 細繩與淡金小星串 */
+        '<path d="M0 54 Q340 112 683 78 Q1026 112 1366 54" fill="none" stroke="#B9794A" stroke-width="3" opacity=".6"/>' +
+        '<circle cx="195" cy="84" r="7" fill="#F2B134" stroke="#6E4125" stroke-width="2" opacity=".75"/>' +
+        '<circle cx="330" cy="92" r="5" fill="#BFE1EA" stroke="#6E4125" stroke-width="2" opacity=".75"/>' +
+        '<circle cx="1035" cy="92" r="5" fill="#BFE1EA" stroke="#6E4125" stroke-width="2" opacity=".75"/>' +
+        '<circle cx="1175" cy="84" r="7" fill="#F2B134" stroke="#6E4125" stroke-width="2" opacity=".75"/>' +
+        /* 暖色木頭桌 */
+        '<rect x="0" y="220" width="1366" height="14" fill="#6E4125" opacity=".25"/>' +
+        '<rect x="0" y="226" width="1366" height="315" fill="#EBD3A5"/>' +
+        '<line x1="0" y1="226" x2="1366" y2="226" stroke="#9A5F36" stroke-width="6"/>' +
+        /* 溫和木紋線 */
+        '<path d="M40 288 H420 M560 310 H1020 M1120 278 H1330 M620 420 H1260 M720 486 H1180" stroke="#B9794A" stroke-width="3" stroke-linecap="round" opacity=".32"/>' +
+        /* 桌布墊（淡羊皮紙，安靜襯托道具） */
+        '<rect x="148" y="250" width="1070" height="260" rx="28" fill="#FFF8E4" opacity=".46" stroke="#B9794A" stroke-width="3" stroke-dasharray="10 8"/>' +
+        /* 桌前厚木緣 */
+        '<rect x="0" y="540" width="1366" height="41" fill="#9A5F36"/>' +
+        '<line x1="0" y1="540" x2="1366" y2="540" stroke="#6E4125" stroke-width="5"/>' +
+      '</svg>';
+
+    /* 選單小圖示（純單色線條 SVG，跟著文字變色） */
+    function menuIcon(kind) {
+      var paths = {
+        open:   '<path d="M3 16V5a1 1 0 0 1 1-1h5l2 2h5a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>',
+        close:  '<rect x="4" y="4" width="12" height="12" rx="2"/><path d="M7 10h6"/>',
+        grow:   '<path d="M12 3h5v5M8 17H3v-5M17 3l-6 6M3 17l6-6"/>',
+        color:  '<circle cx="10" cy="10" r="7"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><circle cx="12" cy="8" r="1.2" fill="currentColor"/><circle cx="10" cy="12" r="1.2" fill="currentColor"/>',
+        pack:   '<rect x="3" y="7" width="14" height="10" rx="2"/><path d="M7 7V5a3 3 0 0 1 6 0v2"/>',
+        glow:   '<polygon points="10,2 12.2,7.4 18,7.8 13.5,11.6 15,17.2 10,14.1 5,17.2 6.5,11.6 2,7.8 7.8,7.4"/>',
+        float:  '<path d="M10 15V4M6 8l4-4 4 4M4 17h12"/>',
+        copy:   '<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M13 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>',
+        rename: '<path d="M4 14.5V17h2.5l7.8-7.8-2.5-2.5L4 14.5zM13.5 5l2.5 2.5"/>',
+        del:    '<path d="M4 6h12M8 6V4h4v2M6 6l1 11h6l1-11"/>'
+      };
+      return '<svg class="sc-menu-ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        (paths[kind] || paths.glow) + '</svg>';
+    }
+
+    /* 選錯魔法時的可愛搞笑疊圖 SVG */
+    var FUNNY_ADDONS = {
+      wings:
+        '<svg class="sc-funny-addon" viewBox="0 0 180 180" aria-hidden="true">' +
+          '<path d="M46 92 C10 66 8 36 32 42 C46 46 52 64 56 80 Z" fill="#FFF8E4" stroke="#33261B" stroke-width="4" stroke-linejoin="round"/>' +
+          '<path d="M134 92 C170 66 172 36 148 42 C134 46 128 64 124 80 Z" fill="#FFF8E4" stroke="#33261B" stroke-width="4" stroke-linejoin="round"/>' +
+        '</svg>',
+      frog:
+        '<svg class="sc-funny-addon" viewBox="0 0 180 180" aria-hidden="true">' +
+          '<g transform="translate(44, 6)">' +
+            '<circle cx="30" cy="30" r="14" fill="#2F7A49" stroke="#33261B" stroke-width="4"/>' +
+            '<circle cx="62" cy="30" r="14" fill="#2F7A49" stroke="#33261B" stroke-width="4"/>' +
+            '<ellipse cx="46" cy="54" rx="34" ry="26" fill="#2F7A49" stroke="#33261B" stroke-width="4"/>' +
+            '<circle cx="30" cy="29" r="6" fill="#FFF8E4"/><circle cx="32" cy="29" r="3" fill="#33261B"/>' +
+            '<circle cx="62" cy="29" r="6" fill="#FFF8E4"/><circle cx="60" cy="29" r="3" fill="#33261B"/>' +
+            '<circle cx="24" cy="56" r="5" fill="#E8704F" opacity=".75"/>' +
+            '<circle cx="68" cy="56" r="5" fill="#E8704F" opacity=".75"/>' +
+            '<path d="M32 58 Q46 72 60 58" fill="none" stroke="#33261B" stroke-width="4" stroke-linecap="round"/>' +
+            '<polygon points="36,16 40,6 46,12 52,6 56,16" fill="#F2B134" stroke="#33261B" stroke-width="3" stroke-linejoin="round"/>' +
+          '</g>' +
+        '</svg>',
+      goofy:
+        '<svg class="sc-funny-addon" viewBox="0 0 180 180" aria-hidden="true">' +
+          '<circle cx="72" cy="82" r="10" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+          '<circle cx="75" cy="82" r="4.5" fill="#33261B"/>' +
+          '<circle cx="108" cy="82" r="10" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+          '<circle cx="105" cy="82" r="4.5" fill="#33261B"/>' +
+          '<path d="M74 104 Q90 116 106 104" fill="none" stroke="#33261B" stroke-width="4" stroke-linecap="round"/>' +
+          '<path d="M84 109 Q90 124 96 109 Z" fill="#E8704F" stroke="#33261B" stroke-width="3"/>' +
+        '</svg>',
+      flower:
+        '<svg class="sc-funny-addon" viewBox="0 0 180 180" aria-hidden="true">' +
+          '<g transform="translate(96, 12)">' +
+            '<circle cx="32" cy="14" r="10" fill="#F2B134" stroke="#33261B" stroke-width="3"/>' +
+            '<circle cx="48" cy="28" r="10" fill="#F2B134" stroke="#33261B" stroke-width="3"/>' +
+            '<circle cx="32" cy="44" r="10" fill="#F2B134" stroke="#33261B" stroke-width="3"/>' +
+            '<circle cx="16" cy="28" r="10" fill="#F2B134" stroke="#33261B" stroke-width="3"/>' +
+            '<circle cx="32" cy="28" r="12" fill="#9A5F36" stroke="#33261B" stroke-width="3"/>' +
+            '<circle cx="28" cy="26" r="2" fill="#FFF8E4"/><circle cx="36" cy="26" r="2" fill="#FFF8E4"/>' +
+            '<path d="M27 32 Q32 36 37 32" fill="none" stroke="#FFF8E4" stroke-width="2.5" stroke-linecap="round"/>' +
+          '</g>' +
+        '</svg>'
+    };
+
+    var STAR_SVG =
+      '<svg viewBox="0 0 32 32" aria-hidden="true">' +
+        '<polygon points="16,2 20,11 30,12 22,19 24,29 16,24 8,29 10,19 2,12 12,11" fill="#F2B134" stroke="#33261B" stroke-width="2.5" stroke-linejoin="round"/>' +
+      '</svg>';
+
+    var MINI_CHEST_SVG =
+      '<svg viewBox="0 0 90 70" aria-hidden="true">' +
+        '<rect x="10" y="24" width="70" height="38" rx="8" fill="#9A5F36" stroke="#33261B" stroke-width="4"/>' +
+        '<path d="M10 28 C10 12 80 12 80 28 Z" fill="#B9794A" stroke="#33261B" stroke-width="4"/>' +
+        '<rect x="38" y="26" width="14" height="14" rx="3" fill="#F2B134" stroke="#33261B" stroke-width="3"/>' +
+      '</svg>';
+
+    var ITEM_META = {
+      book:    { name: '魔法書',   funnyCls: 'sc-funny-fly',    addon: 'wings',  pop: '拍拍拍～飛走啦！', say: '哈哈！書長翅膀飛啦' },
+      potion:  { name: '藥水瓶',   funnyCls: 'sc-funny-giant',  addon: 'goofy',  pop: '咕嚕嚕～太大瓶啦！', say: '哎呀！藥水變太大啦' },
+      crystal: { name: '水晶球',   funnyCls: 'sc-funny-jiggle', addon: 'goofy',  pop: '嘻嘻～變鬼臉！', say: '嘻嘻！水晶球做鬼臉' },
+      wand:    { name: '魔杖',     funnyCls: 'sc-funny-jiggle', addon: 'flower', pop: '噗噗～變出花啦！', say: '噗！魔杖變出向日葵' },
+      hat:     { name: '魔法帽',   funnyCls: 'sc-funny-jiggle', addon: 'frog',   pop: '呱！', say: '呱！帽子跳出青蛙啦' },
+      lamp:    { name: '星星燈',   funnyCls: 'sc-funny-jiggle', addon: 'goofy',  pop: '哈啾～閃歪啦！', say: '哈啾！星星燈閃歪啦' },
+      broom:   { name: '飛天掃帚', funnyCls: 'sc-funny-spin',   addon: '',       pop: '呼呼～頭暈啦！', say: '呼呼！掃帚原地轉圈' },
+      rainbow: { name: '彩虹藥水', funnyCls: 'sc-funny-giant',  addon: 'goofy',  pop: '咕嚕嚕～超大彩虹！', say: '哎呀！藥水變太大啦' }
+    };
+
+    var REGULAR_IDS = ['book', 'potion', 'crystal', 'wand', 'hat', 'lamp', 'broom'];
+
+    /* 電腦風格選單（第三段） */
+    var PC_OPTIONS = [
+      { id: 'open',   label: '開啟',     icon: 'open' },
+      { id: 'copy',   label: '複製',     icon: 'copy' },
+      { id: 'rename', label: '重新命名', icon: 'rename' },
+      { id: 'delete', label: '刪除',     icon: 'del', sepBefore: true }
+    ];
+
+    /* 第二段題庫（隨機挑 4 題） */
+    var STAGE1_POOL = [
+      {
+        itemId: 'potion', task: '把藥水瓶變大', answer: 'grow',
+        options: [
+          { id: 'grow',  label: '變大',   icon: 'grow' },
+          { id: 'color', label: '變色',   icon: 'color' },
+          { id: 'pack',  label: '收起來', icon: 'pack' }
+        ]
+      },
+      {
+        itemId: 'crystal', task: '讓水晶球發光', answer: 'glow',
+        options: [
+          { id: 'glow',  label: '發光',   icon: 'glow' },
+          { id: 'grow',  label: '變大',   icon: 'grow' },
+          { id: 'pack',  label: '收起來', icon: 'pack' }
+        ]
+      },
+      {
+        itemId: 'hat', task: '把魔法帽變色', answer: 'color',
+        options: [
+          { id: 'color', label: '變色',   icon: 'color' },
+          { id: 'grow',  label: '變大',   icon: 'grow' },
+          { id: 'pack',  label: '收起來', icon: 'pack' }
+        ]
+      },
+      {
+        itemId: 'lamp', task: '把星星燈打開', answer: 'open',
+        options: [
+          { id: 'open',  label: '打開',   icon: 'open' },
+          { id: 'color', label: '變色',   icon: 'color' },
+          { id: 'pack',  label: '收起來', icon: 'pack' }
+        ]
+      },
+      {
+        itemId: 'broom', task: '讓飛天掃帚漂浮', answer: 'float',
+        options: [
+          { id: 'float', label: '漂浮',   icon: 'float' },
+          { id: 'grow',  label: '變大',   icon: 'grow' },
+          { id: 'pack',  label: '收起來', icon: 'pack' }
+        ]
+      },
+      {
+        itemId: 'wand', task: '把魔杖收起來', answer: 'pack',
+        options: [
+          { id: 'pack',  label: '收起來', icon: 'pack' },
+          { id: 'grow',  label: '變大',   icon: 'grow' },
+          { id: 'color', label: '變色',   icon: 'color' }
+        ]
+      }
+    ];
+
+    /* 第三段四個互不重疊且完全避開寄寄區（x < 560 && y > 400）的桌面軌道區 */
+    var TABLE_SLOTS = [
+      { minX: 210, maxX: 315, minY: 210, maxY: 278 },
+      { minX: 495, maxX: 585, minY: 218, maxY: 282 },
+      { minX: 775, maxX: 885, minY: 295, maxY: 410 },
+      { minX: 1070, maxX: 1175, minY: 225, maxY: 365 }
+    ];
+
+    function shuffle(arr) {
+      var a = arr.slice();
+      for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = a[i]; a[i] = a[j]; a[j] = t;
+      }
+      return a;
+    }
+
+    function prefersReducedMotion() {
+      return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+
+    /* ============================================================
+     * 2. 掛載本關設定與遊戲場景
+     * ============================================================ */
+    MouseIsland.mount({
+      unit: 34,
+      title: '右鍵魔法師',
+      skill: 'right',
+      gem: '右鍵',
+      grade: '34',
+      zhuyin: false,
+      howto: '在魔法道具上按右鍵，從選單選出正確的魔法！',
+      teach: '右鍵選單（按右鍵看看能對它做什麼）｜資E1、資E2',
+      hints: ['在道具上按滑鼠右邊的鍵', '再看一次示範'],
+      dex: {
+        name: '魔法道具圖鑑',
+        total: 8,
+        tip: '每次玩都有機會找到新道具',
+        items: {
+          book:    { name: '魔法書',   svg: SVGS.book },
+          potion:  { name: '藥水瓶',   svg: SVGS.potion },
+          crystal: { name: '水晶球',   svg: SVGS.crystal },
+          wand:    { name: '魔杖',     svg: SVGS.wand },
+          hat:     { name: '魔法帽',   svg: SVGS.hat },
+          lamp:    { name: '星星燈',   svg: SVGS.lamp },
+          broom:   { name: '飛天掃帚', svg: SVGS.broom },
+          rainbow: { name: '彩虹藥水', svg: SVGS.rainbow }
+        }
+      },
+      hero: HERO_SVG,
+
+      scene: function (api) {
+        var sceneOffs = [];
+        var propOffs = [];
+        var menuOffs = [];
+        var raf = 0;
+
+        var curStage = 0;
+        var questions = [];
+        var qIndex = 0;
+        var props = [];
+        var targetProp = null;
+        var openMenuEl = null;
+        var busy = false;
+        var assistOn = false;
+
+        var els = {
+          bg: null,
+          mission: null,
+          count: null,
+          toast: null,
+          propsLayer: null,
+          fxLayer: null,
+          menuLayer: null
+        };
+
+        /* 清理所有監聽與動畫迴圈 */
+        function closeMenu() {
+          menuOffs.forEach(function (off) { off(); });
+          menuOffs = [];
+          if (openMenuEl && openMenuEl.parentNode) {
+            openMenuEl.parentNode.removeChild(openMenuEl);
+          }
+          openMenuEl = null;
+        }
+
+        function clearProps() {
+          closeMenu();
+          propOffs.forEach(function (off) { off(); });
+          propOffs = [];
+          props = [];
+          targetProp = null;
+          if (els.propsLayer) els.propsLayer.innerHTML = '';
+          if (els.fxLayer) els.fxLayer.innerHTML = '';
+        }
+
+        function clearAll() {
+          clearProps();
+          sceneOffs.forEach(function (off) { off(); });
+          sceneOffs = [];
+          if (raf) {
+            cancelAnimationFrame(raf);
+            raf = 0;
+          }
+          busy = false;
+          assistOn = false;
+        }
+
+        /* 建立各段題目清單 */
+        function buildQuestions(stage) {
+          if (stage === 0) {
+            return [{
+              itemId: 'book',
+              task: '打開魔法書',
+              answer: 'open',
+              isRainbow: false,
+              isPC: false,
+              options: [
+                { id: 'open',  label: '打開', icon: 'open' },
+                { id: 'close', label: '關上', icon: 'close' }
+              ]
+            }];
+          }
+
+          if (stage === 1) {
+            return shuffle(STAGE1_POOL).slice(0, 4).map(function (q) {
+              return {
+                itemId: q.itemId,
+                task: q.task,
+                answer: q.answer,
+                isRainbow: false,
+                isPC: false,
+                options: shuffle(q.options)
+              };
+            });
+          }
+
+          /* 第三段：4 題電腦選單任務，4 題中隨機 1 題出現閃亮彩虹藥水（非刪除題） */
+          var rbChoice = shuffle(['open', 'copy', 'rename'])[0];
+          var used = {};
+          function pickFrom(candidates) {
+            var pool = candidates.filter(function (c) { return !used[c.itemId]; });
+            var chosen = shuffle(pool.length ? pool : candidates)[0];
+            used[chosen.itemId] = true;
+            return chosen;
+          }
+
+          var qOpen = rbChoice === 'open'
+            ? { itemId: 'rainbow', task: '開啟彩虹藥水看看', answer: 'open', isRainbow: true }
+            : (function () {
+                var c = pickFrom([
+                  { itemId: 'book', task: '開啟魔法書看咒語' },
+                  { itemId: 'lamp', task: '開啟星星燈照亮桌子' }
+                ]);
+                return { itemId: c.itemId, task: c.task, answer: 'open', isRainbow: false };
+              })();
+
+          var qCopy = rbChoice === 'copy'
+            ? { itemId: 'rainbow', task: '再多一瓶彩虹藥水', answer: 'copy', isRainbow: true }
+            : (function () {
+                var c = pickFrom([
+                  { itemId: 'potion', task: '再多一瓶藥水' },
+                  { itemId: 'broom',  task: '再多一把飛天掃帚' }
+                ]);
+                return { itemId: c.itemId, task: c.task, answer: 'copy', isRainbow: false };
+              })();
+
+          var qRename = rbChoice === 'rename'
+            ? { itemId: 'rainbow', task: '幫彩虹藥水改名字', answer: 'rename', newName: '七彩珍寶', isRainbow: true }
+            : (function () {
+                var c = pickFrom([
+                  { itemId: 'book', task: '幫魔法書改名字', newName: '秘密咒語書' },
+                  { itemId: 'wand', task: '幫魔杖改名字',   newName: '閃電魔杖' }
+                ]);
+                return { itemId: c.itemId, task: c.task, answer: 'rename', newName: c.newName, isRainbow: false };
+              })();
+
+          var delPick = pickFrom([
+            { itemId: 'potion', task: '把空藥水瓶丟掉' },
+            { itemId: 'hat',    task: '把舊魔法帽清掉' }
+          ]);
+          var qDelete = { itemId: delPick.itemId, task: delPick.task, answer: 'delete', isRainbow: false };
+
+          var list = shuffle([qOpen, qCopy, qRename, qDelete]);
+          return list.map(function (q, idx) {
+            q.isPC = true;
+            q.options = PC_OPTIONS;
+            q.totalOnTable = idx < 2 ? 3 : 4;
+            return q;
+          });
+        }
+
+        /* 計算並套用道具尺寸與位置（避開寄寄區） */
+        function getBaseSize(stage) {
+          if (stage === 0) return 220;
+          if (stage === 1) return 150;
+          return 100;
+        }
+
+        function calcPropSize(stage, cfg) {
+          var raw = Math.round(getBaseSize(stage) * cfg.size);
+          if (stage === 0) return Math.min(250, Math.max(190, raw));
+          if (stage === 1) return Math.min(200, Math.max(115, raw));
+          return Math.min(144, Math.max(72, raw));
+        }
+
+        function positionProp(p) {
+          var half = p.size / 2;
+          /* 再次確保不踏入左下角寄寄區（x < 560 且 y > 400） */
+          if (p.x - half < 560 && p.y + half + 24 > 396) {
+            p.y = Math.min(p.y, 396 - half - 24);
+          }
+          p.el.style.width = p.size + 'px';
+          p.el.style.height = p.size + 'px';
+          p.el.style.left = Math.round(p.x - half) + 'px';
+          p.el.style.top = Math.round(p.y - half) + 'px';
+        }
+
+        /* 更新上方任務條與計數 */
+        function updateHud(q) {
+          if (els.mission) {
+            var badge = q.isRainbow ? '<span class="sc-mission-tag">彩虹任務</span>' : '';
+            els.mission.innerHTML =
+              '<span class="sc-mission-star">' + STAR_SVG + '</span>' +
+              badge + '<span>任務：<span class="sc-mission-em">' + q.task + '</span></span>';
+          }
+          if (els.count) {
+            els.count.textContent = '魔法 ' + qIndex + '／' + questions.length;
+          }
+        }
+
+        function showToast(text) {
+          if (!els.toast) return;
+          els.toast.textContent = text;
+          els.toast.classList.add('sc-show');
+          api.later(function () {
+            if (els.toast) els.toast.classList.remove('sc-show');
+          }, 1250);
+        }
+
+        /* 星星爆開特效 */
+        function spawnSparkles(cx, cy, count) {
+          if (!els.fxLayer || prefersReducedMotion()) return;
+          var n = count || 8;
+          for (var i = 0; i < n; i++) {
+            var sp = document.createElement('div');
+            sp.className = 'sc-spark';
+            sp.innerHTML = STAR_SVG;
+            var angle = (Math.PI * 2 * i) / n + (Math.random() * .35 - .17);
+            var dist = 54 + Math.random() * 44;
+            sp.style.left = Math.round(cx) + 'px';
+            sp.style.top = Math.round(cy) + 'px';
+            sp.style.setProperty('--sc-dx', Math.round(Math.cos(angle) * dist) + 'px');
+            sp.style.setProperty('--sc-dy', Math.round(Math.sin(angle) * dist) + 'px');
+            els.fxLayer.appendChild(sp);
+          }
+        }
+
+        /* 打開自製右鍵選單（精準避開邊界與左下角寄寄區） */
+        function openContextMenu(prop, localPos) {
+          closeMenu();
+          var q = questions[qIndex];
+          if (!q) return;   // 這段最後一題答完、等換段的空檔還被按右鍵（11-22 驗收修）
+          var menu = document.createElement('div');
+          menu.className = 'sc-menu';
+
+          var head = document.createElement('div');
+          head.className = 'sc-menu-head';
+          head.textContent = ITEM_META[prop.itemId].name;
+          menu.appendChild(head);
+
+          q.options.forEach(function (opt) {
+            if (opt.sepBefore) {
+              var sep = document.createElement('div');
+              sep.className = 'sc-menu-sep';
+              menu.appendChild(sep);
+            }
+            var row = document.createElement('div');
+            row.className = 'sc-menu-item';
+            row.setAttribute('role', 'menuitem');
+            row.setAttribute('tabindex', '0');
+            row.innerHTML = menuIcon(opt.icon) + '<span>' + opt.label + '</span>';
+            menu.appendChild(row);
+
+            menuOffs.push(api.on(row, 'click', {
+              ok: function () {
+                if (busy) return;
+                handleMenuPick(prop, opt, q);
+              },
+              wrong: function () {
+                if (busy) return;
+                api.sfx('boing');
+                api.say('點左鍵選選單喔', { zy: false });
+              }
+            }));
+          });
+
+          els.menuLayer.appendChild(menu);
+          openMenuEl = menu;
+
+          /* 計算選單座標（localPos 是 prop 內的 px） */
+          var half = prop.size / 2;
+          var clickX = localPos && typeof localPos.x === 'number' ? (prop.x - half + localPos.x) : (prop.x + half * .35);
+          var clickY = localPos && typeof localPos.y === 'number' ? (prop.y - half + localPos.y) : prop.y;
+          var mw = menu.offsetWidth || 204;
+          var mh = menu.offsetHeight || (q.options.length * 46 + 38);
+
+          var mx = Math.min(Math.max(clickX + 8, 16), 1366 - mw - 16);
+          var my = Math.min(Math.max(clickY + 6, 86), 581 - mh - 16);
+
+          /* 確保選單不進入左下角寄寄區（x < 560 && y > 400） */
+          if (mx < 568 && my + mh > 394) {
+            if (clickY - mh - 8 >= 86) {
+              my = clickY - mh - 8;
+            } else {
+              mx = Math.max(mx, 574);
+            }
+          }
+          if (mx < 568 && my + mh > 394) {
+            mx = 574;
+          }
+
+          menu.style.left = Math.round(mx) + 'px';
+          menu.style.top = Math.round(my) + 'px';
+          api.sfx('pop');
+        }
+
+        /* 處理選單點擊結果 */
+        function handleMenuPick(prop, opt, q) {
+          closeMenu();
+          busy = true;
+
+          if (opt.id === q.answer) {
+            /* === 選對：魔法生效＋成就感特效 === */
+            api.glow(prop.el, false);
+            api.hit();
+            api.sfx(q.isRainbow ? 'gem' : 'ok');
+            spawnSparkles(prop.x, prop.y, q.isRainbow ? 12 : 8);
+
+            applySuccessMagic(prop, opt.id, q);
+            tryCollect(q);
+
+            var doneCount = qIndex + 1;
+            if (els.count) els.count.textContent = '魔法 ' + doneCount + '／' + questions.length;
+
+            var isLastOfStage2 = curStage === 2 && doneCount >= questions.length;
+            if (isLastOfStage2) {
+              api.say('電腦上也可以這樣按喔', { zy: false });
+            } else if (q.isRainbow) {
+              api.say('哇！發現彩虹藥水！', { zy: false });
+            } else {
+              api.say('太棒了！魔法成功！', { zy: false });
+            }
+
+            api.later(function () {
+              qIndex++;
+              busy = false;
+              if (qIndex >= questions.length) {
+                api.stageDone();
+              } else {
+                spawnCurrentQuestion();
+              }
+            }, isLastOfStage2 ? 1200 : 880);
+          } else {
+            /* === 選錯：好笑的魔法，1 秒內自動恢復 === */
+            var meta = ITEM_META[prop.itemId];
+            prop.el.classList.add(meta.funnyCls);
+            api.wob(prop.el);
+            api.sfx('giggle');
+            api.say(meta.say, { zy: false });
+
+            var addonWrap = null;
+            if (meta.addon && FUNNY_ADDONS[meta.addon]) {
+              addonWrap = document.createElement('div');
+              addonWrap.innerHTML = FUNNY_ADDONS[meta.addon];
+              prop.artEl.appendChild(addonWrap.firstChild);
+              addonWrap = prop.artEl.lastChild;
+            }
+
+            var pop = document.createElement('div');
+            pop.className = 'sc-funny-pop';
+            pop.textContent = meta.pop;
+            prop.el.appendChild(pop);
+
+            api.later(function () {
+              prop.el.classList.remove(meta.funnyCls);
+              if (addonWrap && addonWrap.parentNode) addonWrap.parentNode.removeChild(addonWrap);
+              if (pop && pop.parentNode) pop.parentNode.removeChild(pop);
+              busy = false;
+              api.miss();
+            }, 950);
+          }
+        }
+
+        /* 各種選對魔法的視覺演出 */
+        function applySuccessMagic(prop, actionId, q) {
+          if (actionId === 'open') {
+            prop.el.classList.add('sc-ok-open');
+          } else if (actionId === 'grow') {
+            prop.el.classList.add('sc-ok-grow');
+          } else if (actionId === 'color') {
+            prop.el.classList.add('sc-ok-color');
+          } else if (actionId === 'glow') {
+            prop.el.classList.add('sc-ok-glow');
+          } else if (actionId === 'float') {
+            prop.el.classList.add('sc-ok-float');
+          } else if (actionId === 'pack') {
+            var chest = document.createElement('div');
+            chest.className = 'sc-chest-mini';
+            chest.innerHTML = MINI_CHEST_SVG;
+            chest.style.left = Math.round(prop.x) + 'px';
+            chest.style.top = Math.round(Math.min(prop.y + 42, 360)) + 'px';
+            els.fxLayer.appendChild(chest);
+            prop.el.classList.add('sc-ok-pack');
+          } else if (actionId === 'delete') {
+            prop.el.classList.add('sc-ok-delete');
+          } else if (actionId === 'copy') {
+            prop.el.classList.add('sc-ok-copy');
+            var clone = document.createElement('div');
+            clone.className = 'sc-clone-ghost';
+            clone.style.width = prop.size + 'px';
+            clone.style.height = prop.size + 'px';
+            clone.style.left = Math.round(prop.x - prop.size / 2) + 'px';
+            clone.style.top = Math.round(prop.y - prop.size / 2) + 'px';
+            clone.innerHTML = SVGS[prop.itemId];
+            els.fxLayer.appendChild(clone);
+          } else if (actionId === 'rename') {
+            prop.el.classList.add('sc-ok-glow');
+            if (prop.labelEl) {
+              prop.labelEl.textContent = q.newName || '超級魔法道具';
+              prop.labelEl.classList.add('sc-renamed');
+            }
+          }
+        }
+
+        /* 圖鑑收集：彩虹藥水只從彩虹目標收集；一般道具隨機收集 */
+        function tryCollect(q) {
+          if (q.isRainbow) {
+            if (api.collect('rainbow')) {
+              showToast('圖鑑新收集：彩虹藥水！');
+            }
+            return;
+          }
+          var got = api.collected() || [];
+          var chance = (curStage === 0 && got.length === 0) ? 1 : 0.48;
+          if (Math.random() < chance) {
+            if (api.collect(q.itemId)) {
+              showToast('圖鑑新收集：' + ITEM_META[q.itemId].name);
+            }
+          }
+        }
+
+        /* 建立單個魔法道具元素並掛上 api.on(..., 'right', ...) */
+        function createProp(opts) {
+          var el = document.createElement('div');
+          el.className = 'sc-prop';
+
+          var art = document.createElement('div');
+          art.className = 'sc-prop-art';
+          art.innerHTML = SVGS[opts.itemId];
+          el.appendChild(art);
+
+          if (opts.isRainbow) {
+            var ring = document.createElement('div');
+            ring.className = 'sc-rainbow-ring';
+            el.appendChild(ring);
+            var rbBadge = document.createElement('div');
+            rbBadge.className = 'sc-rainbow-badge';
+            rbBadge.textContent = '彩虹道具';
+            el.appendChild(rbBadge);
+          }
+
+          var labelEl = null;
+          if (opts.showLabel) {
+            labelEl = document.createElement('div');
+            labelEl.className = 'sc-prop-label';
+            labelEl.textContent = ITEM_META[opts.itemId].name;
+            el.appendChild(labelEl);
+          }
+
+          var p = {
+            el: el,
+            artEl: art,
+            labelEl: labelEl,
+            itemId: opts.itemId,
+            isTarget: opts.isTarget,
+            isRainbow: opts.isRainbow,
+            x: opts.x,
+            y: opts.y,
+            size: opts.size,
+            vx: opts.vx || 0,
+            vy: opts.vy || 0,
+            bounds: opts.bounds || null
+          };
+
+          positionProp(p);
+          els.propsLayer.appendChild(el);
+          props.push(p);
+
+          propOffs.push(api.on(el, 'right', {
+            ok: function (pos) {
+              if (busy) return;
+              if (!p.isTarget) {
+                /* 第三段干擾道具：點到不算失手，只是沒效果並輕輕提示 */
+                closeMenu();
+                api.wob(el);
+                api.sfx('boing');
+                api.say('先找任務說的道具喔', { zy: false });
+                return;
+              }
+              openContextMenu(p, pos);
+            },
+            wrong: function (which) {
+              if (busy || which !== 'left') return;
+              if (!p.isTarget) {
+                /* 第三段干擾道具：點到不算失手 */
+                closeMenu();
+                api.wob(el);
+                api.sfx('boing');
+                api.say('先找任務說的道具喔', { zy: false });
+                return;
+              }
+              closeMenu();
+              el.classList.remove('sc-left-bounce');
+              void el.offsetWidth;
+              el.classList.add('sc-left-bounce');
+              api.wob(el);
+              api.sfx('boing');
+              api.say('要按右邊的鍵喔', { zy: false });
+              api.miss();
+            }
+          }));
+
+          return p;
+        }
+
+        /* 生成目前這一題的所有道具 */
+        function spawnCurrentQuestion() {
+          clearProps();
+          var cfg = api.cfg();
+          assistOn = !!cfg.assist;
+          api.field.classList.toggle('sc-assist', assistOn);
+
+          var q = questions[qIndex];
+          updateHud(q);
+
+          var size = calcPropSize(curStage, cfg);
+          var noMove = assistOn || prefersReducedMotion();
+
+          if (curStage === 0) {
+            /* 第一段：1 個大道具（魔法書），放在中間偏上、不動、先發光再示範 */
+            targetProp = createProp({
+              itemId: q.itemId,
+              isTarget: true,
+              isRainbow: false,
+              showLabel: false,
+              x: 700,
+              y: 265,
+              size: size,
+              vx: 0,
+              vy: 0
+            });
+            api.glow(targetProp.el, true);
+            api.demo(targetProp.el, 'right');
+            return;
+          }
+
+          if (curStage === 1) {
+            /* 第二段：一次 1 個中等道具，慢慢左右浮動，完全高於 y=400 */
+            var startX = 340 + Math.random() * 680;
+            var startY = 230 + Math.random() * 52;
+            var spd = noMove ? 0 : 34 * cfg.speed;
+            targetProp = createProp({
+              itemId: q.itemId,
+              isTarget: true,
+              isRainbow: false,
+              showLabel: true,
+              x: startX,
+              y: startY,
+              size: size,
+              vx: (Math.random() < .5 ? -1 : 1) * spd,
+              vy: 0,
+              bounds: { minX: 240, maxX: 1126, minY: 220, maxY: 285 }
+            });
+            if (assistOn) api.glow(targetProp.el, true);
+            return;
+          }
+
+          /* 第三段：3–4 個道具分散在互不重疊的桌面槽位，先找對道具再按右鍵 */
+          var countOnTable = q.totalOnTable || 4;
+          var distractorPool = shuffle(REGULAR_IDS.filter(function (id) { return id !== q.itemId; }));
+          var chosenIds = [q.itemId].concat(distractorPool.slice(0, countOnTable - 1));
+          var slots = shuffle(TABLE_SLOTS).slice(0, countOnTable);
+
+          chosenIds.forEach(function (id, idx) {
+            var sl = slots[idx];
+            var isTgt = idx === 0;
+            var sx = (sl.minX + sl.maxX) / 2;
+            var sy = (sl.minY + sl.maxY) / 2;
+            var sp = noMove ? 0 : (36 + Math.random() * 14) * cfg.speed;
+            var ang = Math.random() * Math.PI * 2;
+            var p = createProp({
+              itemId: id,
+              isTarget: isTgt,
+              isRainbow: isTgt && q.isRainbow,
+              showLabel: true,
+              x: sx,
+              y: sy,
+              size: size,
+              vx: Math.cos(ang) * sp,
+              vy: Math.sin(ang) * sp * 0.7,
+              bounds: sl
+            });
+            if (isTgt) targetProp = p;
+          });
+
+          if (assistOn && targetProp) api.glow(targetProp.el, true);
+        }
+
+        /* 慢速平順移動迴圈（開啟選單、busy、assist 或 reduced-motion 時自動暫停） */
+        function startLoop() {
+          var last = performance.now();
+          function step(now) {
+            var dt = Math.min(0.05, (now - last) / 1000);
+            last = now;
+            if (!openMenuEl && !busy && !assistOn && !prefersReducedMotion()) {
+              props.forEach(function (p) {
+                if (!p.bounds || (p.vx === 0 && p.vy === 0)) return;
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                if (p.x < p.bounds.minX) { p.x = p.bounds.minX; p.vx = Math.abs(p.vx); }
+                if (p.x > p.bounds.maxX) { p.x = p.bounds.maxX; p.vx = -Math.abs(p.vx); }
+                if (p.y < p.bounds.minY) { p.y = p.bounds.minY; p.vy = Math.abs(p.vy); }
+                if (p.y > p.bounds.maxY) { p.y = p.bounds.maxY; p.vy = -Math.abs(p.vy); }
+                positionProp(p);
+              });
+            }
+            raf = requestAnimationFrame(step);
+          }
+          raf = requestAnimationFrame(step);
+        }
+
+        /* === 回傳給 mouse-ui.js 的 scene 生命週期介面 === */
+        return {
+          start: function (stage, cfg) {
+            clearAll();
+            curStage = stage;
+            qIndex = 0;
+            assistOn = !!cfg.assist;
+            questions = buildQuestions(stage);
+
+            api.field.classList.toggle('sc-assist', assistOn);
+            api.field.innerHTML =
+              '<div class="sc-bg">' + BG_SVG + '</div>' +
+              '<div class="sc-hud">' +
+                '<div class="sc-mission"></div>' +
+                '<div class="sc-count"></div>' +
+                '<div class="sc-toast" aria-live="polite"></div>' +
+              '</div>' +
+              '<div class="sc-props"></div>' +
+              '<div class="sc-fx"></div>' +
+              '<div class="sc-menu-layer"></div>';
+
+            els.bg = api.field.querySelector('.sc-bg');
+            els.mission = api.field.querySelector('.sc-mission');
+            els.count = api.field.querySelector('.sc-count');
+            els.toast = api.field.querySelector('.sc-toast');
+            els.propsLayer = api.field.querySelector('.sc-props');
+            els.fxLayer = api.field.querySelector('.sc-fx');
+            els.menuLayer = api.field.querySelector('.sc-menu-layer');
+
+            /* 空白背景層是道具與選單的兄弟元素，不會跟道具／選單冒泡衝突 */
+            sceneOffs.push(api.on(els.bg, 'right', {
+              ok: function () {
+                if (busy) return;
+                if (openMenuEl) {
+                  closeMenu();
+                  return;
+                }
+                if (targetProp) {
+                  api.wob(targetProp.el);
+                  api.sfx('giggle');
+                  api.say('要對準道具按右鍵喔', { zy: false });
+                  api.miss();
+                }
+              },
+              wrong: function () {
+                if (busy) return;
+                if (openMenuEl) {
+                  closeMenu();
+                  return;
+                }
+                if (targetProp) {
+                  api.wob(targetProp.el);
+                  api.sfx('giggle');
+                  api.say('要對準道具按右鍵喔', { zy: false });
+                  api.miss();
+                }
+              }
+            }));
+
+            spawnCurrentQuestion();
+            startLoop();
+          },
+
+          hint: function (level) {
+            if (!targetProp || busy) return;
+            api.glow(targetProp.el, true);
+            if (level === 2) {
+              closeMenu();
+              api.demo(targetProp.el, 'right');
+            }
+          },
+
+          assist: function () {
+            assistOn = true;
+            api.field.classList.add('sc-assist');
+            var cfg = api.cfg();
+            props.forEach(function (p) {
+              p.vx = 0;
+              p.vy = 0;
+            });
+            if (targetProp) {
+              targetProp.size = calcPropSize(curStage, cfg);
+              positionProp(targetProp);
+              api.glow(targetProp.el, true);
+            }
+          },
+
+          stop: clearAll
+        };
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

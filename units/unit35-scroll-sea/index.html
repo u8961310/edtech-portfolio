@@ -1,0 +1,1430 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>海底捲捲探險 - 滑鼠島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+  <link rel="stylesheet" href="../../assets/css/mouse-island.css">
+  <style>
+    /* 場景樣式：class 與 keyframes 一律以 sc- 開頭 */
+    .sc-stage {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      user-select: none;
+      background: #236F96;
+    }
+
+    /* 第一、二段：可捲動深海世界 */
+    .sc-world {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1366px;
+      will-change: transform;
+    }
+    .sc-world-s0 {
+      height: 1161px;
+      background: linear-gradient(180deg,
+        #BFE1EA 0px, #BFE1EA 92px,
+        #66B5D1 92px, #3589B0 420px,
+        #236F96 780px, #164B6B 1161px);
+    }
+    .sc-world-s1 {
+      height: 2321px;
+      background: linear-gradient(180deg,
+        #BFE1EA 0px, #BFE1EA 92px,
+        #66B5D1 92px, #3589B0 520px,
+        #236F96 1050px, #184F70 1620px,
+        #0F334D 2020px, #0A2236 2321px);
+    }
+    .sc-surface-wave {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 78px;
+      height: 28px;
+      background: radial-gradient(circle at 24px -4px, transparent 22px, #FFF8E4 23px) 0 0 / 48px 28px repeat-x;
+      opacity: .9;
+      pointer-events: none;
+    }
+    .sc-sunbeam {
+      position: absolute;
+      top: 92px;
+      width: 140px;
+      height: 460px;
+      background: linear-gradient(180deg, rgba(255, 248, 228, .22), rgba(255, 248, 228, 0));
+      transform: skewX(-16deg);
+      pointer-events: none;
+    }
+    .sc-seabed {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 86px;
+      background: #9A5F36;
+      border-top: 6px solid #6E4125;
+      pointer-events: none;
+    }
+    .sc-seabed-sand {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 58px;
+      background: #C49B66;
+      border-radius: 50% 50% 0 0 / 26px 26px 0 0;
+      opacity: .55;
+    }
+
+    /* 深海發光小魚（背景氛圍，不搶寶物視覺） */
+    .sc-glowfish {
+      position: absolute;
+      width: 84px;
+      height: 44px;
+      pointer-events: none;
+      opacity: .68;
+      animation: sc-swim 9s ease-in-out infinite alternate;
+    }
+    .sc-glowfish svg { width: 100%; height: 100%; display: block; }
+
+    /* 潛水艇（位於左上方，完全高於 y=400 避開寄寄區） */
+    .sc-sub {
+      position: absolute;
+      left: 180px;
+      top: 175px;
+      width: 236px;
+      height: 144px;
+      pointer-events: none;
+      z-index: 6;
+      transition: transform .18s ease-out;
+    }
+    .sc-sub-inner {
+      width: 100%;
+      height: 100%;
+      animation: sc-bob 2.8s ease-in-out infinite;
+    }
+    .sc-sub svg { width: 100%; height: 100%; display: block; }
+    .sc-sub .sc-eyes-dizzy { display: none; }
+    .sc-sub.sc-dizzy .sc-eyes-normal { display: none; }
+    .sc-sub.sc-dizzy .sc-eyes-dizzy { display: block; }
+    .sc-sub.sc-dizzy .sc-sub-inner {
+      animation: sc-spin 0.95s ease-in-out 1;
+    }
+    .sc-sub-beam {
+      position: absolute;
+      left: 204px;
+      top: 38px;
+      width: 220px;
+      height: 92px;
+      background: linear-gradient(90deg, rgba(242, 177, 52, .32), rgba(242, 177, 52, 0));
+      clip-path: polygon(0 38%, 100% 0, 100% 100%, 0 62%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .sc-sub-beam.sc-on { opacity: 1; }
+
+    /* 寶物目標（第一、二段） */
+    .sc-treasure {
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      margin: -70px 0 0 -70px;
+      cursor: pointer;
+      z-index: 8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 248, 228, .92) 0%, rgba(242, 177, 52, .42) 58%, rgba(242, 177, 52, 0) 76%);
+      box-shadow: inset 0 0 0 3px rgba(110, 65, 37, .45);
+      transition: transform .22s ease-out, opacity .35s;
+    }
+    .sc-treasure-big {
+      width: 210px;
+      height: 210px;
+      margin: -105px 0 0 -105px;
+    }
+    .sc-treasure svg {
+      width: 82%;
+      height: 82%;
+      display: block;
+      filter: drop-shadow(0 4px 4px rgba(51, 38, 27, .28));
+    }
+    .sc-treasure.sc-got {
+      pointer-events: none;
+      transform: scale(1.35) translateY(-60px) !important;
+      opacity: 0;
+      transition: transform .42s ease-out, opacity .42s;
+    }
+
+    /* 方向提示箭頭（只在右半安全區，避開寄寄區） */
+    .sc-dir {
+      position: absolute;
+      left: 745px;
+      width: 210px;
+      padding: 10px 16px;
+      background: #FFF8E4;
+      color: #33261B;
+      border: 3px solid #6E4125;
+      border-radius: 18px;
+      box-shadow: 0 4px 0 #6E4125;
+      font-size: 19px;
+      font-weight: 900;
+      text-align: center;
+      z-index: 12;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity .25s;
+    }
+    .sc-dir-down { top: 472px; }
+    .sc-dir-up { top: 20px; }
+    .sc-dir.sc-hide { opacity: 0; }
+    .sc-dir-arrow {
+      display: inline-flex;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #C2432A;
+      color: #FFF8E4;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    /* 第二段右側深度尺 */
+    .sc-ruler {
+      position: absolute;
+      right: 22px;
+      top: 78px;
+      width: 112px;
+      height: 472px;
+      background: #FFF8E4;
+      border: 3px solid #6E4125;
+      border-radius: 18px;
+      box-shadow: 0 4px 0 #6E4125;
+      z-index: 14;
+      padding: 10px 8px;
+      box-sizing: border-box;
+      color: #33261B;
+    }
+    .sc-ruler-title {
+      font-size: 15px;
+      font-weight: 900;
+      text-align: center;
+      color: #33261B;
+      margin-bottom: 6px;
+    }
+    .sc-ruler-track {
+      position: relative;
+      width: 22px;
+      height: 386px;
+      margin: 0 auto 0 12px;
+      border-radius: 11px;
+      border: 2px solid #6E4125;
+      background: linear-gradient(180deg, #BFE1EA 0%, #3589B0 35%, #236F96 68%, #0E314A 100%);
+    }
+    .sc-ruler-labels {
+      position: absolute;
+      left: 44px;
+      top: 34px;
+      height: 386px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 700;
+      color: #33261B;
+    }
+    .sc-ruler-sub {
+      position: absolute;
+      left: -8px;
+      width: 34px;
+      height: 18px;
+      margin-top: -9px;
+      border-radius: 9px;
+      background: #C2432A;
+      border: 2px solid #33261B;
+      box-shadow: 0 2px 0 rgba(51, 38, 27, .3);
+    }
+    .sc-ruler-target {
+      position: absolute;
+      left: -4px;
+      width: 26px;
+      height: 26px;
+      margin-top: -13px;
+      border-radius: 50%;
+      background: #F2B134;
+      border: 3px solid #33261B;
+      box-sizing: border-box;
+      animation: sc-pulse 1.4s ease-in-out infinite;
+    }
+    .sc-ruler-depth {
+      margin-top: 8px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 900;
+      color: #236F96;
+    }
+
+    /* 右上計數牌（跟設計規範一致） */
+    .sc-count {
+      position: absolute;
+      right: 22px;
+      top: 14px;
+      padding: 6px 16px;
+      background: #FFF8E4;
+      color: #33261B;
+      border: 3px solid #B9794A;
+      border-radius: 14px;
+      font-size: 21px;
+      font-weight: 900;
+      z-index: 16;
+      box-shadow: 0 3px 0 #6E4125;
+    }
+
+    /* 第三段：海圖放大縮小 */
+    .sc-chart-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 920px 270px, #58A9C9 0%, #236F96 52%, #154A69 100%);
+    }
+    .sc-chart-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 248, 228, .12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 248, 228, .12) 1px, transparent 1px);
+      background-size: 64px 64px;
+      pointer-events: none;
+    }
+    .sc-map-layer {
+      position: absolute;
+      inset: 0;
+      transform-origin: 920px 270px;
+      will-change: transform;
+    }
+    .sc-reef-patch {
+      position: absolute;
+      left: 730px;
+      top: 138px;
+      width: 385px;
+      height: 266px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, #F6E7BE 0%, #E7D29A 62%, rgba(191, 225, 234, 0) 76%);
+      opacity: .75;
+      pointer-events: none;
+    }
+    .sc-rock-slot {
+      position: absolute;
+      width: 82px;
+      height: 68px;
+      margin: -34px 0 0 -41px;
+      pointer-events: none;
+    }
+    .sc-rock-svg {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      display: block;
+      pointer-events: none;
+    }
+    .sc-oct {
+      position: absolute;
+      width: 46px;
+      height: 46px;
+      margin: -23px 0 0 -23px;
+      cursor: pointer;
+      z-index: 4;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 248, 228, .92) 0%, rgba(242, 177, 52, .45) 60%, rgba(242, 177, 52, 0) 76%);
+      box-shadow: inset 0 0 0 2px rgba(51, 38, 27, .45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity .28s, transform .25s;
+    }
+    .sc-oct svg { width: 88%; height: 88%; display: block; }
+    .sc-oct.sc-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(.35) !important;
+    }
+    .sc-oct.sc-got {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(1.4) translateY(-28px) !important;
+      transition: transform .4s ease-out, opacity .4s;
+    }
+    .sc-oct.sc-rainbow {
+      background: radial-gradient(circle, #FFF8E4 0%, rgba(242, 177, 52, .75) 48%, rgba(232, 112, 79, .45) 70%, rgba(191, 225, 234, 0) 84%);
+      box-shadow: 0 0 0 3px #F2B134, 0 0 0 5px #33261B;
+      animation: sc-rainbow-glow 1.4s ease-in-out infinite;
+    }
+
+    /* 干擾物（第三段：點到不會失手，只有可愛晃動） */
+    .sc-distractor {
+      position: absolute;
+      width: 46px;
+      height: 46px;
+      margin: -23px 0 0 -23px;
+      cursor: pointer;
+      z-index: 3;
+    }
+    .sc-distractor svg { width: 100%; height: 100%; display: block; }
+
+    /* 第三段左上放大鏡操作卡（完全高於 y=400 避開寄寄區） */
+    .sc-zoom-card {
+      position: absolute;
+      left: 24px;
+      top: 18px;
+      width: 286px;
+      background: #FFF8E4;
+      color: #33261B;
+      border: 3px solid #6E4125;
+      border-radius: 18px;
+      box-shadow: 0 4px 0 #6E4125;
+      padding: 14px 16px;
+      box-sizing: border-box;
+      z-index: 15;
+    }
+    .sc-zoom-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 20px;
+      font-weight: 900;
+      color: #33261B;
+      margin-bottom: 10px;
+    }
+    .sc-zoom-pct {
+      padding: 2px 10px;
+      border-radius: 10px;
+      background: #236F96;
+      color: #FFF8E4;
+      font-size: 16px;
+      font-weight: 900;
+    }
+    .sc-zoom-rule {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 10px;
+      border-radius: 12px;
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      background: #F6E7BE;
+      border: 2px solid #B9794A;
+      color: #33261B;
+    }
+    .sc-zoom-rule-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 900;
+      color: #FFF8E4;
+      flex-shrink: 0;
+    }
+    .sc-zoom-up-icon { background: #C2432A; }
+    .sc-zoom-dn-icon { background: #236F96; }
+    .sc-zoom-bar {
+      position: relative;
+      height: 16px;
+      margin-top: 10px;
+      background: #E9D9B0;
+      border: 2px solid #6E4125;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .sc-zoom-fill {
+      height: 100%;
+      width: 20%;
+      background: #2F7A49;
+      transition: width .12s;
+    }
+    .sc-zoom-mark {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #C2432A;
+    }
+    .sc-zoom-status {
+      margin-top: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #6B5A48;
+      text-align: center;
+    }
+    .sc-zoom-status.sc-ready {
+      color: #2F7A49;
+    }
+
+    /* 特效：泡泡、水波紋、星星、嚇一跳小魚 */
+    .sc-bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 32%, #FFF8E4 0%, rgba(191, 225, 234, .65) 55%, rgba(255, 248, 228, .9) 100%);
+      border: 2px solid rgba(255, 248, 228, .9);
+      pointer-events: none;
+      z-index: 18;
+      animation: sc-rise .95s ease-out forwards;
+    }
+    .sc-ripple {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      margin: -12px 0 0 -12px;
+      border-radius: 50%;
+      border: 4px solid #FFF8E4;
+      pointer-events: none;
+      z-index: 17;
+      animation: sc-ripple .65s ease-out forwards;
+    }
+    .sc-scared-fish {
+      position: absolute;
+      width: 72px;
+      height: 46px;
+      margin: -23px 0 0 -36px;
+      pointer-events: none;
+      z-index: 19;
+      animation: sc-dart .8s ease-out forwards;
+    }
+    .sc-scared-fish svg { width: 100%; height: 100%; display: block; }
+    .sc-star {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      margin: -12px 0 0 -12px;
+      pointer-events: none;
+      z-index: 20;
+      animation: sc-pop-star .65s ease-out forwards;
+    }
+
+    @keyframes sc-bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-9px); }
+    }
+    @keyframes sc-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes sc-swim {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(90px); }
+    }
+    @keyframes sc-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.18); }
+    }
+    @keyframes sc-rainbow-glow {
+      0%, 100% { box-shadow: 0 0 0 3px #F2B134, 0 0 0 5px #33261B; }
+      50% { box-shadow: 0 0 0 4px #E8704F, 0 0 0 6px #FFF8E4; }
+    }
+    @keyframes sc-rise {
+      0% { transform: translate(0, 0) scale(.6); opacity: .95; }
+      100% { transform: translate(var(--dx, 0px), -110px) scale(1.15); opacity: 0; }
+    }
+    @keyframes sc-ripple {
+      0% { transform: scale(.6); opacity: .95; }
+      100% { transform: scale(3.8); opacity: 0; }
+    }
+    @keyframes sc-dart {
+      0% { transform: translate(0, 0) scale(.7); opacity: 1; }
+      25% { transform: translate(0, -14px) scale(1.1); opacity: 1; }
+      100% { transform: translate(96px, -28px) scale(.85); opacity: 0; }
+    }
+    @keyframes sc-pop-star {
+      0% { transform: translate(0, 0) scale(.5); opacity: 1; }
+      100% { transform: translate(var(--sx, 0px), var(--sy, -40px)) scale(1.15); opacity: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sc-sub-inner, .sc-glowfish, .sc-ruler-target, .sc-oct.sc-rainbow {
+        animation: none !important;
+      }
+      .sc-sub.sc-dizzy .sc-sub-inner {
+        animation: none !important;
+      }
+      .sc-bubble, .sc-ripple, .sc-scared-fish, .sc-star {
+        animation-duration: .01ms !important;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/mouse-ui.js"></script>
+  <script>
+  (function () {
+    // 開始畫面主角插圖（400x400 inline SVG）
+    var HERO_SVG =
+      '<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">' +
+        '<circle cx="200" cy="200" r="184" fill="#BFE1EA" stroke="#6E4125" stroke-width="8"/>' +
+        '<path d="M22 220 C85 196 145 242 205 220 C265 198 320 240 378 216 A184 184 0 0 1 22 220 Z" fill="#236F96"/>' +
+        '<circle cx="96" cy="116" r="13" fill="#FFF8E4" stroke="#33261B" stroke-width="4"/>' +
+        '<circle cx="72" cy="84" r="8" fill="#FFF8E4" stroke="#33261B" stroke-width="3"/>' +
+        '<circle cx="318" cy="108" r="11" fill="#FFF8E4" stroke="#33261B" stroke-width="4"/>' +
+        // 潛水艇
+        '<g transform="translate(58,92)">' +
+          '<path d="M136 28 V8 H164" fill="none" stroke="#33261B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<rect x="108" y="28" width="66" height="44" rx="14" fill="#E8704F" stroke="#33261B" stroke-width="6"/>' +
+          '<ellipse cx="32" cy="106" rx="16" ry="26" fill="#C2432A" stroke="#33261B" stroke-width="6"/>' +
+          '<rect x="44" y="96" width="22" height="20" rx="6" fill="#6E4125" stroke="#33261B" stroke-width="5"/>' +
+          '<rect x="58" y="54" width="184" height="104" rx="52" fill="#F2B134" stroke="#33261B" stroke-width="7"/>' +
+          '<path d="M74 114 H228" stroke="#E8704F" stroke-width="12" stroke-linecap="round"/>' +
+          '<circle cx="152" cy="102" r="32" fill="#BFE1EA" stroke="#33261B" stroke-width="6"/>' +
+          '<circle cx="142" cy="96" r="5" fill="#33261B"/>' +
+          '<circle cx="164" cy="96" r="5" fill="#33261B"/>' +
+          '<path d="M144 110 Q153 118 162 110" fill="none" stroke="#33261B" stroke-width="4" stroke-linecap="round"/>' +
+          '<circle cx="206" cy="96" r="13" fill="#FFF8E4" stroke="#33261B" stroke-width="5"/>' +
+        '</g>' +
+        // 海底珍珠貝與小海星
+        '<g transform="translate(152,276)">' +
+          '<path d="M48 6 C78 6 94 36 88 64 L8 64 C2 36 18 6 48 6 Z" fill="#E8704F" stroke="#33261B" stroke-width="5"/>' +
+          '<circle cx="48" cy="48" r="18" fill="#FFF8E4" stroke="#33261B" stroke-width="4"/>' +
+          '<circle cx="42" cy="42" r="5" fill="#F2B134"/>' +
+        '</g>' +
+        '<path d="M92 316 L100 300 L108 316 L124 318 L112 330 L115 346 L100 338 L85 346 L88 330 L76 318 Z" fill="#F2B134" stroke="#33261B" stroke-width="4" stroke-linejoin="round"/>' +
+      '</svg>';
+
+    // 10 種海底寶物 SVG
+    var ITEM_SVGS = {
+      pearl:
+        '<svg viewBox="0 0 100 100"><path d="M50 14 C80 14 92 44 86 76 L14 76 C8 44 20 14 50 14 Z" fill="#E8704F" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+        '<path d="M50 18 V72 M32 24 L26 72 M68 24 L74 72" stroke="#6E4125" stroke-width="3" stroke-linecap="round"/>' +
+        '<circle cx="50" cy="56" r="20" fill="#FFF8E4" stroke="#33261B" stroke-width="4"/><circle cx="43" cy="49" r="5.5" fill="#F2B134" opacity=".85"/>' +
+        '<rect x="34" y="74" width="32" height="12" rx="5" fill="#C2432A" stroke="#33261B" stroke-width="4"/></svg>',
+      starfish:
+        '<svg viewBox="0 0 100 100"><path d="M50 10 L62 36 L90 40 L69 59 L74 87 L50 73 L26 87 L31 59 L10 40 L38 36 Z" fill="#E8704F" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+        '<circle cx="42" cy="48" r="3.5" fill="#33261B"/><circle cx="58" cy="48" r="3.5" fill="#33261B"/>' +
+        '<path d="M44 58 Q50 64 56 58" fill="none" stroke="#33261B" stroke-width="3.5" stroke-linecap="round"/>' +
+        '<circle cx="50" cy="26" r="3" fill="#F2B134"/><circle cx="72" cy="44" r="3" fill="#F2B134"/><circle cx="28" cy="44" r="3" fill="#F2B134"/></svg>',
+      shell:
+        '<svg viewBox="0 0 100 100"><path d="M22 74 C14 54 24 24 52 18 C76 14 88 32 82 54 C76 74 52 84 22 74 Z" fill="#F6E7BE" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+        '<path d="M52 22 C66 26 70 46 56 56 C44 64 32 54 38 42 C42 34 52 36 52 44" fill="none" stroke="#C2432A" stroke-width="4.5" stroke-linecap="round"/>' +
+        '<path d="M24 72 L36 62" stroke="#6E4125" stroke-width="4" stroke-linecap="round"/></svg>',
+      coral:
+        '<svg viewBox="0 0 100 100"><path d="M36 86 V54 L20 34 M36 60 L50 40 V18 M50 56 L66 36 M64 86 V58 L82 40" fill="none" stroke="#33261B" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="M36 86 V54 L20 34 M36 60 L50 40 V18 M50 56 L66 36 M64 86 V58 L82 40" fill="none" stroke="#E8704F" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<ellipse cx="50" cy="86" rx="32" ry="8" fill="#F6E7BE" stroke="#33261B" stroke-width="4"/></svg>',
+      coin:
+        '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="36" fill="#F2B134" stroke="#33261B" stroke-width="5"/>' +
+        '<circle cx="50" cy="50" r="27" fill="#F6E7BE" stroke="#9A5F36" stroke-width="3.5"/>' +
+        '<path d="M50 30 L55 43 L69 44 L58 53 L62 67 L50 59 L38 67 L42 53 L31 44 L45 43 Z" fill="#F2B134" stroke="#6E4125" stroke-width="3" stroke-linejoin="round"/></svg>',
+      key:
+        '<svg viewBox="0 0 100 100"><circle cx="32" cy="36" r="18" fill="#F2B134" stroke="#33261B" stroke-width="4.5"/>' +
+        '<circle cx="32" cy="36" r="7" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<path d="M46 48 L82 82 M68 68 L78 58 M58 58 L68 48" stroke="#33261B" stroke-width="11" stroke-linecap="round"/>' +
+        '<path d="M46 48 L82 82 M68 68 L78 58 M58 58 L68 48" stroke="#F2B134" stroke-width="5" stroke-linecap="round"/></svg>',
+      jelly:
+        '<svg viewBox="0 0 100 100"><path d="M22 50 C22 22 78 22 78 50 Z" fill="#BFE1EA" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+        '<circle cx="40" cy="39" r="3.5" fill="#33261B"/><circle cx="60" cy="39" r="3.5" fill="#33261B"/>' +
+        '<path d="M32 52 Q26 68 34 84 M44 52 Q40 70 46 86 M56 52 Q62 70 56 86 M68 52 Q74 68 66 84" fill="none" stroke="#F2B134" stroke-width="4.5" stroke-linecap="round"/>' +
+        '<circle cx="50" cy="28" r="5" fill="#FFF8E4"/></svg>',
+      octopus:
+        '<svg viewBox="0 0 100 100"><path d="M24 62 Q16 78 28 84 M36 66 Q32 84 44 86 M64 66 Q68 84 56 86 M76 62 Q84 78 72 84" fill="none" stroke="#33261B" stroke-width="11" stroke-linecap="round"/>' +
+        '<path d="M24 62 Q16 78 28 84 M36 66 Q32 84 44 86 M64 66 Q68 84 56 86 M76 62 Q84 78 72 84" fill="none" stroke="#E8704F" stroke-width="6" stroke-linecap="round"/>' +
+        '<circle cx="50" cy="44" r="26" fill="#E8704F" stroke="#33261B" stroke-width="4.5"/>' +
+        '<circle cx="40" cy="42" r="4.5" fill="#FFF8E4"/><circle cx="40" cy="42" r="2.5" fill="#33261B"/>' +
+        '<circle cx="60" cy="42" r="4.5" fill="#FFF8E4"/><circle cx="60" cy="42" r="2.5" fill="#33261B"/>' +
+        '<path d="M44 53 Q50 59 56 53" fill="none" stroke="#33261B" stroke-width="3.5" stroke-linecap="round"/></svg>',
+      anchor:
+        '<svg viewBox="0 0 100 100"><circle cx="50" cy="22" r="9" fill="none" stroke="#33261B" stroke-width="5"/>' +
+        '<path d="M50 31 V82 M32 42 H68 M22 64 C24 82 76 82 78 64" fill="none" stroke="#33261B" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="M50 31 V82 M32 42 H68 M22 64 C24 82 76 82 78 64" fill="none" stroke="#236F96" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<circle cx="22" cy="64" r="4.5" fill="#F2B134" stroke="#33261B" stroke-width="3"/><circle cx="78" cy="64" r="4.5" fill="#F2B134" stroke="#33261B" stroke-width="3"/></svg>',
+      rainbow:
+        '<svg viewBox="0 0 100 100"><defs><linearGradient id="sc-rb" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0%" stop-color="#E8704F"/><stop offset="35%" stop-color="#F2B134"/>' +
+        '<stop offset="68%" stop-color="#BFE1EA"/><stop offset="100%" stop-color="#2F7A49"/></linearGradient></defs>' +
+        '<path d="M50 10 L58 26 L76 22 L66 38 L86 46 L68 58 L72 78 L50 68 L28 78 L32 58 L14 46 L34 38 L24 22 L42 26 Z" fill="#F2B134" stroke="#33261B" stroke-width="3.5" stroke-linejoin="round"/>' +
+        '<circle cx="50" cy="48" r="24" fill="url(#sc-rb)" stroke="#33261B" stroke-width="4.5"/>' +
+        '<circle cx="42" cy="40" r="6" fill="#FFF8E4" opacity=".9"/></svg>'
+    };
+
+    // 第三段彩虹目標小章魚（抱著閃亮彩虹珍珠）
+    var RAINBOW_OCT_SVG =
+      '<svg viewBox="0 0 100 100"><defs><linearGradient id="sc-rb2" x1="0" y1="0" x2="1" y2="1">' +
+      '<stop offset="0%" stop-color="#E8704F"/><stop offset="50%" stop-color="#F2B134"/><stop offset="100%" stop-color="#BFE1EA"/></linearGradient></defs>' +
+      '<path d="M24 62 Q16 78 28 84 M36 66 Q32 84 44 86 M64 66 Q68 84 56 86 M76 62 Q84 78 72 84" fill="none" stroke="#33261B" stroke-width="11" stroke-linecap="round"/>' +
+      '<path d="M24 62 Q16 78 28 84 M36 66 Q32 84 44 86 M64 66 Q68 84 56 86 M76 62 Q84 78 72 84" fill="none" stroke="#F2B134" stroke-width="6" stroke-linecap="round"/>' +
+      '<circle cx="50" cy="44" r="25" fill="url(#sc-rb2)" stroke="#33261B" stroke-width="4.5"/>' +
+      '<path d="M36 22 L43 10 L50 20 L57 10 L64 22 Z" fill="#F2B134" stroke="#33261B" stroke-width="3.5" stroke-linejoin="round"/>' +
+      '<circle cx="41" cy="42" r="4.5" fill="#FFF8E4"/><circle cx="41" cy="42" r="2.5" fill="#33261B"/>' +
+      '<circle cx="59" cy="42" r="4.5" fill="#FFF8E4"/><circle cx="59" cy="42" r="2.5" fill="#33261B"/>' +
+      '<path d="M44 53 Q50 59 56 53" fill="none" stroke="#33261B" stroke-width="3.5" stroke-linecap="round"/></svg>';
+
+    // 潛水艇 SVG（正常眼＋頭暈蚊香眼切換）
+    var SUB_SVG =
+      '<svg viewBox="0 0 236 144">' +
+        '<path d="M124 34 V14 H146" fill="none" stroke="#33261B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<rect x="98" y="34" width="52" height="32" rx="11" fill="#E8704F" stroke="#33261B" stroke-width="5"/>' +
+        '<ellipse cx="26" cy="92" rx="13" ry="22" fill="#C2432A" stroke="#33261B" stroke-width="5"/>' +
+        '<rect x="36" y="84" width="18" height="16" rx="4" fill="#6E4125" stroke="#33261B" stroke-width="4"/>' +
+        '<rect x="48" y="52" width="154" height="80" rx="40" fill="#F2B134" stroke="#33261B" stroke-width="6"/>' +
+        '<path d="M62 98 H188" stroke="#E8704F" stroke-width="9" stroke-linecap="round"/>' +
+        '<circle cx="126" cy="88" r="25" fill="#BFE1EA" stroke="#33261B" stroke-width="5"/>' +
+        '<g class="sc-eyes-normal">' +
+          '<circle cx="118" cy="84" r="4" fill="#33261B"/><circle cx="135" cy="84" r="4" fill="#33261B"/>' +
+          '<path d="M120 95 Q126.5 101 133 95" fill="none" stroke="#33261B" stroke-width="3.5" stroke-linecap="round"/>' +
+        '</g>' +
+        '<g class="sc-eyes-dizzy">' +
+          '<circle cx="118" cy="84" r="6" fill="none" stroke="#C2432A" stroke-width="2.5"/>' +
+          '<circle cx="118" cy="84" r="2" fill="#33261B"/>' +
+          '<circle cx="135" cy="84" r="6" fill="none" stroke="#C2432A" stroke-width="2.5"/>' +
+          '<circle cx="135" cy="84" r="2" fill="#33261B"/>' +
+          '<path d="M119 97 Q126.5 92 134 97" fill="none" stroke="#33261B" stroke-width="3" stroke-linecap="round"/>' +
+        '</g>' +
+        '<circle cx="170" cy="84" r="10" fill="#FFF8E4" stroke="#33261B" stroke-width="4"/>' +
+      '</svg>';
+
+    var GLOWFISH_SVG =
+      '<svg viewBox="0 0 84 44">' +
+        '<path d="M56 12 Q68 2 74 14" fill="none" stroke="#F2B134" stroke-width="3" stroke-linecap="round"/>' +
+        '<circle cx="76" cy="16" r="5" fill="#F2B134"/><circle cx="76" cy="16" r="2.5" fill="#FFF8E4"/>' +
+        '<path d="M16 24 L4 14 L8 24 L4 34 Z" fill="#56A9C9" stroke="#33261B" stroke-width="2.5" stroke-linejoin="round"/>' +
+        '<ellipse cx="40" cy="24" rx="22" ry="13" fill="#468FAF" stroke="#33261B" stroke-width="2.5"/>' +
+        '<circle cx="51" cy="21" r="3" fill="#FFF8E4"/><circle cx="52" cy="21" r="1.5" fill="#33261B"/>' +
+      '</svg>';
+
+    var SCARED_FISH_SVG =
+      '<svg viewBox="0 0 72 46">' +
+        '<path d="M16 24 L4 12 L9 24 L4 36 Z" fill="#E8704F" stroke="#33261B" stroke-width="3" stroke-linejoin="round"/>' +
+        '<ellipse cx="38" cy="24" rx="22" ry="14" fill="#F2B134" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="48" cy="20" r="6" fill="#FFF8E4" stroke="#33261B" stroke-width="2.5"/>' +
+        '<circle cx="50" cy="20" r="2.2" fill="#33261B"/>' +
+        '<circle cx="57" cy="29" r="3.5" fill="#C2432A"/>' +
+      '</svg>';
+
+    var ROCK_SVG =
+      '<svg viewBox="0 0 90 74">' +
+        '<path d="M10 64 C6 42 18 16 44 14 C68 12 84 34 82 64 Z" fill="#6B5A48" stroke="#33261B" stroke-width="4.5" stroke-linejoin="round"/>' +
+        '<path d="M22 64 C20 46 30 30 48 28 C64 26 74 44 74 64 Z" fill="#9A5F36" opacity=".55"/>' +
+        '<ellipse cx="36" cy="28" rx="9" ry="4" fill="#F6E7BE" opacity=".35"/>' +
+      '</svg>';
+
+    var DISTRACTOR_SVGS = [
+      // 海草
+      '<svg viewBox="0 0 60 60"><path d="M20 54 Q12 36 22 18 M32 54 Q40 34 30 12 M42 54 Q48 38 40 24" fill="none" stroke="#33261B" stroke-width="10" stroke-linecap="round"/>' +
+      '<path d="M20 54 Q12 36 22 18 M32 54 Q40 34 30 12 M42 54 Q48 38 40 24" fill="none" stroke="#2F7A49" stroke-width="5.5" stroke-linecap="round"/></svg>',
+      // 小海螺石
+      '<svg viewBox="0 0 60 60"><ellipse cx="30" cy="40" rx="20" ry="12" fill="#F6E7BE" stroke="#33261B" stroke-width="4"/>' +
+      '<circle cx="24" cy="36" r="5" fill="#B9794A"/><circle cx="38" cy="42" r="4" fill="#B9794A"/></svg>',
+      // 睡覺小海星裝飾
+      '<svg viewBox="0 0 60 60"><circle cx="30" cy="34" r="16" fill="#BFE1EA" stroke="#33261B" stroke-width="4"/>' +
+      '<path d="M22 33 Q26 36 29 33 M33 33 Q36 36 40 33" fill="none" stroke="#33261B" stroke-width="2.5" stroke-linecap="round"/></svg>'
+    ];
+
+    var STAR_SVG =
+      '<svg viewBox="0 0 28 28"><path d="M14 2 L17 10 L26 11 L19 17 L21 26 L14 21 L7 26 L9 17 L2 11 L11 10 Z" fill="#F2B134" stroke="#33261B" stroke-width="2" stroke-linejoin="round"/></svg>';
+
+    MouseIsland.mount({
+      unit: 35,
+      title: '海底捲捲探險',
+      skill: 'wheel',
+      gem: '滾輪',
+      grade: '34',
+      zhuyin: false,
+      howto: '轉動滑鼠滾輪，開著潛水艇往深海找寶物！',
+      teach: '滾輪捲動與縮放｜資E1、資E2',
+      hints: ['用食指轉動滑鼠中間的滾輪', '再看一次示範'],
+      hero: HERO_SVG,
+      dex: {
+        name: '海底寶箱',
+        total: 10,
+        tip: '越深的地方寶物越稀有',
+        items: {
+          pearl:    { name: '珍珠',       svg: ITEM_SVGS.pearl },
+          starfish: { name: '海星',       svg: ITEM_SVGS.starfish },
+          shell:    { name: '貝殼',       svg: ITEM_SVGS.shell },
+          coral:    { name: '珊瑚',       svg: ITEM_SVGS.coral },
+          coin:     { name: '金幣',       svg: ITEM_SVGS.coin },
+          key:      { name: '古老的鑰匙', svg: ITEM_SVGS.key },
+          jelly:    { name: '發光水母',   svg: ITEM_SVGS.jelly },
+          octopus:  { name: '小章魚',     svg: ITEM_SVGS.octopus },
+          anchor:   { name: '船錨',       svg: ITEM_SVGS.anchor },
+          rainbow:  { name: '彩虹珍珠',   svg: ITEM_SVGS.rainbow }
+        }
+      },
+      scene: function (api) {
+        var offs = [];
+        var raf = 0;
+        var runId = 0;
+        var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // 共用階段狀態
+        var curStage = 0;
+        var scrollY = 0;
+        var scrollTarget = 0;
+        var maxScroll = 0;
+        var scrollMult = 1;
+        var zoom = 1;
+        var zoomTarget = 1;
+        var revealZoom = 1.65;
+        var revealedOnce = false;
+        var left = 0;
+        var total = 1;
+        var stageEnded = false;
+
+        // 頭暈節流紀錄
+        var recentDy = 0;
+        var recentTs = 0;
+        var dizzyUntil = 0;
+
+        // DOM 參照
+        var stageEl = null;
+        var worldEl = null;
+        var subEl = null;
+        var beamEl = null;
+        var dirUpEl = null;
+        var dirDownEl = null;
+        var countEl = null;
+        var rulerSubEl = null;
+        var rulerTargetEl = null;
+        var rulerDepthEl = null;
+        var curTreasure = null; // { el, x, y, vx, baseSize, dexId, done }
+
+        // 第三段狀態
+        var mapEl = null;
+        var zoomUpRuleEl = null;
+        var zoomPctEl = null;
+        var zoomFillEl = null;
+        var zoomMarkEl = null;
+        var zoomStatusEl = null;
+        var octs = []; // [{ el, baseX, baseY, amp, phase, rainbow, dexId, done }]
+        var s1SeqIdx = 0;
+
+        function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+        function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+
+        function clearAll() {
+          runId++;
+          offs.forEach(function (f) { f(); });
+          offs = [];
+          if (raf) { cancelAnimationFrame(raf); raf = 0; }
+          stageEl = worldEl = subEl = beamEl = dirUpEl = dirDownEl = countEl = null;
+          rulerSubEl = rulerTargetEl = rulerDepthEl = curTreasure = null;
+          mapEl = zoomUpRuleEl = zoomPctEl = zoomFillEl = zoomMarkEl = zoomStatusEl = null;
+          octs = [];
+          scrollY = scrollTarget = maxScroll = 0;
+          scrollMult = 1;
+          zoom = zoomTarget = 1;
+          revealZoom = 1.65;
+          revealedOnce = false;
+          recentDy = recentTs = dizzyUntil = 0;
+          stageEnded = false;
+        }
+
+        function updateCount(label) {
+          if (countEl) countEl.textContent = label + ' ' + (total - left) + '／' + total;
+        }
+
+        // 潛水艇吐泡泡特效
+        function spawnSubBubbles() {
+          if (!stageEl) return;
+          var count = reduced ? 2 : 7;
+          for (var i = 0; i < count; i++) {
+            var b = document.createElement('div');
+            b.className = 'sc-bubble';
+            var sz = 10 + Math.random() * 14;
+            b.style.width = sz + 'px';
+            b.style.height = sz + 'px';
+            b.style.left = (296 + (Math.random() - .5) * 44) + 'px';
+            b.style.top = (182 + (Math.random() - .5) * 20) + 'px';
+            b.style.setProperty('--dx', ((Math.random() - .5) * 60).toFixed(0) + 'px');
+            stageEl.appendChild(b);
+            (function (el) { api.later(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 980); })(b);
+          }
+        }
+
+        // 撿到寶物的星星噴發特效
+        function spawnStars(x, y) {
+          if (!stageEl) return;
+          var dirs = [[-46, -34], [46, -34], [-52, 16], [52, 16], [0, -56], [0, 44]];
+          var n = reduced ? 3 : dirs.length;
+          for (var i = 0; i < n; i++) {
+            var s = document.createElement('div');
+            s.className = 'sc-star';
+            s.innerHTML = STAR_SVG;
+            s.style.left = x + 'px';
+            s.style.top = y + 'px';
+            s.style.setProperty('--sx', dirs[i][0] + 'px');
+            s.style.setProperty('--sy', dirs[i][1] + 'px');
+            stageEl.appendChild(s);
+            (function (el) { api.later(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 680); })(s);
+          }
+        }
+
+        // 點到空海水的搞笑反應：水波紋＋泡泡＋魚嚇一跳
+        function triggerWaterMiss(pos) {
+          if (!stageEl || stageEnded) return;
+          api.miss();
+          api.sfx('giggle');
+          var x = clamp(pos.x, 40, 1320);
+          var y = clamp(pos.y, 40, 540);
+
+          var rip = document.createElement('div');
+          rip.className = 'sc-ripple';
+          rip.style.left = x + 'px';
+          rip.style.top = y + 'px';
+          stageEl.appendChild(rip);
+          api.later(function () { if (rip.parentNode) rip.parentNode.removeChild(rip); }, 680);
+
+          for (var i = 0; i < (reduced ? 1 : 3); i++) {
+            var b = document.createElement('div');
+            b.className = 'sc-bubble';
+            var sz = 9 + Math.random() * 10;
+            b.style.width = sz + 'px';
+            b.style.height = sz + 'px';
+            b.style.left = (x + (Math.random() - .5) * 32) + 'px';
+            b.style.top = (y + (Math.random() - .5) * 20) + 'px';
+            b.style.setProperty('--dx', ((Math.random() - .5) * 40).toFixed(0) + 'px');
+            stageEl.appendChild(b);
+            (function (el) { api.later(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 980); })(b);
+          }
+
+          var fish = document.createElement('div');
+          fish.className = 'sc-scared-fish';
+          fish.innerHTML = SCARED_FISH_SVG;
+          fish.style.left = x + 'px';
+          fish.style.top = y + 'px';
+          stageEl.appendChild(fish);
+          api.later(function () { if (fish.parentNode) fish.parentNode.removeChild(fish); }, 820);
+
+          if (subEl) api.wob(subEl);
+        }
+
+        // 捲太快頭暈反應（第二段）
+        function checkDizzy(dy) {
+          if (curStage !== 1 || !subEl) return;
+          var now = performance.now();
+          if (now < dizzyUntil) return;
+          if (now - recentTs > 220) recentDy = 0;
+          recentTs = now;
+          recentDy += Math.abs(dy);
+          if (Math.abs(dy) >= 240 || recentDy >= 480) {
+            recentDy = 0;
+            dizzyUntil = now + 1350;
+            subEl.classList.add('sc-dizzy');
+            api.sfx('boing');
+            api.say('轉太快啦！頭好暈～', { zy: false });
+            var myRun = runId;
+            api.later(function () {
+              if (myRun === runId && subEl) subEl.classList.remove('sc-dizzy');
+            }, 1000);
+          }
+        }
+
+        // ---------- 第一、二段：捲動深海 ----------
+        var S1_SPOTS = [
+          { x: 830, y: 780,  pool: ['shell', 'starfish', 'coral'] },
+          { x: 980, y: 1420, pool: ['coin', 'pearl', 'key'] },
+          { x: 770, y: 2040, pool: ['jelly', 'anchor', 'key'] },
+          { x: 920, y: 310,  pool: ['pearl', 'starfish', 'coin'] } // 回到海面附近：要往上捲！
+        ];
+
+        function spawnScrollTreasure(spec, isBig) {
+          if (!worldEl) return;
+          var cfg = api.cfg();
+          var el = document.createElement('div');
+          el.className = 'sc-treasure' + (isBig ? ' sc-treasure-big' : '');
+          var dexId = Array.isArray(spec.pool) ? pick(spec.pool) : spec.pool;
+          el.innerHTML = ITEM_SVGS[dexId];
+          el.style.left = spec.x + 'px';
+          el.style.top = spec.y + 'px';
+          var scale = cfg.size;
+          el.style.transform = 'scale(' + scale + ')';
+          worldEl.appendChild(el);
+
+          var vx = isBig || reduced || cfg.assist ? 0 : (Math.random() < .5 ? -1 : 1) * 28 * cfg.speed;
+          curTreasure = { el: el, x: spec.x, y: spec.y, vx: vx, isBig: isBig, dexId: dexId, done: false };
+
+          if (rulerTargetEl && maxScroll > 0) {
+            var pct = clamp((spec.y - 240) / maxScroll, 0.03, 0.97) * 100;
+            rulerTargetEl.style.top = pct + '%';
+          }
+
+          var myT = curTreasure;
+          var myRun = runId;
+          offs.push(api.on(el, 'click', {
+            ok: function () {
+              if (myT.done || stageEnded || myRun !== runId) return;
+              myT.done = true;
+              api.glow(el, false);
+              if (dirUpEl) api.glow(dirUpEl, false);
+              if (dirDownEl) api.glow(dirDownEl, false);
+              el.classList.add('sc-got');
+              api.hit();
+              api.collect(myT.dexId);
+              api.sfx('ok');
+              spawnSubBubbles();
+              spawnStars(myT.x, clamp(myT.y - scrollY, 70, 510));
+              curTreasure = null;
+              left--;
+              updateCount('寶物');
+              if (left <= 0) {
+                stageEnded = true;
+                api.later(function () { if (myRun === runId) api.stageDone(); }, 550);
+              } else {
+                s1SeqIdx++;
+                api.later(function () {
+                  if (myRun !== runId) return;
+                  spawnScrollTreasure(S1_SPOTS[s1SeqIdx], false);
+                  if (s1SeqIdx === 3) {
+                    api.say('海面亮起來了！往回找找看！', { zy: false });
+                  }
+                }, 460);
+              }
+            },
+            wrong: function () {
+              if (myT.done || stageEnded) return;
+              api.wob(el);
+              api.sfx('giggle');
+              api.miss();
+            }
+          }));
+        }
+
+        function updateScrollVisuals() {
+          if (!worldEl) return;
+          worldEl.style.transform = 'translateY(' + (-scrollY).toFixed(1) + 'px)';
+          // 潛水艇探照燈：越深越亮
+          if (beamEl) {
+            beamEl.classList.toggle('sc-on', scrollY > 420);
+          }
+          // 深度尺同步
+          if (rulerSubEl && maxScroll > 0) {
+            var ratio = clamp(scrollY / maxScroll, 0, 1);
+            rulerSubEl.style.top = (ratio * 100).toFixed(1) + '%';
+            if (rulerDepthEl) rulerDepthEl.textContent = Math.round(ratio * 300) + 'm';
+          }
+          // 方向箭頭顯示與第一段寶物自動發光
+          if (curTreasure && !curTreasure.done) {
+            var sy = curTreasure.y - scrollY;
+            var needDown = sy > 500;
+            var needUp = sy < 80;
+            if (dirDownEl) {
+              dirDownEl.classList.toggle('sc-hide', !needDown);
+              if (!needDown) api.glow(dirDownEl, false);
+            }
+            if (dirUpEl) {
+              dirUpEl.classList.toggle('sc-hide', !needUp);
+              if (!needUp) api.glow(dirUpEl, false);
+            }
+            if (curStage === 0 && !needDown && !needUp) {
+              api.glow(curTreasure.el, true);
+            }
+          } else {
+            if (dirDownEl) { dirDownEl.classList.add('sc-hide'); api.glow(dirDownEl, false); }
+            if (dirUpEl) { dirUpEl.classList.add('sc-hide'); api.glow(dirUpEl, false); }
+          }
+        }
+
+        function buildScrollStage(stage, cfg) {
+          var isS0 = stage === 0;
+          maxScroll = isS0 ? 580 : 1740;
+          total = isS0 ? 1 : 4;
+          left = total;
+          s1SeqIdx = 0;
+          scrollMult = cfg.assist ? 2 : 1;
+
+          var html =
+            '<div class="sc-stage">' +
+              '<div class="sc-world ' + (isS0 ? 'sc-world-s0' : 'sc-world-s1') + '">' +
+                '<div class="sc-surface-wave"></div>' +
+                '<div class="sc-sunbeam" style="left:620px"></div>' +
+                '<div class="sc-sunbeam" style="left:940px"></div>' +
+                '<div class="sc-seabed"><div class="sc-seabed-sand"></div></div>' +
+              '</div>' +
+              '<div class="sc-sub"><div class="sc-sub-inner">' + SUB_SVG + '<div class="sc-sub-beam"></div></div></div>' +
+              '<div class="sc-dir sc-dir-up sc-ui sc-hide"><span class="sc-dir-arrow">▲</span><span>往上滾找寶物</span></div>' +
+              '<div class="sc-dir sc-dir-down sc-ui sc-hide"><span class="sc-dir-arrow">▼</span><span>往下滾找寶物</span></div>' +
+              (isS0 ? '' :
+                '<div class="sc-ruler sc-ui">' +
+                  '<div class="sc-ruler-title">深度尺</div>' +
+                  '<div class="sc-ruler-track">' +
+                    '<div class="sc-ruler-target"></div>' +
+                    '<div class="sc-ruler-sub"></div>' +
+                  '</div>' +
+                  '<div class="sc-ruler-labels"><span>0m</span><span>100m</span><span>200m</span><span>300m</span></div>' +
+                  '<div class="sc-ruler-depth">0m</div>' +
+                '</div>') +
+              '<div class="sc-count sc-ui"></div>' +
+            '</div>';
+
+          api.field.innerHTML = html;
+          stageEl = api.field.querySelector('.sc-stage');
+          worldEl = api.field.querySelector('.sc-world');
+          subEl = api.field.querySelector('.sc-sub');
+          beamEl = api.field.querySelector('.sc-sub-beam');
+          dirUpEl = api.field.querySelector('.sc-dir-up');
+          dirDownEl = api.field.querySelector('.sc-dir-down');
+          countEl = api.field.querySelector('.sc-count');
+          rulerSubEl = api.field.querySelector('.sc-ruler-sub');
+          rulerTargetEl = api.field.querySelector('.sc-ruler-target');
+          rulerDepthEl = api.field.querySelector('.sc-ruler-depth');
+
+          updateCount('寶物');
+
+          // 第二段深海才放背景發光小魚（第一段維持最乾淨）
+          if (!isS0) {
+            var fishSpots = [
+              { x: 640, y: 1240, d: '0s' },
+              { x: 960, y: 1620, d: '-3s' },
+              { x: 680, y: 1960, d: '-5.5s' }
+            ];
+            fishSpots.forEach(function (f) {
+              var fel = document.createElement('div');
+              fel.className = 'sc-glowfish';
+              fel.innerHTML = GLOWFISH_SVG;
+              fel.style.left = f.x + 'px';
+              fel.style.top = f.y + 'px';
+              fel.style.animationDelay = f.d;
+              worldEl.appendChild(fel);
+            });
+          }
+
+          // 生成第一個寶物
+          if (isS0) {
+            spawnScrollTreasure({ x: 840, y: 830, pool: 'pearl' }, true);
+          } else {
+            spawnScrollTreasure(S1_SPOTS[0], false);
+          }
+
+          // 滾輪事件：全程使用 api.on
+          offs.push(api.on(stageEl, 'wheel', {
+            wheel: function (dy) {
+              if (stageEnded) return;
+              checkDizzy(dy);
+              var factor = isS0 ? 0.92 : 1.18;
+              scrollTarget = clamp(scrollTarget + dy * factor * scrollMult, 0, maxScroll);
+              if (reduced) {
+                scrollY = scrollTarget;
+                updateScrollVisuals();
+              }
+            }
+          }));
+
+          // 點擊空海水＝失手
+          offs.push(api.on(stageEl, 'click', {
+            ok: function (pos, e) {
+              if (e.target.closest('.sc-treasure, .sc-ui')) return;
+              triggerWaterMiss(pos);
+            }
+          }));
+
+          updateScrollVisuals();
+
+          // 第一段開場：glow 往下箭頭 ＋ demo('wheel')
+          if (isS0 && dirDownEl) {
+            api.glow(dirDownEl, true);
+            api.demo(dirDownEl, 'wheel', { up: false });
+          }
+
+          // 動畫迴圈
+          var last = performance.now();
+          (function loop(now) {
+            var dt = Math.min(.05, (now - last) / 1000);
+            last = now;
+            if (!reduced) {
+              scrollY += (scrollTarget - scrollY) * 0.22;
+              if (Math.abs(scrollTarget - scrollY) < 0.3) scrollY = scrollTarget;
+            }
+            if (curTreasure && !curTreasure.done && curTreasure.vx) {
+              curTreasure.x += curTreasure.vx * dt;
+              if (curTreasure.x < 700) { curTreasure.x = 700; curTreasure.vx = Math.abs(curTreasure.vx); }
+              if (curTreasure.x > 1070) { curTreasure.x = 1070; curTreasure.vx = -Math.abs(curTreasure.vx); }
+              curTreasure.el.style.left = curTreasure.x.toFixed(1) + 'px';
+            }
+            updateScrollVisuals();
+            raf = requestAnimationFrame(loop);
+          })(last);
+        }
+
+        // ---------- 第三段：海圖放大縮小找 5 隻小章魚 ----------
+        var ROCK_SPOTS = [
+          { rx: 805,  ry: 205, ox: 20,  oy: -12 },
+          { rx: 1045, ry: 200, ox: -22, oy: 12  },
+          { rx: 925,  ry: 270, ox: 22,  oy: -14 },
+          { rx: 815,  ry: 345, ox: 22,  oy: -16 },
+          { rx: 1045, ry: 345, ox: -22, oy: -16 }
+        ];
+        var DISTRACTOR_SPOTS = [
+          { x: 925,  y: 185, idx: 0 },
+          { x: 925,  y: 355, idx: 1 },
+          { x: 1085, y: 272, idx: 2 }
+        ];
+
+        function updateZoomVisuals(tSec) {
+          if (!mapEl) return;
+          mapEl.style.transform = 'scale(' + zoom.toFixed(3) + ')';
+          var pct = Math.round(zoom * 100);
+          if (zoomPctEl) zoomPctEl.textContent = pct + '%';
+          if (zoomFillEl) {
+            var fillPct = clamp((zoom - 0.9) / (2.2 - 0.9), 0, 1) * 100;
+            zoomFillEl.style.width = fillPct.toFixed(1) + '%';
+          }
+          if (zoomMarkEl) {
+            var markPct = clamp((revealZoom - 0.9) / (2.2 - 0.9), 0, 1) * 100;
+            zoomMarkEl.style.left = markPct.toFixed(1) + '%';
+          }
+          var ready = zoom >= revealZoom;
+          if (zoomStatusEl) {
+            zoomStatusEl.classList.toggle('sc-ready', ready);
+            zoomStatusEl.textContent = ready ? '看清楚了！點小章魚！' : '往上滾放大，找躲起來的小章魚';
+          }
+          if (ready && zoomUpRuleEl) api.glow(zoomUpRuleEl, false);
+          if (ready && !revealedOnce) {
+            revealedOnce = true;
+            api.say('看到小章魚了！快點牠們！', { zy: false });
+          }
+
+          var cfg = api.cfg();
+          octs.forEach(function (o) {
+            if (o.done) return;
+            o.el.classList.toggle('sc-hidden', !ready);
+            if (!ready) {
+              api.glow(o.el, false);
+              return;
+            }
+            var dx = 0, dy = 0;
+            if (!reduced && !cfg.assist && o.amp > 0) {
+              dx = Math.sin(tSec * o.spd + o.phase) * o.amp;
+              dy = Math.cos(tSec * o.spd * 0.8 + o.phase) * (o.amp * 0.5);
+            }
+            o.el.style.left = (o.baseX + dx).toFixed(1) + 'px';
+            o.el.style.top = (o.baseY + dy).toFixed(1) + 'px';
+            o.el.style.transform = 'scale(' + cfg.size + ')';
+          });
+        }
+
+        function buildZoomStage(cfg) {
+          total = 5;
+          left = 5;
+          zoom = 1.0;
+          zoomTarget = 1.0;
+          scrollMult = cfg.assist ? 2 : 1;
+          revealZoom = cfg.assist ? 1.35 : 1.65;
+          revealedOnce = false;
+
+          var html =
+            '<div class="sc-stage">' +
+              '<div class="sc-chart-bg"><div class="sc-chart-grid"></div></div>' +
+              '<div class="sc-map-layer"><div class="sc-reef-patch"></div></div>' +
+              '<div class="sc-zoom-card sc-ui">' +
+                '<div class="sc-zoom-head"><span>海圖放大鏡</span><span class="sc-zoom-pct">100%</span></div>' +
+                '<div class="sc-zoom-rule sc-zoom-up"><span class="sc-zoom-rule-icon sc-zoom-up-icon">▲</span><span>往上滾：放大</span></div>' +
+                '<div class="sc-zoom-rule"><span class="sc-zoom-rule-icon sc-zoom-dn-icon">▼</span><span>往下滾：縮小</span></div>' +
+                '<div class="sc-zoom-bar"><div class="sc-zoom-fill"></div><div class="sc-zoom-mark"></div></div>' +
+                '<div class="sc-zoom-status">往上滾放大，找躲起來的小章魚</div>' +
+              '</div>' +
+              '<div class="sc-count sc-ui"></div>' +
+            '</div>';
+
+          api.field.innerHTML = html;
+          stageEl = api.field.querySelector('.sc-stage');
+          mapEl = api.field.querySelector('.sc-map-layer');
+          zoomUpRuleEl = api.field.querySelector('.sc-zoom-up');
+          zoomPctEl = api.field.querySelector('.sc-zoom-pct');
+          zoomFillEl = api.field.querySelector('.sc-zoom-fill');
+          zoomMarkEl = api.field.querySelector('.sc-zoom-mark');
+          zoomStatusEl = api.field.querySelector('.sc-zoom-status');
+          countEl = api.field.querySelector('.sc-count');
+
+          updateCount('小章魚');
+
+          // 干擾物（點到不算失手，只會搖晃冒小泡泡）
+          DISTRACTOR_SPOTS.forEach(function (d) {
+            var del = document.createElement('div');
+            del.className = 'sc-distractor';
+            del.innerHTML = DISTRACTOR_SVGS[d.idx];
+            del.style.left = d.x + 'px';
+            del.style.top = d.y + 'px';
+            mapEl.appendChild(del);
+            offs.push(api.on(del, 'click', {
+              ok: function () {
+                api.wob(del);
+                api.sfx('pop');
+              }
+            }));
+          });
+
+          // 5 顆石頭＋躲在後面的 5 隻小章魚（其中隨機 1 隻是閃亮彩虹目標）
+          var rainbowIndex = Math.floor(Math.random() * ROCK_SPOTS.length);
+          var normalPool = ['octopus', 'octopus', 'jelly', 'anchor', 'key'];
+          var myRun = runId;
+
+          ROCK_SPOTS.forEach(function (sp, idx) {
+            var rock = document.createElement('div');
+            rock.className = 'sc-rock-slot';
+            rock.style.left = sp.rx + 'px';
+            rock.style.top = sp.ry + 'px';
+            rock.innerHTML = '<div class="sc-rock-svg">' + ROCK_SVG + '</div>';
+            mapEl.appendChild(rock);
+
+            var isRb = idx === rainbowIndex;
+            var octEl = document.createElement('div');
+            octEl.className = 'sc-oct sc-hidden' + (isRb ? ' sc-rainbow' : '');
+            octEl.innerHTML = isRb ? RAINBOW_OCT_SVG : ITEM_SVGS.octopus;
+            var bx = sp.rx + sp.ox;
+            var by = sp.ry + sp.oy;
+            octEl.style.left = bx + 'px';
+            octEl.style.top = by + 'px';
+            mapEl.appendChild(octEl);
+
+            var item = {
+              el: octEl,
+              baseX: bx,
+              baseY: by,
+              amp: 5.5,
+              spd: 1.8 * cfg.speed,
+              phase: idx * 1.4,
+              rainbow: isRb,
+              dexId: isRb ? 'rainbow' : normalPool[idx % normalPool.length],
+              done: false
+            };
+            octs.push(item);
+
+            offs.push(api.on(octEl, 'click', {
+              ok: function () {
+                if (item.done || stageEnded || zoom < revealZoom || myRun !== runId) return;
+                item.done = true;
+                api.glow(octEl, false);
+                octEl.classList.add('sc-got');
+                api.hit();
+                if (item.rainbow) {
+                  api.collect('rainbow');
+                  api.sfx('gem');
+                  api.say('哇！找到彩虹珍珠了！', { zy: false });
+                } else {
+                  api.collect(item.dexId);
+                  api.sfx('ok');
+                }
+                // 換算小章魚在舞台上的螢幕位置噴星星
+                var sx = 920 + (item.baseX - 920) * zoom;
+                var sy = 270 + (item.baseY - 270) * zoom;
+                spawnStars(clamp(sx, 80, 1290), clamp(sy, 70, 520));
+                left--;
+                updateCount('小章魚');
+                if (left <= 0) {
+                  stageEnded = true;
+                  // 學習能力連回真的電腦（11-22 驗收補）：看長網頁、地圖也是用滾輪
+                  api.say('看長長的網頁或地圖，也是這樣滾', { zy: false });
+                  api.later(function () { if (myRun === runId) api.stageDone(); }, 2600);
+                }
+              },
+              wrong: function () {
+                if (item.done || stageEnded || zoom < revealZoom) return;
+                api.wob(octEl);
+                api.sfx('giggle');
+                api.miss();
+              }
+            }));
+          });
+
+          // 滾輪放大縮小：往上滾（dy < 0）放大、往下滾（dy > 0）縮小
+          offs.push(api.on(stageEl, 'wheel', {
+            wheel: function (dy) {
+              if (stageEnded) return;
+              zoomTarget = clamp(zoomTarget + (-dy / 420) * scrollMult, 0.9, 2.2);
+              if (reduced) {
+                zoom = zoomTarget;
+                updateZoomVisuals(0);
+              }
+            }
+          }));
+
+          // 點擊空海面＝失手（干擾物與 UI 卡不算）
+          offs.push(api.on(stageEl, 'click', {
+            ok: function (pos, e) {
+              if (e.target.closest('.sc-oct, .sc-distractor, .sc-ui')) return;
+              triggerWaterMiss(pos);
+            }
+          }));
+
+          updateZoomVisuals(0);
+
+          var t0 = performance.now();
+          (function loop(now) {
+            if (!reduced) {
+              zoom += (zoomTarget - zoom) * 0.22;
+              if (Math.abs(zoomTarget - zoom) < 0.002) zoom = zoomTarget;
+            }
+            updateZoomVisuals((now - t0) / 1000);
+            raf = requestAnimationFrame(loop);
+          })(t0);
+        }
+
+        return {
+          start: function (stage, cfg) {
+            clearAll();
+            curStage = stage;
+            if (stage === 2) {
+              buildZoomStage(cfg);
+            } else {
+              buildScrollStage(stage, cfg);
+            }
+          },
+          hint: function (level) {
+            if (stageEnded) return;
+            if (curStage === 2) {
+              if (zoom < revealZoom) {
+                if (zoomUpRuleEl) {
+                  api.glow(zoomUpRuleEl, true);
+                  if (level === 2) api.demo(zoomUpRuleEl, 'wheel', { up: true });
+                }
+              } else {
+                var nextOct = octs.find(function (o) { return !o.done; });
+                if (nextOct) {
+                  api.glow(nextOct.el, true);
+                  if (level === 2) api.demo(nextOct.el, 'click');
+                }
+              }
+              return;
+            }
+            if (!curTreasure || curTreasure.done) return;
+            var sy = curTreasure.y - scrollY;
+            if (sy > 500 && dirDownEl) {
+              api.glow(dirDownEl, true);
+              if (level === 2) api.demo(dirDownEl, 'wheel', { up: false });
+            } else if (sy < 80 && dirUpEl) {
+              api.glow(dirUpEl, true);
+              if (level === 2) api.demo(dirUpEl, 'wheel', { up: true });
+            } else {
+              api.glow(curTreasure.el, true);
+              if (level === 2) api.demo(curTreasure.el, 'click');
+            }
+          },
+          assist: function () {
+            scrollMult = 2;
+            var cfg = api.cfg();
+            if (curStage === 2) {
+              revealZoom = 1.35;
+              octs.forEach(function (o) {
+                o.amp = 0;
+                if (!o.done) o.el.style.transform = 'scale(' + Math.max(1.4, cfg.size) + ')';
+              });
+            } else if (curTreasure && !curTreasure.done) {
+              curTreasure.vx = 0;
+              curTreasure.el.style.transform = 'scale(' + Math.max(1.4, cfg.size) + ')';
+            }
+          },
+          stop: clearAll
+        };
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

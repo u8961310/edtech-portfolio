@@ -309,6 +309,28 @@ const PROPS = {
     mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0,.03,.18), new THREE.Vector3(.05,.01,.3), new THREE.Vector3(-.05,.01,.4)]), 12, .01, 6), 0x9a9a9a, g); },
   carrots(g) { for (let i=0;i<3;i++) { mesh(B(.5,.05,.1), 0x9b6a44, g, 0,.025,-.12+i*.13);
     for (let j=0;j<4;j++) { const x = -.18+j*.12, z = -.12+i*.13; mesh(CO(.03,.08,8), 0xff8a3d, g, x,.08,z).rotation.x = Math.PI; mesh(CO(.035,.1,5), 0x5fbf5a, g, x,.17,z); } } },
+  // 滑鼠島新 4 關（2026-11-22）
+  egg(g) {   // 敲敲蛋寶寶：稻草巢＋兩顆蛋，一顆裂開探出小雞
+    mesh(new THREE.TorusGeometry(.15,.05,8,18), 0xd9a65a, g, 0,.05,0).rotation.x = Math.PI/2;
+    mesh(SP(.075,14,12), 0xfff6e6, g, -.06,.1,.02).scale.set(1,1.25,1);
+    mesh(SP(.07,14,12,0,Math.PI*2,Math.PI/2,Math.PI/2), 0xfff6e6, g, .07,.1,-.02);
+    mesh(SP(.05,12,10), 0xffd23f, g, .07,.16,-.02); mesh(CO(.014,.03,6), 0xff8a3d, g, .07,.16,.03).rotation.x = Math.PI/2;
+    [-.018,.018].forEach(x => mesh(SP(.008,6,6), 0x3b2f2a, g, .07+x,.18,.025)); },
+  wand(g) {   // 右鍵魔法師：魔法帽＋一根前端發光的魔杖
+    mesh(CY(.13,.13,.02,20), 0x5a4fcf, g, -.06,.01,0); mesh(CO(.08,.22,16), 0x5a4fcf, g, -.06,.13,0).rotation.z = .12;
+    mesh(CY(.082,.082,.025,16), 0xffc94d, g, -.06,.035,0);
+    const w = mesh(CY(.012,.012,.3,8), 0x3b2f2a, g, .1,.04,.04); w.rotation.z = Math.PI/2.4;
+    mesh(SP(.03,10,8), 0xffe680, g, .23,.1,.04, { emissive:0xffd23f, emissiveIntensity:.6 }); },
+  octopus(g) {   // 海底捲捲探險：藍色小水池裡的粉紅章魚
+    mesh(CY(.2,.2,.03,20), 0x6fc3df, g, 0,.015,0);
+    mesh(SP(.09,16,12), 0xff7aa8, g, 0,.13,0).scale.set(1,1.15,1);
+    for (let i=0;i<6;i++) { const a = i*Math.PI/3; mesh(new THREE.CapsuleGeometry(.018,.08,4,6), 0xff7aa8, g, Math.cos(a)*.08,.05,Math.sin(a)*.08).rotation.set(Math.sin(a)*.9,0,-Math.cos(a)*.9); }
+    [-.03,.03].forEach(x => mesh(SP(.014,6,6), 0x3b2f2a, g, x,.15,.08)); },
+  sheep(g) {   // 牧場圍圍樂：毛茸茸的羊＋一段木柵欄
+    [[-.04,0],[.04,.02],[0,-.05],[.02,.05]].forEach(([x,z]) => mesh(SP(.07,10,8), 0xffffff, g, x,.13,z));
+    mesh(SP(.05,12,10), 0x4a3a35, g, .1,.14,.04); [-.02,.02].forEach(z => mesh(SP(.01,6,6), 0xffffff, g, .14,.15,.04+z));
+    [[-.05,-.03],[.05,-.03],[-.05,.05],[.05,.05]].forEach(([x,z]) => mesh(CY(.012,.012,.08,6), 0x4a3a35, g, x,.04,z));
+    [-.18,-.06,.06,.18].forEach(x => mesh(B(.025,.14,.025), 0x9a5f36, g, x,.07,-.17)); mesh(B(.4,.025,.02), 0x9a5f36, g, 0,.1,-.17); },
   moles(g) { [[-.12,0],[.13,.05],[0,.17]].forEach(([x,z],i) => { mesh(CY(.08,.09,.03,16), 0x5a3a2a, g, x,.015,z); if (i!==1) { mesh(SP(.06,12,10), 0xb07a52, g, x,.06,z); mesh(SP(.015,6,6), 0xffb6a0, g, x,.07,z+.055); } });
     const h = new THREE.Group(); h.position.set(.18,.12,-.12); h.rotation.z = -.6; g.add(h); mesh(CY(.012,.012,.25,6), C.wood, h); mesh(B(.12,.07,.07), 0xff7b7b, h, 0,.13,0); },
   rocket(g, c=0xff7b7b) { mesh(CY(.07,.07,.36,16), 0xffffff, g, 0,.26,0); mesh(CO(.07,.15,16), c, g, 0,.515,0); mesh(CY(.045,.03,.06,12), 0x9a9a9a, g, 0,.05,0);

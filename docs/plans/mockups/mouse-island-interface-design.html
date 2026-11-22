@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>滑鼠島 mockup｜海島尋寶地圖（interface-design 版）</title>
+<meta name="viewport" content="width=1366">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+@font-face { font-family:'Bpmf Huninn'; src:url('fonts/bpmf-huninn-mouse.woff2') format('woff2'); }
+
+:root{
+  /* 海島尋寶世界：沙、海、珊瑚、棕櫚、木頭 */
+  --sand:#F6E7BE;
+  --parch:#FFF8E4;
+  --sea:#BFE1EA;
+  --sea-d:#236F96;
+  --coral:#C2432A;
+  --coral-l:#E8704F;
+  --palm:#2F7A49;
+  --gold:#F2B134;
+  --ink:#33261B;
+  --ink-2:#6B5A48;
+  --wood:#9A5F36;
+  --wood-d:#6E4125;
+  --rope:#B9794A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#D8CCAE}
+body{font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+.stage{width:1366px;margin:0 auto}
+
+/* 分頁列（矮） */
+.tabs{height:36px;background:#23406B;display:flex;align-items:center;gap:6px;padding:0 10px}
+.tabs button{height:28px;padding:0 14px;border:0;border-radius:6px;background:#EFE6CC;color:#23406B;font:700 14px 'Noto Sans TC',sans-serif;cursor:pointer}
+.tabs button.on{background:var(--gold);color:var(--ink)}
+.tabs span{color:#EFE6CC;font-size:13px;margin-left:auto}
+
+.screen{display:none;width:1366px;height:657px;position:relative;overflow:hidden}
+.screen.on{display:block}
+.abs{position:absolute}
+/* 注音字型：字寬約 1.35em；顏色一律繼承，不在這裡指定 */
+.zy{font-family:'Bpmf Huninn','Noto Sans TC',sans-serif;line-height:1.5;font-weight:400;white-space:nowrap}
+
+/* 共用元件 */
+.home{position:absolute;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:108px;height:46px;padding:0 14px;background:var(--parch);border:2px solid var(--rope);border-radius:14px;color:var(--ink);font:700 18px 'Noto Sans TC',sans-serif;text-decoration:none;box-shadow:0 3px 0 rgba(110,65,37,.3)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:60px;padding:0 22px;border:0;border-radius:16px;font:700 20px 'Noto Sans TC',sans-serif;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.22);cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn.coral{background:var(--coral)} .btn.palm{background:var(--palm)} .btn.sea{background:var(--sea-d)}
+.btn.line{background:var(--parch);color:var(--ink);border:2px solid var(--rope);box-shadow:0 4px 0 rgba(110,65,37,.3)}
+.teacher{position:absolute;padding:6px 12px;background:rgba(255,248,228,.92);border:1px solid var(--rope);border-radius:10px;font-size:13px;line-height:1.45;color:var(--ink)}
+.teacher b{display:block;color:var(--ink-2);font-size:12px;font-weight:700}
+.pill{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 14px;border-radius:20px;font:700 15px 'Noto Sans TC',sans-serif;background:#E9D9B0;color:var(--ink-2);border:2px solid #D4BE86;white-space:nowrap}
+.pill.now{background:var(--coral);color:#fff;border-color:#8A2E1A}
+.pill.done{background:var(--palm);color:#fff;border-color:#1F5A33}
+.pill i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.85);color:var(--ink);font-size:13px;font-weight:700}
+.sg{fill:#F2B134;stroke:#8A5A12;stroke-width:1.5}
+.sh{fill:#FFF8E4;stroke:#8A7A62;stroke-width:1.5}
+
+/* 動畫 */
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.bob{animation:bob 2.2s ease-in-out infinite}
+@keyframes tap{0%,100%{transform:translate(8px,-14px) scale(1)}12%{transform:translate(0,0) scale(.94)}24%{transform:translate(8px,-14px) scale(1)}36%{transform:translate(0,0) scale(.94)}48%{transform:translate(8px,-14px) scale(1)}}
+.demo-cursor{position:absolute;animation:tap 2.6s ease-out infinite;animation-delay:-.5s;transform-origin:4px 3px}
+@keyframes rip1{0%,10%{opacity:0;transform:scale(.3)}12%{opacity:.95;transform:scale(.4)}30%{opacity:0;transform:scale(1.25)}100%{opacity:0}}
+@keyframes rip2{0%,34%{opacity:0;transform:scale(.3)}36%{opacity:.95;transform:scale(.4)}54%{opacity:0;transform:scale(1.25)}100%{opacity:0}}
+.rip{position:absolute;border:5px solid var(--coral-l);border-radius:50%;opacity:0}
+.rip.a{animation:rip1 2.6s ease-out infinite;animation-delay:-.5s}
+.rip.b{animation:rip2 2.6s ease-out infinite;animation-delay:-.5s}
+@keyframes glow{0%,100%{opacity:.75}50%{opacity:1}}
+.glowbg{animation:glow 1.6s ease-in-out infinite}
+@keyframes wob{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.wob{animation:wob .5s ease-in-out infinite;transform-origin:50% 92%}
+
+/* 結算：寶石「蓋下去」只播一次（約 0.85 秒）。reduced-motion 時動畫全關，直接顯示亮起狀態 */
+@keyframes gemdrop{0%{transform:translateY(-80px);opacity:0}10%{opacity:1}80%{transform:translateY(0)}90%{transform:translateY(1.5px) scale(1.12,.88)}100%{transform:translateY(0) scale(1)}}
+.gemdrop{animation:gemdrop .5s ease-in both;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes halo{0%{opacity:0;transform:scale(.4)}12%{opacity:.95}100%{opacity:0;transform:scale(2.8)}}
+.halo{opacity:0;fill:none;stroke:#F2B134;stroke-width:3;transform-box:fill-box;transform-origin:center;animation:halo .45s ease-out .4s both}
+@keyframes spark{0%{opacity:0;transform:translate(0,0) scale(.4)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1)}}
+.spark{opacity:0;transform-box:fill-box;transform-origin:center;animation:spark .45s ease-out .4s both}
+@keyframes glowin{0%{opacity:0}100%{opacity:.85}}
+.glowin{animation:glowin .2s ease-out .4s both}
+@media (prefers-reduced-motion:reduce){*{animation:none !important}}
+
+/* ===== 畫面 1：大廳 ===== */
+#s1{background:#BFE1EA}
+.gempanel{position:absolute;left:1050px;top:94px;width:300px;height:511px;padding:10px 16px;background:#FFF4D6;border:3px solid var(--rope);border-radius:18px;overflow:hidden;box-shadow:0 4px 0 rgba(110,65,37,.28)}
+.gempanel .cnt{margin:2px 0 4px}
+.gl{list-style:none;border-top:2px dashed #D4BE86;padding-top:4px}
+.gl li{display:flex;align-items:center;gap:8px;height:24px;font-size:14px;color:var(--ink-2)}
+.gl li.lit{color:var(--ink)}
+.gl li svg{flex:none}
+.gempanel .foot{margin-top:8px;padding:6px 12px;border-radius:10px;background:#F6E7BE;color:var(--ink)}
+
+/* ===== 畫面 3：卡片 ===== */
+#s3{background:#F1E3BA}
+.card{position:absolute;top:84px;height:553px;background:var(--parch);border:2px solid var(--rope);border-radius:16px;overflow:hidden;box-shadow:0 4px 0 rgba(110,65,37,.28)}
+.card .sign{height:52px;background:var(--wood-d);color:#FFF3D6;display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+.card .sign.ok{background:var(--palm)}
+.marks{display:flex;gap:6px}
+.marks i{width:24px;height:24px;border-radius:50%;background:#FFF3D6;color:var(--wood-d);font-style:normal;font-weight:900;font-size:14px;display:inline-flex;align-items:center;justify-content:center}
+.card .a{position:absolute}
+.note{position:absolute;left:24px;right:24px;font-size:13px;color:var(--ink-2);line-height:1.5}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:18px;font-size:15px}
+.chip.ok{background:var(--palm);color:#fff}
+.chip.gold{background:#FFE9A8;color:var(--ink);border:2px solid var(--gold)}
+.badge{position:absolute;width:44px;height:44px;border-radius:50%;background:var(--coral);color:#fff;font:900 24px 'Noto Sans TC';display:flex;align-items:center;justify-content:center;border:3px solid #FFF8E4;box-shadow:0 2px 0 rgba(0,0,0,.2)}
+
+/* ===== 畫面 4：右鍵（3–4 年級，不加注音） ===== */
+#s4{background:#D6EAEC}
+.ctx{position:absolute;left:400px;top:330px;width:204px;padding:6px;background:#FBFAF3;border:1px solid #8E8A7C;border-radius:8px;box-shadow:0 8px 18px rgba(40,50,60,.35)}
+.ctx div{height:44px;display:flex;align-items:center;padding:0 14px;border-radius:5px;font-size:18px;color:var(--ink)}
+.ctx hr{border:0;border-top:1px solid #CFCABA;margin:3px 4px}
+.ctx .hl{background:var(--sea-d);color:#fff;font-weight:700}
+.itemlabel{position:absolute;top:538px;transform:translateX(-50%);padding:4px 14px;background:var(--parch);border:2px solid var(--rope);border-radius:12px;font-size:18px;font-weight:700}
+
+/* ===== 畫面 5：結算 ===== */
+#s5{background:#F1E3BA}
+.tile{position:absolute;top:164px;width:244px;height:90px;padding:8px 16px;background:var(--parch);border:2px solid var(--rope);border-radius:14px}
+.tile small{display:block;font-size:14px;color:var(--ink-2)}
+.tile b{display:block;font-size:30px;font-weight:900;line-height:1.35;color:var(--ink)}
+.slot{width:60px;height:60px;border-radius:12px;background:#FFF8E4;border:2px solid var(--rope);display:flex;align-items:center;justify-content:center;position:relative}
+.slot.q{background:#EBDDB4;border:2px dashed #B8A272;color:var(--ink-2);font-size:24px;font-weight:900}
+.slot.new{border:3px solid var(--sea-d);box-shadow:0 0 0 4px #BFE1EA}
+</style>
+</head>
+<body>
+
+<!-- ======= 共用 SVG 素材 ======= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="star" viewBox="0 0 24 24"><polygon points="12,1.5 15.2,8.3 22.6,9.2 17.1,14.3 18.6,21.6 12,18 5.4,21.6 6.9,14.3 1.4,9.2 8.8,8.3" stroke-linejoin="round"/></symbol>
+    <symbol id="gem" viewBox="0 0 24 24">
+      <polygon points="12,1 23,8.5 12,23 1,8.5" fill="currentColor" stroke="#3A2412" stroke-width="1.6" stroke-linejoin="round"/>
+      <polygon points="12,1 23,8.5 12,8.5" fill="#fff" opacity=".4"/>
+      <polygon points="1,8.5 7,8.5 12,23" fill="#fff" opacity=".22"/>
+    </symbol>
+    <symbol id="cursor" viewBox="0 0 40 56"><path d="M4 3 L4 42 L13 33 L20 50 L27 47 L20 30 L33 30 Z" fill="#FFFDF6" stroke="#33261B" stroke-width="3" stroke-linejoin="round"/></symbol>
+
+    <!-- 原創吉祥物：戴船長帽的小寄居蟹「寄寄」 -->
+    <symbol id="crab" viewBox="0 0 120 112">
+      <g stroke="#8A3A22" stroke-width="5" stroke-linecap="round"><path d="M26 100 L20 110"/><path d="M42 102 L40 111"/><path d="M58 100 L62 110"/></g>
+      <circle cx="86" cy="70" r="30" fill="#F6D9A8" stroke="#B9794A" stroke-width="4"/>
+      <path d="M86 70 m-5 0 a5 5 0 1 1 5 5 a10 10 0 1 1 -10 -10 a15 15 0 1 1 15 15" fill="none" stroke="#B9794A" stroke-width="3" stroke-linecap="round"/>
+      <ellipse cx="46" cy="84" rx="32" ry="20" fill="#E8704F" stroke="#8A3A22" stroke-width="3"/>
+      <path d="M36 66 V55 M58 66 V55" stroke="#8A3A22" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="36" cy="46" r="9" fill="#FFF9EA" stroke="#33261B" stroke-width="2.5"/>
+      <circle cx="58" cy="46" r="9" fill="#FFF9EA" stroke="#33261B" stroke-width="2.5"/>
+      <circle cx="38" cy="47" r="4" fill="#33261B"/><circle cx="60" cy="47" r="4" fill="#33261B"/>
+      <path d="M22 30 Q22 6 47 6 Q72 6 72 30 Z" fill="#23406B" stroke="#14264A" stroke-width="2.5" stroke-linejoin="round"/>
+      <ellipse cx="47" cy="30" rx="30" ry="6" fill="#14264A"/>
+      <circle cx="47" cy="19" r="5" fill="#F2B134"/>
+      <path d="M38 88 Q47 98 56 88" fill="none" stroke="#5A1E10" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="10" cy="78" r="11" fill="#E8704F" stroke="#8A3A22" stroke-width="3"/>
+      <path d="M4 69 L10 78" stroke="#8A3A22" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="80" cy="88" r="10" fill="#E8704F" stroke="#8A3A22" stroke-width="3"/>
+      <path d="M86 80 L80 88" stroke="#8A3A22" stroke-width="3" stroke-linecap="round"/>
+    </symbol>
+
+    <symbol id="egg" viewBox="0 0 240 300">
+      <path d="M120 8 C175 8 225 110 225 185 C225 250 180 292 120 292 C60 292 15 250 15 185 C15 110 65 8 120 8 Z" fill="#FFF6E2" stroke="#6E4125" stroke-width="7"/>
+      <circle cx="82" cy="150" r="14" fill="#F4A47F"/><circle cx="160" cy="130" r="10" fill="#8CC48A"/>
+      <circle cx="150" cy="215" r="15" fill="#F4A47F"/><circle cx="70" cy="225" r="9" fill="#8CC48A"/>
+      <ellipse cx="78" cy="78" rx="12" ry="26" transform="rotate(25 78 78)" fill="#fff" opacity=".7"/>
+    </symbol>
+
+    <symbol id="chick" viewBox="0 0 100 100">
+      <path d="M40 94 L36 100 M60 94 L64 100" stroke="#E8704F" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="50" cy="56" r="34" fill="#F7D154" stroke="#8A5A12" stroke-width="3"/>
+      <path d="M44 22 Q48 12 50 22 M50 22 Q56 12 58 24" fill="none" stroke="#8A5A12" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="39" cy="50" r="4" fill="#33261B"/><circle cx="61" cy="50" r="4" fill="#33261B"/>
+      <polygon points="43,58 57,58 50,68" fill="#E8704F" stroke="#8A3A22" stroke-width="2" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="turtle" viewBox="0 0 100 100">
+      <rect x="22" y="72" width="12" height="14" rx="5" fill="#8CC48A" stroke="#2F5A3A" stroke-width="2.5"/>
+      <rect x="58" y="72" width="12" height="14" rx="5" fill="#8CC48A" stroke="#2F5A3A" stroke-width="2.5"/>
+      <circle cx="86" cy="58" r="12" fill="#8CC48A" stroke="#2F5A3A" stroke-width="3"/>
+      <circle cx="90" cy="55" r="2.6" fill="#33261B"/>
+      <path d="M12 76 Q12 34 48 34 Q84 34 84 76 Z" fill="#5FAF6A" stroke="#2F5A3A" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M48 36 V76 M30 50 L66 50 M24 64 H72" stroke="#2F5A3A" stroke-width="2.5" fill="none"/>
+    </symbol>
+    <symbol id="penguin" viewBox="0 0 100 100">
+      <ellipse cx="38" cy="95" rx="10" ry="4" fill="#E8704F"/><ellipse cx="62" cy="95" rx="10" ry="4" fill="#E8704F"/>
+      <ellipse cx="50" cy="56" rx="32" ry="40" fill="#2D3E5C" stroke="#14264A" stroke-width="3"/>
+      <ellipse cx="50" cy="63" rx="20" ry="28" fill="#F4F0E4"/>
+      <circle cx="40" cy="40" r="6" fill="#FFF9EA"/><circle cx="60" cy="40" r="6" fill="#FFF9EA"/>
+      <circle cx="41" cy="41" r="3" fill="#33261B"/><circle cx="59" cy="41" r="3" fill="#33261B"/>
+      <polygon points="43,48 57,48 50,58" fill="#F2A134" stroke="#8A5A12" stroke-width="2" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="palm" viewBox="-40 -60 80 120">
+      <path d="M0 56 Q8 10 -2 -22" fill="none" stroke="#8A5A32" stroke-width="8" stroke-linecap="round"/>
+      <g fill="#3E8E5A" stroke="#2A6B40" stroke-width="2">
+        <ellipse cx="-22" cy="-24" rx="22" ry="7" transform="rotate(-20 -22 -24)"/>
+        <ellipse cx="18" cy="-24" rx="22" ry="7" transform="rotate(20 18 -24)"/>
+        <ellipse cx="-14" cy="-36" rx="20" ry="7" transform="rotate(-60 -14 -36)"/>
+        <ellipse cx="12" cy="-36" rx="20" ry="7" transform="rotate(60 12 -36)"/>
+        <ellipse cx="-2" cy="-42" rx="18" ry="6" transform="rotate(90 -2 -42)"/>
+      </g>
+      <circle cx="-4" cy="-20" r="4" fill="#8A5A32"/><circle cx="2" cy="-18" r="4" fill="#8A5A32"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="stage">
+<nav class="tabs">
+  <button data-s="1" class="on">① 大廳</button>
+  <button data-s="2">② 第一段：看我示範</button>
+  <button data-s="3">③ 卡住提示</button>
+  <button data-s="4">④ 右鍵魔法師</button>
+  <button data-s="5">⑤ 結算</button>
+  <span>海島尋寶地圖版（寶石進度，無護照）</span>
+</nav>
+
+<!-- =====================================================
+     畫面 1：大廳（尋寶地圖）
+     地圖整組縮成 0.93 倍，下緣留在 y≈605，寶箱欄同高
+     ===================================================== -->
+<section class="screen on" id="s1">
+  <svg class="abs" style="left:0;top:0" width="1366" height="657" viewBox="0 0 1366 657">
+    <defs>
+      <clipPath id="isl"><rect x="22" y="96" width="1066" height="540" rx="44"/></clipPath>
+      <pattern id="wv" width="90" height="40" patternUnits="userSpaceOnUse"><path d="M6 22 q12 -12 24 0 t24 0" fill="none" stroke="#F4FBFB" stroke-width="3" opacity=".75" stroke-linecap="round"/></pattern>
+    </defs>
+    <rect width="1366" height="657" fill="#BFE1EA"/>
+    <rect width="1366" height="657" fill="url(#wv)"/>
+
+    <g transform="translate(14 88) scale(.93) translate(-14 -88)">
+    <!-- 島：泡沫邊 + 沙地 -->
+    <rect x="14" y="88" width="1082" height="556" rx="50" fill="#F4FBFB"/>
+    <rect x="22" y="96" width="1066" height="540" rx="44" fill="#F7E7BE"/>
+    <g clip-path="url(#isl)">
+      <rect x="683" y="96" width="410" height="545" fill="#E7E6B4"/>
+      <path d="M650 80 C620 200 690 300 650 400 C620 500 680 580 650 660" fill="none" stroke="#F4FBFB" stroke-width="78" stroke-linecap="round"/>
+      <path d="M650 80 C620 200 690 300 650 400 C620 500 680 580 650 660" fill="none" stroke="#8FCBE0" stroke-width="66" stroke-linecap="round"/>
+      <path d="M640 150 q10 -8 20 0 M660 260 q10 -8 20 0 M630 470 q10 -8 20 0 M660 560 q10 -8 20 0" fill="none" stroke="#F4FBFB" stroke-width="3" stroke-linecap="round"/>
+    </g>
+
+    <!-- 小路（虛線） -->
+    <path d="M135 500 C145 410 195 320 265 285 C330 330 340 440 420 480 C490 430 440 290 520 225 C590 240 600 330 650 372 C700 330 710 250 770 230 C840 300 700 420 790 490 C890 480 960 420 975 330 C990 280 980 230 975 165"
+          fill="none" stroke="#9A5F36" stroke-width="6" stroke-linecap="round" stroke-dasharray="1 13"/>
+
+    <!-- 棕櫚樹裝飾 -->
+    <use href="#palm" x="22" y="300" width="80" height="120"/>
+    <use href="#palm" x="1010" y="200" width="80" height="120"/>
+    <use href="#palm" x="1010" y="460" width="80" height="120"/>
+
+    <!-- 年段旗子（三種顏色） -->
+    <g>
+      <rect x="36" y="104" width="116" height="28" rx="6" fill="#C2432A"/><polygon points="152,104 166,118 152,132" fill="#C2432A"/>
+      <text class="zy" x="46" y="125" font-size="15" fill="#fff">1–2 年級</text>
+      <rect x="196" y="104" width="116" height="28" rx="6" fill="#2F7A49"/><polygon points="312,104 326,118 312,132" fill="#2F7A49"/>
+      <text class="zy" x="206" y="125" font-size="15" fill="#fff">1–4 年級</text>
+      <rect x="700" y="104" width="116" height="28" rx="6" fill="#236F96"/><polygon points="816,104 830,118 816,132" fill="#236F96"/>
+      <text class="zy" x="710" y="125" font-size="15" fill="#fff">3–4 年級</text>
+    </g>
+
+    <!-- 橋（標籤放橋下，避開小路） -->
+    <g transform="translate(650 372)">
+      <rect x="-52" y="-16" width="104" height="32" rx="4" fill="#C98F55" stroke="#6E4125" stroke-width="3"/>
+      <path d="M-30 -16 V16 M-10 -16 V16 M10 -16 V16 M30 -16 V16" stroke="#6E4125" stroke-width="2.5"/>
+      <rect x="-52" y="-24" width="104" height="7" rx="3" fill="#8A5A32"/><rect x="-52" y="17" width="104" height="7" rx="3" fill="#8A5A32"/>
+      <rect x="-50" y="34" width="100" height="28" rx="8" fill="#FFF8E4" stroke="#B9794A" stroke-width="2"/>
+      <text class="zy" x="0" y="55" text-anchor="middle" font-size="15" fill="#33261B">過橋去</text>
+    </g>
+
+    <!-- 終點：寶箱 X -->
+    <g transform="translate(975 160)">
+      <path d="M-34 38 L34 62 M34 38 L-34 62" stroke="#C2432A" stroke-width="9" stroke-linecap="round"/>
+      <path d="M-30 8 A30 22 0 0 1 30 8 Z" fill="#B9794A" stroke="#6E4125" stroke-width="3.5"/>
+      <rect x="-30" y="6" width="60" height="30" rx="5" fill="#9A5F36" stroke="#6E4125" stroke-width="3.5"/>
+      <rect x="-6" y="2" width="12" height="16" rx="3" fill="#F2B134" stroke="#6E4125" stroke-width="2.5"/>
+      <rect x="-64" y="-34" width="128" height="28" rx="8" fill="#FFF8E4" stroke="#B9794A" stroke-width="2"/>
+      <text class="zy" x="0" y="-14" text-anchor="middle" font-size="15" fill="#33261B">終點：寶箱</text>
+    </g>
+
+    <!-- ① 貓咪燈塔：滑鼠勇士（已過 ★★★，1–2 年級） -->
+    <g transform="translate(135 500)">
+      <ellipse cx="0" cy="42" rx="40" ry="8" fill="#000" opacity=".12"/>
+      <polygon points="-16,40 16,40 10,-14 -10,-14" fill="#FFF8E4" stroke="#6E4125" stroke-width="3" stroke-linejoin="round"/>
+      <polygon points="-13,22 13,22 14,30 -14,30" fill="#C2432A"/><polygon points="-10,2 10,2 11,10 -11,10" fill="#C2432A"/>
+      <polygon points="-14,-26 -9,-44 -3,-30" fill="#F9D77A" stroke="#6E4125" stroke-width="3" stroke-linejoin="round"/>
+      <polygon points="14,-26 9,-44 3,-30" fill="#F9D77A" stroke="#6E4125" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="0" cy="-22" r="18" fill="#F9D77A" stroke="#6E4125" stroke-width="3"/>
+      <ellipse cx="-7" cy="-24" rx="3" ry="4" fill="#33261B"/><ellipse cx="7" cy="-24" rx="3" ry="4" fill="#33261B"/>
+      <path d="M-4 -16 L0 -13 L4 -16 M-20 -18 H-30 M20 -18 H30" stroke="#33261B" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <use href="#gem" x="26" y="-52" width="26" height="26" style="color:#E8704F"/>
+    </g>
+    <g transform="translate(135 552)">
+      <rect x="-105" y="0" width="210" height="56" rx="10" fill="#FFF8E4" stroke="#B9794A" stroke-width="2"/>
+      <circle cx="-84" cy="28" r="13" fill="#C2432A"/><text x="-84" y="34" text-anchor="middle" font-size="16" font-weight="900" fill="#fff">1</text>
+      <text class="zy" x="-62" y="24" font-size="17" fill="#33261B">滑鼠勇士</text>
+      <text class="zy" x="-62" y="46" font-size="14" fill="#6B5A48">指向＋單擊</text>
+      <use href="#star" class="sg" x="54" y="32" width="14" height="14"/><use href="#star" class="sg" x="70" y="32" width="14" height="14"/><use href="#star" class="sg" x="86" y="32" width="14" height="14"/>
+    </g>
+
+    <!-- ② 蛋蛋山：敲敲蛋寶寶（已過 ★★，1–4 年級） -->
+    <g transform="translate(265 285)">
+      <ellipse cx="0" cy="42" rx="52" ry="8" fill="#000" opacity=".12"/>
+      <path d="M-50 40 Q-32 -30 0 -38 Q32 -30 50 40 Z" fill="#7DB36E" stroke="#2A6B40" stroke-width="3" stroke-linejoin="round"/>
+      <ellipse cx="-18" cy="12" rx="9" ry="12" fill="#FFF6E2" stroke="#6E4125" stroke-width="2.5"/>
+      <ellipse cx="10" cy="-8" rx="9" ry="12" fill="#FFF6E2" stroke="#6E4125" stroke-width="2.5"/>
+      <ellipse cx="24" cy="22" rx="9" ry="12" fill="#FFF6E2" stroke="#6E4125" stroke-width="2.5"/>
+      <circle cx="-18" cy="14" r="3" fill="#F4A47F"/><circle cx="10" cy="-6" r="3" fill="#F4A47F"/><circle cx="24" cy="24" r="3" fill="#8CC48A"/>
+      <use href="#gem" x="30" y="-58" width="26" height="26" style="color:#F2B134"/>
+    </g>
+    <g transform="translate(265 337)">
+      <rect x="-105" y="0" width="210" height="56" rx="10" fill="#FFF8E4" stroke="#B9794A" stroke-width="2"/>
+      <circle cx="-84" cy="28" r="13" fill="#2F7A49"/><text x="-84" y="34" text-anchor="middle" font-size="16" font-weight="900" fill="#fff">2</text>
+      <text class="zy" x="-62" y="24" font-size="17" fill="#33261B">敲敲蛋寶寶</text>
+      <text class="zy" x="-62" y="46" font-size="14" fill="#6B5A48">雙擊</text>
+      <use href="#star" class="sg" x="54" y="32" width="14" height="14"/><use href="#star" class="sg" x="70" y="32" width="14" height="14"/><use href="#star" class="sh" x="86" y="32" width="14" height="14"/>
+    </g>
+
+    <!-- ③ 蔬菜田：拔蔬菜（下一站，1–4 年級） -->
+    <g transform="translate(420 480)">
+      <ellipse cx="0" cy="42" rx="54" ry="8" fill="#000" opacity=".12"/>
+      <rect x="-50" y="8" width="100" height="34" rx="8" fill="#A8693C" stroke="#6E4125" stroke-width="3"/>
+      <path d="M-50 22 H50" stroke="#6E4125" stroke-width="2" opacity=".5"/>
+      <g fill="#E8883A" stroke="#8A3A22" stroke-width="2"><circle cx="-30" cy="8" r="7"/><circle cx="0" cy="8" r="7"/><circle cx="30" cy="8" r="7"/></g>
+      <g fill="#5FAF6A" stroke="#2A6B40" stroke-width="2">
+        <ellipse cx="-34" cy="-6" rx="4" ry="11" transform="rotate(-20 -34 -6)"/><ellipse cx="-26" cy="-6" rx="4" ry="11" transform="rotate(20 -26 -6)"/>
+        <ellipse cx="-4" cy="-10" rx="4" ry="12" transform="rotate(-20 -4 -10)"/><ellipse cx="4" cy="-10" rx="4" ry="12" transform="rotate(20 4 -10)"/>
+        <ellipse cx="26" cy="-6" rx="4" ry="11" transform="rotate(-20 26 -6)"/><ellipse cx="34" cy="-6" rx="4" ry="11" transform="rotate(20 34 -6)"/>
+      </g>
+    </g>
+    <g transform="translate(420 406)">
+      <path d="M-34 0 H34 a8 8 0 0 1 8 8 v12 a8 8 0 0 1 -8 8 H8 L0 38 L-8 28 H-34 a8 8 0 0 1 -8 -8 v-12 a8 8 0 0 1 8 -8 Z" fill="#C2432A"/>
+      <text class="zy" x="0" y="21" text-anchor="middle" font-size="15" fill="#fff">下一站</text>
+    </g>
+    <g transform="translate(420 532)">
+      <rect x="-105" y="0" width="210" height="56" rx="10" fill="#FFF8E4" stroke="#B9794A" stroke-width="2"/>
+      <circle cx="-84" cy="28" r="13" fill="#2F7A49"/><text x="-84" y="34" text-anchor="middle" font-size="16" font-weight="900" fill="#fff">3</text>
+      <text class="zy" x="-62" y="24" font-size="17" fill="#33261B">拔蔬菜</text>
+      <text class="zy" x="-62" y="46" font-size="14" fill="#6B5A48">拖拉</text>
+      <use href="#star" class="sh" x="54" y="32" width="14" height="14"/><use href="#star" class="sh" x="70" y="32" width="14" height="14"/><use href="#star" class="sh" x="86" y="32" width="14" height="14"/>
+    </g>
+
+    <!-- ④ 小兔城堡：小兔勇者（1–4 年級） -->
+    <g transform="translate(520 225)">
+      <ellipse cx="0" cy="42" rx="52" ry="8" fill="#000" opacity=".12"/>
+      <ellipse cx="-8" cy="-52" rx="5" ry="15" fill="#FFF8E4" stroke="#6E4125" stroke-width="2.5"/>
+      <ellipse cx="8" cy="-52" rx="5" ry="15" fill="#FFF8E4" stroke="#6E4125" stroke-width="2.5"/>
+      <rect x="-34" y="-12" width="68" height="52" fill="#F3D2C1" stroke="#6E4125" stroke-width="3"/>
+      <rect x="-46" y="-26" width="22" height="66" fill="#F3D2C1" stroke="#6E4125" stroke-width="3"/>
+      <rect x="24" y="-26" width="22" height="66" fill="#F3D2C1" stroke="#6E4125" stroke-width="3"/>
+      <polygon points="-50,-26 -35,-50 -20,-26" fill="#C2432A" stroke="#6E4125" stroke-width="3" stroke-linejoin="round"/>
+      <polygon points="20,-26 35,-50 50,-26" fill="#C2432A" stroke="#6E4125" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M-10 40 V20 a10 10 0 0 1 20 0 V40 Z" fill="#6E4125"/>
+      <circle cx="-35" cy="-8" r="4" fill="#F9D77A"/><circle cx="35" cy="-8" r="4" fill="#F9D77A"/>
+    </g>
+    <g transform="translate(520 277)">
+      <rect x="-105" y="0" width="210" height="56" rx="10" fill="#FFF8E4" stroke="#B9794A" stroke-width="2"/>
+      <circle cx="-84" cy="28" r="13" fill="#2F7A49"/><text x="-84" y="34" text-anchor="middle" font-size="16" font-weight="900" fill="#fff">4</text>
+      <text class="zy" x="-62" y="24" font-size="17" fill="#33261B">小兔勇者</text>
+      <text class="zy" x="-62" y="46" font-size="14" fill="#6B5A48">總複習</text>
+      <use href="#star" class="sh" x="54" y="32" width="14" height="14"/><use href="#star" class="sh" x="70" y="32" width="14" height="14"/><use href="#star" class="sh" x="86" y="32" width="14" height="14"/>
+    </g>
+
+    <!-- ⑤ 魔法塔：右鍵魔法師（3–4 年級） -->
+    <g transform="translate(770 230)">
+      <ellipse cx="0" cy="42" rx="40" ry="8" fill="#000" opacity=".12"/>
+      <rect x="-20" y="-28" width="40" height="70" fill="#C9BBEE" stroke="#4B3F8A" stroke-width="3"/>
+      <path d="M-30 -28 H30 L6 -72 Q0 -78 -4 -70 Z" fill="#3A3A7A" stroke="#23234F" stroke-width="3" stroke-linejoin="round"/>
+      <use href="#star" x="-8" y="-62" width="16" height="16" style="fill:#F2B134;stroke:#8A5A12;stroke-width:1.5"/>
+      <circle cx="0" cy="-8" r="9" fill="#F9D77A" stroke="#4B3F8A" stroke-width="2.5"/>
+      <path d="M-8 42 V26 a8 8 0 0 1 16 0 V42 Z" fill="#4B3F8A"/>
+    </g>
+    <g transform="translate(790 282)">
+      <rect x="-105" y="0" width="210" height="56" rx="10" fill="#FFF8E4" stroke="#B9794A" stroke-width="2"/>
+      <circle cx="-84" cy="28" r="13" fill="#236F96"/><text x="-84" y="34" text-anchor="middle" font-size="16" font-weight="900" fill="#fff">5</text>
+      <text class="zy" x="-62" y="24" font-size="17" fill="#33261B">右鍵魔法師</text>
+      <text class="zy" x="-62" y="46" font-size="14" fill="#6B5A48">右鍵選單</text>
+      <use href="#star" class="sh" x="54" y="32" width="14" height="14"/><use href="#star" class="sh" x="70" y="32" width="14" height="14"/><use href="#star" class="sh" x="86" y="32" width="14" height="14"/>
+    </g>
+
+    <!-- ⑥ 海底入口：海底捲捲探險（3–4 年級） -->
+    <g transform="translate(790 490)">
+      <ellipse cx="0" cy="22" rx="50" ry="26" fill="#F4FBFB"/>
+      <ellipse cx="0" cy="22" rx="44" ry="22" fill="#236F96" stroke="#14455F" stroke-width="3"/>
+      <ellipse cx="0" cy="22" rx="30" ry="14" fill="#1B557A"/>
+      <ellipse cx="0" cy="22" rx="16" ry="7" fill="#123F5C"/>
+      <path d="M-30 22 a30 14 0 0 1 20 -12" fill="none" stroke="#8FCBE0" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="-8" cy="-8" r="5" fill="#EAF8FB" stroke="#236F96" stroke-width="2"/><circle cx="6" cy="-22" r="7" fill="#EAF8FB" stroke="#236F96" stroke-width="2"/><circle cx="-4" cy="-38" r="4" fill="#EAF8FB" stroke="#236F96" stroke-width="2"/>
+      <path d="M40 40 q-4 -18 4 -26 q4 10 8 0 q6 12 0 26 Z" fill="#E8704F" stroke="#8A3A22" stroke-width="2.5" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(790 542)">
+      <rect x="-105" y="0" width="210" height="56" rx="10" fill="#FFF8E4" stroke="#B9794A" stroke-width="2"/>
+      <circle cx="-84" cy="28" r="13" fill="#236F96"/><text x="-84" y="34" text-anchor="middle" font-size="16" font-weight="900" fill="#fff">6</text>
+      <text class="zy" x="-62" y="24" font-size="17" fill="#33261B">海底捲捲探險</text>
+      <text class="zy" x="-62" y="46" font-size="14" fill="#6B5A48">滾輪</text>
+      <use href="#star" class="sh" x="54" y="32" width="14" height="14"/><use href="#star" class="sh" x="70" y="32" width="14" height="14"/><use href="#star" class="sh" x="86" y="32" width="14" height="14"/>
+    </g>
+
+    <!-- ⑦ 牧場：牧場圍圍樂（3–4 年級） -->
+    <g transform="translate(975 330)">
+      <ellipse cx="0" cy="38" rx="56" ry="12" fill="#8CC48A" stroke="#2A6B40" stroke-width="2.5"/>
+      <g stroke="#6E4125" stroke-width="2.5"><rect x="-52" y="4" width="6" height="34" fill="#C98F55"/><rect x="-18" y="4" width="6" height="34" fill="#C98F55"/><rect x="18" y="4" width="6" height="34" fill="#C98F55"/><rect x="46" y="4" width="6" height="34" fill="#C98F55"/>
+        <rect x="-54" y="12" width="108" height="5" fill="#E0B27A"/><rect x="-54" y="26" width="108" height="5" fill="#E0B27A"/></g>
+      <g fill="#FFFDF4" stroke="#6E4125" stroke-width="2.5"><circle cx="-14" cy="-6" r="14"/><circle cx="6" cy="-12" r="14"/><circle cx="20" cy="-2" r="13"/><circle cx="0" cy="2" r="14"/></g>
+      <ellipse cx="-24" cy="2" rx="9" ry="10" fill="#5A4636"/>
+      <circle cx="-27" cy="0" r="1.8" fill="#fff"/>
+      <path d="M-6 16 V26 M12 16 V26" stroke="#5A4636" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <g transform="translate(975 382)">
+      <rect x="-105" y="0" width="210" height="56" rx="10" fill="#FFF8E4" stroke="#B9794A" stroke-width="2"/>
+      <circle cx="-84" cy="28" r="13" fill="#236F96"/><text x="-84" y="34" text-anchor="middle" font-size="16" font-weight="900" fill="#fff">7</text>
+      <text class="zy" x="-62" y="24" font-size="17" fill="#33261B">牧場圍圍樂</text>
+      <text class="zy" x="-62" y="46" font-size="14" fill="#6B5A48">框選多選</text>
+      <use href="#star" class="sh" x="54" y="32" width="14" height="14"/><use href="#star" class="sh" x="70" y="32" width="14" height="14"/><use href="#star" class="sh" x="86" y="32" width="14" height="14"/>
+    </g>
+
+    <!-- 嚮導寄寄＋說的話 -->
+    <g class="bob"><use href="#crab" x="50" y="148" width="88" height="82"/></g>
+    <rect x="148" y="160" width="132" height="42" rx="14" fill="#FFF8E4" stroke="#B9794A" stroke-width="2"/>
+    <path d="M148 176 L136 184 L148 190" fill="#FFF8E4" stroke="#B9794A" stroke-width="2" stroke-linejoin="round"/>
+    <text class="zy" x="162" y="188" font-size="17" fill="#33261B">跟我來！</text>
+    </g>
+  </svg>
+
+  <!-- 頁首 -->
+  <a class="home" href="../../index.html" style="left:16px;top:20px">🏠 <span class="zy" style="font-size:18px">首頁</span></a>
+  <div class="abs zy" style="left:140px;top:14px;height:56px;display:flex;align-items:center;font-size:36px">滑鼠島</div>
+  <div class="abs" style="left:320px;top:14px;width:470px;height:58px;padding:0 20px;background:#FFF8E4;border:2px solid var(--rope);border-radius:16px;display:flex;align-items:center;box-shadow:0 3px 0 rgba(110,65,37,.28)">
+    <span class="zy" style="font-size:30px">選一關，開始練滑鼠！</span>
+  </div>
+
+  <!-- 寶石寶箱 -->
+  <aside class="gempanel">
+    <div class="zy" style="font-size:20px">我的寶石寶箱</div>
+    <svg width="190" height="164" viewBox="0 0 220 190" style="display:block;margin:0 auto">
+      <path d="M14 108 A96 84 0 0 1 206 108 Z" fill="#B9794A" stroke="#6E4125" stroke-width="4" stroke-linejoin="round"/>
+      <rect x="10" y="100" width="200" height="14" rx="4" fill="#8A5A32" stroke="#6E4125" stroke-width="3"/>
+      <rect x="14" y="112" width="192" height="66" rx="8" fill="#9A5F36" stroke="#6E4125" stroke-width="4"/>
+      <path d="M16 134 H204 M16 156 H204" stroke="#7A4A2A" stroke-width="2.5"/>
+      <rect x="98" y="104" width="24" height="32" rx="5" fill="#F2B134" stroke="#6E4125" stroke-width="3"/>
+      <circle cx="110" cy="118" r="3.5" fill="#33261B"/><rect x="108.8" y="118" width="2.4" height="9" fill="#33261B"/>
+      <use href="#gem" x="30" y="86" width="28" height="28" style="color:#E8704F"/>
+      <use href="#gem" x="38.8" y="58" width="28" height="28" style="color:#F2B134"/>
+      <g fill="#6E4125" stroke="#E8CFA0" stroke-width="2" stroke-dasharray="3 3">
+        <circle cx="77" cy="51.5" r="13"/><circle cx="110" cy="44" r="13"/><circle cx="143" cy="51.5" r="13"/><circle cx="167" cy="72" r="13"/><circle cx="176" cy="100" r="13"/>
+      </g>
+    </svg>
+    <div class="cnt zy" style="font-size:22px">亮了 2／7 顆寶石</div>
+    <ul class="gl">
+      <li class="lit"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#gem" style="color:#E8704F"/></svg>1 <span class="zy">指向＋單擊</span></li>
+      <li class="lit"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#gem" style="color:#F2B134"/></svg>2 <span class="zy">雙擊</span></li>
+      <li><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#6B5A48" stroke-width="2" stroke-dasharray="3 2"/></svg>3 <span class="zy">拖拉</span></li>
+      <li><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#6B5A48" stroke-width="2" stroke-dasharray="3 2"/></svg>4 <span class="zy">總複習</span></li>
+      <li><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#6B5A48" stroke-width="2" stroke-dasharray="3 2"/></svg>5 <span class="zy">右鍵選單</span></li>
+      <li><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#6B5A48" stroke-width="2" stroke-dasharray="3 2"/></svg>6 <span class="zy">滾輪</span></li>
+      <li><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#6B5A48" stroke-width="2" stroke-dasharray="3 2"/></svg>7 <span class="zy">框選多選</span></li>
+    </ul>
+    <div class="foot zy" style="font-size:15px;white-space:normal">練會技能，寶石就亮！<br>集滿 7 顆，領證書！</div>
+  </aside>
+</section>
+
+<!-- =====================================================
+     畫面 2：敲敲蛋寶寶・第一段（看我示範）
+     ===================================================== -->
+<section class="screen" id="s2">
+  <svg class="abs" style="left:0;top:0" width="1366" height="657" viewBox="0 0 1366 657">
+    <rect width="1366" height="657" fill="#D2E9EE"/>
+    <rect y="250" width="1366" height="90" fill="#A9D6E3"/>
+    <path d="M0 250 q40 -10 80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0" fill="none" stroke="#F4FBFB" stroke-width="3" opacity=".8"/>
+    <path d="M0 336 Q100 312 200 336 T400 336 T600 336 T800 336 T1000 336 T1200 336 T1366 336 V657 H0 Z" fill="#F6E7BE"/>
+    <path d="M0 336 Q100 312 200 336 T400 336 T600 336 T800 336 T1000 336 T1200 336 T1366 336" fill="none" stroke="#F4FBFB" stroke-width="6"/>
+    <use href="#palm" x="1226" y="300" width="100" height="150"/>
+    <use href="#palm" x="20" y="300" width="80" height="120"/>
+    <ellipse cx="683" cy="530" rx="140" ry="34" fill="#B9794A" stroke="#6E4125" stroke-width="4"/>
+    <ellipse cx="683" cy="522" rx="112" ry="22" fill="#E0B27A"/>
+    <path d="M590 524 q20 -10 40 0 M640 530 q20 -8 40 0 M700 526 q20 -10 40 0 M750 530 q16 -8 30 0" fill="none" stroke="#9A5F36" stroke-width="3" stroke-linecap="round"/>
+  </svg>
+
+  <a class="home" href="../../index.html" style="left:16px;top:10px">🏠 <span class="zy" style="font-size:18px">首頁</span></a>
+  <div class="abs" style="left:146px;top:10px;height:46px;display:flex;align-items:center"><span class="zy" style="font-size:28px">第一段：看我示範</span></div>
+  <div class="abs" style="left:490px;top:10px;display:flex;gap:8px">
+    <span class="pill now"><i>1</i><span class="zy" style="font-size:14px">看我示範</span></span><span class="pill"><i>2</i><span class="zy" style="font-size:14px">自己來</span></span><span class="pill"><i>3</i><span class="zy" style="font-size:14px">小挑戰</span></span>
+  </div>
+  <div class="teacher" style="left:960px;top:6px;width:390px"><b>給老師</b>這關練什麼：雙擊｜生活 2-I-5、資E1</div>
+
+  <div class="abs" style="left:383px;top:84px;width:600px;height:62px;background:#FFF8E4;border:2px solid var(--rope);border-radius:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 rgba(110,65,37,.28)">
+    <span class="zy" style="font-size:34px">快快按兩下，把蛋敲開！</span>
+  </div>
+
+  <div class="abs glowbg" style="left:543px;top:225px;width:280px;height:320px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,214,90,.75),rgba(255,214,90,0))"></div>
+  <svg class="abs" style="left:563px;top:235px" width="240" height="300" viewBox="0 0 240 300"><use href="#egg"/></svg>
+  <div class="rip a" style="left:633px;top:292px;width:100px;height:100px"></div>
+  <div class="rip b" style="left:633px;top:292px;width:100px;height:100px"></div>
+  <svg class="demo-cursor" style="left:677px;top:332px" width="62" height="86" viewBox="0 0 40 56"><use href="#cursor"/></svg>
+  <div class="badge" style="left:846px;top:296px">1</div>
+  <div class="badge" style="left:846px;top:352px;background:var(--palm)">2</div>
+  <div class="abs zy" style="left:900px;top:312px;font-size:22px">點、點</div>
+
+  <!-- 嚮導（安靜） -->
+  <svg class="abs" style="left:64px;top:432px" width="150" height="140" viewBox="0 0 120 112"><use href="#crab"/></svg>
+  <div class="abs" style="left:222px;top:432px;width:196px;height:52px;background:#FFF8E4;border:2px solid var(--rope);border-radius:16px;display:flex;align-items:center;justify-content:center"><span class="zy" style="font-size:19px">看我按一次</span></div>
+  <svg class="abs" style="left:206px;top:446px" width="18" height="24" viewBox="0 0 18 24"><path d="M18 2 L2 14 L18 22" fill="#FFF8E4" stroke="#B9794A" stroke-width="2" stroke-linejoin="round"/></svg>
+
+  <!-- 蛋 1／5 -->
+  <div class="abs" style="left:1040px;top:552px;width:300px;height:78px;background:#FFF8E4;border:2px solid var(--rope);border-radius:16px;padding:6px 18px;box-shadow:0 3px 0 rgba(110,65,37,.28)">
+    <div class="zy" style="font-size:26px;line-height:1.35">蛋 1／5</div>
+    <div style="display:flex;gap:8px;margin-top:2px">
+      <svg width="26" height="30" viewBox="0 0 240 300"><use href="#egg"/></svg>
+      <svg width="26" height="30" viewBox="0 0 240 300" opacity=".35"><use href="#egg"/></svg>
+      <svg width="26" height="30" viewBox="0 0 240 300" opacity=".35"><use href="#egg"/></svg>
+      <svg width="26" height="30" viewBox="0 0 240 300" opacity=".35"><use href="#egg"/></svg>
+      <svg width="26" height="30" viewBox="0 0 240 300" opacity=".35"><use href="#egg"/></svg>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================
+     畫面 3：卡住提示（同一關，第二段）
+     ===================================================== -->
+<section class="screen" id="s3">
+  <div class="abs" style="left:0;top:0;width:1366px;height:76px;background:#BFE1EA"></div>
+  <a class="home" href="../../index.html" style="left:16px;top:15px">🏠 <span class="zy" style="font-size:18px">首頁</span></a>
+  <div class="abs zy" style="left:146px;top:15px;height:46px;display:flex;align-items:center;font-size:26px">第二段：自己來</div>
+  <div class="abs" style="left:450px;top:18px;display:flex;gap:8px">
+    <span class="pill done"><i>✓</i><span class="zy" style="font-size:14px">看我示範</span></span><span class="pill now"><i>2</i><span class="zy" style="font-size:14px">自己來</span></span><span class="pill"><i>3</i><span class="zy" style="font-size:14px">小挑戰</span></span>
+  </div>
+  <div class="abs zy" style="left:900px;top:20px;font-size:18px">失手沒關係&#xE01E1;，慢慢來！</div>
+
+  <!-- 卡 A：失手 2 次 -->
+  <div class="card" style="left:24px;width:446px">
+    <div class="sign"><span class="zy" style="font-size:22px">失手 2 次</span><span class="marks"><i>✕</i><i>✕</i></span></div>
+    <div class="a" style="left:0;right:0;top:62px;text-align:center"><span class="zy" style="font-size:28px">按兩下要快一點喔！</span></div>
+    <div class="a glowbg" style="left:93px;top:122px;width:260px;height:270px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,214,90,.85),rgba(255,214,90,0))"></div>
+    <svg class="a wob" style="left:143px;top:142px" width="160" height="200" viewBox="0 0 240 300">
+      <use href="#egg"/>
+      <g stroke="#33261B" stroke-width="7" stroke-linecap="round" fill="none"><path d="M70 130 Q88 108 106 130"/><path d="M134 130 Q152 108 170 130"/></g>
+      <path d="M86 166 Q120 218 154 166 Z" fill="#7A2E1E" stroke="#33261B" stroke-width="5" stroke-linejoin="round"/>
+      <circle cx="62" cy="160" r="12" fill="#F08A6E" opacity=".7"/><circle cx="178" cy="160" r="12" fill="#F08A6E" opacity=".7"/>
+    </svg>
+    <svg class="a" style="left:60px;top:200px" width="60" height="110" viewBox="0 0 60 110"><g stroke="#B9794A" stroke-width="5" stroke-linecap="round" fill="none"><path d="M50 20 Q30 10 12 22"/><path d="M52 54 Q28 54 8 56"/><path d="M50 88 Q30 98 12 88"/></g></svg>
+    <svg class="a" style="left:330px;top:200px" width="60" height="110" viewBox="0 0 60 110"><g stroke="#B9794A" stroke-width="5" stroke-linecap="round" fill="none"><path d="M10 20 Q30 10 48 22"/><path d="M8 54 Q32 54 52 56"/><path d="M10 88 Q30 98 48 88"/></g></svg>
+    <div class="a" style="left:292px;top:128px;width:142px;height:50px;background:#FFF8E4;border:2px solid var(--rope);border-radius:20px;display:flex;align-items:center;justify-content:center"><span class="zy" style="font-size:22px">嘻嘻嘻～</span></div>
+    <div class="a" style="left:24px;top:356px;right:24px;height:92px;background:#FFF1C2;border:2px solid var(--gold);border-radius:14px;padding:8px 16px;display:flex;align-items:center;gap:14px">
+      <svg width="64" height="60" viewBox="0 0 64 60" style="flex:none"><circle cx="14" cy="34" r="11" fill="#E8704F" stroke="#8A3A22" stroke-width="3"/><circle cx="50" cy="34" r="11" fill="#E8704F" stroke="#8A3A22" stroke-width="3"/><path d="M14 20 Q32 2 50 20" fill="none" stroke="#33261B" stroke-width="3" stroke-linecap="round"/><polygon points="50,20 42,18 47,26" fill="#33261B"/></svg>
+      <div class="zy" style="font-size:17px">發光那顆蛋，就是目標。<br>連按兩下，快一點！</div>
+    </div>
+    <div class="note" style="top:462px">給老師：提示 1／3，目標發光＋一句方向提示。失手只會讓蛋笑一笑，沒有錯誤音。</div>
+  </div>
+
+  <!-- 卡 B：失手 4 次 -->
+  <div class="card" style="left:490px;width:446px">
+    <div class="sign"><span class="zy" style="font-size:22px">失手 4 次</span><span class="marks"><i>✕</i><i>✕</i><i>✕</i><i>✕</i></span></div>
+    <div class="a" style="left:0;right:0;top:62px;text-align:center"><span class="zy" style="font-size:28px">再看一次示範。</span></div>
+    <div class="a glowbg" style="left:93px;top:122px;width:260px;height:270px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,214,90,.6),rgba(255,214,90,0))"></div>
+    <svg class="a" style="left:143px;top:142px" width="160" height="200" viewBox="0 0 240 300"><use href="#egg"/></svg>
+    <div class="rip a" style="left:171px;top:178px;width:80px;height:80px"></div>
+    <div class="rip b" style="left:171px;top:178px;width:80px;height:80px"></div>
+    <svg class="demo-cursor" style="left:204px;top:208px" width="46" height="64" viewBox="0 0 40 56"><use href="#cursor"/></svg>
+    <div class="badge" style="left:330px;top:170px">1</div>
+    <div class="badge" style="left:330px;top:226px;background:var(--palm)">2</div>
+    <svg class="a bob" style="left:16px;top:344px" width="104" height="96" viewBox="0 0 120 112"><use href="#crab"/></svg>
+    <div class="a" style="left:130px;top:366px;width:190px;height:48px;background:#FFF1C2;border:2px solid var(--gold);border-radius:14px;display:flex;align-items:center;justify-content:center"><span class="zy" style="font-size:17px">看我再按一次</span></div>
+    <div class="note" style="top:462px">給老師：提示 2／3，重播手指示範。再不行會自動放慢、把蛋放大。</div>
+  </div>
+
+  <!-- 卡 C：成功 -->
+  <div class="card" style="left:956px;width:386px">
+    <div class="sign ok"><span class="zy" style="font-size:22px">成功！</span><span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#FFF3D6;color:var(--palm);font-size:20px;font-weight:900">✓</span></div>
+    <div class="a" style="left:0;right:0;top:64px;text-align:center"><span class="zy" style="font-size:26px">蛋寶寶出來了！</span></div>
+    <svg class="a" style="left:43px;top:116px" width="300" height="270" viewBox="0 0 300 270">
+      <use href="#star" x="22" y="30" width="26" height="26" style="fill:#F2B134;stroke:#8A5A12;stroke-width:1.5"/>
+      <use href="#star" x="252" y="52" width="22" height="22" style="fill:#E8704F;stroke:#8A3A22;stroke-width:1.5"/>
+      <use href="#star" x="236" y="12" width="16" height="16" style="fill:#F2B134;stroke:#8A5A12;stroke-width:1.5"/>
+      <circle cx="44" cy="96" r="6" fill="#2B9BC4"/><circle cx="262" cy="120" r="6" fill="#8CC48A"/>
+      <g class="bob">
+        <ellipse cx="150" cy="126" rx="52" ry="62" fill="#2D3E5C" stroke="#14264A" stroke-width="4"/>
+        <ellipse cx="150" cy="140" rx="34" ry="46" fill="#F4F0E4"/>
+        <path d="M100 126 Q86 148 100 160" fill="none" stroke="#14264A" stroke-width="12" stroke-linecap="round"/>
+        <path d="M200 126 Q222 96 212 70" fill="none" stroke="#14264A" stroke-width="12" stroke-linecap="round"/>
+        <circle cx="134" cy="102" r="9" fill="#FFF9EA"/><circle cx="166" cy="102" r="9" fill="#FFF9EA"/>
+        <circle cx="136" cy="104" r="4.5" fill="#33261B"/><circle cx="168" cy="104" r="4.5" fill="#33261B"/>
+        <polygon points="141,116 159,116 150,130" fill="#F2A134" stroke="#8A5A12" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M112 72 L124 52 L136 68 L150 46 L164 68 L176 52 L188 72 Z" fill="#FFF6E2" stroke="#6E4125" stroke-width="4" stroke-linejoin="round"/>
+      </g>
+      <path d="M44 168 L74 146 L100 172 L128 146 L152 172 L178 146 L206 172 L232 148 L258 168 Q262 262 150 266 Q38 262 44 168 Z" fill="#FFF6E2" stroke="#6E4125" stroke-width="5" stroke-linejoin="round"/>
+      <circle cx="100" cy="222" r="10" fill="#F4A47F"/><circle cx="196" cy="214" r="8" fill="#8CC48A"/>
+    </svg>
+    <div class="a" style="left:0;right:0;top:396px;display:flex;justify-content:center;gap:8px;padding:0 14px">
+      <span class="chip ok">✓ <span class="zy" style="font-size:15px">成功</span></span><span class="chip gold"><span class="zy" style="font-size:15px">蛋 1／5 完成</span></span>
+    </div>
+    <div class="note" style="top:454px;text-align:center">給老師：成功時小動物出來打招呼，同時收進蛋寶寶圖鑑。</div>
+  </div>
+</section>
+
+<!-- =====================================================
+     畫面 4：右鍵魔法師・第三段（3–4 年級，不加注音）
+     ===================================================== -->
+<section class="screen" id="s4">
+  <svg class="abs" style="left:0;top:0" width="1366" height="657" viewBox="0 0 1366 657">
+    <rect width="1366" height="657" fill="#D6EAEC"/>
+    <circle cx="1150" cy="250" r="82" fill="#B9794A"/><circle cx="1150" cy="250" r="70" fill="#A9D6E3"/>
+    <path d="M1080 250 H1220 M1150 180 V320" stroke="#B9794A" stroke-width="6"/>
+    <path d="M1100 290 q12 -10 24 0 t24 0 t24 0" fill="none" stroke="#F4FBFB" stroke-width="4"/>
+    <use href="#star" x="1190" y="206" width="20" height="20" style="fill:#F2B134;stroke:#8A5A12;stroke-width:1.5"/>
+    <g stroke="#BFD9DC" stroke-width="2"><path d="M0 200 H1366 M0 300 H1366 M0 400 H1366"/><path d="M120 140 V200 M360 200 V300 M600 140 V200 M880 200 V300 M240 300 V400 M520 300 V400 M780 300 V400"/></g>
+    <rect y="478" width="1366" height="179" fill="#E0B27A"/>
+    <rect y="470" width="1366" height="14" fill="#C98F55"/>
+    <path d="M0 540 H1366 M0 600 H1366" stroke="#C98F55" stroke-width="3"/>
+    <path d="M200 484 V540 M700 540 V600 M1100 484 V540 M400 600 V657" stroke="#C98F55" stroke-width="3"/>
+  </svg>
+
+  <a class="home" href="../../index.html" style="left:16px;top:8px;height:46px">🏠 首頁</a>
+  <div class="abs" style="left:146px;top:8px;display:flex;gap:8px">
+    <span class="pill done"><i>✓</i>第一段</span><span class="pill done"><i>✓</i>第二段</span><span class="pill now"><i>3</i>第三段 進行中</span>
+  </div>
+  <div class="teacher" style="left:960px;top:4px;width:390px"><b>給老師</b>這關練什麼：右鍵選單｜資E1、資E2</div>
+
+  <div class="abs" style="left:24px;top:74px;width:690px;height:60px;padding:0 22px;background:#FFF8E4;border:2px solid var(--rope);border-radius:16px;display:flex;align-items:center;font-size:28px;font-weight:900;box-shadow:0 3px 0 rgba(110,65,37,.28)">幫魔法書改名字：按右鍵，選『重新命名』</div>
+  <div class="abs" style="left:738px;top:80px;height:48px;padding:0 20px;background:#FFF8E4;border:2px solid var(--rope);border-radius:24px;display:flex;align-items:center;font-size:20px;font-weight:900">第 3 題／共 4 題</div>
+
+  <svg class="abs" style="left:220px;top:222px" width="220" height="262" viewBox="0 0 220 262">
+    <rect x="22" y="12" width="182" height="244" rx="12" fill="#F6E7BE" stroke="#6E4125" stroke-width="4"/>
+    <rect x="12" y="6" width="176" height="244" rx="12" fill="#2F7A49" stroke="#1F5A33" stroke-width="4"/>
+    <rect x="12" y="6" width="28" height="244" rx="10" fill="#1F5A33"/>
+    <circle cx="116" cy="92" r="38" fill="none" stroke="#F2B134" stroke-width="5"/>
+    <use href="#star" x="90" y="66" width="52" height="52" style="fill:#F2B134;stroke:#8A5A12;stroke-width:1.5"/>
+    <rect x="58" y="164" width="116" height="40" rx="8" fill="#FFF8E4" stroke="#8A5A12" stroke-width="3"/>
+    <text x="116" y="191" text-anchor="middle" font-size="20" font-weight="900" fill="#33261B">魔法書</text>
+    <rect x="6" y="0" width="188" height="256" rx="14" fill="none" stroke="#F2B134" stroke-width="5" stroke-dasharray="14 7"/>
+  </svg>
+  <svg class="abs" style="left:720px;top:292px" width="140" height="190" viewBox="0 0 140 190">
+    <rect x="50" y="6" width="40" height="22" rx="5" fill="#B9794A" stroke="#6E4125" stroke-width="3.5"/>
+    <rect x="52" y="26" width="36" height="42" fill="#EAF8FB" stroke="#236F96" stroke-width="4"/>
+    <circle cx="70" cy="122" r="58" fill="#EAF8FB" stroke="#236F96" stroke-width="5"/>
+    <path d="M14 122 a58 58 0 0 0 112 0 Z" fill="#E8704F" stroke="#236F96" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M14 122 q14 -10 28 0 t28 0 t28 0 t28 0" fill="none" stroke="#FFF8E4" stroke-width="4"/>
+    <circle cx="48" cy="100" r="6" fill="#fff" opacity=".8"/><circle cx="90" cy="150" r="5" fill="#fff" opacity=".7"/>
+  </svg>
+  <svg class="abs" style="left:960px;top:318px" width="170" height="162" viewBox="0 0 170 162">
+    <path d="M40 150 L56 124 H114 L130 150 Z" fill="#B9794A" stroke="#6E4125" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="85" cy="74" r="62" fill="#C9BBEE" stroke="#4B3F8A" stroke-width="5"/>
+    <circle cx="85" cy="74" r="44" fill="#DCD2F5"/>
+    <ellipse cx="62" cy="48" rx="12" ry="20" transform="rotate(35 62 48)" fill="#fff" opacity=".8"/>
+    <use href="#star" x="96" y="66" width="26" height="26" style="fill:#F2B134;stroke:#8A5A12;stroke-width:1.5"/>
+  </svg>
+  <div class="itemlabel" style="left:330px">魔法書</div>
+  <div class="itemlabel" style="left:790px">藥水瓶</div>
+  <div class="itemlabel" style="left:1045px">水晶球</div>
+
+  <div class="ctx">
+    <div>開啟</div>
+    <div>複製</div>
+    <hr>
+    <div class="hl">重新命名</div>
+    <div>刪除</div>
+  </div>
+  <svg class="abs" style="left:520px;top:444px" width="34" height="48" viewBox="0 0 40 56"><use href="#cursor"/></svg>
+
+  <div class="abs" style="left:1170px;top:556px;width:172px;height:60px;border-radius:16px;background:#F2B134;border:2px solid #8A5A12;display:flex;align-items:center;justify-content:center;gap:8px;font-size:22px;font-weight:900;box-shadow:0 4px 0 rgba(110,65,37,.35)">💡 提示</div>
+  <svg class="abs bob" style="left:1060px;top:536px" width="92" height="86" viewBox="0 0 120 112"><use href="#crab"/></svg>
+</section>
+
+<!-- =====================================================
+     畫面 5：結算（寶石「蓋下去」）
+     ===================================================== -->
+<section class="screen" id="s5">
+  <div class="abs" style="left:0;top:0;width:1366px;height:76px;background:#E8D49E"></div>
+  <a class="home" href="../../index.html" style="left:16px;top:15px">🏠 <span class="zy" style="font-size:18px">首頁</span></a>
+  <div class="abs zy" style="left:146px;top:15px;height:46px;display:flex;align-items:center;font-size:26px">敲敲蛋寶寶　過關</div>
+  <div class="abs" style="left:24px;top:80px;width:516px;height:557px;background:#FFF1D0;border:3px solid var(--rope);border-radius:20px;box-shadow:0 4px 0 rgba(110,65,37,.28);overflow:hidden">
+    <svg class="abs" style="left:8px;top:8px" width="500" height="432" viewBox="0 0 220 190">
+      <path d="M14 108 A96 84 0 0 1 206 108 Z" fill="#B9794A" stroke="#6E4125" stroke-width="4" stroke-linejoin="round"/>
+      <rect x="10" y="100" width="200" height="14" rx="4" fill="#8A5A32" stroke="#6E4125" stroke-width="3"/>
+      <rect x="14" y="112" width="192" height="66" rx="8" fill="#9A5F36" stroke="#6E4125" stroke-width="4"/>
+      <path d="M16 134 H204 M16 156 H204" stroke="#7A4A2A" stroke-width="2.5"/>
+      <rect x="98" y="104" width="24" height="32" rx="5" fill="#F2B134" stroke="#6E4125" stroke-width="3"/>
+      <circle cx="110" cy="118" r="3.5" fill="#33261B"/><rect x="108.8" y="118" width="2.4" height="9" fill="#33261B"/>
+      <!-- 已亮的第 1 顆 -->
+      <use href="#gem" x="30" y="86" width="28" height="28" style="color:#E8704F"/>
+      <!-- 其他空槽（第 2 顆的槽位也先畫，寶石落下後蓋住它） -->
+      <g fill="#6E4125" stroke="#E8CFA0" stroke-width="2" stroke-dasharray="3 3">
+        <circle cx="52.8" cy="72" r="13"/>
+        <circle cx="77" cy="51.5" r="13"/><circle cx="110" cy="44" r="13"/><circle cx="143" cy="51.5" r="13"/><circle cx="167" cy="72" r="13"/><circle cx="176" cy="100" r="13"/>
+      </g>
+      <!-- 第 2 顆：從上方落進槽裡，落定時光環＋星星（只播一次） -->
+      <circle class="glowin" cx="52.8" cy="72" r="19" fill="#FFE9A8" opacity=".85"/>
+      <circle class="halo" cx="52.8" cy="72" r="12"/>
+      <g class="gemdrop"><use href="#gem" x="36.8" y="56" width="32" height="32" style="color:#F2B134"/></g>
+      <use class="spark" href="#star" x="47.8" y="67" width="10" height="10" style="--dx:-30px;--dy:-24px;fill:#F2B134;stroke:#8A5A12;stroke-width:1.5"/>
+      <use class="spark" href="#star" x="47.8" y="67" width="10" height="10" style="--dx:-4px;--dy:-36px;fill:#E8704F;stroke:#8A3A22;stroke-width:1.5"/>
+      <use class="spark" href="#star" x="47.8" y="67" width="10" height="10" style="--dx:26px;--dy:-26px;fill:#F2B134;stroke:#8A5A12;stroke-width:1.5"/>
+      <use class="spark" href="#star" x="47.8" y="67" width="10" height="10" style="--dx:-34px;--dy:6px;fill:#E8704F;stroke:#8A3A22;stroke-width:1.5"/>
+      <use class="spark" href="#star" x="47.8" y="67" width="10" height="10" style="--dx:32px;--dy:6px;fill:#F2B134;stroke:#8A5A12;stroke-width:1.5"/>
+      <use class="spark" href="#star" x="47.8" y="67" width="10" height="10" style="--dx:-20px;--dy:28px;fill:#F2B134;stroke:#8A5A12;stroke-width:1.5"/>
+      <!-- 標籤 -->
+      <rect x="26" y="8" width="56" height="22" rx="8" fill="#FFF8E4" stroke="#8A5A12" stroke-width="2.5"/>
+      <text class="zy" x="54" y="24" text-anchor="middle" font-size="14" fill="#33261B">雙擊</text>
+      <path d="M54 30 V46" stroke="#8A5A12" stroke-width="2.5" stroke-dasharray="3 3"/>
+      <use href="#star" x="168" y="14" width="14" height="14" style="fill:#F2B134;stroke:#8A5A12;stroke-width:1.5"/>
+      <use href="#star" x="188" y="34" width="10" height="10" style="fill:#E8704F;stroke:#8A3A22;stroke-width:1.5"/>
+    </svg>
+    <svg class="abs bob" style="left:14px;top:448px" width="100" height="94" viewBox="0 0 120 112"><use href="#crab"/></svg>
+    <div class="abs" style="left:130px;top:446px;right:16px">
+      <div class="zy" style="font-size:30px;line-height:1.4">寶石 2／7</div>
+      <div class="zy" style="font-size:16px;color:var(--ink-2);margin-top:2px;line-height:1.55">雙擊寶石亮了！<br>集滿 7 顆，領證書。</div>
+    </div>
+  </div>
+
+  <!-- 右欄 -->
+  <div class="abs" style="left:570px;top:84px;width:560px;height:66px;display:flex;align-items:center"><span class="zy" style="font-size:40px">你拿到雙擊章！好棒！</span></div>
+  <svg class="abs" style="left:1150px;top:90px" width="190" height="60" viewBox="0 0 190 60">
+    <use href="#star" class="sg" x="0" y="2" width="56" height="56"/><use href="#star" class="sg" x="64" y="2" width="56" height="56"/><use href="#star" class="sg" x="128" y="2" width="56" height="56"/>
+  </svg>
+
+  <div class="tile" style="left:570px"><small class="zy">成功</small><b>5／5</b></div>
+  <div class="tile" style="left:834px"><small class="zy">平均每顆蛋用了</small><b>3 <span class="zy" style="font-size:18px">秒</span></b></div>
+  <div class="tile" style="left:1098px"><small class="zy">提示</small><b><span class="zy" style="font-size:18px">用了</span> 1 <span class="zy" style="font-size:18px">次</span></b></div>
+
+  <!-- 蛋寶寶圖鑑 -->
+  <div class="abs" style="left:570px;top:272px;width:772px;height:236px;background:var(--parch);border:2px solid var(--rope);border-radius:16px;padding:10px 18px;box-shadow:0 4px 0 rgba(110,65,37,.28)">
+    <div style="display:flex;justify-content:space-between;align-items:center;height:32px"><span class="zy" style="font-size:18px">蛋寶寶圖鑑</span><span class="zy" style="color:var(--ink-2);font-size:15px">已收集 3／12</span></div>
+    <div class="abs" style="left:18px;top:50px;width:290px;height:170px;display:flex;align-items:center;gap:14px">
+      <div style="position:relative;width:120px;height:120px;border-radius:18px;background:#DCEFF4;border:3px solid var(--sea-d);display:flex;align-items:center;justify-content:center;flex:none">
+        <svg width="96" height="96" viewBox="0 0 100 100"><use href="#penguin"/></svg>
+        <span class="zy" style="position:absolute;left:-10px;top:-14px;padding:0 10px;border-radius:12px;background:var(--coral);color:#fff;font-size:14px">新解鎖</span>
+      </div>
+      <div class="zy" style="font-size:20px;line-height:1.45">新朋友：<br>小企鵝<br><span style="font-size:18px;color:var(--sea-d)">3／12</span></div>
+    </div>
+    <div class="abs" style="left:322px;top:52px;width:430px;display:grid;grid-template-columns:repeat(6,60px);gap:10px">
+      <div class="slot"><svg width="46" height="46" viewBox="0 0 100 100"><use href="#chick"/></svg></div>
+      <div class="slot"><svg width="46" height="46" viewBox="0 0 100 100"><use href="#turtle"/></svg></div>
+      <div class="slot new"><svg width="46" height="46" viewBox="0 0 100 100"><use href="#penguin"/></svg></div>
+      <div class="slot q">?</div><div class="slot q">?</div><div class="slot q">?</div>
+      <div class="slot q">?</div><div class="slot q">?</div><div class="slot q">?</div>
+      <div class="slot q">?</div><div class="slot q">?</div><div class="slot q">?</div>
+    </div>
+    <div class="abs zy" style="left:322px;top:188px;font-size:15px;color:var(--ink-2)">快去找彩虹蛋！</div>
+  </div>
+
+  <!-- 按鈕 -->
+  <div class="abs" style="left:570px;top:540px;display:flex;gap:14px">
+    <a class="btn coral" style="width:230px;height:64px"><span class="zy" style="font-size:20px">交成績給老師</span></a>
+    <a class="btn palm" style="width:170px;height:64px"><span class="zy" style="font-size:20px">再玩一次</span></a>
+    <a class="btn sea" style="width:170px;height:64px"><span class="zy" style="font-size:20px">回滑鼠島</span></a>
+    <a class="btn line" href="../../index.html" style="width:150px;height:64px">🏠 <span class="zy" style="font-size:20px">首頁</span></a>
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+  var tabs=document.querySelectorAll('.tabs button');
+  function show(n){
+    document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on',s.id==='s'+n)});
+    tabs.forEach(function(b){b.classList.toggle('on',b.dataset.s===String(n))});
+  }
+  tabs.forEach(function(b){b.addEventListener('click',function(){show(b.dataset.s);history.replaceState(null,'','#s'+b.dataset.s)})});
+  var m=location.hash.match(/s([1-5])/); if(m) show(m[1]);
+})();
+</script>
+</body>
+</html>

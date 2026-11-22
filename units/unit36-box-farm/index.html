@@ -1,0 +1,1724 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>牧場圍圍樂 - 滑鼠島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+  <link rel="stylesheet" href="../../assets/css/mouse-island.css">
+  <style>
+    /* 場景樣式：所有 class 一律 sc- 開頭 */
+    .sc-meadow {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      background:
+        radial-gradient(ellipse 680px 150px at 260px 108px, #89BF76 0 72%, transparent 73%),
+        radial-gradient(ellipse 760px 175px at 980px 118px, #7BB569 0 72%, transparent 73%),
+        linear-gradient(#BFE1EA 0 88px, #92C87E 88px 140px, #85BE72 140px 100%);
+    }
+    .sc-meadow.sc-box-mode { cursor: crosshair; }
+
+    /* 天空雲朵與太陽（安靜背景，不搶目標視覺） */
+    .sc-sky-dec {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 112px;
+      pointer-events: none;
+    }
+
+    /* 草地柔和紋理（點綴小草叢，全部 pointer-events:none） */
+    .sc-tuft {
+      position: absolute;
+      pointer-events: none;
+      opacity: .55;
+    }
+
+    /* 上方任務列與右上計數 */
+    .sc-task {
+      position: absolute;
+      left: 24px;
+      top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 18px;
+      background: #FFF8E4;
+      border: 3px solid #B9794A;
+      border-radius: 16px;
+      color: #33261B;
+      font-size: 19px;
+      font-weight: 700;
+      box-shadow: 0 3px 0 #9A5F36;
+      z-index: 20;
+      pointer-events: none;
+    }
+    .sc-task-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      border-radius: 10px;
+      background: #236F96;
+      color: #FFF8E4;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: .5px;
+    }
+    .sc-kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 9px;
+      border-radius: 7px;
+      background: #F6E7BE;
+      border: 2px solid #6E4125;
+      box-shadow: 0 2px 0 #6E4125;
+      color: #33261B;
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    .sc-count {
+      position: absolute;
+      right: 24px;
+      top: 14px;
+      padding: 8px 18px;
+      background: #FFF8E4;
+      border: 3px solid #B9794A;
+      border-radius: 16px;
+      color: #33261B;
+      font-size: 20px;
+      font-weight: 900;
+      box-shadow: 0 3px 0 #9A5F36;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    /* 右邊木頭柵欄 */
+    .sc-pen {
+      position: absolute;
+      left: 1054px;
+      top: 94px;
+      width: 288px;
+      height: 382px;
+      pointer-events: none;
+      z-index: 4;
+    }
+    .sc-pen-floor {
+      position: absolute;
+      inset: 14px 12px 14px 14px;
+      background: #DFC78F;
+      border-radius: 22px;
+      box-shadow: inset 0 6px 0 rgba(110, 65, 37, .14);
+    }
+    .sc-pen-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .sc-pen-sign {
+      position: absolute;
+      left: 50%;
+      top: -6px;
+      transform: translateX(-50%);
+      padding: 3px 14px;
+      background: #FFF8E4;
+      border: 3px solid #6E4125;
+      border-radius: 12px;
+      color: #33261B;
+      font-size: 16px;
+      font-weight: 900;
+      white-space: nowrap;
+      box-shadow: 0 2px 0 #6E4125;
+      z-index: 2;   /* 使用者 11-22：牌子被上方木樁蓋住 → 放到柵欄前面 */
+    }
+    .sc-pen-gate {
+      transform-origin: 20px 145px;
+      transition: transform .35s ease;
+    }
+    .sc-pen.sc-open .sc-pen-gate {
+      transform: translateX(-8px) scaleY(.45);
+      opacity: .65;
+    }
+
+    /* 框選即時預覽矩形（與外殼相容） */
+    .sc-marquee {
+      position: absolute;
+      display: none;
+      pointer-events: none;
+      z-index: 18;
+      background: rgba(242, 177, 52, .16);
+      border: 3px dashed #6E4125;
+      border-radius: 10px;
+      box-shadow: inset 0 0 0 2px rgba(242, 177, 52, .75);
+    }
+
+    /* 動物容器（絕對定位以中心點對齊） */
+    .sc-animal {
+      position: absolute;
+      z-index: 10;
+      transition: transform .22s ease;
+      transform-origin: center center;
+    }
+    .sc-animal.sc-clickable { cursor: pointer; }
+    .sc-animal.sc-herding {
+      z-index: 14;
+      pointer-events: none;
+      transition: left .62s cubic-bezier(.25, .8, .3, 1), top .62s cubic-bezier(.25, .8, .3, 1), transform .45s ease;
+    }
+    .sc-animal.sc-in-pen {
+      z-index: 8;
+      pointer-events: none;
+    }
+    .sc-animal-body {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transition: transform .2s ease;
+    }
+    .sc-animal-body svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+    .sc-animal.sc-flip .sc-animal-body svg {
+      transform: scaleX(-1);
+    }
+
+    /* 框選中即時預覽高亮 */
+    .sc-animal.sc-preview::after {
+      content: '';
+      position: absolute;
+      inset: -7px;
+      border-radius: 50%;
+      border: 3px dashed #6E4125;
+      box-shadow: 0 0 0 4px rgba(242, 177, 52, .65);
+      pointer-events: none;
+    }
+    .sc-animal.sc-preview-wolf::after {
+      border-color: #6E4125;
+      box-shadow: 0 0 0 4px rgba(232, 112, 79, .65);
+    }
+
+    /* 第三段：Ctrl 選中標記（棕櫚綠勾勾＋深色外框＋金光） */
+    .sc-animal.sc-selected::after {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 3px dashed #2F7A49;
+      box-shadow: 0 0 0 4px rgba(242, 177, 52, .75);
+      pointer-events: none;
+    }
+    .sc-check {
+      position: absolute;
+      right: -6px;
+      top: -12px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #2F7A49;
+      border: 3px solid #FFF8E4;
+      box-shadow: 0 3px 0 #33261B;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 16;
+      pointer-events: none;
+    }
+    .sc-animal.sc-selected .sc-check { display: flex; }
+
+    /* 彩虹羊標誌（柔和光環，閃動頻率 ≤ 1Hz） */
+    .sc-animal.sc-rainbow .sc-animal-body {
+      filter: drop-shadow(0 0 8px rgba(242, 177, 52, .85));
+      animation: sc-rainbow-bob 1.8s ease-in-out infinite;
+    }
+    .sc-rainbow-tag {
+      position: absolute;
+      left: 50%;
+      top: -24px;
+      transform: translateX(-50%);
+      padding: 1px 8px;
+      border-radius: 999px;
+      background: #FFF8E4;
+      border: 2px solid #6E4125;
+      color: #33261B;
+      font-size: 13px;
+      font-weight: 900;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    /* 可愛動作：吃草、歪頭、合唱跳動 */
+    .sc-animal.sc-graze .sc-animal-body {
+      animation: sc-graze-anim 1.1s ease-in-out 1;
+    }
+    .sc-animal.sc-tilt .sc-animal-body {
+      animation: sc-tilt-anim .65s ease-in-out 1;
+    }
+    .sc-animal.sc-sing .sc-animal-body {
+      animation: sc-sing-anim .7s ease-in-out 2;
+    }
+
+    /* 小羊說話／咩叫／破功漫畫泡泡 */
+    .sc-bubble {
+      position: absolute;
+      left: 50%;
+      top: -34px;
+      transform: translateX(-50%);
+      padding: 3px 10px;
+      background: #FFF8E4;
+      border: 2px solid #6E4125;
+      border-radius: 12px;
+      color: #33261B;
+      font-size: 15px;
+      font-weight: 900;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 25;
+      box-shadow: 0 2px 0 rgba(51, 38, 27, .2);
+    }
+    .sc-bubble.sc-wolf-yell {
+      background: #F6E7BE;
+      border-color: #C2432A;
+      color: #33261B;
+      font-size: 18px;
+    }
+
+    /* 合唱音符 */
+    .sc-note {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      pointer-events: none;
+      z-index: 24;
+      animation: sc-note-float 1.15s ease-out forwards;
+    }
+
+    /* 第三段：趕進柵欄按鈕（放在右側柵欄下方，完全避開左下寄寄區） */
+    .sc-herd-btn {
+      position: absolute;
+      left: 1064px;
+      top: 492px;
+      width: 268px;
+      height: 64px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #2F7A49;
+      color: #FFF8E4;
+      border: 3px solid #1E5431;
+      border-radius: 18px;
+      box-shadow: 0 5px 0 #1E5431;
+      font-size: 21px;
+      font-weight: 900;
+      cursor: pointer;
+      z-index: 22;
+      transition: transform .12s ease, box-shadow .12s ease, background .2s ease;
+    }
+    .sc-herd-btn.sc-show { display: flex; }
+    .sc-herd-btn:hover { background: #27693E; }
+    .sc-herd-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #1E5431; }
+    .sc-herd-btn.sc-waiting {
+      background: #FFF8E4;
+      color: #33261B;
+      border-color: #9A5F36;
+      box-shadow: 0 4px 0 #9A5F36;
+    }
+    .sc-herd-pill {
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: rgba(51, 38, 27, .18);
+      font-size: 16px;
+      font-weight: 900;
+    }
+    .sc-herd-btn.sc-waiting .sc-herd-pill {
+      background: #F6E7BE;
+      color: #33261B;
+    }
+
+    /* 新收集牧場朋友小通知（上方中央，不入寄寄區） */
+    .sc-toast {
+      position: absolute;
+      left: 683px;
+      top: 74px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 16px 6px 10px;
+      background: #FFF8E4;
+      border: 3px solid #F2B134;
+      border-radius: 999px;
+      box-shadow: 0 4px 0 #6E4125;
+      color: #33261B;
+      font-size: 17px;
+      font-weight: 900;
+      z-index: 30;
+      pointer-events: none;
+      animation: sc-toast-pop 1.7s ease forwards;
+    }
+    .sc-toast-icon {
+      width: 38px;
+      height: 36px;
+      flex: 0 0 auto;
+    }
+
+    @keyframes sc-graze-anim {
+      0%, 100% { transform: rotate(0deg) translateY(0); }
+      35%, 65% { transform: rotate(-10deg) translateY(5px); }
+    }
+    @keyframes sc-tilt-anim {
+      0%, 100% { transform: rotate(0deg); }
+      40% { transform: rotate(14deg) translateY(-3px); }
+      75% { transform: rotate(-8deg); }
+    }
+    @keyframes sc-sing-anim {
+      0%, 100% { transform: translateY(0) scale(1); }
+      45% { transform: translateY(-10px) scale(1.05); }
+    }
+    @keyframes sc-rainbow-bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    @keyframes sc-note-float {
+      0% { opacity: 0; transform: translateY(6px) scale(.75); }
+      20% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-48px) scale(1.1); }
+    }
+    @keyframes sc-toast-pop {
+      0% { opacity: 0; transform: translate(-50%, -10px) scale(.92); }
+      15%, 82% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -8px) scale(.96); }
+    }
+
+    /* 尊重系統減少動態偏好 */
+    @media (prefers-reduced-motion: reduce) {
+      .sc-animal,
+      .sc-animal.sc-herding,
+      .sc-animal-body,
+      .sc-pen-gate,
+      .sc-herd-btn {
+        transition: none !important;
+      }
+      .sc-animal.sc-rainbow .sc-animal-body,
+      .sc-animal.sc-graze .sc-animal-body,
+      .sc-animal.sc-tilt .sc-animal-body,
+      .sc-animal.sc-sing .sc-animal-body,
+      .sc-note,
+      .sc-toast {
+        animation: none !important;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/mouse-ui.js"></script>
+  <script>
+  (function () {
+    /* ============ 原創幾何 inline SVG 圖庫（零 emoji） ============ */
+    function svgWhiteSheep() {
+      return '<svg viewBox="0 0 120 110" aria-hidden="true">' +
+        '<ellipse cx="60" cy="96" rx="34" ry="8" fill="rgba(51,38,27,.16)"/>' +
+        '<rect x="38" y="76" width="10" height="19" rx="4" fill="#6E4125" stroke="#33261B" stroke-width="3"/>' +
+        '<rect x="70" y="76" width="10" height="19" rx="4" fill="#6E4125" stroke="#33261B" stroke-width="3"/>' +
+        '<circle cx="42" cy="55" r="20" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="62" cy="48" r="23" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="80" cy="57" r="19" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="54" cy="68" r="20" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="72" cy="68" r="18" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<ellipse cx="61" cy="58" rx="32" ry="20" fill="#FFF8E4"/>' +
+        '<ellipse cx="26" cy="54" rx="10" ry="6" transform="rotate(-24 26 54)" fill="#D7B28E" stroke="#33261B" stroke-width="3"/>' +
+        '<ellipse cx="52" cy="54" rx="10" ry="6" transform="rotate(24 52 54)" fill="#D7B28E" stroke="#33261B" stroke-width="3"/>' +
+        '<ellipse cx="39" cy="59" rx="17" ry="15" fill="#E6C7A3" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="39" cy="43" r="9" fill="#FFF8E4" stroke="#33261B" stroke-width="3"/>' +
+        '<circle cx="33" cy="57" r="3" fill="#33261B"/>' +
+        '<circle cx="45" cy="57" r="3" fill="#33261B"/>' +
+        '<circle cx="34" cy="56" r="1" fill="#FFF8E4"/>' +
+        '<circle cx="46" cy="56" r="1" fill="#FFF8E4"/>' +
+        '<path d="M35 64 Q39 68 43 64" fill="none" stroke="#33261B" stroke-width="2.8" stroke-linecap="round"/>' +
+        '<ellipse cx="28" cy="62" rx="3.2" ry="2" fill="#E8704F" opacity=".55"/>' +
+        '<ellipse cx="50" cy="62" rx="3.2" ry="2" fill="#E8704F" opacity=".55"/>' +
+      '</svg>';
+    }
+
+    function svgCurlySheep() {
+      return '<svg viewBox="0 0 120 110" aria-hidden="true">' +
+        '<ellipse cx="60" cy="96" rx="34" ry="8" fill="rgba(51,38,27,.16)"/>' +
+        '<rect x="40" y="76" width="10" height="19" rx="4" fill="#6E4125" stroke="#33261B" stroke-width="3"/>' +
+        '<rect x="72" y="76" width="10" height="19" rx="4" fill="#6E4125" stroke="#33261B" stroke-width="3"/>' +
+        '<circle cx="43" cy="55" r="21" fill="#FFF5D6" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="64" cy="46" r="24" fill="#FFF5D6" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="83" cy="58" r="19" fill="#FFF5D6" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="58" cy="69" r="20" fill="#FFF5D6" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="76" cy="69" r="17" fill="#FFF5D6" stroke="#33261B" stroke-width="3.5"/>' +
+        '<ellipse cx="64" cy="58" rx="31" ry="20" fill="#FFF5D6"/>' +
+        '<path d="M58 46 a6 6 0 1 1 8 6 a4 4 0 1 1 -5 -4" fill="none" stroke="#B9794A" stroke-width="2.8" stroke-linecap="round"/>' +
+        '<path d="M74 56 a5 5 0 1 1 7 5 a3.5 3.5 0 1 1 -4 -3" fill="none" stroke="#B9794A" stroke-width="2.8" stroke-linecap="round"/>' +
+        '<path d="M62 66 a5 5 0 1 1 7 5" fill="none" stroke="#B9794A" stroke-width="2.6" stroke-linecap="round"/>' +
+        '<ellipse cx="25" cy="56" rx="10" ry="6" transform="rotate(-20 25 56)" fill="#D7B28E" stroke="#33261B" stroke-width="3"/>' +
+        '<ellipse cx="51" cy="56" rx="10" ry="6" transform="rotate(20 51 56)" fill="#D7B28E" stroke="#33261B" stroke-width="3"/>' +
+        '<ellipse cx="38" cy="60" rx="16.5" ry="15" fill="#E6C7A3" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="34" cy="43" r="8" fill="#FFF5D6" stroke="#33261B" stroke-width="3"/>' +
+        '<circle cx="43" cy="42" r="7.5" fill="#FFF5D6" stroke="#33261B" stroke-width="3"/>' +
+        '<circle cx="32" cy="58" r="3" fill="#33261B"/>' +
+        '<circle cx="44" cy="58" r="3" fill="#33261B"/>' +
+        '<path d="M35 65 Q38 69 41 65" fill="none" stroke="#33261B" stroke-width="2.8" stroke-linecap="round"/>' +
+      '</svg>';
+    }
+
+    function svgLamb() {
+      return '<svg viewBox="0 0 120 110" aria-hidden="true">' +
+        '<ellipse cx="60" cy="94" rx="28" ry="7" fill="rgba(51,38,27,.16)"/>' +
+        '<rect x="44" y="75" width="9" height="17" rx="4" fill="#9A5F36" stroke="#33261B" stroke-width="3"/>' +
+        '<rect x="67" y="75" width="9" height="17" rx="4" fill="#9A5F36" stroke="#33261B" stroke-width="3"/>' +
+        '<circle cx="48" cy="60" r="17" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="65" cy="55" r="19" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="77" cy="64" r="15" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<ellipse cx="63" cy="63" rx="24" ry="16" fill="#FFF8E4"/>' +
+        '<ellipse cx="29" cy="56" rx="9" ry="5.5" transform="rotate(-24 29 56)" fill="#E6C7A3" stroke="#33261B" stroke-width="3"/>' +
+        '<ellipse cx="53" cy="56" rx="9" ry="5.5" transform="rotate(24 53 56)" fill="#E6C7A3" stroke="#33261B" stroke-width="3"/>' +
+        '<ellipse cx="41" cy="60" rx="15" ry="13.5" fill="#F1D5B5" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="41" cy="46" r="8" fill="#FFF8E4" stroke="#33261B" stroke-width="3"/>' +
+        '<path d="M42 38 Q48 28 55 31 Q50 38 42 38 Z" fill="#2F7A49" stroke="#33261B" stroke-width="2.5"/>' +
+        '<circle cx="35.5" cy="58" r="3.2" fill="#33261B"/>' +
+        '<circle cx="46.5" cy="58" r="3.2" fill="#33261B"/>' +
+        '<circle cx="36.5" cy="57" r="1.2" fill="#FFF8E4"/>' +
+        '<circle cx="47.5" cy="57" r="1.2" fill="#FFF8E4"/>' +
+        '<path d="M38 64 Q41 67 44 64" fill="none" stroke="#33261B" stroke-width="2.5" stroke-linecap="round"/>' +
+        '<ellipse cx="31" cy="63" rx="3" ry="2" fill="#E8704F" opacity=".6"/>' +
+        '<ellipse cx="51" cy="63" rx="3" ry="2" fill="#E8704F" opacity=".6"/>' +
+      '</svg>';
+    }
+
+    function svgBlackSheep() {
+      return '<svg viewBox="0 0 120 110" aria-hidden="true">' +
+        '<ellipse cx="60" cy="96" rx="34" ry="8" fill="rgba(51,38,27,.2)"/>' +
+        '<rect x="38" y="76" width="10" height="19" rx="4" fill="#33261B" stroke="#1E1610" stroke-width="3"/>' +
+        '<rect x="70" y="76" width="10" height="19" rx="4" fill="#33261B" stroke="#1E1610" stroke-width="3"/>' +
+        '<circle cx="42" cy="55" r="20" fill="#4B3C35" stroke="#241B16" stroke-width="3.5"/>' +
+        '<circle cx="62" cy="48" r="23" fill="#4B3C35" stroke="#241B16" stroke-width="3.5"/>' +
+        '<circle cx="80" cy="57" r="19" fill="#4B3C35" stroke="#241B16" stroke-width="3.5"/>' +
+        '<circle cx="54" cy="68" r="20" fill="#4B3C35" stroke="#241B16" stroke-width="3.5"/>' +
+        '<circle cx="72" cy="68" r="18" fill="#4B3C35" stroke="#241B16" stroke-width="3.5"/>' +
+        '<ellipse cx="61" cy="58" rx="32" ry="20" fill="#4B3C35"/>' +
+        '<path d="M27 42 Q21 31 32 34" fill="none" stroke="#F6E7BE" stroke-width="4" stroke-linecap="round"/>' +
+        '<path d="M51 42 Q57 31 46 34" fill="none" stroke="#F6E7BE" stroke-width="4" stroke-linecap="round"/>' +
+        '<ellipse cx="26" cy="55" rx="10" ry="6" transform="rotate(-22 26 55)" fill="#5E4D44" stroke="#241B16" stroke-width="3"/>' +
+        '<ellipse cx="52" cy="55" rx="10" ry="6" transform="rotate(22 52 55)" fill="#5E4D44" stroke="#241B16" stroke-width="3"/>' +
+        '<ellipse cx="39" cy="59" rx="17" ry="15" fill="#6D5A50" stroke="#241B16" stroke-width="3.5"/>' +
+        '<circle cx="39" cy="43" r="8.5" fill="#4B3C35" stroke="#241B16" stroke-width="3"/>' +
+        '<circle cx="33" cy="57" r="3.4" fill="#FFF8E4"/>' +
+        '<circle cx="45" cy="57" r="3.4" fill="#FFF8E4"/>' +
+        '<circle cx="33" cy="57" r="1.8" fill="#241B16"/>' +
+        '<circle cx="45" cy="57" r="1.8" fill="#241B16"/>' +
+        '<path d="M35 65 Q39 68 43 65" fill="none" stroke="#FFF8E4" stroke-width="2.6" stroke-linecap="round"/>' +
+      '</svg>';
+    }
+
+    function svgRainbowSheep() {
+      return '<svg viewBox="0 0 120 110" aria-hidden="true">' +
+        '<ellipse cx="60" cy="96" rx="34" ry="8" fill="rgba(51,38,27,.16)"/>' +
+        '<rect x="38" y="76" width="10" height="19" rx="4" fill="#F2B134" stroke="#6E4125" stroke-width="3"/>' +
+        '<rect x="70" y="76" width="10" height="19" rx="4" fill="#F2B134" stroke="#6E4125" stroke-width="3"/>' +
+        '<circle cx="42" cy="55" r="20" fill="#F7B29B" stroke="#6E4125" stroke-width="3.5"/>' +
+        '<circle cx="62" cy="47" r="23" fill="#FBE08B" stroke="#6E4125" stroke-width="3.5"/>' +
+        '<circle cx="81" cy="57" r="19" fill="#A9DEBC" stroke="#6E4125" stroke-width="3.5"/>' +
+        '<circle cx="55" cy="69" r="20" fill="#BFE1EA" stroke="#6E4125" stroke-width="3.5"/>' +
+        '<circle cx="74" cy="68" r="18" fill="#D5C2F2" stroke="#6E4125" stroke-width="3.5"/>' +
+        '<ellipse cx="61" cy="58" rx="28" ry="17" fill="#FFF8E4"/>' +
+        '<ellipse cx="26" cy="54" rx="10" ry="6" transform="rotate(-24 26 54)" fill="#E6C7A3" stroke="#6E4125" stroke-width="3"/>' +
+        '<ellipse cx="52" cy="54" rx="10" ry="6" transform="rotate(24 52 54)" fill="#E6C7A3" stroke="#6E4125" stroke-width="3"/>' +
+        '<ellipse cx="39" cy="59" rx="17" ry="15" fill="#FFF2DF" stroke="#6E4125" stroke-width="3.5"/>' +
+        '<circle cx="39" cy="42" r="9" fill="#FFF8E4" stroke="#6E4125" stroke-width="3"/>' +
+        '<circle cx="33" cy="57" r="3" fill="#33261B"/>' +
+        '<circle cx="45" cy="57" r="3" fill="#33261B"/>' +
+        '<circle cx="34" cy="56" r="1.2" fill="#FFF8E4"/>' +
+        '<circle cx="46" cy="56" r="1.2" fill="#FFF8E4"/>' +
+        '<path d="M35 64 Q39 68 43 64" fill="none" stroke="#6E4125" stroke-width="2.8" stroke-linecap="round"/>' +
+        '<polygon points="94,24 97,31 104,34 97,37 94,44 91,37 84,34 91,31" fill="#F2B134" stroke="#6E4125" stroke-width="2"/>' +
+        '<polygon points="22,22 24,27 29,29 24,31 22,36 20,31 15,29 20,27" fill="#E8704F" stroke="#6E4125" stroke-width="1.8"/>' +
+      '</svg>';
+    }
+
+    function svgSheepdog() {
+      return '<svg viewBox="0 0 120 110" aria-hidden="true">' +
+        '<ellipse cx="60" cy="96" rx="34" ry="8" fill="rgba(51,38,27,.16)"/>' +
+        '<path d="M88 60 Q105 46 102 64 Q99 74 86 70" fill="#B9794A" stroke="#33261B" stroke-width="3.5" stroke-linejoin="round"/>' +
+        '<rect x="38" y="75" width="11" height="20" rx="4" fill="#9A5F36" stroke="#33261B" stroke-width="3"/>' +
+        '<rect x="70" y="75" width="11" height="20" rx="4" fill="#9A5F36" stroke="#33261B" stroke-width="3"/>' +
+        '<rect x="36" y="48" width="54" height="34" rx="17" fill="#B9794A" stroke="#33261B" stroke-width="3.5"/>' +
+        '<ellipse cx="48" cy="68" rx="14" ry="12" fill="#FFF8E4"/>' +
+        '<polygon points="36,64 56,64 46,78" fill="#C2432A" stroke="#33261B" stroke-width="3" stroke-linejoin="round"/>' +
+        '<circle cx="44" cy="45" r="19" fill="#B9794A" stroke="#33261B" stroke-width="3.5"/>' +
+        '<ellipse cx="26" cy="48" rx="7" ry="14" transform="rotate(14 26 48)" fill="#6E4125" stroke="#33261B" stroke-width="3"/>' +
+        '<ellipse cx="62" cy="48" rx="7" ry="14" transform="rotate(-14 62 48)" fill="#6E4125" stroke="#33261B" stroke-width="3"/>' +
+        '<ellipse cx="44" cy="52" rx="11" ry="9" fill="#FFF8E4"/>' +
+        '<circle cx="38" cy="43" r="3" fill="#33261B"/>' +
+        '<circle cx="50" cy="43" r="3" fill="#33261B"/>' +
+        '<ellipse cx="44" cy="49" rx="4.5" ry="3.2" fill="#33261B"/>' +
+        '<path d="M40 55 Q44 59 48 55" fill="none" stroke="#33261B" stroke-width="2.6" stroke-linecap="round"/>' +
+      '</svg>';
+    }
+
+    function svgHen() {
+      return '<svg viewBox="0 0 120 110" aria-hidden="true">' +
+        '<ellipse cx="60" cy="95" rx="30" ry="7" fill="rgba(51,38,27,.16)"/>' +
+        '<path d="M50 82 V93 M50 93 L44 96 M50 93 L55 96 M68 82 V93 M68 93 L63 96 M68 93 L74 96" stroke="#C2432A" stroke-width="3.5" stroke-linecap="round"/>' +
+        '<path d="M84 52 Q100 38 96 58 Q93 70 80 68" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5" stroke-linejoin="round"/>' +
+        '<ellipse cx="60" cy="64" rx="28" ry="22" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<path d="M52 60 Q68 56 76 68 Q62 76 50 68 Z" fill="#F6E7BE" stroke="#33261B" stroke-width="3"/>' +
+        '<circle cx="42" cy="45" r="16" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<path d="M34 31 C32 22 40 20 42 27 C45 19 53 23 49 32 Z" fill="#C2432A" stroke="#33261B" stroke-width="3" stroke-linejoin="round"/>' +
+        '<polygon points="27,45 16,49 27,54" fill="#F2B134" stroke="#33261B" stroke-width="3" stroke-linejoin="round"/>' +
+        '<circle cx="38" cy="43" r="3" fill="#33261B"/>' +
+        '<ellipse cx="44" cy="50" rx="3.2" ry="2.2" fill="#E8704F" opacity=".7"/>' +
+      '</svg>';
+    }
+
+    function svgPig() {
+      return '<svg viewBox="0 0 120 110" aria-hidden="true">' +
+        '<ellipse cx="60" cy="96" rx="33" ry="8" fill="rgba(51,38,27,.16)"/>' +
+        '<path d="M90 62 C100 56 102 68 93 69" fill="none" stroke="#C2432A" stroke-width="3.5" stroke-linecap="round"/>' +
+        '<rect x="38" y="75" width="11" height="18" rx="4" fill="#E89B82" stroke="#33261B" stroke-width="3"/>' +
+        '<rect x="70" y="75" width="11" height="18" rx="4" fill="#E89B82" stroke="#33261B" stroke-width="3"/>' +
+        '<ellipse cx="62" cy="63" rx="30" ry="22" fill="#F4B7A1" stroke="#33261B" stroke-width="3.5"/>' +
+        '<polygon points="27,40 22,26 37,33" fill="#E89B82" stroke="#33261B" stroke-width="3" stroke-linejoin="round"/>' +
+        '<polygon points="53,40 58,26 43,33" fill="#E89B82" stroke="#33261B" stroke-width="3" stroke-linejoin="round"/>' +
+        '<circle cx="40" cy="52" r="18" fill="#F4B7A1" stroke="#33261B" stroke-width="3.5"/>' +
+        '<ellipse cx="38" cy="57" rx="9" ry="6.5" fill="#E8704F" stroke="#33261B" stroke-width="2.8"/>' +
+        '<circle cx="35" cy="57" r="1.8" fill="#33261B"/>' +
+        '<circle cx="41" cy="57" r="1.8" fill="#33261B"/>' +
+        '<circle cx="33" cy="47" r="2.8" fill="#33261B"/>' +
+        '<circle cx="46" cy="47" r="2.8" fill="#33261B"/>' +
+      '</svg>';
+    }
+
+    /* 披羊皮的小狼（偽裝態：看得到尖灰耳、狡黠斜眼、毛茸茸大灰尾） */
+    function svgWolfDisguise() {
+      return '<svg viewBox="0 0 120 110" aria-hidden="true">' +
+        '<ellipse cx="60" cy="96" rx="34" ry="8" fill="rgba(51,38,27,.18)"/>' +
+        '<path d="M88 66 Q112 52 110 72 Q104 82 86 76 Z" fill="#6B727A" stroke="#33261B" stroke-width="3.5" stroke-linejoin="round"/>' +
+        '<path d="M104 62 L110 72 L100 74 Z" fill="#FFF8E4"/>' +
+        '<rect x="38" y="76" width="10" height="19" rx="4" fill="#596068" stroke="#33261B" stroke-width="3"/>' +
+        '<rect x="70" y="76" width="10" height="19" rx="4" fill="#596068" stroke="#33261B" stroke-width="3"/>' +
+        '<circle cx="44" cy="56" r="20" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="64" cy="49" r="22" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="81" cy="58" r="18" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="56" cy="68" r="19" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<circle cx="73" cy="68" r="17" fill="#FFF8E4" stroke="#33261B" stroke-width="3.5"/>' +
+        '<ellipse cx="62" cy="58" rx="30" ry="18" fill="#FFF8E4"/>' +
+        '<polygon points="24,44 19,17 36,34" fill="#6B727A" stroke="#33261B" stroke-width="3.5" stroke-linejoin="round"/>' +
+        '<polygon points="25,38 23,24 32,33" fill="#C7CCD1"/>' +
+        '<polygon points="52,44 58,17 41,34" fill="#6B727A" stroke="#33261B" stroke-width="3.5" stroke-linejoin="round"/>' +
+        '<polygon points="51,38 54,24 45,33" fill="#C7CCD1"/>' +
+        '<ellipse cx="39" cy="57" rx="17" ry="15" fill="#7C848D" stroke="#33261B" stroke-width="3.5"/>' +
+        '<path d="M26 45 Q39 38 52 45" fill="#FFF8E4" stroke="#33261B" stroke-width="3"/>' +
+        '<path d="M29 53 L36 56 M49 53 L42 56" stroke="#33261B" stroke-width="3" stroke-linecap="round"/>' +
+        '<circle cx="33" cy="57" r="2.8" fill="#F2B134" stroke="#33261B" stroke-width="1.5"/>' +
+        '<circle cx="45" cy="57" r="2.8" fill="#F2B134" stroke="#33261B" stroke-width="1.5"/>' +
+        '<path d="M32 65 Q39 69 47 64" fill="none" stroke="#33261B" stroke-width="2.8" stroke-linecap="round"/>' +
+        '<polygon points="41,66 44,71 46,65" fill="#FFF8E4" stroke="#33261B" stroke-width="1.6"/>' +
+      '</svg>';
+    }
+
+    /* 小狼掀開羊皮破功態（搞笑吐舌、羊皮掀到後面） */
+    function svgWolfBusted() {
+      return '<svg viewBox="0 0 120 110" aria-hidden="true">' +
+        '<ellipse cx="60" cy="96" rx="34" ry="8" fill="rgba(51,38,27,.18)"/>' +
+        '<path d="M72 30 Q98 20 104 42 Q108 60 88 64 Q80 48 72 30 Z" fill="#FFF8E4" stroke="#33261B" stroke-width="3.2" stroke-linejoin="round"/>' +
+        '<path d="M84 68 Q110 50 112 72 Q104 84 82 78 Z" fill="#6B727A" stroke="#33261B" stroke-width="3.5" stroke-linejoin="round"/>' +
+        '<rect x="42" y="74" width="10" height="20" rx="4" fill="#596068" stroke="#33261B" stroke-width="3"/>' +
+        '<rect x="66" y="74" width="10" height="20" rx="4" fill="#596068" stroke="#33261B" stroke-width="3"/>' +
+        '<ellipse cx="60" cy="66" rx="22" ry="18" fill="#6B727A" stroke="#33261B" stroke-width="3.5"/>' +
+        '<ellipse cx="56" cy="68" rx="12" ry="11" fill="#D9DDE0"/>' +
+        '<path d="M38 60 L22 48 M76 58 L90 46" stroke="#596068" stroke-width="9" stroke-linecap="round"/>' +
+        '<path d="M38 60 L22 48 M76 58 L90 46" stroke="#33261B" stroke-width="3" stroke-linecap="round"/>' +
+        '<polygon points="34,36 26,10 47,26" fill="#6B727A" stroke="#33261B" stroke-width="3.5" stroke-linejoin="round"/>' +
+        '<polygon points="70,36 78,10 57,26" fill="#6B727A" stroke="#33261B" stroke-width="3.5" stroke-linejoin="round"/>' +
+        '<circle cx="52" cy="42" r="20" fill="#7C848D" stroke="#33261B" stroke-width="3.5"/>' +
+        '<path d="M40 39 Q44 35 48 39 M56 39 Q60 35 64 39" fill="none" stroke="#33261B" stroke-width="3.2" stroke-linecap="round"/>' +
+        '<ellipse cx="52" cy="48" rx="5" ry="3.5" fill="#33261B"/>' +
+        '<path d="M42 54 Q52 63 62 54" fill="#33261B"/>' +
+        '<path d="M49 57 Q52 66 56 57" fill="#E8704F" stroke="#33261B" stroke-width="2"/>' +
+      '</svg>';
+    }
+
+    /* 開始畫面主角插圖（400×400 inline SVG） */
+    var HERO_SVG =
+      '<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<rect x="14" y="14" width="372" height="372" rx="40" fill="#BFE1EA" stroke="#6E4125" stroke-width="6"/>' +
+        '<circle cx="320" cy="84" r="32" fill="#F2B134" stroke="#6E4125" stroke-width="5"/>' +
+        '<g fill="#FFF8E4" stroke="#6E4125" stroke-width="4">' +
+          '<path d="M58 98 a18 18 0 0 1 28 -14 a22 22 0 0 1 38 4 a16 16 0 0 1 6 30 H62 a14 14 0 0 1 -4 -20 Z"/>' +
+        '</g>' +
+        '<path d="M17 196 Q140 156 260 184 Q330 198 383 182 V346 Q383 383 346 383 H54 Q17 383 17 346 Z" fill="#85BE72" stroke="#6E4125" stroke-width="5"/>' +
+        /* 右側木柵欄 */
+        '<g stroke="#6E4125" stroke-width="4" stroke-linejoin="round">' +
+          '<rect x="292" y="152" width="16" height="86" rx="5" fill="#9A5F36"/>' +
+          '<rect x="336" y="152" width="16" height="86" rx="5" fill="#9A5F36"/>' +
+          '<rect x="282" y="172" width="84" height="14" rx="5" fill="#B9794A"/>' +
+          '<rect x="282" y="206" width="84" height="14" rx="5" fill="#B9794A"/>' +
+        '</g>' +
+        /* 選取框框 */
+        '<rect x="48" y="182" width="234" height="156" rx="18" fill="rgba(242,177,52,.22)" stroke="#6E4125" stroke-width="5" stroke-dasharray="12 9"/>' +
+        '<rect x="44" y="178" width="242" height="164" rx="20" fill="none" stroke="#F2B134" stroke-width="3" opacity=".85"/>' +
+        /* 框內 3 隻小羊 */
+        '<g transform="translate(64,194) scale(.86)">' + svgWhiteSheep().replace(/^<svg[^>]*>|<\/svg>$/g, '') + '</g>' +
+        '<g transform="translate(160,192) scale(.86)">' + svgCurlySheep().replace(/^<svg[^>]*>|<\/svg>$/g, '') + '</g>' +
+        '<g transform="translate(112,244) scale(.84)">' + svgLamb().replace(/^<svg[^>]*>|<\/svg>$/g, '') + '</g>' +
+        /* 右下大白色游標 */
+        '<polygon points="274,316 274,366 289,352 300,374 311,368 300,346 318,346" fill="#FFF8E4" stroke="#33261B" stroke-width="5" stroke-linejoin="round"/>' +
+      '</svg>';
+
+    /* 小圖示 SVG */
+    var CHECK_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 12.5 L10 17.5 L19 7" fill="none" stroke="#FFF8E4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    var NOTE_SVGS = [
+      '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M12 24 V9 L25 6 V21" fill="none" stroke="#6E4125" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="24" r="4.5" fill="#F2B134" stroke="#6E4125" stroke-width="2.8"/><circle cx="22.5" cy="21" r="4.5" fill="#E8704F" stroke="#6E4125" stroke-width="2.8"/></svg>',
+      '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M15 24 V8 L25 11" fill="none" stroke="#6E4125" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="24" r="4.8" fill="#2F7A49" stroke="#6E4125" stroke-width="2.8"/></svg>'
+    ];
+    var GATE_ICON_SVG = '<svg viewBox="0 0 28 24" width="26" height="22" aria-hidden="true"><path d="M3 12 H19 M14 6 L21 12 L14 18" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 4 V20" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg>';
+
+    var DEX_ITEMS = {
+      whiteSheep:   { name: '白羊',   svg: svgWhiteSheep() },
+      blackSheep:   { name: '黑羊',   svg: svgBlackSheep() },
+      curlySheep:   { name: '捲毛羊', svg: svgCurlySheep() },
+      lamb:         { name: '小羊',   svg: svgLamb() },
+      sheepdog:     { name: '牧羊犬', svg: svgSheepdog() },
+      hen:          { name: '母雞',   svg: svgHen() },
+      pig:          { name: '小豬',   svg: svgPig() },
+      rainbowSheep: { name: '彩虹羊', svg: svgRainbowSheep() }
+    };
+    var NORMAL_DEX_KEYS = ['whiteSheep', 'blackSheep', 'curlySheep', 'lamb', 'sheepdog', 'hen', 'pig'];
+
+    function buildMeadowHTML() {
+      var sky =
+        '<svg class="sc-sky-dec" viewBox="0 0 1366 112" preserveAspectRatio="none" aria-hidden="true">' +
+          '<circle cx="1030" cy="44" r="24" fill="#F2B134" stroke="#6E4125" stroke-width="3.5"/>' +   /* 太陽：原本在 1256 被右上計數卡蓋住只露一角（11-22 移開） */
+          '<g fill="#FFF8E4" opacity=".92">' +
+            '<path d="M600 60 a16 16 0 0 1 26 -12 a20 20 0 0 1 36 4 a14 14 0 0 1 4 24 H604 a12 12 0 0 1 -4 -16 Z"/>' +   /* 雲：原本 x310 被左上任務條蓋住（11-22 移開） */
+            '<path d="M840 52 a14 14 0 0 1 22 -10 a18 18 0 0 1 32 4 a12 12 0 0 1 4 20 H844 a10 10 0 0 1 -4 -14 Z"/>' +
+          '</g>' +
+        '</svg>';
+      /* 柔和草叢點綴（避開左下 x<560, y>400） */
+      var tufts = [
+        [140, 175], [420, 145], [760, 142], [930, 210], [670, 445], [880, 488], [240, 325], [510, 278]
+      ].map(function (pt) {
+        return '<svg class="sc-tuft" style="left:' + pt[0] + 'px;top:' + pt[1] + 'px" width="38" height="22" viewBox="0 0 38 22" aria-hidden="true">' +
+          '<path d="M6 20 Q10 8 15 18 Q19 4 23 18 Q28 9 32 20" fill="none" stroke="#2F7A49" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>';
+      }).join('');
+
+      var pen =
+        '<div class="sc-pen">' +
+          '<div class="sc-pen-floor"></div>' +
+          '<div class="sc-pen-sign">牧場柵欄</div>' +
+          '<svg class="sc-pen-svg" viewBox="0 0 288 382" aria-hidden="true">' +
+            /* 上下右橫木 */
+            '<rect x="14" y="20" width="260" height="13" rx="5" fill="#B9794A" stroke="#6E4125" stroke-width="3.5"/>' +
+            '<rect x="14" y="346" width="260" height="13" rx="5" fill="#B9794A" stroke="#6E4125" stroke-width="3.5"/>' +
+            '<rect x="260" y="20" width="14" height="340" rx="5" fill="#B9794A" stroke="#6E4125" stroke-width="3.5"/>' +
+            /* 左側上方與下方柵欄柱，中間留門口 */
+            '<rect x="14" y="20" width="14" height="115" rx="5" fill="#B9794A" stroke="#6E4125" stroke-width="3.5"/>' +
+            '<rect x="14" y="248" width="14" height="112" rx="5" fill="#B9794A" stroke="#6E4125" stroke-width="3.5"/>' +
+            /* 活動木門 */
+            '<g class="sc-pen-gate">' +
+              '<rect x="14" y="138" width="14" height="106" rx="5" fill="#D59A63" stroke="#6E4125" stroke-width="3.5"/>' +
+              '<circle cx="21" cy="191" r="3.5" fill="#6E4125"/>' +
+            '</g>' +
+            /* 角落與節點木樁 */
+            '<g fill="#9A5F36" stroke="#6E4125" stroke-width="3.5">' +
+              '<rect x="10" y="12" width="22" height="28" rx="6"/>' +
+              '<rect x="134" y="12" width="22" height="28" rx="6"/>' +
+              '<rect x="256" y="12" width="22" height="28" rx="6"/>' +
+              '<rect x="10" y="124" width="22" height="22" rx="6"/>' +
+              '<rect x="10" y="238" width="22" height="22" rx="6"/>' +
+              '<rect x="10" y="340" width="22" height="28" rx="6"/>' +
+              '<rect x="134" y="340" width="22" height="28" rx="6"/>' +
+              '<rect x="256" y="340" width="22" height="28" rx="6"/>' +
+              '<rect x="256" y="176" width="22" height="26" rx="6"/>' +
+            '</g>' +
+          '</svg>' +
+        '</div>';
+
+      return '<div class="sc-meadow">' + sky + tufts + pen +
+        '<div class="sc-marquee"></div>' +
+        '<div class="sc-task"></div>' +
+        '<div class="sc-count"></div>' +
+        '<button type="button" class="sc-herd-btn"></button>' +
+      '</div>';
+    }
+
+    MouseIsland.mount({
+      unit: 36,
+      title: '牧場圍圍樂',
+      skill: 'box',
+      gem: '框選',
+      grade: '34',
+      zhuyin: false,
+      howto: '按住滑鼠拉出框框，把羊群圍進柵欄！',
+      teach: '框選與 Ctrl 多選（一次選好幾個）｜資E1、資E8',
+      hints: ['在空地按住滑鼠左鍵，拉出一個框', '再看一次示範'],
+      dex: {
+        name: '牧場朋友',
+        total: 8,
+        tip: '有些朋友很少出現喔',
+        items: DEX_ITEMS
+      },
+      hero: HERO_SVG,
+
+      scene: function (api) {
+        var offs = [];
+        var raf = 0;
+        var stage = 0;
+        var roundIdx = 0;
+        var totalRounds = 1;
+        var roundToken = 0;
+        var roundBusy = false;
+        var stopped = false;
+        var frozen = false;
+        var rainbowRound = -1;
+
+        var meadow = null;
+        var penEl = null;
+        var marqueeEl = null;
+        var taskEl = null;
+        var countEl = null;
+        var herdBtn = null;
+
+        var animals = [];
+        var penSlotIdx = 0;
+        var nextBleatAt = 0;
+        var nextGrazeAt = 0;
+
+        /* 寄寄保護區：x < 560 且 y > 400（留 16px 安全餘裕） */
+        var JIJ_X = 576;
+        var JIJ_Y = 384;
+        var PEN_LEFT = 1054;
+        var FIELD_LEFT = 68;
+        var FIELD_TOP = 94;
+        var FIELD_BOTTOM = 542;
+
+        /* 柵欄內站位（8 格，依序排進柵欄） */
+        var PEN_SLOTS = [
+          { x: 1140, y: 185 }, { x: 1246, y: 185 },
+          { x: 1138, y: 266 }, { x: 1248, y: 266 },
+          { x: 1140, y: 348 }, { x: 1246, y: 348 },
+          { x: 1194, y: 224 }, { x: 1194, y: 312 }
+        ];
+
+        function prefersReduced() {
+          return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        }
+
+        function clearAll() {
+          stopped = true;
+          roundToken++;
+          offs.forEach(function (off) { try { off(); } catch (_) {} });
+          offs = [];
+          cancelAnimationFrame(raf);
+          raf = 0;
+          animals = [];
+          roundBusy = false;
+          frozen = false;
+        }
+
+        function clearRoundAnimals() {
+          animals.forEach(function (a) {
+            try { api.glow(a.el, false); } catch (_) {}
+            if (a.offClick) { try { a.offClick(); } catch (_) {} }
+            if (a.el && a.el.parentNode) a.el.parentNode.removeChild(a.el);
+          });
+          animals = [];
+          penSlotIdx = 0;
+        }
+
+        function normRect(r) {
+          if (!r) return null;
+          var x = r.x != null ? r.x : (r.left != null ? r.left : 0);
+          var y = r.y != null ? r.y : (r.top != null ? r.top : 0);
+          var w = r.w != null ? r.w : (r.width != null ? r.width : (r.x2 != null ? r.x2 - x : 0));
+          var h = r.h != null ? r.h : (r.height != null ? r.height : (r.y2 != null ? r.y2 - y : 0));
+          return { x: x, y: y, w: w, h: h };
+        }
+
+        function hideMarquee() {
+          if (marqueeEl) marqueeEl.style.display = 'none';
+          animals.forEach(function (a) {
+            a.el.classList.remove('sc-preview', 'sc-preview-wolf');
+          });
+        }
+
+        function clampSafePos(a, bounce) {
+          var hw = (a.w * a.scale) * 0.5 + 10;
+          var hh = (a.h * a.scale) * 0.5 + 10;
+          var minX = FIELD_LEFT + hw;
+          var maxX = PEN_LEFT - 24 - hw;
+          var minY = FIELD_TOP + hh;
+          var maxY = FIELD_BOTTOM - hh;
+
+          if (a.x < minX) { a.x = minX; if (bounce) a.vx = Math.abs(a.vx); }
+          if (a.x > maxX) { a.x = maxX; if (bounce) a.vx = -Math.abs(a.vx); }
+          if (a.y < minY) { a.y = minY; if (bounce) a.vy = Math.abs(a.vy); }
+          if (a.y > maxY) { a.y = maxY; if (bounce) a.vy = -Math.abs(a.vy); }
+
+          /* 嚴格避開左下寄寄區（x < 560 && y > 400） */
+          if (a.x - hw < JIJ_X && a.y + hh > JIJ_Y) {
+            var pushRight = (JIJ_X + hw) - a.x;
+            var pushUp = a.y - (JIJ_Y - hh);
+            if (pushUp <= pushRight) {
+              a.y = JIJ_Y - hh;
+              if (bounce) a.vy = -Math.abs(a.vy);
+            } else {
+              a.x = JIJ_X + hw;
+              if (bounce) a.vx = Math.abs(a.vx);
+            }
+          }
+        }
+
+        function applyAnimalTransform(a) {
+          a.el.style.left = (a.x - a.w * 0.5) + 'px';
+          a.el.style.top = (a.y - a.h * 0.5) + 'px';
+          a.el.style.transform = 'scale(' + a.scale.toFixed(3) + ')';
+          a.el.classList.toggle('sc-flip', a.vx > 2);
+        }
+
+        function showBubble(a, text, isWolfYell, ms) {
+          var old = a.el.querySelector('.sc-bubble');
+          if (old) old.remove();
+          var b = document.createElement('div');
+          b.className = 'sc-bubble' + (isWolfYell ? ' sc-wolf-yell' : '');
+          b.textContent = text;
+          a.el.appendChild(b);
+          var token = roundToken;
+          api.later(function () {
+            if (b.parentNode) b.parentNode.removeChild(b);
+            if (stopped || token !== roundToken) return;
+          }, ms || 1050);
+        }
+
+        function spawnNote(x, y, idx) {
+          if (!meadow) return;
+          var n = document.createElement('div');
+          n.className = 'sc-note';
+          n.style.left = (x - 14 + ((idx % 3) - 1) * 20) + 'px';
+          n.style.top = (y - 38) + 'px';
+          n.innerHTML = NOTE_SVGS[idx % NOTE_SVGS.length];
+          meadow.appendChild(n);
+          api.later(function () {
+            if (n.parentNode) n.parentNode.removeChild(n);
+          }, 1200);
+        }
+
+        function showCollectToast(key) {
+          var item = DEX_ITEMS[key];
+          if (!item || !meadow) return;
+          var old = meadow.querySelector('.sc-toast');
+          if (old) old.remove();
+          var t = document.createElement('div');
+          t.className = 'sc-toast';
+          t.innerHTML = '<div class="sc-toast-icon">' + item.svg + '</div><span>新朋友：' + item.name + '！</span>';
+          meadow.appendChild(t);
+          api.later(function () {
+            if (t.parentNode) t.parentNode.removeChild(t);
+          }, 1750);
+        }
+
+        /* 隨機收集牧場朋友（彩虹羊只由彩虹目標觸發） */
+        function maybeCollectFriend(guaranteed) {
+          if (!guaranteed && Math.random() > 0.62) return;
+          var owned = api.collected() || [];
+          var missing = NORMAL_DEX_KEYS.filter(function (k) { return owned.indexOf(k) === -1; });
+          var pool = (missing.length && Math.random() < 0.72) ? missing : NORMAL_DEX_KEYS;
+          var pick = pool[Math.floor(Math.random() * pool.length)];
+          if (api.collect(pick)) {
+            api.sfx('gem');
+            showCollectToast(pick);
+          }
+        }
+
+        function updateHeaderUI() {
+          if (countEl) {
+            countEl.textContent = '第 ' + Math.min(roundIdx + 1, totalRounds) + '／' + totalRounds + ' 題';
+          }
+          if (!taskEl) return;
+          if (stage === 0) {
+            taskEl.innerHTML = '<span class="sc-task-badge">示範</span><span>按住左鍵拉出框框，把 3 隻小羊一起圍進柵欄</span>';
+          } else if (stage === 1) {
+            taskEl.innerHTML = '<span class="sc-task-badge">小心小狼</span><span>框起所有小羊，別框到披羊皮的小狼！</span>';
+          } else {
+            var hasRainbow = animals.some(function (a) { return a.isRainbow && !a.herded; });
+            var extra = hasRainbow ? '（含彩虹羊）' : '';
+            taskEl.innerHTML = '<span class="sc-task-badge">Ctrl 多選</span><span>按住</span><span class="sc-kbd">Ctrl</span><span>點選全部白羊' + extra + '，再按「趕進柵欄」</span>';
+          }
+        }
+
+        function updateHerdButton() {
+          if (!herdBtn) return;
+          if (stage !== 2) {
+            herdBtn.classList.remove('sc-show');
+            return;
+          }
+          herdBtn.classList.add('sc-show');
+          var targets = animals.filter(function (a) { return a.isTarget && !a.herded; });
+          var picked = targets.filter(function (a) { return a.selected; });
+          herdBtn.classList.toggle('sc-waiting', picked.length === 0);
+          herdBtn.innerHTML = GATE_ICON_SVG + '<span>趕進柵欄</span><span class="sc-herd-pill">' + picked.length + '／' + targets.length + '</span>';
+        }
+
+        function createAnimal(opts) {
+          var cfg = api.cfg();
+          var baseW = opts.w || 124;
+          var baseH = opts.h || 112;
+          var scale = (opts.scale || 1) * cfg.size;
+
+          var el = document.createElement('div');
+          el.className = 'sc-animal' + (opts.clickable ? ' sc-clickable' : '') + (opts.isRainbow ? ' sc-rainbow' : '');
+          el.style.width = baseW + 'px';
+          el.style.height = baseH + 'px';
+
+          var body = document.createElement('div');
+          body.className = 'sc-animal-body';
+          body.innerHTML = opts.svg;
+          el.appendChild(body);
+
+          if (opts.isRainbow) {
+            var tag = document.createElement('div');
+            tag.className = 'sc-rainbow-tag';
+            tag.textContent = '彩虹白羊';
+            el.appendChild(tag);
+          }
+
+          if (stage === 2 && opts.isTarget) {
+            var chk = document.createElement('div');
+            chk.className = 'sc-check';
+            chk.innerHTML = CHECK_SVG;
+            el.appendChild(chk);
+          }
+
+          var angle = Math.random() * Math.PI * 2;
+          var spd = (opts.speed || 0) * cfg.speed;
+          var a = {
+            id: opts.id,
+            role: opts.role,          /* 'sheep' | 'wolf' | 'black' */
+            isTarget: !!opts.isTarget,
+            isRainbow: !!opts.isRainbow,
+            el: el,
+            body: body,
+            w: baseW,
+            h: baseH,
+            baseScale: opts.scale || 1,
+            scale: scale,
+            x: opts.x,
+            y: opts.y,
+            baseSpeed: opts.speed || 0,
+            vx: frozen ? 0 : Math.cos(angle) * spd,
+            vy: frozen ? 0 : Math.sin(angle) * spd,
+            herded: false,
+            selected: false,
+            offClick: null
+          };
+
+          clampSafePos(a, false);
+          applyAnimalTransform(a);
+          meadow.appendChild(el);
+
+          if (stage === 2) {
+            a.offClick = api.on(el, 'click', {
+              ok: function (pos, e) { onStage3AnimalClick(a, e); },
+              wrong: function () {
+                if (roundBusy || a.herded) return;
+                api.wob(a.el);
+                api.sfx('giggle');
+                api.say('用左鍵點白羊喔', { zy: false });
+                api.miss();
+              }
+            });
+            offs.push(a.offClick);
+          }
+
+          animals.push(a);
+          return a;
+        }
+
+        function pickSheepSvg(variant) {
+          if (variant === 'curly') return svgCurlySheep();
+          if (variant === 'lamb') return svgLamb();
+          return svgWhiteSheep();
+        }
+
+        /* 計算一批目標羊的包圍框（用於第一段與 hint(2) 示範） */
+        function computeDemoBox(list) {
+          if (!list.length) return { from: { x: 420, y: 140 }, to: { x: 860, y: 340 } };
+          var minX = 9999, minY = 9999, maxX = -9999, maxY = -9999;
+          list.forEach(function (a) {
+            var hw = a.w * a.scale * 0.5;
+            var hh = a.h * a.scale * 0.5;
+            if (a.x - hw < minX) minX = a.x - hw;
+            if (a.y - hh < minY) minY = a.y - hh;
+            if (a.x + hw > maxX) maxX = a.x + hw;
+            if (a.y + hh > maxY) maxY = a.y + hh;
+          });
+          return {
+            from: { x: Math.max(24, Math.round(minX - 36)), y: Math.max(76, Math.round(minY - 30)) },
+            to: { x: Math.min(PEN_LEFT - 14, Math.round(maxX + 36)), y: Math.min(556, Math.round(maxY + 30)) }
+          };
+        }
+
+        /* 找不含小狼的最大可框選子集（確保第二段 hint(2) 示範框永遠乾淨） */
+        function pickSafeDemoGroup() {
+          var targets = animals.filter(function (a) { return a.isTarget && !a.herded; });
+          var wolf = animals.filter(function (a) { return a.role === 'wolf'; })[0];
+          if (!wolf || targets.length <= 1) return targets;
+          /* 檢查總框是否會包到小狼 */
+          var box = computeDemoBox(targets);
+          var wolfInside = wolf.x >= box.from.x && wolf.x <= box.to.x && wolf.y >= box.from.y && wolf.y <= box.to.y;
+          if (!wolfInside) return targets;
+          /* 按離小狼距離排序，優先取與小狼同側相反的羊群 */
+          var leftOfWolf = targets.filter(function (a) { return a.x < wolf.x - 40; });
+          var rightOfWolf = targets.filter(function (a) { return a.x > wolf.x + 40; });
+          var aboveWolf = targets.filter(function (a) { return a.y < wolf.y - 40; });
+          var cands = [leftOfWolf, rightOfWolf, aboveWolf].sort(function (u, v) { return v.length - u.length; });
+          if (cands[0].length > 0) return cands[0];
+          return [targets[0]];
+        }
+
+        /* 把一群目標羊趕進右邊柵欄 */
+        function herdAnimals(list, onAllDone) {
+          if (!list.length) return;
+          var reduced = prefersReduced();
+          if (penEl) penEl.classList.add('sc-open');
+          api.sfx('ok');
+
+          list.forEach(function (a, i) {
+            a.herded = true;
+            a.selected = false;
+            a.vx = 0;
+            a.vy = 0;
+            try { api.glow(a.el, false); } catch (_) {}
+            a.el.classList.remove('sc-selected', 'sc-preview', 'sc-clickable');
+            a.el.classList.add('sc-herding');
+
+            var slot = PEN_SLOTS[penSlotIdx % PEN_SLOTS.length];
+            penSlotIdx++;
+            a.x = slot.x;
+            a.y = slot.y;
+            a.scale = Math.min(a.scale, 0.86);
+            applyAnimalTransform(a);
+
+            if (a.isRainbow) {
+              if (api.collect('rainbowSheep')) {
+                api.sfx('gem');
+                showCollectToast('rainbowSheep');
+              }
+            }
+
+            var myToken = roundToken;
+            api.later(function () {
+              if (stopped || myToken !== roundToken) return;
+              a.el.classList.remove('sc-herding');
+              a.el.classList.add('sc-in-pen');
+            }, reduced ? 20 : 620 + i * 35);
+          });
+
+          var myToken = roundToken;
+          api.later(function () {
+            if (stopped || myToken !== roundToken) return;
+            if (penEl) penEl.classList.remove('sc-open');
+            if (onAllDone) onAllDone();
+          }, reduced ? 120 : 680);
+        }
+
+        /* 柵欄裡羊群咩咩合唱（音符飄起來） */
+        function singChorus(doneCb, extraHoldMs) {
+          var inPen = animals.filter(function (a) { return a.herded; });
+          api.sfx('ok');
+          inPen.forEach(function (a, idx) {
+            a.el.classList.add('sc-sing');
+            spawnNote(a.x, a.y, idx);
+            if (idx % 2 === 0) showBubble(a, '咩～咩～', false, 1100);
+          });
+          var myToken = roundToken;
+          api.later(function () {
+            if (stopped || myToken !== roundToken) return;
+            inPen.forEach(function (a) { a.el.classList.remove('sc-sing'); });
+            if (doneCb) doneCb();
+          }, (prefersReduced() ? 450 : 1200) + (extraHoldMs || 0));
+        }
+
+        /* 完成一整題：hit ＋ 收集 ＋ 合唱 ＋ 進下一題或 stageDone */
+        function completeRound() {
+          roundBusy = true;
+          api.hit();
+          maybeCollectFriend(stage === 0);
+
+          var isLastRound = (roundIdx + 1 >= totalRounds);
+          var extraHold = 0;
+          if (stage === 2 && isLastRound) {
+            api.say('電腦上選好幾個檔案也是這樣', { zy: false });
+            extraHold = 550;
+          } else {
+            api.say('太棒了！全部進柵欄！', { zy: false });
+          }
+
+          singChorus(function () {
+            roundIdx++;
+            if (roundIdx >= totalRounds) {
+              api.stageDone();
+            } else {
+              spawnRound();
+            }
+          }, extraHold);
+        }
+
+        /* 第一、二段：框選結果處理 */
+        function handleBoxSelect(items) {
+          hideMarquee();
+          if (roundBusy || stopped) return;
+
+          var matched = [];
+          items.forEach(function (el) {
+            for (var i = 0; i < animals.length; i++) {
+              if (animals[i].el === el && !animals[i].herded) {
+                matched.push(animals[i]);
+                break;
+              }
+            }
+          });
+
+          /* 框到 0 隻：不算失手，羊歪頭看你 */
+          if (matched.length === 0) {
+            animals.forEach(function (a) {
+              if (a.herded) return;
+              a.el.classList.remove('sc-tilt');
+              void a.el.offsetWidth;
+              a.el.classList.add('sc-tilt');
+              if (a.isTarget) showBubble(a, '咩？', false, 850);
+            });
+            api.sfx('pop');
+            api.say('框到空氣了，再拉一次！', { zy: false });
+            return;
+          }
+
+          /* 檢查有沒有框到披羊皮的小狼 */
+          var wolf = null;
+          for (var j = 0; j < matched.length; j++) {
+            if (matched[j].role === 'wolf') { wolf = matched[j]; break; }
+          }
+
+          if (wolf) {
+            roundBusy = true;
+            wolf.body.innerHTML = svgWolfBusted();
+            api.wob(wolf.el);
+            api.sfx('giggle');
+            showBubble(wolf, '嗷～被發現啦！', true, 1250);
+            api.say('哎呀，框到披羊皮的小狼！', { zy: false });
+
+            /* 羊群嚇得往外散開一點（保持在安全區內） */
+            animals.forEach(function (a) {
+              if (a.herded || a === wolf) return;
+              api.wob(a.el);
+              showBubble(a, '咩呀！', false, 950);
+              var dx = a.x - wolf.x;
+              var dy = a.y - wolf.y;
+              var dist = Math.hypot(dx, dy) || 1;
+              if (!prefersReduced()) {
+                a.x += (dx / dist) * 58;
+                a.y += (dy / dist) * 44;
+                clampSafePos(a, true);
+                applyAnimalTransform(a);
+              }
+            });
+
+            api.miss();
+
+            var myToken = roundToken;
+            api.later(function () {
+              if (stopped || myToken !== roundToken) return;
+              wolf.body.innerHTML = svgWolfDisguise();
+              roundBusy = false;
+            }, 1150);
+            return;
+          }
+
+          /* 全部都是目標羊 → 趕進柵欄！ */
+          roundBusy = true;
+          herdAnimals(matched, function () {
+            var remaining = animals.filter(function (a) { return a.isTarget && !a.herded; });
+            if (remaining.length === 0) {
+              completeRound();
+            } else {
+              roundBusy = false;
+              api.say('好棒！還剩 ' + remaining.length + ' 隻喔', { zy: false });
+            }
+          });
+        }
+
+        /* 第三段：點到某隻羊（Ctrl 多選） */
+        function onStage3AnimalClick(a, e) {
+          if (roundBusy || stopped || a.herded) return;
+
+          /* 黑羊是干擾物：點到不算失手，搖頭搞笑反應 */
+          if (!a.isTarget) {
+            api.wob(a.el);
+            api.sfx('giggle');
+            showBubble(a, '我是黑羊咩～', false, 1000);
+            api.say('點白色的羊喔！', { zy: false });
+            return;
+          }
+
+          var prevSelected = animals.filter(function (x) { return x.isTarget && !x.herded && x.selected; });
+          var ctrl = !!(e && e.ctrlKey);
+
+          if (ctrl) {
+            /* 按住 Ctrl：切換此羊選取狀態 */
+            a.selected = !a.selected;
+            a.el.classList.toggle('sc-selected', a.selected);
+            try { api.glow(a.el, false); } catch (_) {}
+            api.sfx('pop');
+            if (a.selected) showBubble(a, '選我！', false, 650);
+            updateHerdButton();
+            return;
+          }
+
+          /* 沒按 Ctrl */
+          if (prevSelected.length === 0) {
+            /* 第一隻可以直接點選 */
+            a.selected = true;
+            a.el.classList.add('sc-selected');
+            try { api.glow(a.el, false); } catch (_) {}
+            api.sfx('pop');
+            showBubble(a, '選到了！', false, 650);
+            updateHerdButton();
+            return;
+          }
+
+          if (prevSelected.length === 1 && prevSelected[0] === a) {
+            /* 重複點同一隻：保持選取，溫柔提醒 */
+            api.sfx('pop');
+            api.say('按住 Ctrl 再點下一隻', { zy: false });
+            return;
+          }
+
+          /* 沒按 Ctrl 點第二隻 → 前面選的取消（跟電腦一樣）＋提示＋失手 */
+          prevSelected.forEach(function (other) {
+            if (other !== a) {
+              other.selected = false;
+              other.el.classList.remove('sc-selected');
+              api.wob(other.el);
+              showBubble(other, '跑掉啦！', false, 800);
+            }
+          });
+          a.selected = true;
+          a.el.classList.add('sc-selected');
+          try { api.glow(a.el, false); } catch (_) {}
+          api.sfx('giggle');
+          api.say('按住 Ctrl 再點', { zy: false });
+          api.miss();
+          updateHerdButton();
+        }
+
+        /* 第三段：按下「趕進柵欄」按鈕 */
+        function onHerdButtonClick() {
+          if (stage !== 2 || roundBusy || stopped) return;
+          var targets = animals.filter(function (a) { return a.isTarget && !a.herded; });
+          var picked = targets.filter(function (a) { return a.selected; });
+          var unpicked = targets.filter(function (a) { return !a.selected; });
+
+          if (unpicked.length > 0) {
+            unpicked.forEach(function (a) {
+              api.wob(a.el);
+              showBubble(a, '還有我咩！', false, 950);
+            });
+            api.sfx('giggle');
+            api.say(picked.length === 0 ? '先點選白羊再按喔！' : '還有白羊沒選到喔！', { zy: false });
+            api.miss();
+            return;
+          }
+
+          roundBusy = true;
+          herdAnimals(picked, function () {
+            updateHerdButton();
+            completeRound();
+          });
+        }
+
+        /* 生成一題的動物位置（確保互不重疊、不入寄寄區） */
+        function pickSpawnPos(existing, minDist, xMin, xMax, yMin, yMax) {
+          for (var t = 0; t < 80; t++) {
+            var x = xMin + Math.random() * (xMax - xMin);
+            var y = yMin + Math.random() * (yMax - yMin);
+            if (x < JIJ_X + 75 && y > JIJ_Y - 70) continue;
+            var ok = true;
+            for (var i = 0; i < existing.length; i++) {
+              if (Math.hypot(x - existing[i].x, y - existing[i].y) < minDist) { ok = false; break; }
+            }
+            if (ok) return { x: x, y: y };
+          }
+          return { x: Math.max(JIJ_X + 90, xMin + 120), y: yMin + 80 };
+        }
+
+        function spawnRound() {
+          clearRoundAnimals();
+          roundBusy = false;
+          roundToken++;
+          var cfg = api.cfg();
+          frozen = !!cfg.assist;
+
+          if (stage === 0) {
+            /* 第一段：3 隻白羊站在一起、不動、大、畫面中間偏上、乾淨無干擾 */
+            var spots = [
+              { x: 540, y: 230, v: 'white' },
+              { x: 675, y: 205, v: 'curly' },
+              { x: 615, y: 295, v: 'lamb' }
+            ];
+            spots.forEach(function (sp, idx) {
+              createAnimal({
+                id: 's0-' + idx,
+                role: 'sheep',
+                isTarget: true,
+                svg: pickSheepSvg(sp.v),
+                w: 132,
+                h: 120,
+                scale: 1.08,
+                speed: 0,
+                x: sp.x,
+                y: sp.y
+              });
+            });
+            updateHeaderUI();
+            updateHerdButton();
+
+            /* start 時先 glow 羊群再 demo('box') */
+            animals.forEach(function (a) { api.glow(a.el, true); });
+            var box = computeDemoBox(animals);
+            api.demo(meadow, 'box', { from: box.from, to: box.to });
+            return;
+          }
+
+          if (stage === 1) {
+            /* 第二段：4 題，每題 4–6 隻羊＋1 隻披羊皮的小狼，慢慢走動 */
+            var counts = [4, 4, 5, 6];
+            var sheepNum = counts[roundIdx] || 5;
+            var variants = ['white', 'curly', 'lamb'];
+            var placed = [];
+
+            /* 先放羊群在偏左／偏中區塊，再把小狼放遠一點，開局一定好框 */
+            var sheepOnLeft = (roundIdx % 2 === 0);
+            var sxMin = sheepOnLeft ? 150 : 420;
+            var sxMax = sheepOnLeft ? 640 : 920;
+
+            for (var i = 0; i < sheepNum; i++) {
+              var p = pickSpawnPos(placed, 128, sxMin, sxMax, 160, 440);
+              placed.push(p);
+              createAnimal({
+                id: 's1-' + i,
+                role: 'sheep',
+                isTarget: true,
+                svg: pickSheepSvg(variants[i % variants.length]),
+                w: 124,
+                h: 112,
+                scale: 1.0,
+                speed: 28 + Math.random() * 10,
+                x: p.x,
+                y: p.y
+              });
+            }
+
+            /* 披羊皮的小狼放另一側 */
+            var wxMin = sheepOnLeft ? 740 : 160;
+            var wxMax = sheepOnLeft ? 930 : 340;
+            var wp = pickSpawnPos(placed, 165, wxMin, wxMax, 165, 340);
+            createAnimal({
+              id: 's1-wolf',
+              role: 'wolf',
+              isTarget: false,
+              svg: svgWolfDisguise(),
+              w: 124,
+              h: 112,
+              scale: 1.02,
+              speed: 24,
+              x: wp.x,
+              y: wp.y
+            });
+
+            updateHeaderUI();
+            updateHerdButton();
+            return;
+          }
+
+          /* 第三段：4 題，白羊（3–4 隻）＋黑羊（2–3 隻）混在一起，小且會動 */
+          var plans = [
+            { white: 3, black: 2 },
+            { white: 3, black: 3 },
+            { white: 4, black: 2 },
+            { white: 4, black: 3 }
+          ];
+          var plan = plans[roundIdx] || plans[0];
+          var put = [];
+          var hasRainbowThisRound = (roundIdx === rainbowRound);
+
+          for (var w = 0; w < plan.white; w++) {
+            var pw = pickSpawnPos(put, 118, 150, 935, 155, 465);
+            put.push(pw);
+            var isRb = hasRainbowThisRound && (w === 0);
+            createAnimal({
+              id: 's2-w-' + w,
+              role: 'sheep',
+              isTarget: true,
+              isRainbow: isRb,
+              clickable: true,
+              svg: isRb ? svgRainbowSheep() : pickSheepSvg(w % 2 === 0 ? 'white' : 'curly'),
+              w: 96,
+              h: 88,
+              scale: 1.0,
+              speed: 44 + Math.random() * 12,
+              x: pw.x,
+              y: pw.y
+            });
+          }
+
+          for (var b = 0; b < plan.black; b++) {
+            var pb = pickSpawnPos(put, 118, 150, 935, 155, 465);
+            put.push(pb);
+            createAnimal({
+              id: 's2-b-' + b,
+              role: 'black',
+              isTarget: false,
+              clickable: true,
+              svg: svgBlackSheep(),
+              w: 96,
+              h: 88,
+              scale: 1.0,
+              speed: 46 + Math.random() * 12,
+              x: pb.x,
+              y: pb.y
+            });
+          }
+
+          updateHeaderUI();
+          updateHerdButton();
+        }
+
+        /* 主動畫迴圈：移動、推擠、偶爾吃草與咩叫 */
+        function startLoop() {
+          var last = performance.now();
+          nextBleatAt = last + 2200;
+          nextGrazeAt = last + 1800;
+
+          function step(now) {
+            if (stopped) return;
+            var dt = Math.min(0.05, (now - last) / 1000);
+            last = now;
+
+            var active = animals.filter(function (a) { return !a.herded; });
+            var reduced = prefersReduced();
+
+            if (!frozen && !reduced && !roundBusy && stage > 0) {
+              /* 移動＋溫和推擠（小狼與羊拉開較大距離，避免卡死羊群正中間） */
+              for (var i = 0; i < active.length; i++) {
+                var a = active[i];
+                a.x += a.vx * dt;
+                a.y += a.vy * dt;
+                clampSafePos(a, true);
+              }
+              for (var p = 0; p < active.length; p++) {
+                for (var q = p + 1; q < active.length; q++) {
+                  var u = active[p], v = active[q];
+                  var dx = v.x - u.x;
+                  var dy = v.y - u.y;
+                  var d = Math.hypot(dx, dy) || 1;
+                  var isWolfPair = (u.role === 'wolf' || v.role === 'wolf');
+                  var minD = isWolfPair ? 152 : ((u.w * u.scale + v.w * v.scale) * 0.45);
+                  if (d < minD) {
+                    var push = (minD - d) * 0.5;
+                    var nx = dx / d;
+                    var ny = dy / d;
+                    u.x -= nx * push * 0.5;
+                    u.y -= ny * push * 0.5;
+                    v.x += nx * push * 0.5;
+                    v.y += ny * push * 0.5;
+                    /* 微微改變方向像在互相推擠 */
+                    var swapX = u.vx; u.vx = v.vx; v.vx = swapX;
+                    clampSafePos(u, true);
+                    clampSafePos(v, true);
+                  }
+                }
+              }
+              for (var k = 0; k < active.length; k++) {
+                applyAnimalTransform(active[k]);
+              }
+            }
+
+            /* 偶爾咩一聲、偶爾吃草（第一段保持安靜乾淨不亂跳泡泡） */
+            if (stage > 0 && !roundBusy && active.length) {
+              if (now >= nextBleatAt) {
+                nextBleatAt = now + 2800 + Math.random() * 2400;
+                var sheepOnly = active.filter(function (x) { return x.role !== 'wolf'; });
+                if (sheepOnly.length) {
+                  var pick = sheepOnly[Math.floor(Math.random() * sheepOnly.length)];
+                  if (!pick.el.querySelector('.sc-bubble')) {
+                    showBubble(pick, '咩～', false, 950);
+                  }
+                }
+              }
+              if (!reduced && now >= nextGrazeAt) {
+                nextGrazeAt = now + 2400 + Math.random() * 2000;
+                var eater = active[Math.floor(Math.random() * active.length)];
+                if (eater && eater.role !== 'wolf') {
+                  eater.el.classList.remove('sc-graze');
+                  void eater.el.offsetWidth;
+                  eater.el.classList.add('sc-graze');
+                }
+              }
+            }
+
+            raf = requestAnimationFrame(step);
+          }
+
+          raf = requestAnimationFrame(step);
+        }
+
+        return {
+          start: function (st, cfg) {
+            clearAll();
+            stopped = false;
+            stage = st;
+            roundIdx = 0;
+            totalRounds = (st === 0) ? 1 : 4;
+            rainbowRound = (st === 2) ? Math.floor(Math.random() * 4) : -1;
+
+            api.field.innerHTML = buildMeadowHTML();
+            meadow = api.field.querySelector('.sc-meadow');
+            penEl = api.field.querySelector('.sc-pen');
+            marqueeEl = api.field.querySelector('.sc-marquee');
+            taskEl = api.field.querySelector('.sc-task');
+            countEl = api.field.querySelector('.sc-count');
+            herdBtn = api.field.querySelector('.sc-herd-btn');
+
+            if (st < 2) {
+              /* 第一、二段：草地框選偵測 */
+              meadow.classList.add('sc-box-mode');
+              offs.push(api.on(meadow, 'box', {
+                move: function (rect) {
+                  if (roundBusy || stopped) return;
+                  var r = normRect(rect);
+                  if (!r || (r.w < 4 && r.h < 4)) { hideMarquee(); return; }
+                  marqueeEl.style.display = 'block';
+                  marqueeEl.style.left = r.x + 'px';
+                  marqueeEl.style.top = r.y + 'px';
+                  marqueeEl.style.width = r.w + 'px';
+                  marqueeEl.style.height = r.h + 'px';
+
+                  animals.forEach(function (a) {
+                    if (a.herded) return;
+                    var inside = a.x >= r.x && a.x <= r.x + r.w && a.y >= r.y && a.y <= r.y + r.h;
+                    a.el.classList.toggle('sc-preview', inside && a.role !== 'wolf');
+                    a.el.classList.toggle('sc-preview-wolf', inside && a.role === 'wolf');
+                  });
+                },
+                select: function (items) {
+                  handleBoxSelect(items || []);
+                },
+                empty: function () {
+                  hideMarquee();
+                  if (roundBusy || stopped) return;
+                  animals.forEach(function (a) {
+                    if (a.herded) return;
+                    a.el.classList.remove('sc-tilt');
+                    void a.el.offsetWidth;
+                    a.el.classList.add('sc-tilt');
+                  });
+                }
+              }, {
+                items: function () {
+                  return animals.filter(function (a) { return !a.herded; }).map(function (a) { return a.el; });
+                },
+                background: function (target) {
+                  return !target.closest('.sc-animal') && !target.closest('.sc-herd-btn');
+                }
+              }));
+            } else {
+              /* 第三段：「趕進柵欄」按鈕 ＋ 空白處點擊提醒 */
+              offs.push(api.on(herdBtn, 'click', {
+                ok: function () { onHerdButtonClick(); }
+              }));
+              offs.push(api.on(meadow, 'click', {
+                ok: function (pos, e) {
+                  if (roundBusy || stopped) return;
+                  if (e && e.target && (e.target.closest('.sc-animal') || e.target.closest('.sc-herd-btn'))) return;
+                  var unpicked = animals.filter(function (a) { return a.isTarget && !a.herded && !a.selected; });
+                  if (unpicked.length) {
+                    api.wob(unpicked[0].el);
+                    showBubble(unpicked[0], '點我咩～', false, 800);
+                  }
+                  api.sfx('giggle');
+                  api.miss();
+                }
+              }));
+            }
+
+            spawnRound();
+            startLoop();
+          },
+
+          hint: function (level) {
+            if (stopped || roundBusy) return;
+            var targets = animals.filter(function (a) {
+              if (!a.isTarget || a.herded) return false;
+              return stage === 2 ? !a.selected : true;
+            });
+
+            if (stage === 2 && targets.length === 0 && herdBtn) {
+              /* 第三段已全選白羊，引導按「趕進柵欄」 */
+              api.glow(herdBtn, true);
+              if (level === 2) api.demo(herdBtn, 'click');
+              return;
+            }
+
+            targets.forEach(function (a) { api.glow(a.el, true); });
+
+            if (level === 2) {
+              if (stage < 2) {
+                var group = pickSafeDemoGroup();
+                var box = computeDemoBox(group);
+                api.demo(meadow, 'box', { from: box.from, to: box.to });
+              } else if (targets.length) {
+                api.demo(targets[0].el, 'click');
+              }
+            }
+          },
+
+          assist: function () {
+            if (stopped) return;
+            frozen = true;
+            var cfg = api.cfg();
+            animals.forEach(function (a) {
+              if (a.herded) return;
+              a.vx = 0;
+              a.vy = 0;
+              if (a.isTarget) {
+                a.scale = a.baseScale * cfg.size;
+              } else if (a.role === 'wolf') {
+                /* 讓小狼往右上角落退一點，方便框羊 */
+                a.x = Math.min(930, Math.max(a.x, 860));
+                a.y = Math.min(200, a.y);
+              }
+              clampSafePos(a, false);
+              applyAnimalTransform(a);
+            });
+          },
+
+          stop: clearAll
+        };
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

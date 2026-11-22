@@ -1,0 +1,1064 @@
+<!doctype html><html lang="zh-Hant"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>敲敲蛋寶寶 - 滑鼠島</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+  <link rel="stylesheet" href="../../assets/css/mouse-island.css">
+  <style>
+    /* 場景樣式：class 一律以 sc- 開頭（共用語音字型 mi-zy 由外殼提供） */
+    .sc-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(#BFE1EA 0 112px, #F6E7BE 112px 100%);
+      overflow: hidden;
+      user-select: none;
+    }
+    .sc-wave {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 96px;
+      height: 30px;
+      background: radial-gradient(circle at 22px -6px, transparent 22px, #FFF8E4 23px, #FFF8E4 28px, transparent 29px) 0 0 / 44px 30px repeat-x;
+      opacity: .92;
+      pointer-events: none;
+    }
+    .sc-deco {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .sc-nest {
+      position: absolute;
+      width: 290px;
+      height: 104px;
+      margin: -52px 0 0 -145px;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .sc-nest svg { width: 100%; height: 100%; display: block; }
+
+    /* 右上角進度計數牌（羊皮紙底＋木頭色框，文字深色高對比） */
+    .sc-count {
+      position: absolute;
+      right: 24px;
+      top: 14px;
+      z-index: 20;
+      padding: 6px 18px;
+      background: #FFF8E4;
+      color: #33261B;
+      border: 3px solid #B9794A;
+      border-radius: 14px;
+      font-size: 22px;
+      font-weight: 700;
+      box-shadow: 0 3px 0 rgba(110, 65, 37, .22);
+      pointer-events: none;
+    }
+
+    /* 蛋外層只管位置與大小，不佔用 transform，讓 api.wob／api.glow 穩定作用 */
+    .sc-egg {
+      position: absolute;
+      z-index: 8;
+      cursor: pointer;
+      touch-action: manipulation;
+      border-radius: 50% 50% 46% 46% / 58% 58% 42% 42%;
+      transition: width .28s ease, height .28s ease, margin .28s ease;
+    }
+    .sc-egg-dim {
+      opacity: .92;
+    }
+    .sc-egg-active {
+      z-index: 10;
+    }
+    .sc-egg-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-origin: 50% 88%;
+    }
+    .sc-egg-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+
+    /* 蛋內表情與裂縫層切換 */
+    .sc-egg-crack,
+    .sc-egg-laugh,
+    .sc-egg-blink,
+    .sc-egg-stars {
+      opacity: 0;
+      transition: opacity .15s ease;
+      pointer-events: none;
+    }
+    .sc-egg-cracked .sc-egg-crack { opacity: 1; }
+    .sc-egg-laughing .sc-egg-laugh { opacity: 1; }
+    .sc-egg-blinking .sc-egg-blink { opacity: 1; }
+    .sc-egg-rainbow .sc-egg-stars { opacity: 1; }
+
+    /* 敲第一下的輕彈回饋 */
+    .sc-egg-knock .sc-egg-inner {
+      animation: sc-knock .22s ease;
+    }
+    @keyframes sc-knock {
+      0%   { transform: scale(1, 1); }
+      40%  { transform: scale(1.07, .93) rotate(-5deg); }
+      75%  { transform: scale(.96, 1.04) rotate(4deg); }
+      100% { transform: scale(1, 1); }
+    }
+
+    /* 只按一下失手時的咯咯笑氣泡（對比 13.8:1） */
+    .sc-egg-msg {
+      position: absolute;
+      left: 50%;
+      top: -46px;
+      transform: translateX(-50%) scale(.85);
+      padding: 4px 12px;
+      background: #FFF8E4;
+      color: #33261B;
+      border: 2.5px solid #6E4125;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 700;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      box-shadow: 0 3px 0 rgba(110, 65, 37, .2);
+      transition: opacity .18s ease, transform .18s ease;
+      z-index: 15;
+    }
+    .sc-egg-laughing .sc-egg-msg {
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+    }
+
+    /* 彩虹蛋小星星柔和閃耀（每秒 0.8 次，低於 3 次上限） */
+    .sc-egg-rainbow .sc-egg-stars {
+      animation: sc-twinkle 1.25s ease-in-out infinite;
+    }
+    @keyframes sc-twinkle {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: .45; }
+    }
+
+    /* 蛋殼破開上下飛散 */
+    .sc-egg-hatched {
+      pointer-events: none;
+    }
+    .sc-egg-hatched .sc-shell-top {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: sc-top-fly .55s ease-out forwards;
+    }
+    .sc-egg-hatched .sc-shell-bot {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: sc-bot-drop .55s ease-out forwards;
+    }
+    .sc-egg-hatched .sc-egg-shadow {
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    @keyframes sc-top-fly {
+      0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(-22px, -54px) rotate(-32deg); opacity: 0; }
+    }
+    @keyframes sc-bot-drop {
+      0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(14px, 24px) rotate(18deg); opacity: 0; }
+    }
+
+    /* 破殼金色星星爆開 */
+    .sc-sparks {
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      margin: -70px 0 0 -70px;
+      pointer-events: none;
+      z-index: 14;
+    }
+    .sc-spark {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 22px;
+      height: 22px;
+      margin: -11px 0 0 -11px;
+      animation: sc-spark-out .65s ease-out forwards;
+    }
+    @keyframes sc-spark-out {
+      0%   { transform: translate(0, 0) scale(.4); opacity: 1; }
+      70%  { opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(1.05); opacity: 0; }
+    }
+
+    /* 孵出來的小動物：先蹦出來揮手跳，再走到右側排隊 */
+    .sc-baby {
+      position: absolute;
+      width: 140px;          /* 使用者 11-22：動物偏小 → 78 改 140（排隊時 100） */
+      height: 140px;
+      margin: -70px 0 0 -70px;
+      z-index: 12;
+      pointer-events: none;
+      transition: left .75s cubic-bezier(.32, .82, .38, 1), top .75s cubic-bezier(.32, .82, .38, 1), width .55s ease, height .55s ease, margin .55s ease;
+    }
+    .sc-baby-body {
+      width: 100%;
+      height: 100%;
+      transform-origin: 50% 85%;
+    }
+    .sc-baby-body svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .sc-baby-pop .sc-baby-body {
+      animation: sc-baby-jump .62s cubic-bezier(.22, 1.3, .45, 1) forwards;
+    }
+    @keyframes sc-baby-jump {
+      0%   { transform: scale(.25) translateY(24px); opacity: 0; }
+      45%  { transform: scale(1.14) translateY(-22px) rotate(-7deg); opacity: 1; }
+      72%  { transform: scale(.96) translateY(0) rotate(6deg); opacity: 1; }
+      100% { transform: scale(1) translateY(0) rotate(0deg); opacity: 1; }
+    }
+    .sc-baby-walk .sc-baby-body {
+      animation: sc-baby-waddle .36s ease-in-out 2;
+    }
+    @keyframes sc-baby-waddle {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25%      { transform: translateY(-7px) rotate(-7deg); }
+      75%      { transform: translateY(-7px) rotate(7deg); }
+    }
+    .sc-baby-cheer .sc-baby-body {
+      animation: sc-baby-hurray .48s ease-in-out 2;
+    }
+    @keyframes sc-baby-hurray {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50%      { transform: translateY(-18px) scale(1.08); }
+    }
+    .sc-baby-name {
+      position: absolute;
+      left: 50%;
+      bottom: -30px;
+      transform: translateX(-50%);
+      padding: 2px 10px;
+      background: #FFF8E4;
+      color: #33261B;
+      border: 2px solid #B9794A;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 2px 0 rgba(110, 65, 37, .18);
+    }
+
+    /* 尊重系統減少動態偏好設定：關閉位移與閃爍，直接呈現結果 */
+    @media (prefers-reduced-motion: reduce) {
+      .sc-egg,
+      .sc-baby { transition: none !important; }
+      .sc-egg-knock .sc-egg-inner,
+      .sc-egg-rainbow .sc-egg-stars,
+      .sc-egg-hatched .sc-shell-top,
+      .sc-egg-hatched .sc-shell-bot,
+      .sc-spark,
+      .sc-baby-pop .sc-baby-body,
+      .sc-baby-walk .sc-baby-body,
+      .sc-baby-cheer .sc-baby-body {
+        animation: none !important;
+      }
+      .sc-egg-hatched .sc-shell-top,
+      .sc-egg-hatched .sc-shell-bot {
+        opacity: 0;
+      }
+    }
+  </style>
+</head><body>
+  <script src="../../assets/js/mouse-ui.js"></script>
+  <script>
+  (function () {
+    // 開始畫面主角插圖（400x400 inline SVG：稻草巢裡破殼的小雞＋旁側小彩虹蛋）
+    var HERO_SVG = '<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="16" y="16" width="368" height="368" rx="44" fill="#FFF8E4" stroke="#B9794A" stroke-width="6"/>' +
+      '<path d="M22 250 Q200 220 378 250 L378 340 Q378 378 340 378 L60 378 Q22 378 22 340 Z" fill="#F6E7BE"/>' +
+      '<path d="M22 145 Q110 130 200 144 T378 140 L378 252 Q200 222 22 252 Z" fill="#BFE1EA" opacity=".55"/>' +
+      /* 金色小星星裝飾 */
+      '<polygon points="88,78 94,92 109,94 97,104 100,119 88,111 76,119 79,104 67,94 82,92" fill="#F2B134" stroke="#6E4125" stroke-width="3" stroke-linejoin="round"/>' +
+      '<polygon points="318,74 323,85 335,87 326,95 328,107 318,101 308,107 310,95 301,87 313,85" fill="#F2B134" stroke="#6E4125" stroke-width="3" stroke-linejoin="round"/>' +
+      /* 旁邊的迷你彩虹蛋 */
+      '<g transform="translate(298 258) rotate(12)">' +
+        '<ellipse cx="0" cy="0" rx="34" ry="44" fill="#FFF8E4" stroke="#6E4125" stroke-width="5"/>' +
+        '<path d="M-30 -12 Q0 -20 30 -12 L32 2 Q0 -6 -32 2 Z" fill="#E8704F"/>' +
+        '<path d="M-32 2 Q0 -6 32 2 L31 15 Q0 7 -31 15 Z" fill="#F2B134"/>' +
+        '<path d="M-30 15 Q0 7 30 15 L24 28 Q0 22 -24 28 Z" fill="#7BC490"/>' +
+        '<ellipse cx="0" cy="0" rx="34" ry="44" fill="none" stroke="#6E4125" stroke-width="5"/>' +
+        '<circle cx="-11" cy="-20" r="5" fill="#FFF8E4" opacity=".9"/>' +
+      '</g>' +
+      /* 稻草巢底 */
+      '<ellipse cx="186" cy="316" rx="126" ry="38" fill="#C98A42" stroke="#6E4125" stroke-width="5"/>' +
+      '<ellipse cx="186" cy="306" rx="116" ry="30" fill="#E3B363" stroke="#6E4125" stroke-width="5"/>' +
+      '<ellipse cx="186" cy="304" rx="92" ry="18" fill="#9A5F36"/>' +
+      /* 破殼而出的可愛小雞 */
+      '<g transform="translate(186 218)">' +
+        '<path d="M-12 -86 Q-6 -108 6 -94 Q12 -112 22 -90" fill="none" stroke="#6E4125" stroke-width="5" stroke-linecap="round"/>' +
+        '<circle cx="0" cy="-34" r="54" fill="#F9D55C" stroke="#6E4125" stroke-width="5"/>' +
+        '<ellipse cx="-56" cy="-16" rx="18" ry="12" transform="rotate(-24 -56 -16)" fill="#F2B134" stroke="#6E4125" stroke-width="5"/>' +
+        '<ellipse cx="56" cy="-16" rx="18" ry="12" transform="rotate(24 56 -16)" fill="#F2B134" stroke="#6E4125" stroke-width="5"/>' +
+        '<circle cx="-19" cy="-40" r="7" fill="#33261B"/>' +
+        '<circle cx="19" cy="-40" r="7" fill="#33261B"/>' +
+        '<circle cx="-17" cy="-42" r="2.5" fill="#FFF8E4"/>' +
+        '<circle cx="21" cy="-42" r="2.5" fill="#FFF8E4"/>' +
+        '<ellipse cx="-32" cy="-26" rx="8" ry="5" fill="#E8704F" opacity=".65"/>' +
+        '<ellipse cx="32" cy="-26" rx="8" ry="5" fill="#E8704F" opacity=".65"/>' +
+        '<polygon points="-10,-26 10,-26 0,-12" fill="#E8704F" stroke="#6E4125" stroke-width="4" stroke-linejoin="round"/>' +
+      '</g>' +
+      /* 裂開的蛋殼下半部 */
+      '<path d="M108 232 L134 252 L160 228 L186 254 L212 228 L238 252 L264 232 C264 294 232 320 186 320 C140 320 108 294 108 232 Z" fill="#FFF8E4" stroke="#6E4125" stroke-width="5" stroke-linejoin="round"/>' +
+      '<circle cx="144" cy="284" r="10" fill="#E8704F" opacity=".75"/>' +
+      '<circle cx="222" cy="278" r="12" fill="#E8704F" opacity=".75"/>' +
+      '<circle cx="186" cy="298" r="8" fill="#F2B134" opacity=".85"/>' +
+      /* 歪戴在頭上的上蛋殼 */
+      '<g transform="translate(232 108) rotate(24)">' +
+        '<path d="M-44 26 C-44 -14 -24 -40 0 -40 C24 -40 44 -14 44 26 L26 14 L8 30 L-10 14 L-28 28 Z" fill="#FFF8E4" stroke="#6E4125" stroke-width="5" stroke-linejoin="round"/>' +
+        '<circle cx="-12" cy="-8" r="7" fill="#E8704F" opacity=".75"/>' +
+        '<circle cx="16" cy="-4" r="6" fill="#F2B134" opacity=".85"/>' +
+      '</g>' +
+      /* 巢前稻草紋理 */
+      '<path d="M86 314 Q142 336 206 324 M160 330 Q230 338 284 314 M110 332 Q170 344 244 334" fill="none" stroke="#6E4125" stroke-width="4" stroke-linecap="round"/>' +
+    '</svg>';
+
+    // 12 隻 60x60 原創蛋寶寶圖鑑 SVG（簡單幾何＋#33261B / #6E4125 線條）
+    var DEX_ITEMS = {
+      chick: {
+        name: '小雞',
+        svg: '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">' +
+          '<path d="M26 12 Q28 5 32 10 Q35 5 37 12" fill="none" stroke="#6E4125" stroke-width="2.6" stroke-linecap="round"/>' +
+          '<circle cx="30" cy="33" r="19" fill="#F9D55C" stroke="#6E4125" stroke-width="2.8"/>' +
+          '<ellipse cx="11" cy="36" rx="5" ry="7" transform="rotate(24 11 36)" fill="#F2B134" stroke="#6E4125" stroke-width="2.4"/>' +
+          '<ellipse cx="49" cy="36" rx="5" ry="7" transform="rotate(-24 49 36)" fill="#F2B134" stroke="#6E4125" stroke-width="2.4"/>' +
+          '<circle cx="23" cy="30" r="2.8" fill="#33261B"/><circle cx="37" cy="30" r="2.8" fill="#33261B"/>' +
+          '<circle cx="18" cy="35" r="3" fill="#E8704F" opacity=".55"/><circle cx="42" cy="35" r="3" fill="#E8704F" opacity=".55"/>' +
+          '<polygon points="26,34 34,34 30,40" fill="#E8704F" stroke="#6E4125" stroke-width="2" stroke-linejoin="round"/>' +
+          '<path d="M23 51 V56 M37 51 V56" stroke="#C2432A" stroke-width="3" stroke-linecap="round"/>' +
+        '</svg>'
+      },
+      duck: {
+        name: '小鴨',
+        svg: '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">' +
+          '<path d="M28 11 Q32 5 35 12" fill="none" stroke="#6E4125" stroke-width="2.6" stroke-linecap="round"/>' +
+          '<ellipse cx="30" cy="37" rx="20" ry="15" fill="#FCE68A" stroke="#6E4125" stroke-width="2.8"/>' +
+          '<circle cx="30" cy="24" r="13" fill="#FCE68A" stroke="#6E4125" stroke-width="2.8"/>' +
+          '<circle cx="25" cy="22" r="2.5" fill="#33261B"/><circle cx="35" cy="22" r="2.5" fill="#33261B"/>' +
+          '<ellipse cx="30" cy="29" rx="7.5" ry="4" fill="#E8704F" stroke="#6E4125" stroke-width="2.2"/>' +
+          '<path d="M18 39 Q30 46 42 39" fill="none" stroke="#236F96" stroke-width="4" stroke-linecap="round"/>' +
+          '<path d="M22 52 L19 56 M38 52 L41 56" stroke="#C2432A" stroke-width="3" stroke-linecap="round"/>' +
+        '</svg>'
+      },
+      penguin: {
+        name: '小企鵝',
+        svg: '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">' +
+          '<ellipse cx="30" cy="34" rx="18" ry="21" fill="#236F96" stroke="#33261B" stroke-width="2.8"/>' +
+          '<ellipse cx="30" cy="38" rx="12" ry="14" fill="#FFF8E4"/>' +
+          '<circle cx="23" cy="25" r="2.6" fill="#33261B"/><circle cx="37" cy="25" r="2.6" fill="#33261B"/>' +
+          '<circle cx="24" cy="24" r="1" fill="#FFF8E4"/><circle cx="38" cy="24" r="1" fill="#FFF8E4"/>' +
+          '<polygon points="26,28 34,28 30,34" fill="#F2B134" stroke="#6E4125" stroke-width="2" stroke-linejoin="round"/>' +
+          '<ellipse cx="10" cy="36" rx="4.5" ry="9" transform="rotate(18 10 36)" fill="#236F96" stroke="#33261B" stroke-width="2.4"/>' +
+          '<ellipse cx="50" cy="36" rx="4.5" ry="9" transform="rotate(-18 50 36)" fill="#236F96" stroke="#33261B" stroke-width="2.4"/>' +
+          '<ellipse cx="22" cy="54" rx="5.5" ry="2.8" fill="#F2B134" stroke="#6E4125" stroke-width="2"/>' +
+          '<ellipse cx="38" cy="54" rx="5.5" ry="2.8" fill="#F2B134" stroke="#6E4125" stroke-width="2"/>' +
+        '</svg>'
+      },
+      turtle: {
+        name: '小烏龜',
+        svg: '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">' +
+          '<circle cx="47" cy="32" r="8" fill="#89C97E" stroke="#33261B" stroke-width="2.6"/>' +
+          '<circle cx="49" cy="30" r="2" fill="#33261B"/>' +
+          '<path d="M46 35 Q49 37 52 35" fill="none" stroke="#33261B" stroke-width="2" stroke-linecap="round"/>' +
+          '<rect x="16" y="42" width="7" height="10" rx="3" fill="#89C97E" stroke="#33261B" stroke-width="2.4"/>' +
+          '<rect x="33" y="42" width="7" height="10" rx="3" fill="#89C97E" stroke="#33261B" stroke-width="2.4"/>' +
+          '<path d="M10 43 C10 22 44 22 44 43 Z" fill="#2F7A49" stroke="#33261B" stroke-width="2.8" stroke-linejoin="round"/>' +
+          '<polygon points="27,27 33,32 31,39 23,39 21,32" fill="#5CA46E" stroke="#33261B" stroke-width="2"/>' +
+          '<line x1="10" y1="43" x2="44" y2="43" stroke="#F6E7BE" stroke-width="3"/>' +
+        '</svg>'
+      },
+      dino: {
+        name: '小恐龍',
+        svg: '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">' +
+          '<polygon points="15,24 9,20 14,15" fill="#E8704F" stroke="#6E4125" stroke-width="2" stroke-linejoin="round"/>' +
+          '<polygon points="13,34 6,31 11,26" fill="#E8704F" stroke="#6E4125" stroke-width="2" stroke-linejoin="round"/>' +
+          '<polygon points="14,43 8,42 12,37" fill="#E8704F" stroke="#6E4125" stroke-width="2" stroke-linejoin="round"/>' +
+          '<path d="M16 48 C14 34 17 20 26 14 C36 10 47 16 46 27 C45 34 38 35 38 41 C41 45 43 49 41 53 L18 53 Z" fill="#6BB876" stroke="#33261B" stroke-width="2.8" stroke-linejoin="round"/>' +
+          '<ellipse cx="33" cy="43" rx="6" ry="7" fill="#FFF8E4" opacity=".8"/>' +
+          '<circle cx="35" cy="22" r="2.7" fill="#33261B"/>' +
+          '<path d="M36 28 Q41 30 44 27" fill="none" stroke="#33261B" stroke-width="2.2" stroke-linecap="round"/>' +
+        '</svg>'
+      },
+      parrot: {
+        name: '小鸚鵡',
+        svg: '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">' +
+          '<path d="M24 14 Q24 6 29 12 M30 13 Q33 5 36 13" fill="none" stroke="#F2B134" stroke-width="3.5" stroke-linecap="round"/>' +
+          '<ellipse cx="30" cy="34" rx="16" ry="20" fill="#E8704F" stroke="#6E4125" stroke-width="2.8"/>' +
+          '<ellipse cx="42" cy="38" rx="7" ry="12" transform="rotate(-12 42 38)" fill="#236F96" stroke="#33261B" stroke-width="2.4"/>' +
+          '<circle cx="24" cy="26" r="5" fill="#FFF8E4"/><circle cx="24" cy="26" r="2.5" fill="#33261B"/>' +
+          '<path d="M18 30 Q10 31 13 38 Q18 37 21 34 Z" fill="#F2B134" stroke="#6E4125" stroke-width="2.2" stroke-linejoin="round"/>' +
+          '<path d="M25 53 V57 M34 53 V57" stroke="#6E4125" stroke-width="2.8" stroke-linecap="round"/>' +
+        '</svg>'
+      },
+      ostrich: {
+        name: '小鴕鳥',
+        svg: '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">' +
+          '<path d="M24 44 V56 M34 44 V56" stroke="#E8704F" stroke-width="3" stroke-linecap="round"/>' +
+          '<ellipse cx="29" cy="40" rx="15" ry="11" fill="#B9794A" stroke="#6E4125" stroke-width="2.8"/>' +
+          '<rect x="26" y="18" width="7" height="16" rx="3" fill="#F6E7BE" stroke="#6E4125" stroke-width="2.4"/>' +
+          '<circle cx="30" cy="16" r="8.5" fill="#F6E7BE" stroke="#6E4125" stroke-width="2.6"/>' +
+          '<path d="M28 7 Q30 3 33 7" fill="none" stroke="#6E4125" stroke-width="2.4" stroke-linecap="round"/>' +
+          '<circle cx="27" cy="15" r="2.2" fill="#33261B"/><circle cx="33" cy="15" r="2.2" fill="#33261B"/>' +
+          '<polygon points="36,15 44,17 36,20" fill="#E8704F" stroke="#6E4125" stroke-width="2" stroke-linejoin="round"/>' +
+          '<ellipse cx="22" cy="40" rx="6" ry="4" fill="#FFF8E4" opacity=".65"/>' +
+        '</svg>'
+      },
+      owl: {
+        name: '小貓頭鷹',
+        svg: '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">' +
+          '<polygon points="15,19 18,9 26,16" fill="#9A5F36" stroke="#33261B" stroke-width="2.5" stroke-linejoin="round"/>' +
+          '<polygon points="45,19 42,9 34,16" fill="#9A5F36" stroke="#33261B" stroke-width="2.5" stroke-linejoin="round"/>' +
+          '<ellipse cx="30" cy="34" rx="18" ry="20" fill="#9A5F36" stroke="#33261B" stroke-width="2.8"/>' +
+          '<ellipse cx="30" cy="41" rx="11" ry="10" fill="#FFF8E4"/>' +
+          '<circle cx="22" cy="26" r="7" fill="#FFF8E4" stroke="#33261B" stroke-width="2.2"/>' +
+          '<circle cx="38" cy="26" r="7" fill="#FFF8E4" stroke="#33261B" stroke-width="2.2"/>' +
+          '<circle cx="22" cy="26" r="3" fill="#33261B"/><circle cx="38" cy="26" r="3" fill="#33261B"/>' +
+          '<polygon points="27,30 33,30 30,36" fill="#F2B134" stroke="#6E4125" stroke-width="2" stroke-linejoin="round"/>' +
+          '<path d="M24 41 L27 44 L30 41 L33 44 L36 41" fill="none" stroke="#9A5F36" stroke-width="2.2" stroke-linecap="round"/>' +
+        '</svg>'
+      },
+      croc: {
+        name: '小鱷魚',
+        svg: '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">' +
+          '<circle cx="22" cy="20" r="6" fill="#2F7A49" stroke="#33261B" stroke-width="2.6"/>' +
+          '<circle cx="38" cy="20" r="6" fill="#2F7A49" stroke="#33261B" stroke-width="2.6"/>' +
+          '<circle cx="22" cy="20" r="2.4" fill="#FFF8E4"/><circle cx="22" cy="20" r="1.4" fill="#33261B"/>' +
+          '<circle cx="38" cy="20" r="2.4" fill="#FFF8E4"/><circle cx="38" cy="20" r="1.4" fill="#33261B"/>' +
+          '<rect x="10" y="22" width="40" height="24" rx="12" fill="#2F7A49" stroke="#33261B" stroke-width="2.8"/>' +
+          '<ellipse cx="30" cy="40" rx="12" ry="6" fill="#DDF0C4"/>' +
+          '<path d="M16 33 Q30 39 44 33" fill="none" stroke="#33261B" stroke-width="2.4" stroke-linecap="round"/>' +
+          '<polygon points="23,35 26,39 29,35" fill="#FFF8E4" stroke="#33261B" stroke-width="1.6"/>' +
+          '<rect x="15" y="45" width="7" height="7" rx="3" fill="#2F7A49" stroke="#33261B" stroke-width="2.4"/>' +
+          '<rect x="38" y="45" width="7" height="7" rx="3" fill="#2F7A49" stroke="#33261B" stroke-width="2.4"/>' +
+        '</svg>'
+      },
+      lizard: {
+        name: '小蜥蜴',
+        svg: '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">' +
+          '<path d="M40 44 C52 46 55 34 48 31 C43 29 42 35 46 37" fill="none" stroke="#5EA958" stroke-width="5" stroke-linecap="round"/>' +
+          '<path d="M40 44 C52 46 55 34 48 31 C43 29 42 35 46 37" fill="none" stroke="#33261B" stroke-width="2" stroke-linecap="round"/>' +
+          '<ellipse cx="27" cy="39" rx="14" ry="10" fill="#77C36A" stroke="#33261B" stroke-width="2.6"/>' +
+          '<circle cx="24" cy="23" r="11" fill="#77C36A" stroke="#33261B" stroke-width="2.6"/>' +
+          '<circle cx="19" cy="21" r="2.7" fill="#33261B"/><circle cx="29" cy="21" r="2.7" fill="#33261B"/>' +
+          '<circle cx="28" cy="37" r="3" fill="#F2B134"/><circle cx="21" cy="41" r="2.5" fill="#F2B134"/>' +
+          '<path d="M20 27 Q24 30 28 27" fill="none" stroke="#33261B" stroke-width="2" stroke-linecap="round"/>' +
+          '<path d="M17 48 L14 54 M34 48 L37 54" stroke="#33261B" stroke-width="2.6" stroke-linecap="round"/>' +
+        '</svg>'
+      },
+      seaturtle: {
+        name: '小海龜',
+        svg: '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">' +
+          '<ellipse cx="14" cy="26" rx="9" ry="5" transform="rotate(-30 14 26)" fill="#58A8B8" stroke="#33261B" stroke-width="2.4"/>' +
+          '<ellipse cx="46" cy="26" rx="9" ry="5" transform="rotate(30 46 26)" fill="#58A8B8" stroke="#33261B" stroke-width="2.4"/>' +
+          '<ellipse cx="18" cy="47" rx="6" ry="4" transform="rotate(24 18 47)" fill="#58A8B8" stroke="#33261B" stroke-width="2.4"/>' +
+          '<ellipse cx="42" cy="47" rx="6" ry="4" transform="rotate(-24 42 47)" fill="#58A8B8" stroke="#33261B" stroke-width="2.4"/>' +
+          '<circle cx="30" cy="15" r="7.5" fill="#79C3CE" stroke="#33261B" stroke-width="2.6"/>' +
+          '<circle cx="27" cy="14" r="2" fill="#33261B"/><circle cx="33" cy="14" r="2" fill="#33261B"/>' +
+          '<ellipse cx="30" cy="36" rx="14" ry="15" fill="#236F96" stroke="#33261B" stroke-width="2.8"/>' +
+          '<polygon points="30,26 37,33 34,43 26,43 23,33" fill="#BFE1EA" opacity=".8" stroke="#33261B" stroke-width="1.8"/>' +
+        '</svg>'
+      },
+      unicorn: {
+        name: '彩虹獨角獸',
+        svg: '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">' +
+          '<polygon points="27,16 30,4 33,16" fill="#F2B134" stroke="#6E4125" stroke-width="2.2" stroke-linejoin="round"/>' +
+          '<polygon points="18,22 15,12 24,18" fill="#FFF8E4" stroke="#6E4125" stroke-width="2.2" stroke-linejoin="round"/>' +
+          '<polygon points="42,22 45,12 36,18" fill="#FFF8E4" stroke="#6E4125" stroke-width="2.2" stroke-linejoin="round"/>' +
+          '<path d="M16 26 Q10 34 15 44" fill="none" stroke="#E8704F" stroke-width="4.5" stroke-linecap="round"/>' +
+          '<path d="M44 26 Q50 34 45 44" fill="none" stroke="#236F96" stroke-width="4.5" stroke-linecap="round"/>' +
+          '<circle cx="30" cy="34" r="16" fill="#FFF8E4" stroke="#6E4125" stroke-width="2.8"/>' +
+          '<path d="M22 18 Q30 13 38 18" fill="none" stroke="#F2B134" stroke-width="4.5" stroke-linecap="round"/>' +
+          '<circle cx="24" cy="32" r="2.6" fill="#33261B"/><circle cx="36" cy="32" r="2.6" fill="#33261B"/>' +
+          '<circle cx="19" cy="37" r="3" fill="#E8704F" opacity=".5"/><circle cx="41" cy="37" r="3" fill="#E8704F" opacity=".5"/>' +
+          '<path d="M26 40 Q30 43 34 40" fill="none" stroke="#6E4125" stroke-width="2.2" stroke-linecap="round"/>' +
+        '</svg>'
+      }
+    };
+
+    var NORMAL_IDS = [
+      'chick', 'duck', 'penguin', 'turtle', 'dino', 'parrot',
+      'ostrich', 'owl', 'croc', 'lizard', 'seaturtle'
+    ];
+
+    // 4 種溫暖柔和的蛋殼色盤（與沙灘底保持高辨識度）
+    var EGG_THEMES = [
+      { base: '#FFF8E4', spot1: '#E8704F', spot2: '#F2B134' },
+      { base: '#E4F4F8', spot1: '#236F96', spot2: '#7BBDD1' },
+      { base: '#FDEFC1', spot1: '#F2B134', spot2: '#E8704F' },
+      { base: '#E6F4E6', spot1: '#2F7A49', spot2: '#89C97E' }
+    ];
+
+    var svgUid = 0;
+    function makeEggSvg(themeIdx, isRainbow) {
+      svgUid++;
+      var cid = 'sc-c-' + svgUid;
+      var t = EGG_THEMES[themeIdx % EGG_THEMES.length];
+      var deco = isRainbow
+        ? '<rect x="0" y="10" width="120" height="24" fill="#F29B7E"/>' +
+          '<rect x="0" y="34" width="120" height="24" fill="#F9D55C"/>' +
+          '<rect x="0" y="58" width="120" height="24" fill="#8CD19D"/>' +
+          '<rect x="0" y="82" width="120" height="24" fill="#89C9DE"/>' +
+          '<rect x="0" y="106" width="120" height="30" fill="#D1B2E0"/>'
+        : '<rect x="0" y="0" width="120" height="140" fill="' + t.base + '"/>' +
+          '<circle cx="38" cy="48" r="11" fill="' + t.spot1 + '" opacity=".82"/>' +
+          '<circle cx="84" cy="58" r="13" fill="' + t.spot2 + '" opacity=".82"/>' +
+          '<circle cx="52" cy="96" r="10" fill="' + t.spot2 + '" opacity=".82"/>' +
+          '<circle cx="82" cy="102" r="8" fill="' + t.spot1 + '" opacity=".78"/>';
+
+      var topPath = 'M60 10 C89 10 106 42 108 74 L86 64 L68 78 L52 62 L34 78 L12 72 C14 42 31 10 60 10 Z';
+      var botPath = 'M12 72 L34 78 L52 62 L68 78 L86 64 L108 74 C109 108 88 128 60 128 C32 128 11 108 12 72 Z';
+      var fullPath = 'M60 10 C90 10 109 46 108 82 C107 110 88 128 60 128 C32 128 13 110 12 82 C11 46 30 10 60 10 Z';
+
+      return '<svg class="sc-egg-svg" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">' +
+        '<defs>' +
+          '<clipPath id="' + cid + '-t"><path d="' + topPath + '"/></clipPath>' +
+          '<clipPath id="' + cid + '-b"><path d="' + botPath + '"/></clipPath>' +
+        '</defs>' +
+        '<ellipse class="sc-egg-shadow" cx="60" cy="129" rx="38" ry="8" fill="#6E4125" opacity=".2"/>' +
+        /* 上半殼 */
+        '<g class="sc-shell-top">' +
+          '<g clip-path="url(#' + cid + '-t)">' + deco + '</g>' +
+          '<ellipse cx="44" cy="36" rx="8" ry="14" transform="rotate(-18 44 36)" fill="#FFF8E4" opacity=".68"/>' +
+          '<path d="' + topPath + '" fill="none" stroke="#6E4125" stroke-width="4.5" stroke-linejoin="round"/>' +
+        '</g>' +
+        /* 下半殼 */
+        '<g class="sc-shell-bot">' +
+          '<g clip-path="url(#' + cid + '-b)">' + deco + '</g>' +
+          '<path d="' + botPath + '" fill="none" stroke="#6E4125" stroke-width="4.5" stroke-linejoin="round"/>' +
+        '</g>' +
+        /* 完整外輪廓讓平常看不到接縫 */
+        '<path class="sc-egg-seam" d="' + fullPath + '" fill="none" stroke="#6E4125" stroke-width="4.5"/>' +
+        /* 敲第一下的鋸齒裂紋 */
+        '<g class="sc-egg-crack">' +
+          '<path d="M22 72 L40 64 L54 78 L69 62 L85 75 L98 68" fill="none" stroke="#33261B" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<path d="M54 78 L58 92" fill="none" stroke="#33261B" stroke-width="3.2" stroke-linecap="round"/>' +
+        '</g>' +
+        /* 只按一下失手時的可愛咯咯笑表情 */
+        '<g class="sc-egg-laugh">' +
+          '<ellipse cx="60" cy="70" rx="32" ry="22" fill="#FFF8E4" opacity=".92"/>' +
+          '<path d="M38 66 Q44 58 50 66" fill="none" stroke="#33261B" stroke-width="4" stroke-linecap="round"/>' +
+          '<path d="M70 66 Q76 58 82 66" fill="none" stroke="#33261B" stroke-width="4" stroke-linecap="round"/>' +
+          '<path d="M48 75 Q60 88 72 75 Z" fill="#E8704F" stroke="#33261B" stroke-width="3" stroke-linejoin="round"/>' +
+          '<circle cx="36" cy="74" r="5" fill="#E8704F" opacity=".55"/>' +
+          '<circle cx="84" cy="74" r="5" fill="#E8704F" opacity=".55"/>' +
+        '</g>' +
+        /* 第三段點到干擾蛋時的眨眼表情 */
+        '<g class="sc-egg-blink">' +
+          '<ellipse cx="60" cy="68" rx="28" ry="16" fill="#FFF8E4" opacity=".9"/>' +
+          '<path d="M40 68 Q46 73 52 68" fill="none" stroke="#33261B" stroke-width="3.8" stroke-linecap="round"/>' +
+          '<circle cx="74" cy="67" r="4.5" fill="#33261B"/>' +
+          '<circle cx="75.5" cy="65.5" r="1.6" fill="#FFF8E4"/>' +
+        '</g>' +
+        /* 彩虹蛋四角的閃亮小星 */
+        '<g class="sc-egg-stars">' +
+          '<polygon points="10,24 14,32 22,34 15,39 17,47 10,43 3,47 5,39 -2,34 6,32" fill="#F2B134" stroke="#6E4125" stroke-width="2" stroke-linejoin="round"/>' +
+          '<polygon points="110,18 113,25 120,27 114,31 116,38 110,34 104,38 106,31 100,27 107,25" fill="#F2B134" stroke="#6E4125" stroke-width="2" stroke-linejoin="round"/>' +
+          '<polygon points="108,104 111,110 117,112 112,115 114,121 108,118 102,121 104,115 99,112 105,110" fill="#F2B134" stroke="#6E4125" stroke-width="2" stroke-linejoin="round"/>' +
+        '</g>' +
+      '</svg>';
+    }
+
+    var NEST_SVG = '<svg viewBox="0 0 290 104" xmlns="http://www.w3.org/2000/svg">' +
+      '<ellipse cx="145" cy="62" rx="134" ry="34" fill="#C98A42" stroke="#6E4125" stroke-width="4.5"/>' +
+      '<ellipse cx="145" cy="52" rx="124" ry="26" fill="#E3B363" stroke="#6E4125" stroke-width="4.5"/>' +
+      '<ellipse cx="145" cy="50" rx="94" ry="15" fill="#9A5F36"/>' +
+      '<path d="M40 62 Q100 84 176 72 M112 78 Q192 86 250 62 M70 76 Q142 92 216 80" fill="none" stroke="#6E4125" stroke-width="3.6" stroke-linecap="round"/>' +
+    '</svg>';
+
+    var SPARK_SVG = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+      '<polygon points="12,1 15,9 23,10 17,15 19,23 12,18 5,23 7,15 1,10 9,9" fill="#F2B134" stroke="#6E4125" stroke-width="1.8" stroke-linejoin="round"/>' +
+    '</svg>';
+
+    var DECO_SVG = '<svg class="sc-deco" viewBox="0 0 1366 581" xmlns="http://www.w3.org/2000/svg">' +
+      /* 遠方柔和白雲 */
+      '<g fill="#FFF8E4" opacity=".72">' +
+        '<ellipse cx="180" cy="48" rx="48" ry="18"/><ellipse cx="215" cy="44" rx="34" ry="14"/>' +
+        '<ellipse cx="960" cy="42" rx="52" ry="17"/><ellipse cx="924" cy="46" rx="32" ry="13"/>' +
+      '</g>' +
+      /* 安靜沙灘遠景線與小貝紋 */
+      '<path d="M0 198 Q360 172 720 198 T1366 190" fill="none" stroke="#E8D49E" stroke-width="4" opacity=".75"/>' +
+      '<path d="M620 510 Q880 486 1130 518" fill="none" stroke="#E8D49E" stroke-width="4" opacity=".7"/>' +
+      '<circle cx="1095" cy="472" r="5" fill="#DFC78D"/><circle cx="1112" cy="482" r="3.5" fill="#DFC78D"/>' +
+      '<circle cx="390" cy="166" r="4" fill="#DFC78D"/><circle cx="620" cy="158" r="3.5" fill="#DFC78D"/>' +
+    '</svg>';
+
+    MouseIsland.mount({
+      unit: 33,
+      title: '敲敲蛋寶寶',
+      skill: 'dblclick',
+      gem: '雙擊',
+      grade: '14',
+      zhuyin: true,
+      howto: '快快按兩下，把蛋敲開！',
+      teach: '雙擊（快速連按兩下左鍵）｜生活 2-I-5、資E1',
+      hints: ['按兩下要快一點喔！', '再看一次示範。'],
+      hero: HERO_SVG,
+      dex: {
+        name: '蛋寶寶圖鑑',
+        total: 12,
+        tip: '快去找彩虹蛋！',
+        items: DEX_ITEMS
+      },
+      scene: function (api) {
+        // 跨場次計算第三段目標數，每 4 顆固定出現 1 顆彩虹蛋
+        var stage3RainbowCounter = 0;
+
+        var offs = [];
+        var rafId = 0;
+        var runId = 0;
+        var eggs = [];
+        var currentEgg = null;
+        var babies = [];
+        var stageUsedIds = [];
+        var doneCount = 0;
+        var totalCount = 0;
+        var assistActive = false;
+
+        // 三段基準參數（大小與速度皆會再乘上 api.cfg().size / speed）
+        var PLAN = [
+          { n: 1, w: 216, h: 252, wobbleAmp: 0, wobbleSpeed: 0 },
+          { n: 4, w: 136, h: 158, wobbleAmp: 7, wobbleSpeed: 2.3 },
+          { n: 5, w: 84,  h: 98,  wobbleAmp: 9, wobbleSpeed: 3.1 }
+        ];
+
+        // 全部點位避開左下角寄寄區（x < 560 且 y > 400）、右上計數器、右側排隊區
+        var STAGE2_SPOTS = [
+          { x: 340, y: 235 },
+          { x: 690, y: 245 },
+          { x: 960, y: 260 },
+          { x: 820, y: 385 }
+        ];
+        var STAGE3_SPOTS = [
+          { x: 250, y: 235 },
+          { x: 490, y: 265 },
+          { x: 730, y: 205 },
+          { x: 980, y: 255 },
+          { x: 790, y: 415 }
+        ];
+        // 右側排隊槽位（動物放大到 100px 後改兩欄，避開右上計數器與左下寄寄區）
+        var QUEUE_SLOTS = [
+          { x: 1280, y: 150 },
+          { x: 1160, y: 205 },
+          { x: 1280, y: 285 },
+          { x: 1160, y: 340 },
+          { x: 1280, y: 420 }
+        ];
+
+        function prefersReduced() {
+          return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        }
+
+        function shuffle(list) {
+          var arr = list.slice();
+          for (var i = arr.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+          }
+          return arr;
+        }
+
+        function clear() {
+          runId++;
+          offs.forEach(function (off) { if (off) off(); });
+          offs = [];
+          if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = 0;
+          }
+          eggs = [];
+          currentEgg = null;
+          babies = [];
+          stageUsedIds = [];
+          assistActive = false;
+        }
+
+        function updateCount() {
+          var el = api.field.querySelector('.sc-count');
+          if (el) el.textContent = '蛋 ' + doneCount + '／' + totalCount;
+        }
+
+        function applyEggSize(egg, mult) {
+          var w = Math.round(egg.baseW * mult);
+          var h = Math.round(egg.baseH * mult);
+          egg.el.style.width = w + 'px';
+          egg.el.style.height = h + 'px';
+          egg.el.style.marginLeft = (-Math.round(w / 2)) + 'px';
+          egg.el.style.marginTop = (-Math.round(h / 2)) + 'px';
+        }
+
+        function pickAnimalId(isRainbow) {
+          if (isRainbow) return 'unicorn';
+          var got = api.collected() || [];
+          var freshUncollected = NORMAL_IDS.filter(function (id) {
+            return got.indexOf(id) === -1 && stageUsedIds.indexOf(id) === -1;
+          });
+          var pool = freshUncollected;
+          if (!pool.length) {
+            pool = NORMAL_IDS.filter(function (id) { return got.indexOf(id) === -1; });
+          }
+          if (!pool.length) {
+            pool = NORMAL_IDS.filter(function (id) { return stageUsedIds.indexOf(id) === -1; });
+          }
+          if (!pool.length) pool = NORMAL_IDS;
+          var chosen = pool[Math.floor(Math.random() * pool.length)];
+          stageUsedIds.push(chosen);
+          return chosen;
+        }
+
+        function spawnSparks(x, y) {
+          var box = document.createElement('div');
+          box.className = 'sc-sparks';
+          box.style.left = x + 'px';
+          box.style.top = y + 'px';
+          for (var i = 0; i < 6; i++) {
+            var sp = document.createElement('div');
+            sp.className = 'sc-spark';
+            var ang = (Math.PI * 2 * i) / 6 - Math.PI / 6;
+            sp.style.setProperty('--tx', Math.round(Math.cos(ang) * 66) + 'px');
+            sp.style.setProperty('--ty', Math.round(Math.sin(ang) * 58) + 'px');
+            sp.innerHTML = SPARK_SVG;
+            box.appendChild(sp);
+          }
+          api.field.appendChild(box);
+          var myRun = runId;
+          api.later(function () {
+            if (myRun !== runId) return;
+            if (box.parentNode) box.parentNode.removeChild(box);
+          }, 720);
+        }
+
+        function spawnBaby(egg, animalId) {
+          var item = DEX_ITEMS[animalId];
+          var el = document.createElement('div');
+          el.className = 'sc-baby sc-baby-pop';
+          el.style.left = egg.x + 'px';
+          el.style.top = (egg.y - 8) + 'px';
+          el.innerHTML = '<div class="sc-baby-body">' + item.svg + '</div>' +
+            '<div class="sc-baby-name mi-zy">' + item.name + '</div>';
+          api.field.appendChild(el);
+
+          var slotIdx = babies.length % QUEUE_SLOTS.length;
+          var slot = QUEUE_SLOTS[slotIdx];
+          babies.push(el);
+
+          var myRun = runId;
+          // 揮手跳一下之後，走到畫面右側排隊
+          api.later(function () {
+            if (myRun !== runId) return;
+            el.classList.remove('sc-baby-pop');
+            el.classList.add('sc-baby-walk');
+            el.style.width = '100px';
+            el.style.height = '100px';
+            el.style.margin = '-50px 0 0 -50px';
+            el.style.left = slot.x + 'px';
+            el.style.top = slot.y + 'px';
+            api.later(function () {
+              if (myRun !== runId) return;
+              el.classList.remove('sc-baby-walk');
+            }, 760);
+          }, 680);
+        }
+
+        function triggerBlink(egg) {
+          var now = performance.now();
+          if (now - egg.lastBlink < 450) return;
+          egg.lastBlink = now;
+          egg.el.classList.add('sc-egg-blinking');
+          var myRun = runId;
+          api.later(function () {
+            if (myRun !== runId) return;
+            egg.el.classList.remove('sc-egg-blinking');
+          }, 620);
+        }
+
+        function makeTargetActive(egg, cfg, forceGlow) {
+          currentEgg = egg;
+          eggs.forEach(function (item) {
+            if (item.hatched) return;
+            var isCur = (item === egg);
+            item.el.classList.toggle('sc-egg-active', isCur);
+            item.el.classList.toggle('sc-egg-dim', !isCur);
+            if (!isCur) api.glow(item.el, false);
+          });
+
+          // 第三段：每 4 顆目標蛋固定出現 1 顆彩虹蛋
+          if (cfg.stage === 2) {
+            stage3RainbowCounter++;
+            if (stage3RainbowCounter % 4 === 0) {
+              egg.isRainbow = true;
+              egg.el.classList.add('sc-egg-rainbow');
+              egg.inner.innerHTML = makeEggSvg(egg.themeIdx, true);
+              api.say('哇！彩虹蛋！');
+            }
+          }
+
+          var mult = assistActive ? Math.max(cfg.size, 1.4) : cfg.size;
+          applyEggSize(egg, mult);
+          if (forceGlow) api.glow(egg.el, true);
+        }
+
+        function createEgg(x, y, plan, cfg, themeIdx) {
+          var el = document.createElement('div');
+          el.className = 'sc-egg';
+          el.style.left = x + 'px';
+          el.style.top = y + 'px';
+
+          var inner = document.createElement('div');
+          inner.className = 'sc-egg-inner';
+          inner.innerHTML = makeEggSvg(themeIdx, false);
+          el.appendChild(inner);
+
+          var msg = document.createElement('div');
+          msg.className = 'sc-egg-msg mi-zy';
+          msg.textContent = '嘻嘻嘻～';
+          el.appendChild(msg);
+
+          var egg = {
+            el: el,
+            inner: inner,
+            x: x,
+            y: y,
+            baseW: plan.w,
+            baseH: plan.h,
+            themeIdx: themeIdx,
+            isRainbow: false,
+            hatched: false,
+            phase: Math.random() * Math.PI * 2,
+            lastBlink: 0
+          };
+          applyEggSize(egg, assistActive ? Math.max(cfg.size, 1.4) : cfg.size);
+          api.field.appendChild(el);
+          eggs.push(egg);
+
+          // 操作偵測一律交由 api.on('dblclick')
+          var off = api.on(el, 'dblclick', {
+            first: function () {
+              if (egg.hatched) return;
+              // 第三段干擾蛋：點到只會眨眼，不算失手
+              if (egg !== currentEgg) {
+                triggerBlink(egg);
+                return;
+              }
+              egg.el.classList.remove('sc-egg-laughing');
+              egg.el.classList.add('sc-egg-cracked');
+              egg.el.classList.remove('sc-egg-knock');
+              void egg.el.offsetWidth;
+              egg.el.classList.add('sc-egg-knock');
+              api.sfx('pop');
+            },
+            single: function () {
+              if (egg.hatched) return;
+              if (egg !== currentEgg) {
+                triggerBlink(egg);
+                return;
+              }
+              // 只按一下就停：收起裂紋、搞笑咯咯笑、晃兩下，再 api.miss()
+              egg.el.classList.remove('sc-egg-cracked');
+              egg.el.classList.add('sc-egg-laughing');
+              api.wob(egg.el);
+              api.sfx('giggle');
+              api.miss();
+              var myRun = runId;
+              api.later(function () {
+                if (myRun !== runId) return;
+                egg.el.classList.remove('sc-egg-laughing');
+              }, 950);
+            },
+            ok: function () {
+              if (egg.hatched) return;
+              if (egg !== currentEgg) {
+                triggerBlink(egg);
+                return;
+              }
+              hatchEgg(egg);
+            }
+          });
+          offs.push(off);
+          return egg;
+        }
+
+        function hatchEgg(egg) {
+          egg.hatched = true;
+          currentEgg = null;
+          api.glow(egg.el, false);
+          egg.el.classList.remove('sc-egg-laughing', 'sc-egg-cracked', 'sc-egg-active');
+          egg.el.classList.add('sc-egg-hatched');
+          egg.inner.style.transform = '';
+
+          var animalId = pickAnimalId(egg.isRainbow);
+          var isNew = api.collect(animalId);
+          api.hit();
+          api.sfx(egg.isRainbow || isNew ? 'gem' : 'ok');
+          if (egg.isRainbow) api.say('彩虹獨角獸出來了！');
+
+          spawnSparks(egg.x, egg.y);
+          spawnBaby(egg, animalId);
+
+          doneCount++;
+          updateCount();
+
+          var myRun = runId;
+          var curStage = api.stage();
+
+          // 蛋殼動畫結束後移除該蛋節點
+          api.later(function () {
+            if (myRun !== runId) return;
+            if (egg.el.parentNode) egg.el.parentNode.removeChild(egg.el);
+          }, 600);
+
+          if (doneCount >= totalCount) {
+            // 第三段結尾：右側排好隊的小動物一起跳躍歡呼
+            if (curStage === 2) {
+              api.later(function () {
+                if (myRun !== runId) return;
+                api.say('太棒了！全部敲開了！');
+                babies.forEach(function (b) { b.classList.add('sc-baby-cheer'); });
+                api.sfx('gem');
+                // 學習能力連回真的電腦：雙擊是用來「打開」東西（11-22 驗收補）
+                api.later(function () {
+                  if (myRun !== runId) return;
+                  api.say('電腦上按兩下，可以打開資料夾！');
+                }, 1300);
+                api.later(function () {
+                  if (myRun !== runId) return;
+                  api.stageDone();
+                }, 3600);
+              }, 1100);
+            } else {
+              api.later(function () {
+                if (myRun !== runId) return;
+                api.stageDone();
+              }, 1100);
+            }
+            return;
+          }
+
+          // 繼續同一段的下一顆目標蛋
+          api.later(function () {
+            if (myRun !== runId) return;
+            var latestCfg = api.cfg();
+            if (curStage === 1) {
+              spawnStage2Next(latestCfg);
+            } else if (curStage === 2) {
+              var remain = eggs.filter(function (item) { return !item.hatched; });
+              if (remain.length) {
+                var next = remain[Math.floor(Math.random() * remain.length)];
+                makeTargetActive(next, latestCfg, true);
+              }
+            }
+          }, 720);
+        }
+
+        var stage2Queue = [];
+        function spawnStage2Next(cfg) {
+          var spot = stage2Queue.shift() || STAGE2_SPOTS[0];
+          var jx = Math.round((Math.random() - .5) * 34);
+          var jy = Math.round((Math.random() - .5) * 28);
+          var egg = createEgg(spot.x + jx, spot.y + jy, PLAN[1], cfg, doneCount);
+          makeTargetActive(egg, cfg, false);
+        }
+
+        function startWobbleLoop() {
+          var last = performance.now();
+          function loop(now) {
+            var dt = Math.min(.05, (now - last) / 1000);
+            last = now;
+            var cfg = api.cfg();
+            var p = PLAN[cfg.stage];
+            if (currentEgg && !currentEgg.hatched && p.wobbleAmp > 0 && !assistActive && !cfg.assist && !prefersReduced()) {
+              currentEgg.phase += dt * p.wobbleSpeed * cfg.speed;
+              var deg = Math.sin(currentEgg.phase) * p.wobbleAmp;
+              currentEgg.inner.style.transform = 'rotate(' + deg.toFixed(2) + 'deg)';
+            } else if (currentEgg && !currentEgg.hatched) {
+              currentEgg.inner.style.transform = '';
+            }
+            rafId = requestAnimationFrame(loop);
+          }
+          rafId = requestAnimationFrame(loop);
+        }
+
+        return {
+          start: function (stage, cfg) {
+            clear();
+            assistActive = !!cfg.assist;
+            doneCount = 0;
+            totalCount = PLAN[stage].n;
+
+            api.field.innerHTML =
+              '<div class="sc-bg">' + DECO_SVG + '<div class="sc-wave"></div></div>' +
+              '<div class="sc-count mi-zy"></div>';
+            updateCount();
+
+            if (stage === 0) {
+              // 第一段：稻草巢＋1 顆不動大蛋，先 glow 再播 dblclick 示範，畫面乾淨無干擾物
+              var nest = document.createElement('div');
+              nest.className = 'sc-nest';
+              nest.style.left = '730px';
+              nest.style.top = '326px';
+              nest.innerHTML = NEST_SVG;
+              api.field.appendChild(nest);
+
+              var egg1 = createEgg(730, 236, PLAN[0], cfg, 0);
+              makeTargetActive(egg1, cfg, true);
+              api.demo(egg1.el, 'dblclick');
+            } else if (stage === 1) {
+              // 第二段：4 顆蛋一次出現一顆，輕輕左右搖，不主動提示
+              stage2Queue = shuffle(STAGE2_SPOTS);
+              spawnStage2Next(cfg);
+            } else {
+              // 第三段：5 顆蛋同時在畫面上，只有發光的那顆要敲，其餘為干擾物
+              var spots = shuffle(STAGE3_SPOTS);
+              for (var i = 0; i < 5; i++) {
+                var sx = spots[i].x + Math.round((Math.random() - .5) * 30);
+                var sy = spots[i].y + Math.round((Math.random() - .5) * 28);
+                createEgg(sx, sy, PLAN[2], cfg, i);
+              }
+              var first = eggs[Math.floor(Math.random() * eggs.length)];
+              makeTargetActive(first, cfg, true);
+            }
+
+            startWobbleLoop();
+          },
+
+          hint: function (level) {
+            if (!currentEgg || currentEgg.hatched) return;
+            api.glow(currentEgg.el, true);
+            if (level === 1) {
+              api.wob(currentEgg.el);
+            } else if (level === 2) {
+              api.demo(currentEgg.el, 'dblclick');
+            }
+          },
+
+          assist: function () {
+            assistActive = true;
+            if (!currentEgg || currentEgg.hatched) return;
+            var mult = Math.max(api.cfg().size, 1.4);
+            applyEggSize(currentEgg, mult);
+            currentEgg.inner.style.transform = '';
+          },
+
+          stop: clear
+        };
+      }
+    });
+  })();
+  </script>
+  <script defer src="../../assets/js/beacon.js"></script>
+</body></html>

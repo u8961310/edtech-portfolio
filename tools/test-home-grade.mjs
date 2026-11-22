@@ -15,17 +15,17 @@ ok(eq(rangeOf('🌱 初階 1–3 年級'), [1, 3]) && eq(rangeOf('🌿 進階 4�
 ok(eq(rangeOf('⭐ 1–4 年級'), [1, 4]) && eq(rangeOf('奇怪的字'), [1, 6]), '1–4 年級、讀不懂當都能玩');
 
 const count = g => UNITS.filter(u => fits(u, g)).length;
-ok(count('12') === 26 && count('34') === 20 && count('56') === 8 && count('all') === UNITS.length, `各年級關卡數 ${count('12')}／${count('34')}／${count('56')}`);
+ok(count('12') === 27 && count('34') === 26 && count('56') === 8 && count('all') === UNITS.length, `各年級關卡數 ${count('12')}／${count('34')}／${count('56')}`);
 
 const ids = g => route(ISLANDS, g).map(r => r.isl.id).join(',');
 ok(ids('12') === 'mouse,type,fest,think,art,smart,board,duel', '1–2 年級路線：' + ids('12'));
-ok(ids('34') === 'type,fest,art,smart,board,duel', '3–4 年級路線：' + ids('34'));
+ok(ids('34') === 'mouse,type,fest,art,smart,board,duel', '3–4 年級路線：' + ids('34'));
 ok(ids('56') === 'type,fest,board,duel', '5–6 年級路線：' + ids('56'));
 ok(route(ISLANDS, 'all').length === 0, '全部模式不畫路線');
-ok(route(ISLANDS, '12').reduce((a, r) => a + r.total, 0) === 26, '1–2 年級路線上 26 關');
+ok(route(ISLANDS, '12').reduce((a, r) => a + r.total, 0) === 27, '1–2 年級路線上 27 關（滑鼠島 2026-11-22 改 7 關）');
 
-ok(nextStop(ISLANDS, '12').short === '小兔勇者', '沒玩過時 1–2 年級第一站是小兔勇者');
-ok(nextStop(ISLANDS, '34').short === '怪獸冒頭', '3–4 年級第一站是打字島怪獸冒頭');
+ok(nextStop(ISLANDS, '12').short === '滑鼠勇士', '沒玩過時 1–2 年級第一站是滑鼠勇士');
+ok(nextStop(ISLANDS, '34').short === '敲敲蛋寶寶', '3–4 年級第一站是滑鼠島敲敲蛋寶寶');
 const mouse = ISLANDS.find(i => i.id === 'mouse');
 mouse.list[0].rec = { score: 1 }; mouse.list[1].rec = { score: 1 };
 ok(nextStop(ISLANDS, '12').short === '拔蔬菜', '玩過兩關後下一站是拔蔬菜');

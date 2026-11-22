@@ -489,6 +489,7 @@ td.sub { color: var(--ink3); font-size: 13px; }
       return '<tr' + (r.seat === lastSeat ? ' class="last"' : '') + '><td class="r num">' + r.seat + '</td><td>' + esc(r.name || '—') + '</td>' +
         '<td>' + esc(CS.unitName(r.unit)) + (r.tier !== '-' ? '<span class="sub">・' + CS.TIERS[r.tier] + '</span>' : '') + (r.min === 0 && !CS.isArt(r) ? '<span class="sub">・30 秒測試</span>' : '') + '</td>' +
         (CS.isArt(r) ? '<td class="r" colspan="2">' + esc(CS.LANGS[r.lang]) + '・第 <span class="num">' + r.acc + '</span> 關</td>'   // 畫畫島、小常識島沒有正確率、字數
+          : CS.isMouse && CS.isMouse(r) ? '<td class="r" colspan="2">滑鼠・成功率 <span class="num">' + r.acc + '</span><span class="u">%</span></td>'   // 滑鼠島：只有成功率
           : '<td class="r num">' + r.acc + '<span class="u">%</span></td><td class="r num">' + r.cpm + '<span class="u">字/分</span></td>') +
         '<td class="stars">' + starsHTML(r) + '</td><td class="r num">' + CS.timeText(r.time) + '</td></tr>';
     }).join('') : '<tr><td colspan="7" class="empty-note">還沒有成績。到「掃描」分頁開相機掃學生的 QR。</td></tr>';
