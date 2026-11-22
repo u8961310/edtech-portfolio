@@ -74,6 +74,8 @@
   .bdg .fi { width:24px; height:24px; } .bdg .kc { width:22px; height:22px; font-size:14px; border-radius:6px; }
   .mini b .fi, .grid b .fi { width:40px; height:40px; } .mini b .kc, .grid b .kc { width:34px; height:34px; font-size:21px; border-radius:9px; margin:3px auto; }
   #card .emo .fi { width:64px; height:64px; } #card .emo .kc { width:54px; height:54px; font-size:32px; border-radius:13px; }
+  .isl i .fi { width:22px; height:22px; } #list h3 i .fi { width:26px; height:26px; } #list h3 i.hi { background:none; border:0; width:auto; height:auto; } #list h3 i.hi .fi { width:30px; height:30px; }
+  .chips span .fi { display:inline-block; width:20px; height:20px; vertical-align:-4px; margin:0 2px 0 0; }
   .tip .fi, .tip .kc { display:inline-grid; vertical-align:-4px; width:20px; height:20px; font-size:12px; margin:0 2px 0 0; } .tip .kc { border-color:#fff; box-shadow:none; }
   .hint { font-size:40px; transform:translate(-50%,0) scale(var(--inv)); transform-origin:50% 0; }
   .hint b { display:block; animation:tap 1.2s ease-in-out infinite; }
@@ -210,6 +212,8 @@
   .pin.guide { z-index:4; pointer-events:none; }
   .pin.guide.r { transform:translate(0, -100%) scale(var(--inv)); transform-origin:0 100%; }
   .pin.guide.l { transform:translate(-100%, -100%) scale(var(--inv)); transform-origin:100% 100%; }
+  .pin.guide.d { transform:translate(-50%, 0) scale(var(--inv)); transform-origin:50% 0; }   /* 左右都壓到名牌時：站在站點正下方 */
+  .d .gwrap { flex-direction:column-reverse; padding-top:22px; }
   .gwrap { display:flex; align-items:center; gap:10px; }
   .r .gwrap { flex-direction:row-reverse; padding-left:20px; } .l .gwrap { padding-right:20px; }
   .gwrap button { pointer-events:auto; border:0; background:none; padding:0; }
@@ -245,7 +249,7 @@
     .title { font-size:17px; padding:8px 12px; }
     .stars, .teacher { font-size:17px; padding:6px 10px; }
     .scores-link { display:none; }
-    .isl { font-size:13px; } .isl i { width:22px; height:22px; font-size:12px; }
+    .isl { font-size:13px; } .isl i { width:22px; height:22px; font-size:12px; } .isl i .fi { width:18px; height:18px; }
     #card { left:10px; right:10px; top:auto; bottom:calc(84px + env(safe-area-inset-bottom)); width:auto; padding:16px; display:grid; grid-template-columns:84px 1fr; gap:4px 14px; text-align:left; align-items:center; }
     #card[hidden] { display:none; }
     #card .emo { width:76px; height:76px; font-size:42px; margin:0; grid-row:span 2; }
@@ -324,7 +328,7 @@
 
 <script src="assets/js/smart-pet.js"></script>
 <script type="module">
-import { ISLANDS, UNITS, recText, hex, pastelHex, iconHtml } from './island/data.js';
+import { ISLANDS, UNITS, recText, hex, pastelHex, iconHtml, islIconHtml } from './island/data.js';
 import { GRADES, route, nextStop, fits, rangeOf, loadChoice, saveChoice, gradeFromUrl } from './island/grade.js';
 
 const $ = id => document.getElementById(id);
@@ -364,7 +368,7 @@ async function build() {
   html += `<div class="pin top" style="left:${M.hub[0]}px;top:${M.hub[1]}px"><div class="isl" style="--c:#ffe1a8"><i>🏠</i>我的家</div></div>`;
   for (const s of M.spots) {
     if (s.kind === 'island') { const i = islById.get(s.id);
-      html += `<div class="pin top" style="left:${s.label[0]}px;top:${s.label[1]}px"><div class="isl" data-isl="${i.id}" role="button" tabindex="0" style="--c:${pastelHex(i.color,.35)}"><i>${i.icon}</i>${i.name}</div></div>`;
+      html += `<div class="pin top" style="left:${s.label[0]}px;top:${s.label[1]}px"><div class="isl" data-isl="${i.id}" role="button" tabindex="0" style="--c:${pastelHex(i.color,.35)}"><i>${islIconHtml(i)}</i>${i.name}</div></div>`;
     } else { const u = unitById.get(s.id); if (!u) continue;
       html += `<div class="pin bdg" data-u="${u.id}" style="left:${s.badge[0]}px;top:${s.badge[1]}px"><span style="--c:${hex(u.isl.color)};--d:${(s.c[0] % 7) * -.3}s">${iconHtml(u)}${u.rec ? '<s>⭐</s>' : ''}</span></div>`; }
   }
@@ -445,7 +449,7 @@ function bindSpots() {
     p.addEventListener('pointerenter', e => {
       if (e.pointerType !== 'mouse') return;
       const u = kind === 'unit' ? unitById.get(id) : null, i = u ? null : islById.get(id);
-      tipEl.innerHTML = u ? `${iconHtml(u)} ${u.short}` : `${i.icon} ${i.name}`;
+      tipEl.innerHTML = u ? `${iconHtml(u)} ${u.short}` : `${islIconHtml(i)} ${i.name}`;
       const at = u ? [s.badge[0], s.badge[1] - 46 / cam.s] : s.label;
       tip.style.left = at[0] + 'px'; tip.style.top = (u ? at[1] : at[1] - 48 / cam.s) + 'px';
       tipEl.classList.add('on');
@@ -463,7 +467,7 @@ function openUnit(u) {
   card.style.setProperty('--c', pastelHex(u.isl.color, .35));
   card.innerHTML = `<button class="x" aria-label="關閉">✖</button>
     <div class="emo">${iconHtml(u)}</div><h2>${u.short}</h2><p class="full">${u.full}</p>
-    <div class="chips"><span>${u.isl.icon} ${u.isl.name}</span><span>${u.grade}</span><span>${recText(u)}</span></div>
+    <div class="chips"><span>${islIconHtml(u.isl)} ${u.isl.name}</span><span>${u.grade}</span><span>${recText(u)}</span></div>
     <a class="go" href="./${u.url}">🚀 出發</a>`;
   card.hidden = false;
   card.querySelector('.x').onclick = closeCard;
@@ -474,7 +478,7 @@ function openIsland(isl) {
   selected = isl; dismissHint();
   card.style.setProperty('--c', pastelHex(isl.color, .35));
   card.innerHTML = `<button class="x" aria-label="關閉">✖</button>
-    <div class="emo">${isl.icon}</div><h2>${isl.name}</h2>
+    <div class="emo">${islIconHtml(isl)}</div><h2>${isl.name}</h2>
     <div class="chips"><span>🎮 ${isl.list.length} 關</span><span>⭐ ${isl.list.filter(u => u.rec).length}</span></div>
     <div class="mini">${isl.list.map((u, i) => `<button data-i="${i}"><b>${iconHtml(u)}</b><span>${u.short}</span>${u.rec ? '<s>⭐</s>' : ''}</button>`).join('')}</div>`;
   card.hidden = false;
@@ -496,8 +500,8 @@ function renderList() {
   $('listBody').innerHTML = order.map(isl => {
     const r = rOf.get(isl.id), ii = ISLANDS.indexOf(isl);
     const us = isl.list.map((u, i) => ({ u, i, ok:fits(u, g) })).sort((a, b) => b.ok - a.ok);
-    const st = r ? `<b class="st ${r.done === r.total ? 'full' : nx && nx.isl === isl ? 'cur' : ''}">${r.n}</b>` : `<i>${isl.icon}</i>`;
-    return `<h3 class="${g && g !== 'all' && !r ? 'off' : ''}" style="--c:${pastelHex(isl.color,.35)}">${st}${r ? isl.icon + ' ' : ''}${isl.name}${r ? `<small>玩過 ${r.done}／${r.total}</small>` : g && g !== 'all' ? `<small>給 ${islGrades(isl)}</small>` : ''}</h3>
+    const st = r ? `<b class="st ${r.done === r.total ? 'full' : nx && nx.isl === isl ? 'cur' : ''}">${r.n}</b>` : `<i>${islIconHtml(isl)}</i>`;
+    return `<h3 class="${g && g !== 'all' && !r ? 'off' : ''}" style="--c:${pastelHex(isl.color,.35)}">${st}${r ? `<i class="hi">${islIconHtml(isl)}</i>` : ''}${isl.name}${r ? `<small>玩過 ${r.done}／${r.total}</small>` : g && g !== 'all' ? `<small>給 ${islGrades(isl)}</small>` : ''}</h3>
     <div class="grid">${us.map(({ u, i, ok }) => `<button class="${ok ? '' : 'dim'} ${u === nx ? 'nx' : ''}" data-ii="${ii}" data-i="${i}" aria-label="${u.full}${ok ? '' : '（' + u.grade + '）'}"><b>${iconHtml(u)}</b><span>${u.short}</span>${ok ? '' : `<em>${u.grade.replace(/^\S+\s/, '')}</em>`}${u.rec ? '<s>⭐</s>' : ''}</button>`).join('')}</div>`;
   }).join('');
   listEl.querySelectorAll('.grid button').forEach(b => b.onclick = () => { closeList(); openUnit(ISLANDS[+b.dataset.ii].list[+b.dataset.i]); });
@@ -554,7 +558,7 @@ function applyGrade() {
     const isl = islById.get(el.dataset.isl), r = rOf.get(isl.id), off = !!G && g !== 'all' && !r;
     const cls = r && (r.done === r.total ? 'full' : nx && nx.isl === isl ? 'cur' : '');
     el.classList.toggle('off', off);
-    el.innerHTML = `${r ? `<b class="st ${cls}">${r.done === r.total ? '✓' : r.n}</b>` : ''}<i>${isl.icon}</i>${isl.name}${r ? `<small class="pg">${r.done}/${r.total}</small>` : ''}${off ? `<em class="for">給 ${islGrades(isl)}</em>` : ''}`;
+    el.innerHTML = `${r ? `<b class="st ${cls}">${r.done === r.total ? '✓' : r.n}</b>` : ''}<i>${islIconHtml(isl)}</i>${isl.name}${r ? `<small class="pg">${r.done}/${r.total}</small>` : ''}${off ? `<em class="for">給 ${islGrades(isl)}</em>` : ''}`;
     el.setAttribute('aria-label', `${isl.name}${r ? `，第 ${r.n} 站，玩過 ${r.done}／${r.total} 關` : off ? `，給 ${islGrades(isl)}` : ''}`);
   });
   // 淡化層（不適合的關、不在這個年級的島）
@@ -600,14 +604,23 @@ function applyGrade() {
   guideSide();
 }
 let guideFolded = false;
-// 嚮導預設站在島外側；那一側會超出螢幕就換邊（鏡頭每次移動都重算）
+// 鏡頭飛行中 --inv 還在變，寵物和名牌的相對大小不準 → 飛到定位後再判斷一次站哪邊
+stage.addEventListener('transitionend', e => { if (e.target === stage && e.propertyName === 'transform') guideSide(); });
+// 嚮導預設站在島外側；那一側會超出螢幕、或會壓到島名牌就換邊（鏡頭每次移動都重算）
 function guideSide() {
   const p = stage.querySelector('.pin.guide'); if (!p) return;
   const x = parseFloat(p.style.left) * cam.s + cam.x, w = p.querySelector('.gwrap').offsetWidth + 8;
-  let side = p.dataset.pref;
-  if (side === 'r' && x + w > innerWidth && x - w > 0) side = 'l';
-  else if (side === 'l' && x - w < 0 && x + w < innerWidth) side = 'r';
-  p.classList.toggle('r', side === 'r'); p.classList.toggle('l', side === 'l');
+  const set = s => { p.classList.toggle('r', s === 'r'); p.classList.toggle('l', s === 'l'); p.classList.toggle('d', s === 'd'); };
+  const fitsScreen = s => s === 'r' ? x + w <= innerWidth : x - w >= 0;
+  const plates = [...stage.querySelectorAll('.isl')].map(e => e.getBoundingClientRect());
+  // 只量看得到的東西（寵物＋留在地圖上的泡泡），不含 .gwrap 的空白邊距
+  const hitsPlate = () => [...p.querySelectorAll('.gpet, .gbub:not([hidden])')].some(el => { const g = el.getBoundingClientRect();
+    return plates.some(r => r.left < g.right - 4 && r.right > g.left + 4 && r.top < g.bottom - 4 && r.bottom > g.top + 4); });
+  const pref = p.dataset.pref, alt = pref === 'r' ? 'l' : 'r';
+  set(pref);
+  if (!fitsScreen(pref) && fitsScreen(alt)) { set(alt); return; }
+  // 站點常在名牌正下方，左右都會壓到 → 改站站點正下方（.d）；三種都壓到就回原本那邊
+  if (hitsPlate()) { set(alt); if (!fitsScreen(alt) || hitsPlate()) { set('d'); if (hitsPlate()) set(pref); } }
 }
 
 // 歡迎卡：第 1 步選年級，第 2 步選嚮導（「全部」跳過第 2 步）

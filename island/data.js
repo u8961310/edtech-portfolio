@@ -83,12 +83,16 @@ export const ICON = {
   '🍲':'pot-of-food', '🚂':'locomotive', '🖌️':'paintbrush', '👾':'alien-monster', '🦋':'butterfly', '🛠️':'hammer-wrench', '🎆':'fireworks',
   '🏠':'house', '💻':'laptop', '⏰':'alarm-clock', '🗂️':'dividers', '💬':'speech-balloon', '🤖':'robot', '👮':'police',
   '🌳':'deciduous-tree', '🐳':'whale', '🎄':'christmas-tree', '🏆':'trophy',
+  // 島圖示（ISLANDS 的 icon；🖱️、🎄 跟關卡共用）
+  '⌨️':'keyboard', '🧩':'puzzle-piece', '🎨':'artist-palette', '📁':'file-folder', '🎲':'game-die', '⚔️':'crossed-swords',
 };
-export const iconHtml = u => {
-  const i = ICON[u.emoji];
-  if (!i) return u.emoji;
+export const emojiHtml = e => {
+  const i = ICON[e];
+  if (!i) return e;
   return i.key ? `<i class="kc" aria-hidden="true">${i.key}</i>` : `<img class="fi" src="./assets/unit-icons/${i}.webp" alt="" draggable="false">`;
 };
+export const iconHtml = u => emojiHtml(u.emoji);        // 關卡
+export const islIconHtml = isl => emojiHtml(isl.icon);  // 島
 
 // ---------- 成績（只讀 localStorage，讀不到就當沒玩過） ----------
 const ls = k => { try { return localStorage.getItem(k); } catch { return null; } };

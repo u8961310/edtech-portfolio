@@ -45,6 +45,13 @@ SRC = {
     "whale": "assets/Spouting whale/3D/spouting_whale_3d.png",
     "christmas-tree": "assets/Christmas tree/3D/christmas_tree_3d.png",
     "trophy": "assets/Trophy/3D/trophy_3d.png",
+    # 島圖示（島名牌、島卡片、清單標題；滑鼠島與節慶島跟關卡共用 computer-mouse／christmas-tree）
+    "keyboard": "assets/Keyboard/3D/keyboard_3d.png",
+    "puzzle-piece": "assets/Puzzle piece/3D/puzzle_piece_3d.png",
+    "artist-palette": "assets/Artist palette/3D/artist_palette_3d.png",
+    "file-folder": "assets/File folder/3D/file_folder_3d.png",
+    "game-die": "assets/Game die/3D/game_die_3d.png",
+    "crossed-swords": "assets/Crossed swords/3D/crossed_swords_3d.png",
 }
 total = 0
 for name, path in SRC.items():
