@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<!-- 宣傳片字卡：overlay.html?s=<字卡 id>&o=land|port[&bg=<底圖網址>]
+     沒給 bg 時背景透明，由 render_overlays.py 截成 PNG 疊進影片；給 bg 時當關鍵格預覽。 -->
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--ink:#1F2F47;--cta:#C2412A;--sun:#FFD23F;--sea:#A9DFE8}
+  html,body{background:transparent;overflow:hidden}
+  body{position:relative;font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+  .bg{position:absolute;inset:0;background-size:cover;background-position:center}
+  .bg[style*="url"]{background-color:#BFE8EF}
+  .full{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .sea{background:linear-gradient(160deg,#E4F7FA,#A9DFE8)}
+  .hook1{font-weight:900;color:var(--ink);letter-spacing:.04em}
+  .hook2{font-weight:900;letter-spacing:.04em;background:var(--sun);padding:.05em .45em;border-radius:.25em;transform:rotate(-2deg);
+         box-shadow:0 .12em 0 rgba(31,47,71,.18);margin-top:.18em}
+  .label{position:absolute;display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+  .chip{display:inline-flex;align-items:center;gap:10px;color:#fff;font-weight:900;border-radius:999px;padding:8px 26px 8px 12px;
+        box-shadow:0 6px 18px rgba(0,0,0,.18)}
+  .chip img{width:1.5em;height:1.5em}
+  .big{font-weight:900;color:#fff;letter-spacing:.03em;line-height:1.15;background:var(--ink);
+       padding:.12em .42em .16em;border-radius:.22em;box-shadow:0 .1em .3em rgba(0,0,0,.25)}
+  .stat{font-weight:900;letter-spacing:.03em;line-height:1.15}
+  .stat em{font-style:normal;color:var(--cta);font-size:1.25em}
+  .pill{display:inline-block;background:#fff;border-radius:999px;font-weight:900;box-shadow:0 6px 16px rgba(31,47,71,.16)}
+  .url{display:inline-block;background:var(--cta);color:#fff;border-radius:999px;font-weight:900;box-shadow:0 8px 18px rgba(194,65,42,.35)}
+  .dog{display:block;margin:0 auto}
+</style>
+</head>
+<body>
+<div class="bg" id="bg"></div>
+<div id="root"></div>
+<script>
+const q = new URLSearchParams(location.search);
+const s = q.get('s') || 'hook', o = q.get('o') || 'land', P = o === 'port';
+const W = P ? 1080 : 1920, H = P ? 1920 : 1080;
+document.body.style.width = W + 'px'; document.body.style.height = H + 'px';
+if (q.get('bg')) document.getElementById('bg').style.backgroundImage = `url(${q.get('bg')})`;
+const ICON = n => `../../../assets/unit-icons/${n}.webp`;
+const LABELS = {
+  egg:    ['滑鼠島', '#2E9E5B', 'computer-mouse', '雙擊敲蛋寶寶'],
+  dino:   ['打字島', '#C98A00', 'keyboard', '恐龍跑酷打字'],
+  pixel:  ['畫畫島', '#D14A88', 'artist-palette', '數字像素畫'],
+  turtle: ['思考島', '#2F7FDB', 'puzzle-piece', '下指令帶烏龜'],
+  duel:   ['對戰島', '#3F5FE0', 'crossed-swords', '和同學比打字'],
+};
+const root = document.getElementById('root');
+const px = n => n + 'px';
+if (s === 'hook1' || s === 'hook2' || s === 'hook') {
+  // hook1: line 1 only; hook2: both lines (the video animates them in two steps)
+  root.innerHTML = `<div class="full ${q.get('bg') ? '' : 'sea'}">
+    <div class="hook1" style="font-size:${px(P ? 120 : 130)}">電腦課，</div>
+    <div class="hook2" style="font-size:${px(P ? 120 : 130)};${s === 'hook1' ? 'visibility:hidden' : ''}">也可以這麼好玩！</div></div>`;
+} else if (LABELS[s]) {
+  const [isle, col, icon, line] = LABELS[s];
+  // optional game frame: img=<url>&crop=x,y,w,h (source px) &lay=card|crop ; lp=bl|tl|tr|br|below
+  const img = q.get('img'), [cx, cy, cw, ch] = (q.get('crop') || '0,0,1920,1080').split(',').map(Number);
+  const lay = q.get('lay') || 'crop', lp = q.get('lp') || (lay === 'card' ? 'below' : 'bl');
+  if (img) {
+    const bgSize = (boxW, boxH) => { const k = boxW / cw; return `background-image:url(${img});background-size:${1920 * k}px auto;background-position:${-cx * k}px ${-cy * k}px;width:${boxW}px;height:${boxH}px`; };
+    if (lay === 'card') {
+      const bw = Math.round(Math.min(P ? 1000 : 1500, (P ? 900 : H - 280) * cw / ch)), bh = Math.round(bw * ch / cw);
+      root.innerHTML = `<div class="full sea"></div><div style="position:absolute;left:${(W - bw) / 2}px;top:${P ? 380 : 60}px;border-radius:28px;overflow:hidden;
+        box-shadow:0 20px 50px rgba(31,47,71,.28);border:8px solid #fff;${bgSize(bw, bh)}"></div>`;
+    } else root.innerHTML = `<div style="position:absolute;left:0;top:0;${bgSize(W, H)}"></div>`;
+  }
+  const POS = { bl: 'left:70px;bottom:70px', tl: 'left:70px;top:70px', tr: 'right:70px;top:70px;align-items:flex-end', br: 'right:70px;bottom:70px;align-items:flex-end',
+                below: `left:0;right:0;bottom:${P ? 300 : 40}px;align-items:center;flex-direction:row;justify-content:center;gap:22px`,
+                band: `left:0;right:0;bottom:0;padding:120px 0 56px;align-items:center;flex-direction:row;justify-content:center;gap:22px;
+                       background:linear-gradient(180deg,rgba(31,47,71,0),rgba(31,47,71,.82) 55%)` };
+  const pos = P ? `left:60px;bottom:${px(1920 * .2)}` : POS[lp];
+  root.innerHTML += `<div class="label" style="${pos}">
+    <span class="chip" style="background:${col};font-size:${px(P ? 46 : 40)}"><img src="${ICON(icon)}" alt="">${isle}</span>
+    <span class="big" style="font-size:${px(P ? 104 : 110)}">${line}</span></div>`;
+} else if (s === 'map') {
+  root.innerHTML = `<div class="full" style="justify-content:${P ? 'flex-start' : 'flex-end'};padding:${P ? '210px 0 0' : '0 0 70px'}">
+    <div class="pill stat" style="font-size:${px(P ? 66 : 64)};padding:18px 54px"><em>8</em> 座主題島・<em>39</em> 個關卡</div></div>`;
+} else if (s === 'end') {
+  root.innerHTML = `<div class="full ${q.get('bg') ? '' : 'sea'}">
+    <img class="dog" src="${ICON('dog')}" style="width:${px(P ? 220 : 170)}" alt="">
+    <div class="hook1" style="font-size:${px(P ? 120 : 120)};margin-top:10px">我的學習樂園島</div>
+    <div class="pill" style="font-size:${px(P ? 50 : 46)};padding:12px 40px;margin-top:26px">免費・免安裝・免登入</div>
+    <div class="url" style="font-size:${px(P ? 44 : 52)};padding:16px 46px;margin-top:30px">u8961310.github.io/edtech-portfolio</div>
+    <div style="font-size:${px(P ? 42 : 40)};font-weight:700;margin-top:24px;color:#2E4260">國小資訊課，打開瀏覽器就能玩</div></div>`;
+}
+</script>
+</body>
+</html>

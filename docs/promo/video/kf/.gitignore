@@ -1,0 +1,5 @@
+# 關鍵畫面的中間產物（底圖、單張）不進 git，只留總覽圖
+*
+!.gitignore
+!keyframes.png
+!keyframes-v2.png

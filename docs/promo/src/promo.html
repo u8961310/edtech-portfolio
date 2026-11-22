@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<!-- 社群宣傳圖版型：promo.html?f=fb|ig|igsq|threads，由 render_promo.py 截圖。島圖由 compose_map.py 產生。 -->
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--ink:#1F2F47;--muted:#3F5068;--cta:#C2412A}
+  body{overflow:hidden;font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;color:var(--ink);
+       background:linear-gradient(180deg,#DDF4F7,#A9DFE8);-webkit-font-smoothing:antialiased}
+  .col{display:flex;flex-direction:column;align-items:center;text-align:center}
+  .tag{display:inline-flex;align-items:center;gap:10px;background:#fff;border-radius:999px;padding:8px 24px 8px 14px;
+       font-weight:700;color:var(--muted);box-shadow:0 4px 14px rgba(31,47,71,.12);white-space:nowrap}
+  .tag img{width:1.5em;height:1.5em}
+  h1{font-weight:900;letter-spacing:.04em;line-height:1.1;white-space:nowrap}
+  h1 em{font-style:normal;color:var(--cta)}
+  .lead{font-weight:700;color:var(--muted);line-height:1.5}
+  .mapbox{position:relative}
+  .mapbox .map{display:block;width:100%;filter:drop-shadow(0 16px 22px rgba(31,47,71,.18))}
+  .mapbox .dog{position:absolute;transform:translate(-50%,-92%)}
+  .isles{display:grid;gap:12px}
+  .isle{display:flex;align-items:center;gap:10px;background:#FFFBF2;border-radius:16px;padding:10px 16px;white-space:nowrap;
+        font-weight:900;box-shadow:0 4px 12px rgba(31,47,71,.12);border-left:8px solid var(--c)}
+  .isle img{width:1.7em;height:1.7em}
+  .isle small{margin-left:auto;padding-left:8px;font-size:.82em;color:var(--muted);font-weight:700}
+  .cta{display:inline-block;background:var(--cta);color:#fff;font-weight:900;border-radius:999px;white-space:nowrap;
+       box-shadow:0 6px 16px rgba(194,65,42,.3)}
+  .url{font-weight:700;color:var(--ink);white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="page"></div>
+<script>
+const ISLES = [
+  ['滑鼠島','computer-mouse',7,'#3FBF72'],['打字島','keyboard',8,'#E8A400'],['思考島','puzzle-piece',6,'#3D8FEF'],['畫畫島','artist-palette',7,'#E8609F'],
+  ['小常識島','file-folder',7,'#8C6BEF'],['大富翁港','game-die',2,'#EE7C2E'],['節慶島','christmas-tree',1,'#D9443B'],['對戰島','crossed-swords',1,'#4A6BEF'],
+];
+const URL = 'u8961310.github.io/edtech-portfolio';
+const I = n => `../../../assets/unit-icons/${n}.webp`;
+const HUB = { land: [.516, .475], port: [.52, .465] };          // 中央廣場在合成島圖上的位置（比例）
+const tag = (t, fs) => `<span class="tag" style="font-size:${fs}px"><img src="${I('sparkles')}" alt="">${t}</span>`;
+const h1 = (fs, mt = 0) => `<h1 style="font-size:${fs}px;margin-top:${mt}px">我的<em>學習樂園島</em></h1>`;
+const map = (mode, w, dog, mt = 0) => `<div class="mapbox" style="width:${w}px;margin-top:${mt}px">
+  <img class="map" src="map-${mode}.webp" alt=""><img class="dog" src="${I('dog')}" alt=""
+  style="width:${dog}px;left:${HUB[mode][0] * 100}%;top:${HUB[mode][1] * 100}%"></div>`;
+const isles = (list, cols, fs, w, mt) => `<div class="isles" style="grid-template-columns:repeat(${cols},1fr);width:${w}px;margin-top:${mt}px;font-size:${fs}px">` +
+  list.map(([n, i, c, col]) => `<div class="isle" style="--c:${col}"><img src="${I(i)}" alt="">${n}<small>${c} 關</small></div>`).join('') + '</div>';
+const cta = (fs, mt) => `<span class="cta" style="font-size:${fs}px;padding:${fs * .45}px ${fs * 1.1}px;margin-top:${mt}px">免費・免登入・打開瀏覽器就能玩</span>`;
+const url = (fs, mt) => `<p class="url" style="font-size:${fs}px;margin-top:${mt}px">${URL}</p>`;
+
+const V = {
+  fb: [1200, 630, () => `
+    <div style="position:absolute;right:-70px;top:50%;transform:translateY(-50%)">${map('land', 720, 62)}</div>
+    <div class="col" style="position:absolute;left:52px;top:44px;width:540px;align-items:flex-start;text-align:left">
+      ${tag('國小資訊課・免費互動教材', 22)}${h1(66, 18)}
+      <p class="lead" style="font-size:26px;margin-top:12px">滑鼠、打字、運算思維、畫畫<br>8 座主題小島、39 個關卡</p>
+      ${isles(ISLES.slice(0, 4), 2, 22, 470, 18)}
+      ${cta(23, 22)}${url(20, 10)}
+    </div>`],
+  ig: [1080, 1350, () => `<div class="col" style="padding-top:52px">
+      ${tag('國小資訊課・免費互動教材', 30)}${h1(104, 14)}
+      ${map('land', 1000, 86, 6)}
+      ${isles(ISLES, 4, 26, 1000, 14)}
+      ${cta(34, 30)}${url(28, 14)}
+    </div>`],
+  igsq: [1080, 1080, () => `<div class="col" style="padding-top:48px">
+      ${tag('國小資訊課・免費互動教材', 30)}${h1(100, 12)}
+      ${map('land', 960, 84, 0)}
+      ${cta(34, 6)}${url(28, 12)}
+    </div>`],
+  threads: [1080, 1350, () => `<div class="col" style="padding-top:56px">
+      ${tag('電腦課要玩什麼？', 34)}${h1(100, 14)}
+      <p class="lead" style="font-size:38px;margin-top:10px">39 個免費關卡，點一座島就開玩</p>
+      ${map('land', 1020, 88, 10)}
+      ${isles(ISLES.slice(0, 4), 4, 26, 1000, 18)}
+      ${cta(34, 30)}${url(28, 14)}
+    </div>`],
+};
+const f = new URLSearchParams(location.search).get('f') || 'fb';
+const [w, h, html] = V[f];
+Object.assign(document.body.style, { width: w + 'px', height: h + 'px' });
+document.getElementById('page').innerHTML = html();
+</script>
+</body>
+</html>

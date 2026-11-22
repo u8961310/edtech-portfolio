@@ -1,0 +1,3 @@
+# record_clips.py 的輸出（錄影畫格與 mp4），可重錄，不進 git
+clips/
+frames/
