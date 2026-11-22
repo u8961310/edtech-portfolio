@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>首頁 B 方案「年級入口＋嚮導寵物」設計稿：航程票版（interface-design）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+/* 注音字型：只用在【注音】四句，字本身就畫好注音，不用 ruby */
+@font-face { font-family:'Bpmf Huninn'; src:url('fonts/bpmf-huninn-home.woff2') format('woff2'); font-display:swap; }
+
+/* ===== 色票：沿用首頁既有的奶油卡片＋深咖啡粗框，再從「港口航程」借幾個顏色 =====
+   --sand     卡片底（既有 #fffaf2）
+   --driftwood 字與粗框（既有 #3b2f2a）
+   --buoy     浮標橘＝強調色（既有 #d9480f）；只用在大字／色塊
+   --buoy-ink 浮標橘的小字版，對比 ≥ 4.5
+   --lagoon   潟湖藍（地圖海水），航線的白邊
+   --kelp     海藻綠＝玩過打勾
+   --mist     海霧＝變淡關卡的薄紗 */
+:root{
+  --sand:#fffaf2; --sand-deep:#f6ecdc; --sand-line:#e6d6bf;
+  --driftwood:#3b2f2a; --driftwood-2:#5c4a40; --driftwood-3:#6b5a50;
+  --buoy:#d9480f; --buoy-ink:#b33a0a; --buoy-soft:#fde3d3;
+  --lagoon:#8fd3d3; --kelp:#2b7a3d; --kelp-soft:#dcefd9;
+  --mist:#fffaf2;
+  --g12:#e3f2cf; --g34:#d5eaf5; --g56:#ebe0f6;
+  --rim:3px solid var(--driftwood);
+  --lift:0 5px 0 var(--driftwood);
+  --lift-sm:0 3px 0 var(--driftwood);
+  --r-card:20px; --r-ctl:14px; --r-chip:999px;
+  --ease:cubic-bezier(.23,1,.32,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#efe6d8;color:var(--driftwood);font-family:'Noto Sans TC',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--buoy);outline-offset:3px}
+.zy{font-family:'Bpmf Huninn','Noto Sans TC',sans-serif;font-weight:400;letter-spacing:.02em;line-height:1.55}
+
+/* ===== 設計稿外框（分頁列在畫面外上方）===== */
+.deck{width:1366px;margin:0 auto;padding:18px 0 40px}
+.deck-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:12px}
+.deck-head h1{font-size:18px;font-weight:900}
+.deck-head p{font-size:13px;color:var(--driftwood-3);font-weight:500}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{min-height:44px;padding:0 18px;border:var(--rim);border-radius:var(--r-ctl);background:var(--sand);font-weight:700;font-size:15px;box-shadow:var(--lift-sm);transition:transform .12s var(--ease)}
+.tab:active{transform:translateY(2px)}
+.tab[aria-selected="true"]{background:var(--driftwood);color:var(--sand)}
+.tab b{display:inline-block;width:22px;height:22px;line-height:20px;border-radius:50%;border:2px solid currentColor;font-size:12px;margin-right:6px;text-align:center}
+.notes{margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.notes div{background:var(--sand);border:2px solid var(--sand-line);border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.65;color:var(--driftwood-2)}
+.notes h3{font-size:13px;color:var(--driftwood);margin-bottom:4px}
+
+/* ===== 一個畫面 = 1366×657 ===== */
+.screen{position:relative;width:1366px;height:657px;overflow:hidden;border-radius:6px;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+.screen[hidden]{display:none}
+.map{position:absolute;inset:0;width:1366px;height:657px;display:block}
+.overlay{position:absolute;inset:0;width:1366px;height:657px}
+.scrim{position:absolute;inset:0;background:rgba(255,250,242,.62);backdrop-filter:blur(2px)}
+
+/* ===== 舊介面（全部保留）===== */
+.hud{position:absolute;display:flex;align-items:center;gap:8px;height:52px;padding:0 16px;background:var(--sand);border:var(--rim);border-radius:18px;box-shadow:var(--lift);font-weight:900;white-space:nowrap}
+.hud-title{left:16px;top:16px;font-size:21px}
+.hud-title .ico{font-size:22px}
+.hud-right{position:absolute;top:16px;right:16px;display:flex;gap:10px}
+.hud-right .hud{position:static}
+.hud-btn{font-size:15px;transition:transform .12s var(--ease)}
+.hud-btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--driftwood)}
+.stars{font-size:15px}
+.stars strong{font-size:20px;font-variant-numeric:tabular-nums}
+.grade-pill{background:var(--g12);font-size:16px;gap:6px}
+.grade-pill .pen{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--sand);border:2px solid var(--driftwood);font-size:12px}
+.viewtog{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:4px;padding:6px;background:var(--sand);border:var(--rim);border-radius:20px;box-shadow:var(--lift)}
+.viewtog button{min-width:104px;height:48px;border-radius:14px;font-size:19px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:6px}
+.viewtog .on{background:var(--buoy);color:#fff}
+.dim-ui{opacity:.45;pointer-events:none}
+
+/* ===== 卡片（歡迎卡／選嚮導）===== */
+.card{position:absolute;background:var(--sand);border:var(--rim);border-radius:24px;box-shadow:0 7px 0 var(--driftwood)}
+.welcome{left:283px;top:92px;width:800px;height:470px;display:grid;grid-template-columns:230px 1fr;overflow:hidden}
+.host{background:var(--sand-deep);border-right:2px dashed var(--sand-line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px}
+.host .pet{width:190px;height:190px}
+.host .who{font-size:14px;font-weight:700;color:var(--driftwood-3)}
+.welcome-main{padding:30px 34px 22px;display:flex;flex-direction:column}
+.welcome-main h2{font-size:36px;margin-bottom:18px}
+.grades{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.gbtn{position:relative;height:112px;border:var(--rim);border-radius:18px;box-shadow:var(--lift);display:flex;align-items:center;gap:14px;padding:0 18px;text-align:left;transition:transform .12s var(--ease),box-shadow .12s var(--ease)}
+.gbtn:hover{transform:translateY(-2px);box-shadow:0 7px 0 var(--driftwood)}
+.gbtn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--driftwood)}
+.gbtn .num{font-size:40px;font-weight:900;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.gbtn .unit{font-size:20px;font-weight:900}
+.gbtn .sub{display:block;font-size:14px;font-weight:700;color:var(--driftwood-2);margin-top:4px}
+.gbtn .steps{margin-left:auto;flex:none}
+.g12{background:var(--g12)} .g34{background:var(--g34)} .g56{background:var(--g56)}
+.gteach{background:var(--sand);border-style:dashed}
+.gteach .num{font-size:26px}
+.foot{margin-top:auto;font-size:13px;color:var(--driftwood-3);font-weight:500;line-height:1.6}
+.foot code{font-family:inherit;background:var(--sand-deep);border:1px solid var(--sand-line);border-radius:6px;padding:0 5px;color:var(--driftwood)}
+
+.chooser{left:213px;top:84px;width:940px;height:486px;padding:24px 32px}
+.crumb{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;color:var(--driftwood-2)}
+.crumb .done{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:var(--r-chip);background:var(--g12);border:2px solid var(--driftwood)}
+.crumb .back{margin-left:auto;min-height:44px;padding:0 14px;border-radius:12px;border:2px solid var(--driftwood);background:var(--sand);font-weight:700}
+.chooser h2{font-size:30px;margin:8px 0 14px}
+.pick-row{display:grid;grid-template-columns:300px 1fr;gap:22px;align-items:stretch}
+.mine{position:relative;border:var(--rim);border-radius:20px;background:var(--buoy-soft);box-shadow:0 0 0 4px var(--sand),0 0 0 7px var(--buoy),var(--lift);display:flex;flex-direction:column;align-items:center;padding:14px 14px 16px;text-align:center}
+.mine .pet{width:150px;height:150px}
+.mine .ttl{font-size:24px;font-weight:900}
+.mine .meta{font-size:13px;font-weight:700;color:var(--driftwood-2);margin-top:2px}
+.mine .flag{position:absolute;top:-14px;left:16px;height:28px;padding:0 10px;border-radius:var(--r-chip);background:var(--buoy-ink);color:#fff;font-size:13px;font-weight:900;line-height:28px}
+.babies-label{font-size:15px;font-weight:700;color:var(--driftwood-2);margin-bottom:8px}
+.babies{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.baby{border:var(--rim);border-radius:18px;background:var(--sand);box-shadow:var(--lift-sm);padding:8px 6px 10px;display:flex;flex-direction:column;align-items:center;transition:transform .12s var(--ease)}
+.baby:hover{transform:translateY(-2px)}
+.baby:active{transform:translateY(2px)}
+.baby .pet{width:112px;height:112px}
+.baby .nm{font-size:18px;font-weight:900}
+.baby .ds{font-size:12px;font-weight:500;color:var(--driftwood-3)}
+.go-row{display:flex;align-items:center;justify-content:space-between;margin-top:16px}
+.go-row p{font-size:13px;color:var(--driftwood-3);font-weight:500}
+.go{height:56px;padding:0 30px;border-radius:16px;border:var(--rim);background:var(--buoy);color:#fff;font-size:21px;font-weight:900;box-shadow:var(--lift);transition:transform .12s var(--ease)}
+.go:active{transform:translateY(4px);box-shadow:0 1px 0 var(--driftwood)}
+
+/* ===== 地圖疊層：航線、站點、變淡 ===== */
+.leg-now{fill:none;stroke:var(--buoy);stroke-width:5;stroke-dasharray:10 8;stroke-linecap:round}
+.leg-later{fill:none;stroke:var(--driftwood);stroke-width:3;stroke-dasharray:6 8;stroke-linecap:round;opacity:.72}
+.leg-halo{fill:none;stroke:#fff;stroke-linecap:round;opacity:.9}
+.inner-path{fill:none;stroke:var(--driftwood);stroke-width:2.5;stroke-dasharray:3 5;stroke-linecap:round}
+.node circle{stroke:var(--driftwood);stroke-width:2.5}
+.node text{font:900 14px 'Noto Sans TC';text-anchor:middle;dominant-baseline:central}
+.stn{cursor:pointer}
+.stn .hit{fill:transparent}
+.veil{cursor:pointer}
+.veil circle{fill:var(--mist);opacity:.58;transition:opacity .15s var(--ease)}
+.veil:hover circle{opacity:.3}
+.veil-island{fill:var(--mist);opacity:.5}
+.tag-dim{font:700 12px 'Noto Sans TC';fill:var(--driftwood-2)}
+
+/* 嚮導＋泡泡 */
+.guide{position:absolute;left:984px;top:326px;width:104px;height:104px;pointer-events:none}
+.bubble{position:absolute;left:1004px;top:214px;width:300px;min-height:92px;padding:10px 16px 10px 18px;background:var(--sand);border:var(--rim);border-radius:20px;box-shadow:var(--lift);text-align:left;transition:transform .12s var(--ease)}
+.bubble:hover{transform:translateY(-2px)}
+.bubble:active{transform:translateY(3px);box-shadow:0 2px 0 var(--driftwood)}
+.bubble::after{content:"";position:absolute;left:30px;bottom:-15px;width:22px;height:22px;background:var(--sand);border-right:var(--rim);border-bottom:var(--rim);transform:rotate(45deg) skew(8deg,8deg);border-bottom-right-radius:4px}
+.bubble .zy{font-size:24px;display:block}
+.bubble .cta{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--buoy-ink)}
+.bubble .cta i{font-style:normal;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--buoy-ink);color:#fff;font-size:12px}
+
+/* 航程票（建議路線說明＋縮小版航程）*/
+.ticket{position:absolute;left:16px;top:94px;width:300px;background:var(--sand);border:var(--rim);border-radius:var(--r-card);box-shadow:var(--lift);overflow:hidden}
+.ticket-head{padding:12px 16px 10px;border-bottom:2px dashed var(--sand-line);position:relative}
+.ticket-head::before,.ticket-head::after{content:"";position:absolute;bottom:-9px;width:16px;height:16px;border-radius:50%;background:#efe6d8;border:var(--rim)}
+.ticket-head::before{left:-11px} .ticket-head::after{right:-11px}
+.ticket .kicker{font-size:12px;font-weight:900;letter-spacing:.12em;color:var(--buoy-ink)}
+.ticket .zy{font-size:20px;display:block;margin-top:2px}
+.stops{list-style:none;padding:8px 10px 6px}
+.stops li{display:flex;align-items:center;gap:10px;height:34px;padding:0 8px;border-radius:10px;font-size:15px;font-weight:700}
+.stops li .o{flex:none;width:24px;height:24px;border-radius:50%;border:2.5px solid var(--driftwood);display:grid;place-items:center;font-size:12px;font-weight:900;background:var(--sand)}
+.stops li .p{margin-left:auto;font-size:13px;color:var(--driftwood-3);font-variant-numeric:tabular-nums}
+.stops li.now{background:var(--buoy-soft)}
+.stops li.now .o{background:var(--buoy);color:#fff}
+.stops li.now .p{color:var(--buoy-ink);font-weight:900}
+.stops li .here{font-size:11px;font-weight:900;color:#fff;background:var(--buoy-ink);border-radius:var(--r-chip);padding:1px 8px}
+.stops li.skip{color:var(--driftwood-3);font-weight:500}
+.stops li.skip .o{border-style:dashed;border-color:var(--driftwood-3)}
+.howto{margin:2px 12px 12px;padding:10px 12px;background:var(--sand-deep);border-radius:12px;font-size:13px;line-height:1.6;color:var(--driftwood-2);font-weight:500}
+.howto b{color:var(--driftwood)}
+.howto .k{display:inline-block;vertical-align:middle;margin:0 2px}
+
+/* 關卡面板（按泡泡開）*/
+.panel-wrap{position:absolute;inset:0;display:grid;place-items:center;background:rgba(59,47,42,.28)}
+.panel-wrap[hidden]{display:none}
+.panel{width:460px;padding:22px 24px;background:var(--sand);border:var(--rim);border-radius:24px;box-shadow:0 7px 0 var(--driftwood);animation:pop .22s var(--ease)}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.panel .meta{display:flex;gap:8px;margin-bottom:8px}
+.panel .meta span{height:28px;line-height:24px;padding:0 10px;border-radius:var(--r-chip);border:2px solid var(--driftwood);font-size:13px;font-weight:700}
+.panel h3{font-size:26px;font-weight:900}
+.panel p{font-size:15px;color:var(--driftwood-2);margin:6px 0 18px;line-height:1.6}
+.panel .acts{display:flex;gap:10px;justify-content:flex-end}
+.btn{min-height:50px;padding:0 22px;border-radius:14px;border:var(--rim);box-shadow:var(--lift-sm);font-size:18px;font-weight:900;background:var(--sand)}
+.btn.pri{background:var(--buoy);color:#fff}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--driftwood)}
+
+/* ===== 清單模式 ===== */
+.listp{left:143px;top:78px;width:1080px;height:488px;display:flex;flex-direction:column;padding:16px 22px 14px}
+.list-top{display:flex;align-items:center;gap:14px;padding-bottom:12px;border-bottom:2px dashed var(--sand-line)}
+.list-top h2{font-size:22px;font-weight:900;white-space:nowrap}
+.seg{display:flex;gap:4px;padding:4px;border:var(--rim);border-radius:16px;background:var(--sand-deep)}
+.seg button{height:44px;padding:0 14px;border-radius:12px;font-size:16px;font-weight:900;display:flex;align-items:center;gap:6px}
+.seg button span{font-size:12px;font-weight:700;color:var(--driftwood-3);font-variant-numeric:tabular-nums}
+.seg button[aria-pressed="true"]{background:var(--driftwood);color:var(--sand)}
+.seg button[aria-pressed="true"] span{color:var(--sand)}
+.sync{font-size:13px;font-weight:700;color:var(--driftwood-3);display:flex;align-items:center;gap:6px}
+.close{margin-left:auto;width:44px;height:44px;border-radius:12px;border:var(--rim);font-size:22px;font-weight:900;background:var(--sand);box-shadow:var(--lift-sm)}
+.list-body{flex:1;columns:5;column-gap:14px;padding-top:12px;overflow:hidden}
+.isl-h{break-after:avoid;display:flex;align-items:center;gap:6px;height:26px;font-size:13px;font-weight:900;color:var(--driftwood-2);letter-spacing:.04em}
+.isl-h::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--c,#ccc);border:1.5px solid var(--driftwood)}
+.row{break-inside:avoid;display:flex;align-items:center;gap:8px;width:100%;height:44px;padding:0 8px;border-radius:12px;text-align:left;font-size:15px;font-weight:700}
+.row:hover{background:var(--sand-deep)}
+.row .st{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--driftwood-3);display:grid;place-items:center}
+.row.played .st{background:var(--kelp);border-color:var(--kelp)}
+.row .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .gr{flex:none;font-size:12px;font-weight:700;color:var(--driftwood-3);font-variant-numeric:tabular-nums}
+.list-foot{display:flex;justify-content:space-between;font-size:13px;color:var(--driftwood-3);font-weight:500;padding-top:8px;border-top:2px dashed var(--sand-line)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<div class="deck">
+  <div class="deck-head">
+    <div>
+      <h1>學習樂園島首頁 B 方案：「航程票」版</h1>
+      <p>年級是登船證、嚮導是船長、建議路線是一張 7 站航程票：地圖上只畫「島到島」，島裡的小站只在你所在的那座島出現。</p>
+    </div>
+    <p>interface-design · 1366×657 · 2026-11-22</p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-go="s1"><b>1</b>歡迎卡</button>
+    <button class="tab" role="tab" aria-selected="false" data-go="s2"><b>2</b>選嚮導</button>
+    <button class="tab" role="tab" aria-selected="false" data-go="s3"><b>3</b>地圖＋建議路線（1–2 年級）</button>
+    <button class="tab" role="tab" aria-selected="false" data-go="s4"><b>4</b>清單＋年級篩選</button>
+  </div>
+
+  <!-- ================= 畫面 1：歡迎卡 ================= -->
+  <section class="screen" id="s1" role="tabpanel">
+    <img class="map" src="home-data/home-map.png" alt="學習樂園島地圖">
+    <div class="scrim"></div>
+    <div class="dim-ui">
+      <div class="hud hud-title"><span class="ico">🏝️</span>我的學習樂園島</div>
+      <div class="hud-right">
+        <div class="hud stars">⭐ 玩過 <strong>2</strong>／35 關</div>
+        <button class="hud hud-btn">📥 收成績</button>
+        <button class="hud hud-btn">👨‍🏫 老師</button>
+      </div>
+      <div class="viewtog"><button class="on">🌏 全景</button><button>📋 清單</button></div>
+    </div>
+
+    <div class="card welcome" role="dialog" aria-labelledby="w-h">
+      <div class="host">
+        <div class="pet" data-pet="bunny" data-stage="1" data-mood="happy"></div>
+        <div class="who">樂園嚮導・雲朵兔</div>
+      </div>
+      <div class="welcome-main">
+        <h2 class="zy" id="w-h">嗨！你幾年級？</h2>
+        <div class="grades">
+          <button class="gbtn g12" data-go="s2">
+            <span><span class="num">1–2</span> <span class="unit">年級</span><span class="sub">25 關・有注音</span></span>
+            <svg class="steps" width="54" height="54" viewBox="0 0 54 54" aria-hidden="true"><rect x="4" y="34" width="14" height="16" rx="3" fill="#fff" stroke="#3b2f2a" stroke-width="2.5"/><rect x="20" y="34" width="14" height="16" rx="3" fill="#fffaf2" stroke="#3b2f2a" stroke-width="2" stroke-dasharray="3 3" opacity=".6"/><rect x="36" y="34" width="14" height="16" rx="3" fill="#fffaf2" stroke="#3b2f2a" stroke-width="2" stroke-dasharray="3 3" opacity=".6"/></svg>
+          </button>
+          <button class="gbtn g34" data-go="s2">
+            <span><span class="num">3–4</span> <span class="unit">年級</span><span class="sub">20 關</span></span>
+            <svg class="steps" width="54" height="54" viewBox="0 0 54 54" aria-hidden="true"><rect x="4" y="34" width="14" height="16" rx="3" fill="#fff" stroke="#3b2f2a" stroke-width="2.5"/><rect x="20" y="20" width="14" height="30" rx="3" fill="#fff" stroke="#3b2f2a" stroke-width="2.5"/><rect x="36" y="34" width="14" height="16" rx="3" fill="#fffaf2" stroke="#3b2f2a" stroke-width="2" stroke-dasharray="3 3" opacity=".6"/></svg>
+          </button>
+          <button class="gbtn g56" data-go="s2">
+            <span><span class="num">5–6</span> <span class="unit">年級</span><span class="sub">7 關・打字挑戰多</span></span>
+            <svg class="steps" width="54" height="54" viewBox="0 0 54 54" aria-hidden="true"><rect x="4" y="34" width="14" height="16" rx="3" fill="#fff" stroke="#3b2f2a" stroke-width="2.5"/><rect x="20" y="20" width="14" height="30" rx="3" fill="#fff" stroke="#3b2f2a" stroke-width="2.5"/><rect x="36" y="6" width="14" height="44" rx="3" fill="#fff" stroke="#3b2f2a" stroke-width="2.5"/></svg>
+          </button>
+          <button class="gbtn gteach" data-go="s3">
+            <span><span class="num">我是老師</span><span class="sub">全部看看・35 關都打開</span></span>
+            <svg class="steps" width="54" height="54" viewBox="0 0 54 54" aria-hidden="true"><circle cx="27" cy="27" r="20" fill="#fff" stroke="#3b2f2a" stroke-width="2.5"/><path d="M27 7v40M7 27h40" stroke="#3b2f2a" stroke-width="2"/><ellipse cx="27" cy="27" rx="9" ry="20" fill="none" stroke="#3b2f2a" stroke-width="2"/></svg>
+          </button>
+        </div>
+        <p class="foot">只記到今天放學，明天會再問一次；換班時按右上角的年級就能改。<br>老師投影：網址加 <code>?grade=all</code> 或 <code>?grade=12</code> 直接跳過這張卡。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 畫面 2：選嚮導 ================= -->
+  <section class="screen" id="s2" role="tabpanel" hidden>
+    <img class="map" src="home-data/home-map.png" alt="學習樂園島地圖">
+    <div class="scrim"></div>
+    <div class="dim-ui">
+      <div class="hud hud-title"><span class="ico">🏝️</span>我的學習樂園島</div>
+      <div class="hud-right">
+        <div class="hud stars">⭐ 玩過 <strong>2</strong>／35 關</div>
+        <button class="hud hud-btn">📥 收成績</button>
+        <button class="hud hud-btn">👨‍🏫 老師</button>
+      </div>
+      <div class="viewtog"><button class="on">🌏 全景</button><button>📋 清單</button></div>
+    </div>
+
+    <div class="card chooser" role="dialog" aria-labelledby="c-h">
+      <div class="crumb">
+        <span class="done">✓ 1–2 年級</span><span>→</span><span>選嚮導</span>
+        <button class="back" data-go="s1">‹ 換年級</button>
+      </div>
+      <h2 class="zy" id="c-h">選一隻寵物陪你逛樂園！</h2>
+      <div class="pick-row">
+        <button class="mine" aria-pressed="true">
+          <span class="flag">這台電腦養過</span>
+          <span class="pet" data-pet="bunny" data-stage="1" data-mood="happy" data-wear="scarf"></span>
+          <span class="ttl">用我的小雲</span>
+          <span class="meta">在小常識島領養的雲朵兔・小朋友</span>
+        </button>
+        <div>
+          <p class="babies-label">或選一隻新的寶寶：</p>
+          <div class="babies">
+            <button class="baby"><span class="pet" data-pet="bunny" data-stage="0" data-mood="happy"></span><span class="nm">雲朵兔</span><span class="ds">耳朵收得到訊號</span></button>
+            <button class="baby"><span class="pet" data-pet="turtle" data-stage="0" data-mood="happy"></span><span class="nm">鍵盤龜</span><span class="ds">背上是小鍵盤</span></button>
+            <button class="baby"><span class="pet" data-pet="cat" data-stage="0" data-mood="happy"></span><span class="nm">螢幕貓</span><span class="ds">臉就是小螢幕</span></button>
+            <button class="baby"><span class="pet" data-pet="chick" data-stage="0" data-mood="happy"></span><span class="nm">燈泡雞</span><span class="ds">想到點子頭上會亮</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="go-row">
+        <p>嚮導只是陪你逛，不會影響小常識島的點心和長大。</p>
+        <button class="go" data-go="s3">出發！</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 畫面 3：地圖＋建議路線 ================= -->
+  <section class="screen" id="s3" role="tabpanel" hidden>
+    <img class="map" src="home-data/home-map.png" alt="學習樂園島地圖">
+    <svg class="overlay" id="routeLayer" viewBox="0 0 1366 657" aria-label="建議路線與關卡標記"></svg>
+
+    <div class="hud hud-title"><span class="ico">🏝️</span>我的學習樂園島</div>
+    <div class="hud-right">
+      <button class="hud hud-btn grade-pill" data-go="s1" aria-label="目前 1–2 年級，按一下換年級">🎒 1–2 年級 <span class="pen">✏️</span></button>
+      <div class="hud stars">⭐ 玩過 <strong>2</strong>／35 關</div>
+      <button class="hud hud-btn">📥 收成績</button>
+      <button class="hud hud-btn">👨‍🏫 老師</button>
+    </div>
+
+    <aside class="ticket" aria-label="建議路線說明">
+      <div class="ticket-head">
+        <div class="kicker">1–2 年級航程票</div>
+        <span class="zy">照虛線一站一站玩！</span>
+      </div>
+      <ol class="stops" id="stops"></ol>
+      <div class="howto">
+        <b>路線怎麼看：</b>地圖上的虛線只連「島到島」，<b>橘色粗虛線</b>是下一段。島裡的
+        <svg class="k" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7.5" fill="#d9480f" stroke="#3b2f2a" stroke-width="1.5"/><text x="9" y="9.5" font-size="9" font-weight="900" fill="#fff" text-anchor="middle" dominant-baseline="central">3</text></svg>
+        小站只出現在你現在這座島，玩完就換下一座。<b>淡淡的關卡</b>比較適合大哥哥大姊姊，一樣點得到。
+      </div>
+    </aside>
+
+    <div class="guide" data-pet="bunny" data-stage="1" data-mood="happy" data-wear="scarf"></div>
+    <button class="bubble" id="bubble" aria-label="下一站：拔蔬菜，按一下打開關卡">
+      <span class="zy">下一站：拔蔬菜！</span>
+      <span class="cta"><i>›</i>滑鼠島第 3 站・按我打開</span>
+    </button>
+
+    <div class="viewtog"><button class="on">🌏 全景</button><button data-go="s4">📋 清單</button></div>
+
+    <div class="panel-wrap" id="panel" hidden>
+      <div class="panel" role="dialog" aria-labelledby="p-h">
+        <div class="meta"><span>滑鼠島・第 3 站</span><span style="background:var(--g12)">一年級</span></div>
+        <h3 id="p-h">快樂農場：蔬菜拔拔樂</h3>
+        <p>按住滑鼠把蔬菜拖進籃子，練習「拖曳」。這是滑鼠島最後一站，玩完小雲就帶你去大富翁港。</p>
+        <div class="acts"><button class="btn" id="panelClose">等一下</button><button class="btn pri">開始玩</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 畫面 4：清單＋年級篩選 ================= -->
+  <section class="screen" id="s4" role="tabpanel" hidden>
+    <img class="map" src="home-data/home-map.png" alt="學習樂園島地圖">
+    <div class="scrim"></div>
+
+    <div class="hud hud-title"><span class="ico">🏝️</span>我的學習樂園島</div>
+    <div class="hud-right">
+      <button class="hud hud-btn grade-pill" id="pill4" data-go="s1">🎒 <span id="pill4t">1–2 年級</span> <span class="pen">✏️</span></button>
+      <div class="hud stars">⭐ 玩過 <strong>2</strong>／35 關</div>
+      <button class="hud hud-btn">📥 收成績</button>
+      <button class="hud hud-btn">👨‍🏫 老師</button>
+    </div>
+
+    <div class="card listp" role="dialog" aria-labelledby="l-h">
+      <div class="list-top">
+        <h2 id="l-h">全部關卡</h2>
+        <div class="seg" id="seg" role="group" aria-label="年級篩選">
+          <button data-f="12" aria-pressed="true">1–2 年級<span>25</span></button>
+          <button data-f="34" aria-pressed="false">3–4 年級<span>20</span></button>
+          <button data-f="56" aria-pressed="false">5–6 年級<span>7</span></button>
+          <button data-f="all" aria-pressed="false">全部<span>35</span></button>
+        </div>
+        <span class="sync">⇄ 跟右上角的年級同步</span>
+        <button class="close" data-go="s3" aria-label="關閉清單">×</button>
+      </div>
+      <div class="list-body" id="listBody"></div>
+      <div class="list-foot"><span id="listCount"></span><span>順序＝建議航程（滑鼠島 → 大富翁港 → 小常識島 → 畫畫島 → 思考島 → 打字島 → 對戰島）</span></div>
+    </div>
+
+    <div class="viewtog"><button data-go="s3">🌏 全景</button><button class="on">📋 清單</button></div>
+  </section>
+
+  <div class="notes">
+    <div><h3>路線：一張 7 站航程票</h3>25 站畫成一條線會纏成毛線球，所以拆兩層：地圖只畫 6 段「島到島」虛線（只有下一段是橘色粗線），島內 ①②③ 只在目前這座島出現。左邊航程票同時是小地圖和說明，告訴孩子「這座島還剩幾站」。</div>
+    <div><h3>年級切換與變淡</h3>右上「🎒 1–2 年級 ✏️」用年級色底，按了回到歡迎卡重選。不適合的關卡蓋一層 58% 奶油色薄紗（滑過變 30%），整座不適合的節慶島連名牌一起蓋，旁邊寫「3–4 年級」；都還點得到。清單的篩選跟膠囊同一個值。</div>
+    <div><h3>嚮導</h3>只用 smart-pet.js 的 4 隻。這台電腦領養過就把「用我的小雲」放最前面、預先選好；嚮導站在下一站旁，泡泡本身就是按鈕，按了開關卡面板。</div>
+  </div>
+</div>
+
+<script src="home-data/smart-pet.js"></script>
+<script>
+(function(){
+'use strict';
+/* ---------- 真資料：取自 home-data/units.json（座標是 1366×657 畫面上的中心）---------- */
+var ISLANDS = {
+  mouse:{name:'滑鼠島',pos:[891,324],c:'#b7e3b0'}, type:{name:'打字島',pos:[701,402],c:'#ffe3a3'},
+  think:{name:'思考島',pos:[508,325],c:'#c8dcf5'}, art:{name:'畫畫島',pos:[527,196],c:'#f8c8da'},
+  smart:{name:'小常識島',pos:[695,141],c:'#dccbf2'}, board:{name:'大富翁港',pos:[866,195],c:'#fbd2b0'},
+  fest:{name:'節慶島',pos:[484,492],c:'#f4b3ae'}, duel:{name:'對戰島',pos:[922,491],c:'#c3c8f3'}
+};
+// [key, 島, 全名, 年級起, 年級迄, x, y]
+var U = [
+ ['mouse-0','mouse','小兔勇者大冒險',1,1,852,361],['mouse-1','mouse','滑鼠小勇士大冒險',1,1,892,367],['mouse-2','mouse','快樂農場：蔬菜拔拔樂',1,1,928,360],
+ ['type-0','type','鍵盤怪獸冒冒頭',1,3,661,434],['type-1','type','太空打字防衛戰',1,3,702,459],['type-2','type','恐龍打字大冒險',1,3,742,439],['type-3','type','中文打字冒險王',1,3,740,400],
+ ['type-4','type','極速雷射森林戰',4,5,700,392],['type-5','type','英打太空特攻',4,5,661,406],['type-6','type','中打特攻',4,5,702,487],['type-7','type','魔法字彈極速覺醒',6,6,660,477],
+ ['think-0','think','烏龜小指揮官',1,1,471,363],['think-1','think','指令小法師',1,1,507,376],['think-2','think','運算思維挑戰營',1,1,547,352],['think-3','think','程式小勇士：萌寵尋寶',1,1,550,333],['think-4','think','分類大隊長',1,1,515,317],['think-5','think','瘋狂襪子配對線',1,1,476,323],
+ ['art-0','art','調色魔法鍋',1,2,494,228],['art-1','art','線條小火車',1,2,526,232],['art-2','art','魔法畫畫屋',1,2,561,227],['art-3','art','像素小畫家',1,4,564,205],['art-4','art','對稱魔鏡工坊',3,4,532,186],['art-5','art','小畫家任務局',3,4,498,204],['art-6','art','閃亮亮煙火畫',1,4,467,194],
+ ['smart-0','smart','寵物小屋：領養與換裝',1,4,663,165],['smart-1','smart','寵物的新電腦',1,2,696,183],['smart-2','smart','寵物作息表',1,2,728,170],['smart-3','smart','寵物房間大整理',1,4,726,144],['smart-4','smart','寵物收到怪訊息',3,4,695,141],['smart-5','smart','寵物的 AI 作業',3,4,664,149],['smart-6','smart','寵物警察訓練',3,4,695,114],
+ ['board-0','board','資訊大富翁：森林大冒險',1,6,832,228],['board-1','board','資訊大富翁：海洋大探索',1,6,868,239],
+ ['fest-0','fest','聖誕工坊大救援',3,4,442,534],
+ ['duel-0','duel','打字擂台：雙人連線對戰',1,6,877,525]
+];
+var PLAYED = {'mouse-0':1,'mouse-1':1};
+var BANDS = {'12':[1,2],'34':[3,4],'56':[5,6]};
+function fits(u,f){ if(f==='all') return true; var b=BANDS[f]; return u[3]<=b[1] && u[4]>=b[0]; }
+function gr(u){ return u[3]===u[4] ? u[3]+' 年級' : (u[3]===1&&u[4]===6 ? '都能玩' : u[3]+'–'+u[4]+' 年級'); }
+
+/* 1–2 年級航程：沿島嶼外圈逆時針走，6 段線不交叉、打字島排在對戰島前 */
+var ROUTE = ['mouse','board','smart','art','think','type','duel'];
+// 每座島的航線節點放在名牌旁的海面上（名牌在島中心上方約 48px）
+var NODE = { mouse:[824,276], board:[790,147], smart:[620,93], art:[595,148], think:[578,277], type:[633,354], duel:[854,443] };
+var CTRL = [[775,212],[705,125],[598,112],[615,212],[590,330],[745,420]];
+
+/* ---------- 寵物 ---------- */
+function drawPets(){
+  document.querySelectorAll('[data-pet]').forEach(function(el){
+    if(!window.SmartPet){ el.textContent = '（寵物）'; return; }
+    var wear = el.dataset.wear ? { wear: el.dataset.wear.split(',') } : undefined;
+    el.innerHTML = SmartPet.svg(el.dataset.pet, +el.dataset.stage, el.dataset.mood || 'happy', wear);
+    var s = el.querySelector('svg'); if(s){ s.setAttribute('width','100%'); s.setAttribute('height','100%'); }
+  });
+}
+
+/* ---------- 畫面 3：航線＋站點＋變淡 ---------- */
+function buildRoute(){
+  var g = document.getElementById('routeLayer'), h = '';
+  var f = '12';
+  // 1) 不適合的整座島（節慶島）
+  h += '<ellipse class="veil-island" cx="484" cy="505" rx="96" ry="96"/>';
+  h += '<g class="veil" tabindex="0"><title>節慶島：比較適合 3–4 年級，還是可以點</title>'+
+       '<rect x="420" y="456" width="128" height="26" rx="13" fill="#fffaf2" stroke="#3b2f2a" stroke-width="2"/>'+
+       '<text class="tag-dim" x="484" y="470" text-anchor="middle" dominant-baseline="central">3–4 年級的島</text></g>';
+  // 2) 不適合的單一關卡：薄紗
+  U.forEach(function(u){
+    if(fits(u,f) || u[1]==='fest') return;
+    h += '<g class="veil" tabindex="0"><title>'+u[2]+'（'+gr(u)+'）還是可以點</title><circle cx="'+u[5]+'" cy="'+u[6]+'" r="19"/></g>';
+  });
+  // 3) 島到島航線：先畫白邊再畫虛線
+  for(var i=0;i<ROUTE.length-1;i++){
+    var a=NODE[ROUTE[i]], b=NODE[ROUTE[i+1]], c=CTRL[i];
+    var d='M'+a[0]+' '+a[1]+' Q'+c[0]+' '+c[1]+' '+b[0]+' '+b[1];
+    var now = i===0;
+    h += '<path class="leg-halo" d="'+d+'" stroke-width="'+(now?11:8)+'"/>';
+    h += '<path class="'+(now?'leg-now':'leg-later')+'" d="'+d+'"/>';
+  }
+  // 4) 航線節點（島的順序）
+  ROUTE.forEach(function(k,i){
+    var p=NODE[k], cur = k==='mouse';
+    h += '<g class="node"><circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(cur?15:13)+'" fill="'+(cur?'#d9480f':'#fffaf2')+'"/>'+
+         '<text x="'+p[0]+'" y="'+(p[1]+1)+'" fill="'+(cur?'#fff':'#3b2f2a')+'">'+(i+1)+'</text></g>';
+  });
+  // 5) 目前這座島（滑鼠島）的小站：①②打勾、③下一站
+  var ms = U.filter(function(u){ return u[1]==='mouse'; });
+  var ip = 'M'+ms.map(function(u){return u[5]+' '+u[6];}).join(' L');
+  h += '<path d="'+ip+'" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round" opacity=".9"/><path class="inner-path" d="'+ip+'"/>';
+  ms.forEach(function(u,i){
+    var x=u[5], y=u[6], done=PLAYED[u[0]], next=u[0]==='mouse-2';
+    h += '<g class="stn" tabindex="0" data-unit="'+u[0]+'"><title>第 '+(i+1)+' 站：'+u[2]+(done?'（玩過了）':'')+'</title>';
+    if(next) h += '<circle cx="'+x+'" cy="'+y+'" r="23" fill="#d9480f" opacity=".22"/>';
+    h += '<circle class="hit" cx="'+x+'" cy="'+y+'" r="20"/>';
+    h += '<circle cx="'+x+'" cy="'+y+'" r="15" fill="'+(done?'#2b7a3d':next?'#d9480f':'#fffaf2')+'" stroke="#3b2f2a" stroke-width="2.5"/>';
+    if(done) h += '<path d="M'+(x-6)+' '+y+' l4 4.5 l8 -9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>';
+    else h += '<text x="'+x+'" y="'+(y+1)+'" font-family="Noto Sans TC" font-weight="900" font-size="15" fill="#fff" text-anchor="middle" dominant-baseline="central">'+(i+1)+'</text>';
+    h += '</g>';
+  });
+  g.innerHTML = h;
+  g.querySelectorAll('[data-unit="mouse-2"]').forEach(function(el){ el.addEventListener('click', openPanel); });
+
+  // 航程票
+  var ol = document.getElementById('stops'), s='';
+  ROUTE.forEach(function(k,i){
+    var list = U.filter(function(u){ return u[1]===k && fits(u,f); });
+    var done = list.filter(function(u){ return PLAYED[u[0]]; }).length;
+    var cur = k==='mouse';
+    s += '<li class="'+(cur?'now':'')+'"><span class="o">'+(i+1)+'</span>'+ISLANDS[k].name+
+         (cur?' <span class="here">現在在這</span>':'')+'<span class="p">'+done+'／'+list.length+' 站</span></li>';
+  });
+  s += '<li class="skip"><span class="o">–</span>節慶島<span class="p">3–4 年級再來</span></li>';
+  ol.innerHTML = s;
+}
+
+/* ---------- 面板 ---------- */
+var panel = document.getElementById('panel');
+function openPanel(){ panel.hidden = false; document.getElementById('panelClose').focus(); }
+document.getElementById('bubble').addEventListener('click', openPanel);
+document.getElementById('panelClose').addEventListener('click', function(){ panel.hidden = true; });
+panel.addEventListener('click', function(e){ if(e.target===panel) panel.hidden = true; });
+
+/* ---------- 畫面 4：清單＋篩選（跟年級膠囊同一個值）---------- */
+var ORDER = ['mouse','board','smart','art','think','type','duel','fest'];
+var LABEL = {'12':'1–2 年級','34':'3–4 年級','56':'5–6 年級','all':'全部年級'};
+function buildList(f){
+  var body = document.getElementById('listBody'), h='', n=0;
+  ORDER.forEach(function(k){
+    var list = U.filter(function(u){ return u[1]===k && fits(u,f); });
+    if(!list.length) return;
+    h += '<div class="isl-h" style="--c:'+ISLANDS[k].c+'">'+ISLANDS[k].name+'</div>';
+    list.forEach(function(u){
+      n++;
+      var p = PLAYED[u[0]];
+      h += '<button class="row'+(p?' played':'')+'" title="'+u[2]+'"><span class="st">'+
+           (p?'<svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6.2l2.6 2.8L10 3" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>':'')+
+           '</span><span class="nm">'+u[2]+'</span><span class="gr">'+gr(u)+'</span></button>';
+    });
+  });
+  body.innerHTML = h;
+  document.getElementById('listCount').textContent = LABEL[f]+'：'+n+' 關・玩過 '+U.filter(function(u){return PLAYED[u[0]]&&fits(u,f);}).length+' 關';
+  document.getElementById('pill4t').textContent = LABEL[f];
+  document.querySelectorAll('#seg button').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.f===f ? 'true':'false'); });
+  var pill = document.getElementById('pill4');
+  pill.style.background = {'12':'var(--g12)','34':'var(--g34)','56':'var(--g56)','all':'var(--sand)'}[f];
+}
+document.querySelectorAll('#seg button').forEach(function(b){ b.addEventListener('click', function(){ buildList(b.dataset.f); }); });
+
+/* ---------- 分頁 ---------- */
+function go(id){
+  document.querySelectorAll('.screen').forEach(function(s){ s.hidden = s.id!==id; });
+  document.querySelectorAll('.tab').forEach(function(t){ t.setAttribute('aria-selected', t.dataset.go===id ? 'true':'false'); });
+  panel.hidden = true;
+}
+document.querySelectorAll('[data-go]').forEach(function(el){
+  el.addEventListener('click', function(e){ e.stopPropagation(); go(el.dataset.go); });
+});
+
+drawPets(); buildRoute(); buildList('12');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,673 @@
+{
+ "islands": [
+  {
+   "id": "mouse",
+   "name": "滑鼠島",
+   "icon": "🖱️",
+   "pos": [
+    891,
+    324
+   ]
+  },
+  {
+   "id": "type",
+   "name": "打字島",
+   "icon": "⌨️",
+   "pos": [
+    701,
+    402
+   ]
+  },
+  {
+   "id": "think",
+   "name": "思考島",
+   "icon": "🧩",
+   "pos": [
+    508,
+    325
+   ]
+  },
+  {
+   "id": "art",
+   "name": "畫畫島",
+   "icon": "🎨",
+   "pos": [
+    527,
+    196
+   ]
+  },
+  {
+   "id": "smart",
+   "name": "小常識島",
+   "icon": "📁",
+   "pos": [
+    695,
+    141
+   ]
+  },
+  {
+   "id": "board",
+   "name": "大富翁港",
+   "icon": "🎲",
+   "pos": [
+    866,
+    195
+   ]
+  },
+  {
+   "id": "fest",
+   "name": "節慶島",
+   "icon": "🎄",
+   "pos": [
+    484,
+    492
+   ]
+  },
+  {
+   "id": "duel",
+   "name": "對戰島",
+   "icon": "⚔️",
+   "pos": [
+    922,
+    491
+   ]
+  }
+ ],
+ "units": [
+  {
+   "key": "mouse-0",
+   "island": "滑鼠島",
+   "short": "小兔勇者",
+   "full": "小兔勇者大冒險",
+   "emoji": "🐰",
+   "grade": "🎒 一年級",
+   "range": [
+    1,
+    1
+   ],
+   "url": "units/unit2-mouse-adventure/",
+   "pos": [
+    852,
+    361
+   ]
+  },
+  {
+   "key": "mouse-1",
+   "island": "滑鼠島",
+   "short": "滑鼠勇士",
+   "full": "滑鼠小勇士大冒險",
+   "emoji": "🖱️",
+   "grade": "🎒 一年級",
+   "range": [
+    1,
+    1
+   ],
+   "url": "units/unit21-mouse-challenge/",
+   "pos": [
+    892,
+    367
+   ]
+  },
+  {
+   "key": "mouse-2",
+   "island": "滑鼠島",
+   "short": "拔蔬菜",
+   "full": "快樂農場：蔬菜拔拔樂",
+   "emoji": "🥕",
+   "grade": "🎒 一年級",
+   "range": [
+    1,
+    1
+   ],
+   "url": "units/unit19-farm-harvest/",
+   "pos": [
+    928,
+    360
+   ]
+  },
+  {
+   "key": "type-0",
+   "island": "打字島",
+   "short": "怪獸冒頭",
+   "full": "鍵盤怪獸冒冒頭",
+   "emoji": "🐹",
+   "grade": "🌱 初階 1–3 年級",
+   "range": [
+    1,
+    3
+   ],
+   "url": "units/unit4-whack-keyboard/?tier=t1",
+   "pos": [
+    661,
+    434
+   ]
+  },
+  {
+   "key": "type-1",
+   "island": "打字島",
+   "short": "太空打字",
+   "full": "太空打字防衛戰",
+   "emoji": "🚀",
+   "grade": "🌱 初階 1–3 年級",
+   "range": [
+    1,
+    3
+   ],
+   "url": "units/unit3-space-typing/?tier=t1",
+   "pos": [
+    702,
+    459
+   ]
+  },
+  {
+   "key": "type-2",
+   "island": "打字島",
+   "short": "恐龍打字",
+   "full": "恐龍打字大冒險",
+   "emoji": "🦖",
+   "grade": "🌱 初階 1–3 年級",
+   "range": [
+    1,
+    3
+   ],
+   "url": "units/unit16-dino-typing/?tier=t1",
+   "pos": [
+    742,
+    439
+   ]
+  },
+  {
+   "key": "type-3",
+   "island": "打字島",
+   "short": "中文打字",
+   "full": "中文打字冒險王",
+   "emoji": "🔤",
+   "grade": "🌱 初階 1–3 年級",
+   "range": [
+    1,
+    3
+   ],
+   "url": "units/unit1-typing-adventure/?tier=t1",
+   "pos": [
+    740,
+    400
+   ]
+  },
+  {
+   "key": "type-4",
+   "island": "打字島",
+   "short": "雷射森林",
+   "full": "極速雷射森林戰",
+   "emoji": "🌲",
+   "grade": "🌿 進階 4–5 年級",
+   "range": [
+    4,
+    5
+   ],
+   "url": "units/unit13-forest-typing-defense/?tier=t2",
+   "pos": [
+    700,
+    392
+   ]
+  },
+  {
+   "key": "type-5",
+   "island": "打字島",
+   "short": "英打特攻",
+   "full": "英打太空特攻",
+   "emoji": "🛸",
+   "grade": "🌿 進階 4–5 年級",
+   "range": [
+    4,
+    5
+   ],
+   "url": "units/unit11-space-typing-pro/?tier=t2",
+   "pos": [
+    661,
+    406
+   ]
+  },
+  {
+   "key": "type-6",
+   "island": "打字島",
+   "short": "中打特攻",
+   "full": "中打特攻",
+   "emoji": "🌙",
+   "grade": "🌿 進階 4–5 年級",
+   "range": [
+    4,
+    5
+   ],
+   "url": "units/unit12-space-typing-zh/?tier=t2",
+   "pos": [
+    702,
+    487
+   ]
+  },
+  {
+   "key": "type-7",
+   "island": "打字島",
+   "short": "魔法字彈",
+   "full": "魔法字彈極速覺醒",
+   "emoji": "✨",
+   "grade": "🌳 高階 6 年級",
+   "range": [
+    6,
+    6
+   ],
+   "url": "units/unit14-magic-word-bullet/?tier=t3",
+   "pos": [
+    660,
+    477
+   ]
+  },
+  {
+   "key": "think-0",
+   "island": "思考島",
+   "short": "烏龜指揮",
+   "full": "烏龜小指揮官",
+   "emoji": "🐢",
+   "grade": "🎒 一年級",
+   "range": [
+    1,
+    1
+   ],
+   "url": "units/unit6-turtle-commander/",
+   "pos": [
+    471,
+    363
+   ]
+  },
+  {
+   "key": "think-1",
+   "island": "思考島",
+   "short": "指令法師",
+   "full": "指令小法師",
+   "emoji": "🧙",
+   "grade": "🎒 一年級",
+   "range": [
+    1,
+    1
+   ],
+   "url": "units/unit7-spell-commander/",
+   "pos": [
+    507,
+    376
+   ]
+  },
+  {
+   "key": "think-2",
+   "island": "思考島",
+   "short": "思考營",
+   "full": "運算思維挑戰營",
+   "emoji": "🧠",
+   "grade": "🎒 一年級",
+   "range": [
+    1,
+    1
+   ],
+   "url": "units/unit15-computational-thinking/",
+   "pos": [
+    547,
+    352
+   ]
+  },
+  {
+   "key": "think-3",
+   "island": "思考島",
+   "short": "萌寵尋寶",
+   "full": "程式小勇士：萌寵尋寶",
+   "emoji": "🐶",
+   "grade": "🎒 一年級",
+   "range": [
+    1,
+    1
+   ],
+   "url": "units/unit17-pet-treasure-coding/",
+   "pos": [
+    550,
+    333
+   ]
+  },
+  {
+   "key": "think-4",
+   "island": "思考島",
+   "short": "分類隊長",
+   "full": "分類大隊長",
+   "emoji": "🧺",
+   "grade": "🎒 一年級",
+   "range": [
+    1,
+    1
+   ],
+   "url": "units/unit10-classifier-captain/",
+   "pos": [
+    515,
+    317
+   ]
+  },
+  {
+   "key": "think-5",
+   "island": "思考島",
+   "short": "襪子配對",
+   "full": "瘋狂襪子配對線",
+   "emoji": "🧦",
+   "grade": "🎒 一年級",
+   "range": [
+    1,
+    1
+   ],
+   "url": "units/unit20-sock-matching/",
+   "pos": [
+    476,
+    323
+   ]
+  },
+  {
+   "key": "art-0",
+   "island": "畫畫島",
+   "short": "魔法鍋",
+   "full": "調色魔法鍋",
+   "emoji": "🍲",
+   "grade": "🎒 1–2 年級",
+   "range": [
+    1,
+    2
+   ],
+   "url": "units/unit24-color-cauldron/",
+   "pos": [
+    494,
+    228
+   ]
+  },
+  {
+   "key": "art-1",
+   "island": "畫畫島",
+   "short": "小火車",
+   "full": "線條小火車",
+   "emoji": "🚂",
+   "grade": "🎒 1–2 年級",
+   "range": [
+    1,
+    2
+   ],
+   "url": "units/unit25-line-train/",
+   "pos": [
+    526,
+    232
+   ]
+  },
+  {
+   "key": "art-2",
+   "island": "畫畫島",
+   "short": "魔法畫畫",
+   "full": "魔法畫畫屋",
+   "emoji": "🖌️",
+   "grade": "🎒 1–2 年級",
+   "range": [
+    1,
+    2
+   ],
+   "url": "units/unit18-magic-paint/",
+   "pos": [
+    561,
+    227
+   ]
+  },
+  {
+   "key": "art-3",
+   "island": "畫畫島",
+   "short": "像素畫家",
+   "full": "像素小畫家",
+   "emoji": "👾",
+   "grade": "🎨 1–4 年級",
+   "range": [
+    1,
+    4
+   ],
+   "url": "units/unit5-pixel-art/",
+   "pos": [
+    564,
+    205
+   ]
+  },
+  {
+   "key": "art-4",
+   "island": "畫畫島",
+   "short": "對稱魔鏡",
+   "full": "對稱魔鏡工坊",
+   "emoji": "🦋",
+   "grade": "📘 3–4 年級",
+   "range": [
+    3,
+    4
+   ],
+   "url": "units/unit26-mirror-workshop/",
+   "pos": [
+    532,
+    186
+   ]
+  },
+  {
+   "key": "art-5",
+   "island": "畫畫島",
+   "short": "任務局",
+   "full": "小畫家任務局",
+   "emoji": "🛠️",
+   "grade": "📘 3–4 年級",
+   "range": [
+    3,
+    4
+   ],
+   "url": "units/unit27-paint-mission/",
+   "pos": [
+    498,
+    204
+   ]
+  },
+  {
+   "key": "art-6",
+   "island": "畫畫島",
+   "short": "煙火畫",
+   "full": "閃亮亮煙火畫",
+   "emoji": "🎆",
+   "grade": "🎨 1–4 年級",
+   "range": [
+    1,
+    4
+   ],
+   "url": "units/unit28-sparkle-fireworks/",
+   "pos": [
+    467,
+    194
+   ]
+  },
+  {
+   "key": "smart-0",
+   "island": "小常識島",
+   "short": "寵物屋",
+   "full": "寵物小屋：領養與換裝",
+   "emoji": "🏠",
+   "grade": "⭐ 1–4 年級",
+   "range": [
+    1,
+    4
+   ],
+   "url": "units/smart-pet-house/",
+   "pos": [
+    663,
+    165
+   ]
+  },
+  {
+   "key": "smart-1",
+   "island": "小常識島",
+   "short": "新電腦",
+   "full": "寵物的新電腦",
+   "emoji": "💻",
+   "grade": "🎒 1–2 年級",
+   "range": [
+    1,
+    2
+   ],
+   "url": "units/unit29-pet-computer/",
+   "pos": [
+    696,
+    183
+   ]
+  },
+  {
+   "key": "smart-2",
+   "island": "小常識島",
+   "short": "作息表",
+   "full": "寵物作息表",
+   "emoji": "⏰",
+   "grade": "🎒 1–2 年級",
+   "range": [
+    1,
+    2
+   ],
+   "url": "units/unit30-pet-schedule/",
+   "pos": [
+    728,
+    170
+   ]
+  },
+  {
+   "key": "smart-3",
+   "island": "小常識島",
+   "short": "大整理",
+   "full": "寵物房間大整理",
+   "emoji": "🗂️",
+   "grade": "⭐ 1–4 年級",
+   "range": [
+    1,
+    4
+   ],
+   "url": "units/unit8-desktop-organizer/",
+   "pos": [
+    726,
+    144
+   ]
+  },
+  {
+   "key": "smart-4",
+   "island": "小常識島",
+   "short": "怪訊息",
+   "full": "寵物收到怪訊息",
+   "emoji": "💬",
+   "grade": "📘 3–4 年級",
+   "range": [
+    3,
+    4
+   ],
+   "url": "units/unit31-pet-message/",
+   "pos": [
+    695,
+    141
+   ]
+  },
+  {
+   "key": "smart-5",
+   "island": "小常識島",
+   "short": "AI 作業",
+   "full": "寵物的 AI 作業",
+   "emoji": "🤖",
+   "grade": "📘 3–4 年級",
+   "range": [
+    3,
+    4
+   ],
+   "url": "units/unit32-pet-ai-homework/",
+   "pos": [
+    664,
+    149
+   ]
+  },
+  {
+   "key": "smart-6",
+   "island": "小常識島",
+   "short": "小警察",
+   "full": "寵物警察訓練",
+   "emoji": "👮",
+   "grade": "📘 3–4 年級",
+   "range": [
+    3,
+    4
+   ],
+   "url": "units/unit9-net-detective/",
+   "pos": [
+    695,
+    114
+   ]
+  },
+  {
+   "key": "board-0",
+   "island": "大富翁港",
+   "short": "森林大富翁",
+   "full": "資訊大富翁：森林大冒險",
+   "emoji": "🌳",
+   "grade": "🎲 都能玩",
+   "range": [
+    1,
+    6
+   ],
+   "url": "board/index.html",
+   "pos": [
+    832,
+    228
+   ]
+  },
+  {
+   "key": "board-1",
+   "island": "大富翁港",
+   "short": "海洋大富翁",
+   "full": "資訊大富翁：海洋大探索",
+   "emoji": "🐳",
+   "grade": "🎲 都能玩",
+   "range": [
+    1,
+    6
+   ],
+   "url": "board/ocean.html",
+   "pos": [
+    868,
+    239
+   ]
+  },
+  {
+   "key": "fest-0",
+   "island": "節慶島",
+   "short": "聖誕工坊",
+   "full": "聖誕工坊大救援",
+   "emoji": "🎄",
+   "grade": "📘 中年級",
+   "range": [
+    3,
+    4
+   ],
+   "url": "units/unit22-xmas-workshop/",
+   "pos": [
+    442,
+    534
+   ]
+  },
+  {
+   "key": "duel-0",
+   "island": "對戰島",
+   "short": "打字擂台",
+   "full": "打字擂台：雙人連線對戰",
+   "emoji": "🏆",
+   "grade": "🎲 都能玩",
+   "range": [
+    1,
+    6
+   ],
+   "url": "units/unit23-typing-duel/",
+   "pos": [
+    877,
+    525
+   ]
+  }
+ ]
+}

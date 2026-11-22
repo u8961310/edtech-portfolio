@@ -64,7 +64,7 @@ export const ISLANDS = [
   //   at [-5,10]：離思考島、打字島各 5 格（跟其他島同間距），island-3d.html 的底座為此放大到 21.5
   //   theme:'xmas'：雪地、拐杖糖塔、燈泡、聖誕樹／雪人／禮物堆（換節慶時改這裡，island-3d.html 的 THEMES 加對應裝飾）
   { id:'fest', name:'節慶島', icon:'🎄', color:0xe0524a, at:[-5,10], from:'type', small:true, theme:'xmas', units:[
-    ['聖誕工坊','🎄','xtree','units/unit22-xmas-workshop/','聖誕工坊大救援',GM,22] ] },
+    ['聖誕工坊','🎄','xtree','units/unit22-xmas-workshop/','聖誕工坊大救援',GA,22] ] },   // 節慶關不分年級（使用者 11-22）
   // 第 8 座（2026-11-19）：雙人連線對戰。打字島已滿 8 關，另開一座放對戰類（之後班級競賽也放這裡）
   //   at [5,5]：打字島與滑鼠島之間的右前方，離兩島各 5 格、離中心 15（跟節慶島對稱）；吊橋從打字島接過來
   //   theme:'duel'：帆布地面、紅藍圍繩塔、獎盃、拳擊手套、旗子（island-3d.html 的 THEMES.duel）
@@ -72,6 +72,23 @@ export const ISLANDS = [
   { id:'duel', name:'對戰島', icon:'⚔️', color:0x5b7cff, at:[5,5], from:'type', small:true, theme:'duel', units:[
     ['打字擂台','🏆','ring','units/unit23-typing-duel/','打字擂台：雙人連線對戰',GA,23] ] },
 ];
+
+// ---------- 關卡圖示（2026-11-22）：首頁用固定圖檔，各裝置長得一樣 ----------
+// emoji → assets/unit-icons/<檔名>.webp（Microsoft Fluent Emoji 3D，MIT，tools/build-icons.py 產生）；
+// key:'字'＝自製鍵帽章（emoji 看不懂的關：中文打字、英打、中打）。沒列到的關退回顯示 emoji。
+export const ICON = {
+  '🐰':'rabbit', '🖱️':'computer-mouse', '🥕':'carrot',
+  '🐹':'hamster', '🚀':'rocket', '🦖':'t-rex', '🔤':{ key:'ㄅ' }, '🌲':'evergreen-tree', '🛸':{ key:'A' }, '🌙':{ key:'中' }, '✨':'sparkles',
+  '🐢':'turtle', '🧙':'mage', '🧠':'brain', '🐶':'dog', '🧺':'basket', '🧦':'socks',
+  '🍲':'pot-of-food', '🚂':'locomotive', '🖌️':'paintbrush', '👾':'alien-monster', '🦋':'butterfly', '🛠️':'hammer-wrench', '🎆':'fireworks',
+  '🏠':'house', '💻':'laptop', '⏰':'alarm-clock', '🗂️':'dividers', '💬':'speech-balloon', '🤖':'robot', '👮':'police',
+  '🌳':'deciduous-tree', '🐳':'whale', '🎄':'christmas-tree', '🏆':'trophy',
+};
+export const iconHtml = u => {
+  const i = ICON[u.emoji];
+  if (!i) return u.emoji;
+  return i.key ? `<i class="kc" aria-hidden="true">${i.key}</i>` : `<img class="fi" src="./assets/unit-icons/${i}.webp" alt="" draggable="false">`;
+};
 
 // ---------- 成績（只讀 localStorage，讀不到就當沒玩過） ----------
 const ls = k => { try { return localStorage.getItem(k); } catch { return null; } };

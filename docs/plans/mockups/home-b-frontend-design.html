@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>首頁 B 方案設計稿｜集章旅行版（frontend-design）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+@font-face { font-family:'Bpmf Huninn'; src:url('fonts/bpmf-huninn-home.woff2') format('woff2'); font-display:swap; }
+
+/* ===== 色票：沿用首頁現有＋三條年級色（都對奶油底 ≥ 4.5:1） ===== */
+:root{
+  --cream:#fffaf2;      /* 現有卡片底 */
+  --paper:#f6ead6;      /* 卡片內凹的格子 */
+  --ink:#3b2f2a;        /* 現有字色與粗外框 */
+  --ink-soft:#5e4c43;   /* 次要說明字（對奶油底 7.9:1） */
+  --orange:#d9480f;     /* 現有強調色：只當填色（白字粗體） */
+  --orange-text:#b23c0b;/* 強調色當字用 */
+  --g12:#246b32;        /* 1–2 年級：嫩葉綠 */
+  --g34:#1b62a3;        /* 3–4 年級：海灣藍 */
+  --g56:#6a3fbf;        /* 5–6 年級：葡萄紫 */
+  --gall:#3b2f2a;       /* 老師／全部 */
+  --stamp:#d9480f;
+  --shadow:0 5px 0 var(--ink);
+  --zy:'Bpmf Huninn','Huninn','Noto Sans TC',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:'Noto Sans TC',sans-serif; color:var(--ink);
+  background:#e9dcc6; min-height:100vh;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:4px solid #1b62a3;outline-offset:3px}
+
+/* ===== 設計稿外框：分頁列在畫面外上方 ===== */
+.deck-head{
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  padding:14px 20px 12px;max-width:1406px;margin:0 auto;
+}
+.deck-head h1{font-size:18px;font-weight:900;margin:0;letter-spacing:.02em}
+.deck-head p{margin:0;font-size:14px;color:var(--ink-soft)}
+.tabs{display:flex;gap:8px;margin-left:auto}
+.tab{
+  min-height:44px;padding:0 16px;border:3px solid var(--ink);border-radius:14px;
+  background:var(--cream);font-weight:700;font-size:15px;box-shadow:0 3px 0 var(--ink);
+}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--cream)}
+.stage-wrap{display:flex;justify-content:center;padding:0 20px 24px}
+.stage-scale{transform-origin:top left}
+
+/* ===== 每個畫面 1366×657 ===== */
+.screen{
+  position:relative;width:1366px;height:657px;overflow:hidden;
+  border-radius:6px;box-shadow:0 0 0 1px rgba(59,47,42,.25), 0 18px 40px rgba(59,47,42,.18);
+  background:#f8e8d2;
+}
+.screen[hidden]{display:none}
+.map{position:absolute;inset:0;width:1366px;height:657px;display:block}
+.map-img{position:absolute;inset:0;width:100%;height:100%}
+.veil{position:absolute;inset:0;background:rgba(255,246,232,.62);backdrop-filter:blur(2px) saturate(.75)}
+.overlay{position:absolute;inset:0;width:1366px;height:657px}
+
+/* ===== 現有介面（全部保留） ===== */
+.chip{
+  position:absolute;display:flex;align-items:center;gap:8px;
+  height:52px;padding:0 16px;background:var(--cream);
+  border:3px solid var(--ink);border-radius:20px;box-shadow:var(--shadow);
+  font-weight:700;font-size:16px;white-space:nowrap;
+}
+button.chip{cursor:pointer}
+.title-chip{left:16px;top:16px;font-size:21px;font-weight:900;padding:0 20px}
+.topright{position:absolute;right:16px;top:16px;display:flex;gap:12px}
+.topright .chip{position:static}
+.played b{font-size:20px}
+.played small{font-size:14px;color:var(--ink-soft);font-weight:700}
+.grade-pill{border-color:var(--g12)}
+.grade-pill .gp-dot{width:14px;height:14px;border-radius:50%;background:var(--g12);border:2px solid var(--ink)}
+.grade-pill .pen{font-size:15px}
+.viewtoggle{
+  position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
+  display:flex;gap:6px;padding:6px;background:var(--cream);
+  border:3px solid var(--ink);border-radius:20px;box-shadow:var(--shadow);
+}
+.viewtoggle button{
+  min-width:104px;height:46px;border:0;border-radius:14px;background:transparent;
+  font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.viewtoggle button[aria-pressed="true"]{background:var(--orange);color:#fff}
+
+/* ===== 年級下拉（按膠囊） ===== */
+.grade-menu{
+  position:absolute;right:16px;top:80px;width:300px;padding:14px;
+  background:var(--cream);border:3px solid var(--ink);border-radius:20px;box-shadow:var(--shadow);z-index:20;
+}
+.grade-menu[hidden]{display:none}
+.grade-menu p{margin:0 0 10px;font-size:14px;color:var(--ink-soft);line-height:1.5}
+.grade-menu .gm-list{display:grid;gap:8px}
+
+/* ===== 年級按鈕（歡迎卡、下拉、清單共用同一套顏色語言） ===== */
+.gbtn{
+  display:flex;align-items:center;gap:14px;text-align:left;
+  min-height:48px;padding:8px 14px;background:var(--cream);
+  border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink);
+  font-weight:700;
+}
+.gbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.gbtn .gnum{
+  flex:none;display:flex;align-items:baseline;justify-content:center;
+  min-width:64px;height:40px;border-radius:12px;color:#fff;font-weight:900;font-size:22px;line-height:40px;
+  border:3px solid var(--ink);
+}
+.gbtn .glabel{display:flex;flex-direction:column;line-height:1.25}
+.gbtn .glabel small{font-size:13px;color:var(--ink-soft);font-weight:500}
+.g12 .gnum{background:var(--g12)} .g34 .gnum{background:var(--g34)}
+.g56 .gnum{background:var(--g56)} .gall .gnum{background:var(--gall)}
+.gbtn[aria-pressed="true"]{background:#fff3df;outline:3px solid var(--orange);outline-offset:2px}
+
+/* ===== 畫面 1、2：歡迎卡 ===== */
+.card{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:860px;background:var(--cream);border:3px solid var(--ink);border-radius:28px;box-shadow:0 8px 0 var(--ink);
+  padding:30px 34px 24px;
+}
+.steps{display:flex;gap:10px;align-items:center;margin-bottom:14px;font-size:14px;font-weight:700;color:var(--ink-soft)}
+.steps span{display:flex;align-items:center;gap:6px}
+.steps i{
+  font-style:normal;width:26px;height:26px;border-radius:50%;border:2.5px solid var(--ink);
+  display:grid;place-items:center;font-size:13px;background:var(--cream);color:var(--ink)
+}
+.steps .on{color:var(--ink)} .steps .on i{background:var(--ink);color:var(--cream)}
+.steps .done i{background:var(--g12);color:#fff}
+.steps .bar{width:36px;height:3px;background:var(--ink);border-radius:2px;opacity:.35}
+.welcome{display:grid;grid-template-columns:230px 1fr;gap:28px;align-items:center}
+.pet-plinth{
+  position:relative;width:230px;height:250px;display:flex;align-items:flex-end;justify-content:center;
+}
+.pet-plinth::before{ /* 小小的六角島台，呼應地圖的六角地塊 */
+  content:"";position:absolute;bottom:6px;left:20px;width:190px;height:58px;
+  background:#9fd36b;border:3px solid var(--ink);
+  clip-path:polygon(18% 0,82% 0,100% 50%,82% 100%,18% 100%,0 50%);
+}
+.pet-plinth .pet{position:relative;width:210px;height:210px;margin-bottom:22px}
+.pet svg{width:100%;height:100%;display:block;overflow:visible}
+.zy{font-family:var(--zy);font-weight:400;letter-spacing:.04em}
+.welcome h2{font-size:40px;margin:0 0 6px;line-height:1.35}
+.welcome .sub{margin:0 0 18px;font-size:15px;color:var(--ink-soft);line-height:1.6}
+.ggrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ggrid .gbtn{min-height:92px;padding:12px 16px;border-radius:20px;box-shadow:0 5px 0 var(--ink)}
+.ggrid .gbtn .gnum{min-width:96px;height:62px;line-height:58px;font-size:34px;border-radius:16px}
+.ggrid .gbtn .gnum em{font-style:normal;font-size:17px;margin-left:2px}
+.ggrid .gbtn .glabel{font-size:20px}
+.ggrid .gbtn .glabel small{font-size:14px;margin-top:2px}
+.ggrid .gall .gnum{font-size:15px;line-height:1.15;display:flex;align-items:center;flex-direction:column;justify-content:center;padding-top:2px}
+.memo{
+  margin:18px 0 0;padding-top:14px;border-top:2px dashed rgba(59,47,42,.35);
+  font-size:14px;color:var(--ink-soft);display:flex;gap:10px;align-items:center
+}
+.memo svg{flex:none}
+
+/* 選嚮導 */
+.guide h2{font-size:34px;margin:0 0 4px;line-height:1.35}
+.guide .sub{margin:0 0 16px;font-size:15px;color:var(--ink-soft)}
+.mine{
+  width:100%;display:flex;align-items:center;gap:18px;text-align:left;
+  padding:10px 20px 10px 12px;margin-bottom:16px;background:#fff3df;
+  border:3px solid var(--ink);border-radius:20px;box-shadow:0 5px 0 var(--ink);
+}
+.mine .pet{width:96px;height:96px;flex:none;background:var(--cream);border:3px solid var(--ink);border-radius:50%;padding:4px}
+.mine strong{font-size:24px;display:block}
+.mine span{font-size:14px;color:var(--ink-soft)}
+.mine .go{
+  margin-left:auto;flex:none;height:52px;padding:0 22px;border-radius:16px;
+  background:var(--orange);color:#fff;font-weight:900;font-size:19px;border:3px solid var(--ink);
+  display:flex;align-items:center
+}
+.or{display:flex;align-items:center;gap:12px;margin:0 0 12px;font-size:14px;color:var(--ink-soft);font-weight:700}
+.or::before,.or::after{content:"";flex:1;height:2px;background:rgba(59,47,42,.25)}
+.babies{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.baby{
+  display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px 12px;
+  background:var(--cream);border:3px solid var(--ink);border-radius:20px;box-shadow:0 5px 0 var(--ink);
+}
+.baby .pet{width:112px;height:112px}
+.baby b{font-size:18px}
+.baby small{font-size:13px;color:var(--ink-soft)}
+.baby[aria-pressed="true"],.mine[aria-pressed="true"]{outline:4px solid var(--orange);outline-offset:3px}
+.backlink{
+  margin-top:16px;display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--ink-soft)
+}
+.backlink button{min-height:44px;padding:0 16px;border:2.5px solid var(--ink);border-radius:14px;background:var(--cream);font-weight:700;font-size:15px}
+
+/* ===== 畫面 3：地圖＋集章路線 ===== */
+.route-under{fill:none;stroke:var(--cream);stroke-width:11;stroke-linecap:round}
+.route{fill:none;stroke:var(--ink);stroke-width:4.5;stroke-linecap:round;stroke-dasharray:2 11}
+.route-arrow{fill:var(--ink)}
+.inner-path{fill:none;stroke:var(--ink);stroke-width:3;stroke-dasharray:1 7;stroke-linecap:round}
+.u-dot{fill:#fff;stroke:var(--ink);stroke-width:2.5;cursor:pointer}
+.u-dim-veil{fill:rgba(255,250,242,.58);pointer-events:none}
+.u-dim{fill:rgba(255,255,255,.55);stroke:rgba(59,47,42,.55);stroke-width:2;stroke-dasharray:3 3;cursor:pointer}
+.u-hit{fill:transparent;cursor:pointer}
+.isl-veil{fill:rgba(255,250,242,.6);pointer-events:none}
+.stop circle.base{stroke:var(--ink);stroke-width:3}
+.stop text{font:900 15px 'Noto Sans TC',sans-serif;text-anchor:middle;dominant-baseline:central}
+.stop.done circle.base{fill:var(--g12)}
+.stop.todo circle.base{fill:var(--cream)}
+.stop.next circle.base{fill:var(--orange)}
+.stop.next text{fill:#fff;font-size:18px}
+.ripple{fill:none;stroke:var(--orange);stroke-width:4;opacity:0;transform-box:fill-box;transform-origin:center;animation:ripple 1.4s ease-out .5s 2}
+@keyframes ripple{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(2.1)}}
+.stamp circle{stroke:var(--ink);stroke-width:3}
+.stamp text{font:900 17px 'Noto Sans TC',sans-serif;text-anchor:middle;dominant-baseline:central}
+.stamp.future circle{fill:var(--cream)} .stamp.future text{fill:var(--ink)}
+.stamp.current circle{fill:var(--orange)} .stamp.current text{fill:#fff}
+.stamp.full circle{fill:var(--g12)} .stamp.full text{fill:#fff}
+.prog rect{fill:var(--cream);stroke:var(--ink);stroke-width:2.5}
+.prog text{font:700 13px 'Noto Sans TC',sans-serif;fill:var(--ink);dominant-baseline:central;text-anchor:middle}
+.dimtag rect{fill:var(--cream);stroke:rgba(59,47,42,.6);stroke-width:2;stroke-dasharray:4 3}
+.dimtag text{font:700 13px 'Noto Sans TC',sans-serif;fill:var(--ink-soft);dominant-baseline:central;text-anchor:middle}
+
+.guide-pet{position:absolute;width:92px;height:92px;pointer-events:none;filter:drop-shadow(0 4px 0 rgba(59,47,42,.25))}
+.bubble{
+  position:absolute;display:block;text-align:left;min-width:236px;
+  padding:12px 18px 12px 16px;background:var(--cream);border:3px solid var(--ink);border-radius:20px;box-shadow:var(--shadow);
+}
+.bubble::after{ /* 尾巴指向寵物 */
+  content:"";position:absolute;left:34px;bottom:-15px;width:22px;height:22px;background:var(--cream);
+  border-right:3px solid var(--ink);border-bottom:3px solid var(--ink);transform:rotate(45deg);
+}
+.bubble .zy{display:block;font-size:26px;line-height:1.4;white-space:nowrap}
+.bubble .hint{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:14px;font-weight:700;color:var(--orange-text)}
+.bubble .hint b{display:inline-flex;align-items:center;height:30px;padding:0 12px;background:var(--orange);color:#fff;border-radius:10px;border:2px solid var(--ink)}
+
+.legend{
+  position:absolute;left:16px;bottom:16px;width:330px;padding:14px 16px 12px;
+  background:var(--cream);border:3px solid var(--ink);border-radius:20px;box-shadow:var(--shadow);
+}
+.legend .zy{font-size:23px;margin:0 0 4px;line-height:1.4}
+.legend .why{margin:0 0 8px;font-size:13px;line-height:1.55;color:var(--ink-soft)}
+.legend ul{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+.legend li{display:flex;align-items:center;gap:10px;font-size:14px;line-height:1.35}
+.legend li svg{flex:none}
+
+.unit-pop{
+  position:absolute;width:280px;padding:14px 16px;background:var(--cream);
+  border:3px solid var(--ink);border-radius:20px;box-shadow:var(--shadow);z-index:15;
+}
+.unit-pop[hidden]{display:none}
+.unit-pop h3{margin:0 0 2px;font-size:20px}
+.unit-pop .meta{font-size:14px;color:var(--ink-soft);margin:0 0 6px}
+.unit-pop .warn{font-size:14px;margin:0 0 8px;color:var(--ink);background:#fff3df;border-radius:10px;padding:6px 10px}
+.unit-pop .row{display:flex;gap:8px}
+.unit-pop .row button{min-height:44px;padding:0 16px;border-radius:14px;border:3px solid var(--ink);font-weight:900;font-size:16px}
+.unit-pop .play{background:var(--orange);color:#fff}
+.unit-pop .close{background:var(--cream)}
+
+/* ===== 畫面 4：清單＋年級篩選 ===== */
+.list-panel{
+  position:absolute;left:50%;top:84px;transform:translateX(-50%);
+  width:1010px;height:478px;display:flex;flex-direction:column;
+  background:var(--cream);border:3px solid var(--ink);border-radius:24px;box-shadow:0 6px 0 var(--ink);
+  padding:16px 20px 12px;
+}
+.lp-head{display:flex;align-items:center;gap:14px}
+.lp-head h2{margin:0;font-size:22px;font-weight:900}
+.seg{display:flex;gap:6px;margin-left:auto;padding:4px;border:3px solid var(--ink);border-radius:16px;background:var(--paper)}
+.seg button{
+  min-height:44px;padding:0 14px;border:0;border-radius:11px;background:transparent;font-weight:700;font-size:15px;
+  display:flex;align-items:center;gap:6px
+}
+.seg button i{width:12px;height:12px;border-radius:50%;border:2px solid var(--ink)}
+.seg button small{font-size:13px;color:var(--ink-soft);font-weight:700}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--cream)}
+.seg button[aria-pressed="true"] small{color:#e9dcc6}
+.lp-close{min-height:44px;padding:0 16px;border:3px solid var(--ink);border-radius:14px;background:var(--cream);font-weight:700}
+.lp-note{margin:8px 0 8px;font-size:13px;color:var(--ink-soft)}
+.lp-rows{flex:1;display:grid;align-content:start;gap:6px;overflow:hidden}
+.lp-row{display:grid;grid-template-columns:168px 1fr;gap:12px;align-items:center;padding:4px 0;border-bottom:2px dashed rgba(59,47,42,.18)}
+.lp-row:last-child{border-bottom:0}
+.lp-isl{display:flex;align-items:center;gap:8px;font-weight:900;font-size:16px}
+.lp-isl .num{
+  width:30px;height:30px;border-radius:50%;border:2.5px solid var(--ink);display:grid;place-items:center;font-size:14px
+}
+.lp-isl .num.current{background:var(--orange);color:#fff}
+.lp-isl .num.full{background:var(--g12);color:#fff}
+.lp-isl small{font-weight:700;font-size:13px;color:var(--ink-soft)}
+.lp-units{display:flex;flex-wrap:wrap;gap:6px}
+.ubtn{
+  display:flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;
+  background:#fff;border:2.5px solid var(--ink);border-radius:14px;font-weight:700;font-size:15px
+}
+.ubtn .ck{width:20px;height:20px;border-radius:50%;background:var(--g12);display:grid;place-items:center}
+.ubtn.next{background:var(--orange);color:#fff}
+.ubtn.next .tag{font-size:12px;background:#fff;color:var(--orange-text);border-radius:8px;padding:1px 6px}
+.ubtn.dim{background:rgba(255,255,255,.5);border-style:dashed;color:var(--ink-soft)}
+.ubtn .gt{font-size:12px;font-weight:700;border-radius:8px;padding:1px 6px;color:#fff}
+.lp-foot{margin-top:6px;padding-top:8px;border-top:2px solid rgba(59,47,42,.2);font-size:14px;color:var(--ink-soft);display:flex;align-items:center;gap:10px}
+.lp-foot button{min-height:44px;padding:0 14px;border:2.5px solid var(--ink);border-radius:12px;background:var(--cream);font-weight:700}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="deck-head">
+  <h1>首頁 B 方案「集章旅行版」</h1>
+  <p>每座島是一枚章，照數字一座一座蓋；只有目前這座島會展開站點。</p>
+  <nav class="tabs" role="tablist" aria-label="設計稿畫面">
+    <button class="tab" role="tab" data-go="s1" aria-selected="true">1 歡迎卡</button>
+    <button class="tab" role="tab" data-go="s2" aria-selected="false">2 選嚮導</button>
+    <button class="tab" role="tab" data-go="s3" aria-selected="false">3 地圖＋建議路線</button>
+    <button class="tab" role="tab" data-go="s4" aria-selected="false">4 清單＋年級篩選</button>
+  </nav>
+</header>
+
+<div class="stage-wrap"><div class="stage-scale" id="scale">
+
+<!-- ================= 畫面 1：歡迎卡 ================= -->
+<section class="screen" id="s1" aria-label="歡迎卡">
+  <img class="map-img" src="home-data/home-map.png" alt="">
+  <div class="veil"></div>
+  <div class="chrome"></div>
+  <div class="card">
+    <div class="steps" aria-label="步驟">
+      <span class="on"><i>1</i>選年級</span><span class="bar"></span><span><i>2</i>選嚮導</span>
+    </div>
+    <div class="welcome">
+      <div class="pet-plinth"><div class="pet" data-pet="bunny" data-stage="1" data-mood="happy"></div></div>
+      <div>
+        <h2 class="zy">嗨！你幾年級？</h2>
+        <p class="sub">選好之後，地圖會幫你標出適合的關卡，其他關卡還是點得到。</p>
+        <div class="ggrid">
+          <button class="gbtn g12" data-grade="12" data-next="s2"><span class="gnum">1–2<em>年級</em></span><span class="glabel">一、二年級<small>25 關</small></span></button>
+          <button class="gbtn g34" data-grade="34" data-next="s2"><span class="gnum">3–4<em>年級</em></span><span class="glabel">三、四年級<small>20 關</small></span></button>
+          <button class="gbtn g56" data-grade="56" data-next="s2"><span class="gnum">5–6<em>年級</em></span><span class="glabel">五、六年級<small>7 關</small></span></button>
+          <button class="gbtn gall" data-grade="all" data-next="s3"><span class="gnum">全部</span><span class="glabel">我是老師／全部看看<small>35 關都攤開</small></span></button>
+        </div>
+      </div>
+    </div>
+    <p class="memo">
+      <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="9" fill="none" stroke="#3b2f2a" stroke-width="2.5"/><path d="M11 6v5l3 2" stroke="#3b2f2a" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+      這台電腦只記到今天放學；下一節換班時，按右上角的年級膠囊就能改。
+    </p>
+  </div>
+</section>
+
+<!-- ================= 畫面 2：選嚮導 ================= -->
+<section class="screen" id="s2" aria-label="選嚮導" hidden>
+  <img class="map-img" src="home-data/home-map.png" alt="">
+  <div class="veil"></div>
+  <div class="chrome"></div>
+  <div class="card guide">
+    <div class="steps" aria-label="步驟">
+      <span class="done"><i>✓</i>1–2 年級</span><span class="bar"></span><span class="on"><i>2</i>選嚮導</span>
+    </div>
+    <h2 class="zy">選一隻寵物陪你逛樂園！</h2>
+    <p class="sub">嚮導會站在下一站旁邊提醒你。之後在地圖上按牠，也能換一隻。</p>
+    <button class="mine" data-pick="mine" aria-pressed="true">
+      <span class="pet" data-pet="bunny" data-stage="1" data-mood="happy" data-wear="scarf"></span>
+      <span><strong>用我的小雲</strong><span>你在小常識島領養的雲朵兔，已經長成小朋友了</span></span>
+      <span class="go">就是牠</span>
+    </button>
+    <div class="or">或是帶一隻寵物寶寶出門</div>
+    <div class="babies">
+      <button class="baby" data-pick="bunny" aria-pressed="false"><span class="pet" data-pet="bunny" data-stage="0" data-mood="normal"></span><b>雲朵兔</b><small>耳朵收得到訊號</small></button>
+      <button class="baby" data-pick="turtle" aria-pressed="false"><span class="pet" data-pet="turtle" data-stage="0" data-mood="normal"></span><b>鍵盤龜</b><small>背上是小鍵盤</small></button>
+      <button class="baby" data-pick="cat" aria-pressed="false"><span class="pet" data-pet="cat" data-stage="0" data-mood="normal"></span><b>螢幕貓</b><small>臉就是小螢幕</small></button>
+      <button class="baby" data-pick="chick" aria-pressed="false"><span class="pet" data-pet="chick" data-stage="0" data-mood="normal"></span><b>燈泡雞</b><small>想到點子頭上會亮</small></button>
+    </div>
+    <div class="backlink">
+      <button data-go="s1">回上一步：改年級</button>
+      <span>按一隻就出發，地圖會畫好你的路線</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 畫面 3：地圖＋建議路線 ================= -->
+<section class="screen" id="s3" aria-label="地圖與建議路線" hidden>
+  <img class="map-img" src="home-data/home-map.png" alt="學習樂園島地圖">
+  <svg class="overlay" id="ov" viewBox="0 0 1366 657" aria-label="建議路線與關卡位置"></svg>
+  <div id="guideLayer"></div>
+  <aside class="legend" aria-label="路線怎麼看">
+    <p class="zy">照虛線一站一站玩！</p>
+    <p class="why">25 關不畫成一條長線：島和島之間只畫順序，<b>只有你現在這座島</b>會展開 1、2、3 站。</p>
+    <ul>
+      <li><svg width="46" height="16" aria-hidden="true"><path d="M4 8H42" stroke="#fffaf2" stroke-width="10" stroke-linecap="round"/><path d="M4 8H42" stroke="#3b2f2a" stroke-width="4.5" stroke-dasharray="2 9" stroke-linecap="round"/></svg>虛線：下一座要去哪個島</li>
+      <li><svg width="46" height="30" aria-hidden="true"><circle cx="13" cy="15" r="12" fill="#d9480f" stroke="#3b2f2a" stroke-width="3"/><text x="13" y="16" text-anchor="middle" dominant-baseline="central" font-weight="900" font-size="13" fill="#fff">1</text><circle cx="34" cy="15" r="9" fill="#246b32" stroke="#3b2f2a" stroke-width="2.5"/><path d="M30 15l3 3 5-6" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>大數字：第幾座島　綠勾：玩過了</li>
+      <li><svg width="46" height="24" aria-hidden="true"><circle cx="23" cy="12" r="10" fill="rgba(255,250,242,.8)"/><circle cx="23" cy="12" r="6" fill="rgba(255,255,255,.6)" stroke="rgba(59,47,42,.55)" stroke-width="2" stroke-dasharray="3 3"/></svg>淡淡的：給哥哥姊姊，也能點</li>
+    </ul>
+  </aside>
+  <div class="unit-pop" id="pop" hidden role="dialog" aria-label="關卡"></div>
+  <div class="chrome" data-view="map"></div>
+</section>
+
+<!-- ================= 畫面 4：清單＋年級篩選 ================= -->
+<section class="screen" id="s4" aria-label="清單與年級篩選" hidden>
+  <img class="map-img" src="home-data/home-map.png" alt="">
+  <div class="veil"></div>
+  <div class="list-panel" role="dialog" aria-label="全部關卡清單">
+    <div class="lp-head">
+      <h2>關卡清單</h2>
+      <div class="seg" role="group" aria-label="年級篩選" id="seg"></div>
+      <button class="lp-close" data-go="s3">關閉</button>
+    </div>
+    <p class="lp-note">篩選跟右上角的年級膠囊同步：在這裡換，地圖上的路線和變淡也會一起換。排序就是建議路線的順序。</p>
+    <div class="lp-rows" id="rows"></div>
+    <div class="lp-foot" id="foot"></div>
+  </div>
+  <div class="chrome" data-view="list"></div>
+</section>
+
+</div></div>
+
+<script src="home-data/smart-pet.js"></script>
+<script>
+(function(){
+'use strict';
+/* ===== 資料：照 home-data/units.json 抄（file:// 不能 fetch，所以內嵌） ===== */
+var ISL = {
+  mouse:{name:'滑鼠島',pos:[891,324],w:98}, type:{name:'打字島',pos:[701,402],w:98},
+  think:{name:'思考島',pos:[508,325],w:98}, art:{name:'畫畫島',pos:[527,196],w:98},
+  smart:{name:'小常識島',pos:[695,141],w:114}, board:{name:'大富翁港',pos:[866,195],w:114},
+  fest:{name:'節慶島',pos:[484,492],w:98}, duel:{name:'對戰島',pos:[922,491],w:98}
+};
+// [key, 島, 短名, 全名, 年級標籤, 最低, 最高, x, y]
+var U = [
+ ['mouse-0','mouse','小兔勇者','小兔勇者大冒險','一年級',1,1,852,361],
+ ['mouse-1','mouse','滑鼠勇士','滑鼠小勇士大冒險','一年級',1,1,892,367],
+ ['mouse-2','mouse','拔蔬菜','快樂農場：蔬菜拔拔樂','一年級',1,1,928,360],
+ ['type-0','type','怪獸冒頭','鍵盤怪獸冒冒頭','初階 1–3 年級',1,3,661,434],
+ ['type-1','type','太空打字','太空打字防衛戰','初階 1–3 年級',1,3,702,459],
+ ['type-2','type','恐龍打字','恐龍打字大冒險','初階 1–3 年級',1,3,742,439],
+ ['type-3','type','中文打字','中文打字冒險王','初階 1–3 年級',1,3,740,400],
+ ['type-4','type','雷射森林','極速雷射森林戰','進階 4–5 年級',4,5,700,392],
+ ['type-5','type','英打特攻','英打太空特攻','進階 4–5 年級',4,5,661,406],
+ ['type-6','type','中打特攻','中打特攻','進階 4–5 年級',4,5,702,487],
+ ['type-7','type','魔法字彈','魔法字彈極速覺醒','高階 6 年級',6,6,660,477],
+ ['think-0','think','烏龜指揮','烏龜小指揮官','一年級',1,1,471,363],
+ ['think-1','think','指令法師','指令小法師','一年級',1,1,507,376],
+ ['think-2','think','思考營','運算思維挑戰營','一年級',1,1,547,352],
+ ['think-3','think','萌寵尋寶','程式小勇士：萌寵尋寶','一年級',1,1,550,333],
+ ['think-4','think','分類隊長','分類大隊長','一年級',1,1,515,317],
+ ['think-5','think','襪子配對','瘋狂襪子配對線','一年級',1,1,476,323],
+ ['art-0','art','魔法鍋','調色魔法鍋','1–2 年級',1,2,494,228],
+ ['art-1','art','小火車','線條小火車','1–2 年級',1,2,526,232],
+ ['art-2','art','魔法畫畫','魔法畫畫屋','1–2 年級',1,2,561,227],
+ ['art-3','art','像素畫家','像素小畫家','1–4 年級',1,4,564,205],
+ ['art-4','art','對稱魔鏡','對稱魔鏡工坊','3–4 年級',3,4,532,186],
+ ['art-5','art','任務局','小畫家任務局','3–4 年級',3,4,498,204],
+ ['art-6','art','煙火畫','閃亮亮煙火畫','1–4 年級',1,4,467,194],
+ ['smart-0','smart','寵物屋','寵物小屋：領養與換裝','1–4 年級',1,4,663,165],
+ ['smart-1','smart','新電腦','寵物的新電腦','1–2 年級',1,2,696,183],
+ ['smart-2','smart','作息表','寵物作息表','1–2 年級',1,2,728,170],
+ ['smart-3','smart','大整理','寵物房間大整理','1–4 年級',1,4,726,144],
+ ['smart-4','smart','怪訊息','寵物收到怪訊息','3–4 年級',3,4,695,141],
+ ['smart-5','smart','AI 作業','寵物的 AI 作業','3–4 年級',3,4,664,149],
+ ['smart-6','smart','小警察','寵物警察訓練','3–4 年級',3,4,695,114],
+ ['board-0','board','森林大富翁','資訊大富翁：森林大冒險','都能玩',1,6,832,228],
+ ['board-1','board','海洋大富翁','資訊大富翁：海洋大探索','都能玩',1,6,868,239],
+ ['fest-0','fest','聖誕工坊','聖誕工坊大救援','中年級',3,4,442,534],
+ ['duel-0','duel','打字擂台','打字擂台：雙人連線對戰','都能玩',1,6,877,525]
+].map(function(a){return {key:a[0],isl:a[1],short:a[2],full:a[3],tag:a[4],r:[a[5],a[6]],pos:[a[7],a[8]]};});
+
+/* 建議路線順序：從滑鼠島出發，繞著「我的家」逆時針轉一圈，線不交叉 */
+var ORDER = ['mouse','board','smart','art','think','fest','type','duel'];
+var HUB = [697,300];
+var GRADES = {
+  '12':{lo:1,hi:2,label:'1–2 年級',col:'var(--g12)',cls:'g12'},
+  '34':{lo:3,hi:4,label:'3–4 年級',col:'var(--g34)',cls:'g34'},
+  '56':{lo:5,hi:6,label:'5–6 年級',col:'var(--g56)',cls:'g56'},
+  'all':{lo:1,hi:6,label:'全部',col:'var(--gall)',cls:'gall'}
+};
+var DONE = {'mouse-0':1,'mouse-1':1}; // 設計稿示意：玩過 2 關
+
+var st = { grade:'12', pick:'mine', screen:'s1' };
+var esc = function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+var fits = function(u,g){ g=GRADES[g||st.grade]; return u.r[0]<=g.hi && u.r[1]>=g.lo; };
+var count = function(g){ return U.filter(function(u){return fits(u,g);}).length; };
+
+function petSvg(type,stage,mood,wear){
+  if(!window.SmartPet) return '';
+  return SmartPet.svg(type,stage,mood,wear?{wear:[wear]}:undefined);
+}
+function guidePet(mood){
+  return st.pick==='mine' ? petSvg('bunny',1,mood,'scarf') : petSvg(st.pick,0,mood);
+}
+function paintPets(root){
+  (root||document).querySelectorAll('[data-pet]').forEach(function(el){
+    el.innerHTML = petSvg(el.dataset.pet, +el.dataset.stage, el.dataset.mood, el.dataset.wear);
+  });
+}
+
+/* ===== 現有介面（每個畫面都放，舊元素一個都不少） ===== */
+function chrome(view){
+  var g = GRADES[st.grade];
+  return '<div class="chip title-chip">🏝️ 我的學習樂園島</div>'+
+  '<div class="topright">'+
+    '<button class="chip grade-pill" data-menu aria-haspopup="true" style="border-color:'+g.col+'" aria-label="目前年級 '+g.label+'，按這裡改">🎒 '+(st.grade==='all'?'全部年級':g.label)+' <span class="pen">✏️</span></button>'+
+    '<div class="chip played">⭐ 玩過 <b>2</b><small>／35 關</small></div>'+
+    '<button class="chip">📥 收成績</button>'+
+    '<button class="chip">👨‍🏫 老師</button>'+
+  '</div>'+
+  '<div class="grade-menu" hidden><p>換班了嗎？選這一節的年級，地圖會重畫路線。</p><div class="gm-list">'+
+    Object.keys(GRADES).map(function(k){var x=GRADES[k];
+      return '<button class="gbtn '+x.cls+'" data-grade="'+k+'" aria-pressed="'+(k===st.grade)+'"><span class="gnum" style="font-size:'+(k==='all'?16:20)+'px">'+(k==='all'?'全部':x.label.replace(' 年級',''))+'</span><span class="glabel">'+(k==='all'?'我是老師／全部看看':x.label)+'<small>'+count(k)+' 關</small></span></button>';
+    }).join('')+'</div></div>'+
+  '<div class="viewtoggle" role="group" aria-label="切換顯示">'+
+    '<button data-go="s3" aria-pressed="'+(view!=='list')+'"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="9" fill="#4dabf7" stroke="currentColor" stroke-width="2"/><path d="M6 8c3 0 3 3 6 2s2 4 5 3" stroke="#2f9e44" stroke-width="3" fill="none"/></svg>全景</button>'+
+    '<button data-go="s4" aria-pressed="'+(view==='list')+'"><svg width="20" height="22" viewBox="0 0 20 22" aria-hidden="true"><rect x="2" y="3" width="16" height="17" rx="2" fill="#fff" stroke="currentColor" stroke-width="2"/><path d="M6 9h8M6 13h8M6 17h5" stroke="currentColor" stroke-width="2"/></svg>清單</button>'+
+  '</div>';
+}
+function paintChrome(){
+  document.querySelectorAll('.chrome').forEach(function(c){ c.innerHTML = chrome(c.dataset.view); });
+}
+
+/* ===== 路線計算：哪些島要去、目前在哪座島、下一站是哪關 ===== */
+function plan(){
+  var isl = ORDER.map(function(id){
+    var us = U.filter(function(u){return u.isl===id && fits(u);});
+    var cx=0,cy=0; us.forEach(function(u){cx+=u.pos[0];cy+=u.pos[1];});
+    return {id:id,units:us,c:us.length?[cx/us.length,cy/us.length]:null,done:us.filter(function(u){return DONE[u.key];}).length};
+  }).filter(function(i){return i.units.length;});
+  var cur = isl.find(function(i){return i.done<i.units.length;}) || isl[0];
+  var next = cur.units.find(function(u){return !DONE[u.key];});
+  return {isl:isl,cur:cur,next:next};
+}
+
+/* 1–2 年級這條路手調過：避開島名牌、章和進度牌（起點, 控制點, 終點） */
+var LEGS = {
+  'mouse>board':[[838,338],[770,300],[815,247]],
+  'board>smart':[[815,225],[785,205],[752,182]],
+  'smart>art'  :[[655,178],[615,215],[582,222]],
+  'art>think'  :[[478,242],[330,285],[460,330]],
+  'think>type' :[[560,366],[610,410],[646,422]],
+  'type>duel'  :[[752,452],[820,470],[862,512]]
+};
+function leg(a,b,ia,ib){
+  var L=LEGS[ia+'>'+ib];
+  if(L) return {d:'M'+L[0].join(' ')+' Q'+L[1].join(' ')+' '+L[2].join(' '), end:L[2], tan:[L[2][0]-L[1][0],L[2][1]-L[1][1]]};
+  return curve(a,b);
+}
+function curve(a,b){
+  var dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,cut=Math.min(38,L*.28);
+  var p=[a[0]+ux*cut,a[1]+uy*cut], q=[b[0]-ux*cut,b[1]-uy*cut];
+  var m=[(a[0]+b[0])/2,(a[1]+b[1])/2], ox=m[0]-HUB[0], oy=m[1]-HUB[1], ol=Math.hypot(ox,oy)||1;
+  var c=[m[0]+ox/ol*34,m[1]+oy/ol*34];
+  return {d:'M'+p[0].toFixed(1)+' '+p[1].toFixed(1)+' Q'+c[0].toFixed(1)+' '+c[1].toFixed(1)+' '+q[0].toFixed(1)+' '+q[1].toFixed(1), end:q, tan:[q[0]-c[0],q[1]-c[1]]};
+}
+
+function paintMap(){
+  var ov = document.getElementById('ov'), P = plan(), all = st.grade==='all', h = '';
+  var check = function(x,y,s){return '<path d="M'+(x-5*s)+' '+y+'l'+(4*s)+' '+(4*s)+' '+(7*s)+' '+(-8*s)+'" stroke="#fff" stroke-width="'+(3*s)+'" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';};
+
+  // 1) 不適合的：整座島或單一關，蓋一層奶油薄紗（還點得到）
+  if(!all){
+    Object.keys(ISL).forEach(function(id){
+      var us=U.filter(function(u){return u.isl===id;}), ok=us.filter(function(u){return fits(u);});
+      if(!ok.length){
+        h+='<ellipse class="isl-veil" cx="'+ISL[id].pos[0]+'" cy="'+(ISL[id].pos[1]+34)+'" rx="96" ry="70"/>';
+      }
+    });
+    U.forEach(function(u){ if(!fits(u)) h+='<circle class="u-dim-veil" cx="'+u.pos[0]+'" cy="'+u.pos[1]+'" r="19"/>'; });
+  }
+
+  // 2) 島到島的虛線（只畫順序，不畫每一關）
+  if(!all){
+    for(var i=0;i<P.isl.length-1;i++){
+      var cv=leg(P.isl[i].c,P.isl[i+1].c,P.isl[i].id,P.isl[i+1].id);
+      h+='<path class="route-under" d="'+cv.d+'"/><path class="route" d="'+cv.d+'"/>';
+      var ang=Math.atan2(cv.tan[1],cv.tan[0])*180/Math.PI;
+      h+='<path class="route-arrow" d="M0 -7 L12 0 L0 7 Z" transform="translate('+cv.end[0].toFixed(1)+' '+cv.end[1].toFixed(1)+') rotate('+ang.toFixed(1)+')" stroke="#fffaf2" stroke-width="2"/>';
+    }
+  }
+
+  // 3) 每一關的點：適合＝白點、不適合＝虛線淡點；目前這座島的關卡改畫成編號站
+  U.forEach(function(u){
+    if(!all && P.cur && u.isl===P.cur.id && fits(u)) return;
+    var ok = all || fits(u);
+    h+='<g data-unit="'+u.key+'" role="button" tabindex="0" aria-label="'+esc(u.full)+(ok?'':'（'+u.tag+'）')+'"><circle class="u-hit" cx="'+u.pos[0]+'" cy="'+u.pos[1]+'" r="18"/>'+
+       (DONE[u.key]&&ok ? '<circle cx="'+u.pos[0]+'" cy="'+u.pos[1]+'" r="9" fill="#246b32" stroke="#3b2f2a" stroke-width="2.5"/>'+check(u.pos[0],u.pos[1],.8)
+        : '<circle class="'+(ok?'u-dot':'u-dim')+'" cx="'+u.pos[0]+'" cy="'+u.pos[1]+'" r="'+(ok?6.5:6)+'"/>')+'</g>';
+  });
+
+  // 4) 目前這座島：展開 1、2、3 站（站內小虛線＋打勾＋下一站）
+  if(!all && P.cur){
+    var cu=P.cur.units;
+    if(cu.length>1) h+='<path class="inner-path" d="M'+cu.map(function(u){return u.pos.join(' ');}).join(' L')+'"/>';
+    cu.forEach(function(u,k){
+      var done=DONE[u.key], nx=u===P.next, cls=done?'done':nx?'next':'todo', r=nx?19:14;
+      h+='<g class="stop '+cls+'" data-unit="'+u.key+'" role="button" tabindex="0" aria-label="第 '+(k+1)+' 站 '+esc(u.full)+(done?'，玩過了':nx?'，下一站':'')+'">'+
+        (nx?'<circle class="ripple" cx="'+u.pos[0]+'" cy="'+u.pos[1]+'" r="'+r+'"/>':'')+
+        '<circle class="base" cx="'+u.pos[0]+'" cy="'+u.pos[1]+'" r="'+r+'"/>'+
+        (done?check(u.pos[0],u.pos[1],1.15):'<text x="'+u.pos[0]+'" y="'+(u.pos[1]+1)+'"'+(nx?'':' fill="#3b2f2a"')+'>'+(k+1)+'</text>')+'</g>';
+    });
+  }
+
+  // 5) 島名牌旁的章（第幾座島）＋進度；不適合的島掛「3–4 年級」淡標
+  Object.keys(ISL).forEach(function(id){
+    var I=ISL[id], bx=I.pos[0], by=I.pos[1]-47, idx=-1;
+    P.isl.forEach(function(p,k){ if(p.id===id) idx=k; });
+    if(all) return;
+    if(idx<0){
+      var us=U.filter(function(u){return u.isl===id;}), lo=Math.min.apply(null,us.map(function(u){return u.r[0];})), hi=Math.max.apply(null,us.map(function(u){return u.r[1];}));
+      var w=104; h+='<g class="dimtag"><rect x="'+(bx-w/2)+'" y="'+(by+24)+'" width="'+w+'" height="26" rx="13"/><text x="'+bx+'" y="'+(by+37)+'">給 '+(lo===hi?lo:lo+'–'+hi)+' 年級</text></g>';
+      return;
+    }
+    var p=P.isl[idx], full=p.done===p.units.length, cls=full?'full':p===P.cur?'current':'future';
+    var sx=bx-I.w/2-22;
+    h+='<g class="stamp '+cls+'"><circle cx="'+sx+'" cy="'+by+'" r="17"/><text x="'+sx+'" y="'+(by+1)+'">'+(idx+1)+'</text></g>';
+    var px=bx+I.w/2+24;
+    h+='<g class="prog"><rect x="'+(px-22)+'" y="'+(by-12)+'" width="44" height="24" rx="12"/><text x="'+px+'" y="'+(by+1)+'">'+p.done+'/'+p.units.length+'</text></g>';
+  });
+  ov.innerHTML = h;
+
+  // 6) 嚮導寵物＋泡泡站在下一站旁邊
+  var gl=document.getElementById('guideLayer'), legend=document.querySelector('#s3 .legend');
+  legend.style.display = all ? 'none' : '';
+  if(all || !P.next){ gl.innerHTML=''; return; }
+  var nx=P.next.pos, px=Math.min(nx[0]+40,1366-110), py=nx[1]-56;
+  gl.innerHTML =
+    '<div class="guide-pet" style="left:'+px+'px;top:'+py+'px">'+guidePet('happy')+'</div>'+
+    '<button class="bubble" data-unit="'+P.next.key+'" style="left:'+Math.min(px-16,1366-300)+'px;top:'+(py-104)+'px" aria-label="下一站 '+esc(P.next.full)+'，按這裡開始">'+
+      '<span class="zy">下一站：'+esc(P.next.short)+'！</span>'+
+      '<span class="hint">'+ISL[P.next.isl].name+'第 '+(P.cur.units.indexOf(P.next)+1)+' 站<b>按我開始</b></span>'+
+    '</button>';
+}
+
+/* ===== 關卡面板（按泡泡、按點都會開；變淡的也開得了） ===== */
+function openPop(key){
+  var u=U.find(function(x){return x.key===key;}), pop=document.getElementById('pop'), ok=st.grade==='all'||fits(u);
+  pop.innerHTML='<h3>'+esc(u.full)+'</h3><p class="meta">'+ISL[u.isl].name+'，適合 '+esc(u.tag)+(DONE[u.key]?'，你玩過了':'')+'</p>'+
+    (ok?'':'<p class="warn">這關是給哥哥姊姊的，想挑戰也可以玩。</p>')+
+    '<div class="row"><button class="play">'+(DONE[u.key]?'再玩一次':'開始玩')+'</button><button class="close">先不要</button></div>';
+  var x=u.pos[0]+28, y=u.pos[1]-150;
+  if(x+290>1366) x=u.pos[0]-310;
+  pop.style.left=Math.max(12,x)+'px'; pop.style.top=Math.max(80,Math.min(y,657-200))+'px';
+  pop.hidden=false; pop.querySelector('.play').focus();
+}
+
+/* ===== 清單＋篩選 ===== */
+function paintList(){
+  var P=plan(), seg=document.getElementById('seg');
+  seg.innerHTML = Object.keys(GRADES).map(function(k){var g=GRADES[k];
+    return '<button data-grade="'+k+'" aria-pressed="'+(k===st.grade)+'"><i style="background:'+g.col+'"></i>'+g.label+' <small>'+count(k)+'</small></button>';}).join('');
+  var rows='', idx=0;
+  ORDER.forEach(function(id){
+    var us=U.filter(function(u){return u.isl===id && fits(u);});
+    if(!us.length) return;
+    idx++;
+    var p=P.isl.find(function(x){return x.id===id;}), done=us.filter(function(u){return DONE[u.key];}).length;
+    var cls = st.grade==='all' ? '' : (done===us.length?'full':p===P.cur?'current':'');
+    rows+='<div class="lp-row"><div class="lp-isl"><span class="num '+cls+'">'+idx+'</span>'+ISL[id].name+' <small>'+done+'/'+us.length+'</small></div><div class="lp-units">'+
+      us.map(function(u){
+        var nx = st.grade!=='all' && u===P.next;
+        return '<button class="ubtn'+(nx?' next':'')+'">'+(DONE[u.key]?'<span class="ck">'+'<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6l3 3 5-6" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg></span>':'')+esc(u.short)+(nx?'<span class="tag">下一站</span>':'')+
+          (st.grade==='all'?'<span class="gt" style="background:'+(u.r[1]<=2?'var(--g12)':u.r[0]>=5?'var(--g56)':u.r[0]>=3?'var(--g34)':'var(--ink-soft)')+'">'+esc(u.tag.replace(/^(初階|進階|高階) /,''))+'</span>':'')+'</button>';
+      }).join('')+'</div></div>';
+  });
+  document.getElementById('rows').innerHTML=rows;
+  var others=35-count(st.grade);
+  document.getElementById('foot').innerHTML = st.grade==='all'
+    ? '35 關全部攤開，彩色小標是適合的年級。老師投影時網址加 ?grade=all 會直接到這個狀態。'
+    : '其他年級還有 '+others+' 關，在地圖上是淡淡的，也點得到。<button data-grade="all">全部看看</button>';
+}
+
+/* ===== 切換 ===== */
+function go(id){
+  st.screen=id;
+  document.querySelectorAll('.screen').forEach(function(s){s.hidden = s.id!==id;});
+  document.querySelectorAll('.tab').forEach(function(t){t.setAttribute('aria-selected', t.dataset.go===id);});
+  document.getElementById('pop').hidden=true;
+}
+function setGrade(g){
+  st.grade=g; paintChrome(); paintMap(); paintList();
+  document.querySelectorAll('.ggrid .gbtn').forEach(function(b){b.setAttribute('aria-pressed', b.dataset.grade===g);});
+  var lbl=document.querySelector('#s2 .steps .done'); if(lbl) lbl.innerHTML='<i>✓</i>'+GRADES[g].label;
+}
+
+document.addEventListener('click',function(e){
+  var t=e.target.closest('button,[data-unit]'); if(!t) return;
+  var menuBtn=t.closest('[data-menu]');
+  if(menuBtn){ var m=menuBtn.closest('.chrome').querySelector('.grade-menu'); m.hidden=!m.hidden; return; }
+  if(t.dataset.grade){ setGrade(t.dataset.grade); document.querySelectorAll('.grade-menu').forEach(function(m){m.hidden=true;}); if(t.dataset.next) go(t.dataset.next); return; }
+  if(t.dataset.pick){
+    st.pick=t.dataset.pick;
+    document.querySelectorAll('[data-pick]').forEach(function(b){b.setAttribute('aria-pressed', b===t);});
+    paintMap(); go('s3'); return;
+  }
+  if(t.dataset.unit){ openPop(t.dataset.unit); return; }
+  if(t.classList.contains('close')){ document.getElementById('pop').hidden=true; return; }
+  if(t.dataset.go){ go(t.dataset.go); }
+});
+document.addEventListener('keydown',function(e){
+  if((e.key==='Enter'||e.key===' ') && e.target.matches && e.target.matches('g[data-unit]')){ e.preventDefault(); openPop(e.target.dataset.unit); }
+  if(e.key==='Escape'){ document.getElementById('pop').hidden=true; document.querySelectorAll('.grade-menu').forEach(function(m){m.hidden=true;}); }
+});
+
+/* 視窗比 1366 窄時整張等比縮小（設計稿檢視用） */
+function fit(){
+  var s=Math.min(1,(window.innerWidth-40)/1366), el=document.getElementById('scale');
+  el.style.transform='scale('+s+')'; el.style.width=(1366*s)+'px'; el.style.height=(657*s)+'px';
+}
+window.addEventListener('resize',fit);
+
+/* 網址參數：?grade=all／?grade=12 直接略過歡迎卡（投影用） */
+var q=new URLSearchParams(location.search).get('grade');
+paintPets(); setGrade(GRADES[q]?q:'12'); fit();
+if(GRADES[q]) go('s3');
+})();
+</script>
+</body>
+</html>
