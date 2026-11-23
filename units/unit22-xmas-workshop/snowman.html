@@ -288,7 +288,8 @@
       z-index: 10;
       flex: 1;
       display: grid;
-      grid-template-columns: 336px 1fr 384px;
+      /* 寬螢幕時左右欄跟著變寬，任務與配件名稱不必擠成兩行 */
+      grid-template-columns: clamp(336px, 22vw, 430px) 1fr clamp(384px, 26vw, 510px);
       gap: 14px;
       padding: 20px 14px 14px;
       min-height: 0;
