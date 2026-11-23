@@ -1391,7 +1391,7 @@
           <div class="drop-hint-pill" id="drop-hint-pill">點選或拖曳配件到雪人身上</div>
 
           <!-- 白天雪地公園＋雪人主畫布 SVG -->
-          <svg class="park-svg" id="park-svg" viewBox="0 0 640 520" preserveAspectRatio="xMidYMax slice" role="img" aria-label="雪地公園與雪人">
+          <svg class="park-svg" id="park-svg" viewBox="0 -40 640 560" preserveAspectRatio="xMidYMax meet" role="img" aria-label="雪地公園與雪人">
             <defs>
               <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="#5aaae6"/>
@@ -1420,8 +1420,9 @@
               </pattern>
             </defs>
 
-            <!-- 晴朗冬日藍天 -->
-            <rect x="0" y="0" width="640" height="520" fill="url(#skyGrad)"/>
+            <!-- 晴朗冬日藍天（往左右與上方延伸：舞台用 meet 完整顯示雪人與帽子，寬或高的舞台多出來的部分由延伸的天空與雪地補滿） -->
+            <rect x="-640" y="-400" width="1920" height="920" fill="#5aaae6"/>
+            <rect x="-640" y="0" width="1920" height="520" fill="url(#skyGrad)"/>
 
             <!-- 溫暖冬日太陽與白雲 -->
             <circle cx="548" cy="72" r="34" fill="#fff3b0" opacity="0.55"/>
@@ -1435,7 +1436,7 @@
             </g>
 
             <!-- 遠山雪坡 -->
-            <path d="M0,310 Q130,230 270,295 Q420,225 560,280 L640,265 L640,390 L0,390 Z" fill="url(#snowHillFar)"/>
+            <path d="M-640,295 Q-480,240 -320,290 Q-160,245 0,310 Q130,230 270,295 Q420,225 560,280 L640,265 Q800,235 960,285 Q1120,240 1280,290 L1280,390 L-640,390 Z" fill="url(#snowHillFar)"/>
 
             <!-- 遠方的聖誕工坊（尖屋頂木屋＋冒煙煙囪＋暖光窗戶） -->
             <g id="far-workshop" transform="translate(465, 196)">
@@ -1503,7 +1504,7 @@
             </g>
 
             <!-- 中景雪地丘陵 -->
-            <path d="M0,355 Q175,320 330,348 Q490,322 640,352 L640,520 L0,520 Z" fill="url(#snowGround)"/>
+            <path d="M-640,350 Q-470,325 -320,348 Q-160,322 0,355 Q175,320 330,348 Q490,322 640,352 Q800,325 960,350 Q1120,322 1280,348 L1280,520 L-640,520 Z" fill="url(#snowGround)"/>
 
             <!-- 公園木頭長椅（覆著白雪＋聖誕花圈與拐杖糖） -->
             <g id="park-bench" transform="translate(48, 336)">
