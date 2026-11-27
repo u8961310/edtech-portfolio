@@ -259,7 +259,10 @@
     });
   };
   var fmt = function (n) { return Number(n || 0).toLocaleString('zh-TW'); };
+  var TOKEN_OK = /^[\x21-\x7e]+$/;
   var token = store.get(KEY);
+  // 舊版沒檢查，存進來的壞 token 每次開頁都會讓 fetch 丟例外 → 清掉重新登入
+  if (token && !TOKEN_OK.test(token)) { store.del(KEY); token = null; }
   var range = store.get(RANGE_KEY) || '30';
 
   function pageName(path) {
@@ -540,8 +543,11 @@
 
   $('loginForm').addEventListener('submit', function (e) {
     e.preventDefault();
-    token = $('tok').value.trim();
-    if (!token) return;
+    var t = $('tok').value.trim();
+    if (!t) return;
+    // HTTP header 只收 ASCII：輸入法沒切、複製帶到全形空白，fetch 會直接丟例外（2026-11-27）
+    if (!TOKEN_OK.test(t)) { $('loginErr').textContent = 'token 只會有英數字與符號，裡面混到中文或全形字了（檢查輸入法、前後空白）。'; return; }
+    token = t;
     store.set(KEY, token);
     $('tok').value = '';
     load();
